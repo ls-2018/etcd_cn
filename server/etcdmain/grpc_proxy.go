@@ -19,6 +19,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	clientv3 "github.com/ls-2018/client/v3"
 	"io/ioutil"
 	"log"
 	"math"
@@ -31,7 +32,6 @@ import (
 
 	"github.com/ls-2018/client/pkg/logutil"
 	"github.com/ls-2018/client/pkg/transport"
-	clientv3 "github.com/ls-2018/client/v3"
 	"github.com/ls-2018/client/v3/leasing"
 	"github.com/ls-2018/client/v3/namespace"
 	"github.com/ls-2018/client/v3/ordering"

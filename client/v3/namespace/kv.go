@@ -16,8 +16,8 @@ package namespace
 
 import (
 	"context"
+	clientv3 "github.com/ls-2018/client/v3"
 
-	"github.com/ls-2018/client/v3"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
 )

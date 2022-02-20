@@ -21,6 +21,7 @@
 // To use, first import the packages:
 //
 //	import (
+//	    "github.com/ls-2018/client/v3"
 //		"github.com/ls-2018/client/v3"
 //		"github.com/ls-2018/client/v3/naming/endpoints"
 //		"github.com/ls-2018/client/v3/naming/resolver"

@@ -17,10 +17,10 @@ package ordering
 import (
 	"context"
 	gContext "context"
+	clientv3 "github.com/ls-2018/client/v3"
 	"sync"
 	"testing"
 
-	"github.com/ls-2018/client/v3"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 )
 

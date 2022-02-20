@@ -16,6 +16,7 @@ package runner
 
 import (
 	"fmt"
+	clientv2 "github.com/ls-2018/client/v2"
 	"os"
 )
 
@@ -33,7 +34,7 @@ const (
 
 func ExitWithError(code int, err error) {
 	fmt.Fprintln(os.Stderr, "Error: ", err)
-	if cerr, ok := err.(*client.ClusterError); ok {
+	if cerr, ok := err.(*clientv2.ClusterError); ok {
 		fmt.Fprintln(os.Stderr, cerr.Detail())
 	}
 	os.Exit(code)

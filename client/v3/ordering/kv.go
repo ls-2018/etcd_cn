@@ -16,9 +16,8 @@ package ordering
 
 import (
 	"context"
+	clientv3 "github.com/ls-2018/client/v3"
 	"sync"
-
-	"github.com/ls-2018/client/v3"
 )
 
 // kvOrdering ensures that serialized requests do not return

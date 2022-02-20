@@ -16,6 +16,7 @@ package v3client
 
 import (
 	"context"
+	clientv3 "github.com/ls-2018/client/v3"
 	"time"
 
 	"github.com/ls-2018/server/etcdserver"

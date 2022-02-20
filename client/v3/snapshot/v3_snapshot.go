@@ -18,13 +18,13 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
+	clientv3 "github.com/ls-2018/client/v3"
 	"io"
 	"os"
 	"time"
 
 	"github.com/dustin/go-humanize"
 	"github.com/ls-2018/client/pkg/fileutil"
-	"github.com/ls-2018/client/v3"
 	"go.uber.org/zap"
 )
 

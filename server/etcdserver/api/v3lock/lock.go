@@ -16,6 +16,7 @@ package v3lock
 
 import (
 	"context"
+	clientv3 "github.com/ls-2018/client/v3"
 
 	"github.com/ls-2018/client/v3/concurrency"
 	"github.com/ls-2018/server/etcdserver/api/v3lock/v3lockpb"

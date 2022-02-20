@@ -18,9 +18,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	v3 "github.com/ls-2018/client/v3"
 	"sync"
 
-	v3 "github.com/ls-2018/client/v3"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 )
 

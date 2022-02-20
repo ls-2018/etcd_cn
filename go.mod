@@ -64,6 +64,7 @@ require (
 	google.golang.org/genproto v0.0.0-20210624195500-8bfb893ecb84
 	google.golang.org/grpc v1.38.0
 	gopkg.in/cheggaaa/pb.v1 v1.0.28
+	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/yaml.v2 v2.4.0
 	honnef.co/go/tools v0.0.1-2019.2.3
 	mvdan.cc/unparam v0.0.0-20200501210554-b37ab49443f7

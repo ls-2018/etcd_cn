@@ -16,9 +16,8 @@ package concurrency
 
 import (
 	"context"
-	"time"
-
 	v3 "github.com/ls-2018/client/v3"
+	"time"
 )
 
 const defaultSessionTTL = 60

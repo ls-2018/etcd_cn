@@ -17,8 +17,7 @@ package mirror
 
 import (
 	"context"
-
-	"github.com/ls-2018/client/v3"
+	clientv3 "github.com/ls-2018/client/v3"
 )
 
 const (

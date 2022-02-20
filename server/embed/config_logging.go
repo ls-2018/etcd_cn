@@ -29,6 +29,7 @@ import (
 	"go.uber.org/zap/zapgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/grpclog"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 // GetLogger returns the logger.

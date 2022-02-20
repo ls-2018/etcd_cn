@@ -16,6 +16,7 @@ package grpcproxy
 
 import (
 	"context"
+	clientv3 "github.com/ls-2018/client/v3"
 
 	"github.com/ls-2018/server/proxy/grpcproxy/cache"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
@@ -161,7 +162,7 @@ func requestOpToOp(union *pb.RequestOp) clientv3.Op {
 }
 
 func RangeRequestToOp(r *pb.RangeRequest) clientv3.Op {
-	opts := []clientv3.OpOption{}
+	var opts []clientv3.OpOption
 	if len(r.RangeEnd) != 0 {
 		opts = append(opts, clientv3.WithRange(string(r.RangeEnd)))
 	}

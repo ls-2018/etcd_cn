@@ -16,6 +16,7 @@ package v3rpc
 
 import (
 	"context"
+	"github.com/ls-2018/raft"
 	"sync"
 	"time"
 
