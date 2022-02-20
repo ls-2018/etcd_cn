@@ -17,6 +17,7 @@ package snap
 import (
 	"errors"
 	"fmt"
+	"github.com/ls-2018/raft"
 	"hash/crc32"
 	"io/ioutil"
 	"os"
@@ -26,12 +27,11 @@ import (
 	"strings"
 	"time"
 
-	pioutil "go.etcd.io/etcd/pkg/v3/ioutil"
-	"go.etcd.io/etcd/pkg/v3/pbutil"
-	"go.etcd.io/etcd/raft/v3"
-	"go.etcd.io/etcd/raft/v3/raftpb"
-	"go.etcd.io/etcd/server/v3/etcdserver/api/snap/snappb"
-	"go.etcd.io/etcd/server/v3/wal/walpb"
+	pioutil "github.com/ls-2018/pkg/ioutil"
+	"github.com/ls-2018/pkg/pbutil"
+	"github.com/ls-2018/raft/raftpb"
+	"github.com/ls-2018/server/etcdserver/api/snap/snappb"
+	"github.com/ls-2018/server/wal/walpb"
 
 	"go.uber.org/zap"
 )

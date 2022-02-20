@@ -17,9 +17,9 @@ package mvcc
 import (
 	"fmt"
 
+	"github.com/ls-2018/server/mvcc/backend"
+	"github.com/ls-2018/server/mvcc/buckets"
 	"go.etcd.io/etcd/api/v3/mvccpb"
-	"go.etcd.io/etcd/server/v3/mvcc/backend"
-	"go.etcd.io/etcd/server/v3/mvcc/buckets"
 )
 
 func WriteKV(be backend.Backend, kv mvccpb.KeyValue) {

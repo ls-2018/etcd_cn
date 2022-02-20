@@ -18,7 +18,7 @@ import (
 	"testing"
 	"time"
 
-	"go.etcd.io/etcd/tests/v3/integration"
+	"github.com/ls-2018/tests/integration"
 )
 
 func TestBeforeTestWithoutLeakDetection(t *testing.T) {

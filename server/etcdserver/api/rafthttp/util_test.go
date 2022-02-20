@@ -22,8 +22,8 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/ls-2018/raft/raftpb"
 	"go.etcd.io/etcd/api/v3/version"
-	"go.etcd.io/etcd/raft/v3/raftpb"
 
 	"github.com/coreos/go-semver/semver"
 )

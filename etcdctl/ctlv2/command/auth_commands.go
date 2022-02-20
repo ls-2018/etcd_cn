@@ -16,11 +16,11 @@ package command
 
 import (
 	"fmt"
+	clientv2 "github.com/ls-2018/client/v2"
 	"os"
 	"strings"
 
 	"github.com/urfave/cli"
-	"go.etcd.io/etcd/client/v2"
 )
 
 func NewAuthCommands() cli.Command {
@@ -54,14 +54,14 @@ func actionAuthDisable(c *cli.Context) error {
 	return nil
 }
 
-func mustNewAuthAPI(c *cli.Context) client.AuthAPI {
+func mustNewAuthAPI(c *cli.Context) clientv2.AuthAPI {
 	hc := mustNewClient(c)
 
 	if c.GlobalBool("debug") {
 		fmt.Fprintf(os.Stderr, "Cluster-Endpoints: %s\n", strings.Join(hc.Endpoints(), ", "))
 	}
 
-	return client.NewAuthAPI(hc)
+	return clientv2.NewAuthAPI(hc)
 }
 
 func authEnableDisable(c *cli.Context, enable bool) {

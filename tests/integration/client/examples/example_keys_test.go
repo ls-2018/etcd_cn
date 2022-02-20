@@ -19,8 +19,6 @@ import (
 	"fmt"
 	"log"
 	"sort"
-
-	"go.etcd.io/etcd/client/v2"
 )
 
 func mockKeysAPI_directory() {

@@ -21,11 +21,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ls-2018/client/pkg/fileutil"
+	"github.com/ls-2018/client/pkg/testutil"
+	"github.com/ls-2018/pkg/flags"
 	"github.com/stretchr/testify/assert"
 	"go.etcd.io/etcd/api/v3/version"
-	"go.etcd.io/etcd/client/pkg/v3/fileutil"
-	"go.etcd.io/etcd/client/pkg/v3/testutil"
-	"go.etcd.io/etcd/pkg/v3/flags"
 )
 
 func TestCtlV3Version(t *testing.T) { testCtl(t, versionTest) }

@@ -18,14 +18,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	clientv2 "github.com/ls-2018/client/v2"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
 
-	"go.etcd.io/etcd/client/v2"
-	"go.etcd.io/etcd/pkg/v3/cobrautl"
+	"github.com/ls-2018/pkg/cobrautl"
 
 	"github.com/urfave/cli"
 )
@@ -64,7 +64,7 @@ func handleClusterHealth(c *cli.Context) error {
 	}
 
 	cln := mustNewClientNoSync(c)
-	mi := client.NewMembersAPI(cln)
+	mi := clientv2.NewMembersAPI(cln)
 	ms, err := mi.List(context.TODO())
 	if err != nil {
 		fmt.Println("cluster may be unhealthy: failed to list members")

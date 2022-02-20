@@ -22,7 +22,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.etcd.io/etcd/client/v2"
 )
 
 func TestPauseMember(t *testing.T) {

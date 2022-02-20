@@ -27,11 +27,11 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/ls-2018/client/pkg/fileutil"
+	"github.com/ls-2018/pkg/pbutil"
+	"github.com/ls-2018/raft/raftpb"
+	"github.com/ls-2018/server/wal/walpb"
 	"github.com/stretchr/testify/assert"
-	"go.etcd.io/etcd/client/pkg/v3/fileutil"
-	"go.etcd.io/etcd/pkg/v3/pbutil"
-	"go.etcd.io/etcd/raft/v3/raftpb"
-	"go.etcd.io/etcd/server/v3/wal/walpb"
 	"go.uber.org/zap/zaptest"
 
 	"go.uber.org/zap"

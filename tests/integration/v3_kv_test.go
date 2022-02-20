@@ -4,8 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"go.etcd.io/etcd/client/v3"
-	"go.etcd.io/etcd/client/v3/namespace"
+	"github.com/ls-2018/client/v3/namespace"
 )
 
 // TestKVWithEmptyValue ensures that a get/delete with an empty value, and with WithFromKey/WithPrefix function will return an empty error.

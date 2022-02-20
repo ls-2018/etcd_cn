@@ -18,12 +18,12 @@ import (
 	"fmt"
 	"os"
 
-	"go.etcd.io/etcd/raft/v3/raftpb"
-	"go.etcd.io/etcd/server/v3/datadir"
-	"go.etcd.io/etcd/server/v3/etcdserver/cindex"
-	"go.etcd.io/etcd/server/v3/mvcc/backend"
-	wal2 "go.etcd.io/etcd/server/v3/wal"
-	"go.etcd.io/etcd/server/v3/wal/walpb"
+	"github.com/ls-2018/raft/raftpb"
+	"github.com/ls-2018/server/datadir"
+	"github.com/ls-2018/server/etcdserver/cindex"
+	"github.com/ls-2018/server/mvcc/backend"
+	wal2 "github.com/ls-2018/server/wal"
+	"github.com/ls-2018/server/wal/walpb"
 	"go.uber.org/zap"
 )
 

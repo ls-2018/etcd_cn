@@ -22,8 +22,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ls-2018/client/pkg/testutil"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
-	"go.etcd.io/etcd/client/pkg/v3/testutil"
 	"go.uber.org/zap/zaptest"
 
 	"google.golang.org/grpc"

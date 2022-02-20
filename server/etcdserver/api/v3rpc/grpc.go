@@ -18,9 +18,9 @@ import (
 	"crypto/tls"
 	"math"
 
+	"github.com/ls-2018/client/v3/credentials"
+	"github.com/ls-2018/server/etcdserver"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
-	"go.etcd.io/etcd/client/v3/credentials"
-	"go.etcd.io/etcd/server/v3/etcdserver"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"

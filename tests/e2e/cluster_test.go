@@ -23,8 +23,8 @@ import (
 	"testing"
 	"time"
 
-	"go.etcd.io/etcd/server/v3/etcdserver"
-	"go.etcd.io/etcd/tests/v3/integration"
+	"github.com/ls-2018/server/etcdserver"
+	"github.com/ls-2018/tests/integration"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
 )

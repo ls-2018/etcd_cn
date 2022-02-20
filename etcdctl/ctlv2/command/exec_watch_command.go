@@ -18,12 +18,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	clientv2 "github.com/ls-2018/client/v2"
 	"os"
 	"os/exec"
 	"os/signal"
 
-	"go.etcd.io/etcd/client/v2"
-	"go.etcd.io/etcd/pkg/v3/cobrautl"
+	"github.com/ls-2018/pkg/cobrautl"
 
 	"github.com/urfave/cli"
 )
@@ -46,7 +46,7 @@ func NewExecWatchCommand() cli.Command {
 }
 
 // execWatchCommandFunc executes the "exec-watch" command.
-func execWatchCommandFunc(c *cli.Context, ki client.KeysAPI) {
+func execWatchCommandFunc(c *cli.Context, ki clientv2.KeysAPI) {
 	args := c.Args()
 	argslen := len(args)
 
@@ -89,7 +89,7 @@ func execWatchCommandFunc(c *cli.Context, ki client.KeysAPI) {
 		os.Exit(0)
 	}()
 
-	w := ki.Watcher(key, &client.WatcherOptions{AfterIndex: uint64(index), Recursive: recursive})
+	w := ki.Watcher(key, &clientv2.WatcherOptions{AfterIndex: uint64(index), Recursive: recursive})
 
 	for {
 		resp, err := w.Next(context.TODO())
@@ -118,7 +118,7 @@ func execWatchCommandFunc(c *cli.Context, ki client.KeysAPI) {
 	}
 }
 
-func environResponse(resp *client.Response, env []string) []string {
+func environResponse(resp *clientv2.Response, env []string) []string {
 	env = append(env, "ETCD_WATCH_ACTION="+resp.Action)
 	env = append(env, "ETCD_WATCH_MODIFIED_INDEX="+fmt.Sprintf("%d", resp.Node.ModifiedIndex))
 	env = append(env, "ETCD_WATCH_KEY="+resp.Node.Key)

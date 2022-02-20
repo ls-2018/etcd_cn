@@ -18,10 +18,10 @@ import (
 	"fmt"
 	"os"
 
+	v3 "github.com/ls-2018/client/v3"
+	"github.com/ls-2018/pkg/cobrautl"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 	mvccpb "go.etcd.io/etcd/api/v3/mvccpb"
-	v3 "go.etcd.io/etcd/client/v3"
-	"go.etcd.io/etcd/pkg/v3/cobrautl"
 )
 
 type pbPrinter struct{ printer }

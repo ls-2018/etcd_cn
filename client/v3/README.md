@@ -1,21 +1,21 @@
 # etcd/clientv3
 
 [![Docs](https://img.shields.io/badge/docs-latest-green.svg)](https://etcd.io/docs)
-[![Godoc](https://img.shields.io/badge/go-documentation-blue.svg?style=flat-square)](https://godoc.org/go.etcd.io/etcd/clientv3)
+[![Godoc](https://img.shields.io/badge/go-documentation-blue.svg?style=flat-square)](https://godoc.org/github.com/ls-2018/clientv3)
 
 `etcd/clientv3` is the official Go etcd client for v3.
 
 ## Install
 
 ```bash
-go get go.etcd.io/etcd/client/v3
+go get github.com/ls-2018/client/v3
 ```
 
-Warning: As etcd 3.5.0 was not yet released, the command above does not work. 
-After first pre-release of 3.5.0 [#12498](https://github.com/etcd-io/etcd/issues/12498), 
-etcd can be referenced using: 
+Warning: As etcd 3.5.0 was not yet released, the command above does not work. After first pre-release of
+3.5.0 [#12498](https://github.com/etcd-io/etcd/issues/12498), etcd can be referenced using:
+
 ```
-go get go.etcd.io/etcd/client/v3@v3.5.0-pre
+go get github.com/ls-2018/client/v3@v3.5.0-pre
 ```
 
 ## Get started
@@ -34,8 +34,8 @@ defer cli.Close()
 ```
 
 etcd v3 uses [`gRPC`](https://www.grpc.io) for remote procedure calls. And `clientv3` uses
-[`grpc-go`](https://github.com/grpc/grpc-go) to connect to etcd. Make sure to close the client after using it.
-If the client is not closed, the connection will have leaky goroutines. To specify client request timeout,
+[`grpc-go`](https://github.com/grpc/grpc-go) to connect to etcd. Make sure to close the client after using it. If the
+client is not closed, the connection will have leaky goroutines. To specify client request timeout,
 pass `context.WithTimeout` to APIs:
 
 ```go
@@ -77,16 +77,22 @@ if err != nil {
 
 ## Metrics
 
-The etcd client optionally exposes RPC metrics through [go-grpc-prometheus](https://github.com/grpc-ecosystem/go-grpc-prometheus). See the [examples](https://github.com/etcd-io/etcd/blob/main/tests/integration/clientv3/examples/example_metrics_test.go).
+The etcd client optionally exposes RPC metrics
+through [go-grpc-prometheus](https://github.com/grpc-ecosystem/go-grpc-prometheus). See
+the [examples](https://github.com/etcd-io/etcd/blob/main/tests/integration/clientv3/examples/example_metrics_test.go).
 
 ## Namespacing
 
-The [namespace](https://godoc.org/go.etcd.io/etcd/client/v3/namespace) package provides `clientv3` interface wrappers to transparently isolate client requests to a user-defined prefix.
+The [namespace](https://godoc.org/github.com/ls-2018/client/v3/namespace) package provides `clientv3` interface wrappers
+to transparently isolate client requests to a user-defined prefix.
 
 ## Request size limit
 
-Client request size limit is configurable via `clientv3.Config.MaxCallSendMsgSize` and `MaxCallRecvMsgSize` in bytes. If none given, client request send limit defaults to 2 MiB including gRPC overhead bytes. And receive limit defaults to `math.MaxInt32`.
+Client request size limit is configurable via `clientv3.Config.MaxCallSendMsgSize` and `MaxCallRecvMsgSize` in bytes. If
+none given, client request send limit defaults to 2 MiB including gRPC overhead bytes. And receive limit defaults
+to `math.MaxInt32`.
 
 ## Examples
 
-More code [examples](https://github.com/etcd-io/etcd/tree/main/tests/integration/clientv3/examples) can be found at [GoDoc](https://pkg.go.dev/go.etcd.io/etcd/client/v3).
+More code [examples](https://github.com/etcd-io/etcd/tree/main/tests/integration/clientv3/examples) can be found
+at [GoDoc](https://pkg.go.dev/github.com/ls-2018/client/v3).

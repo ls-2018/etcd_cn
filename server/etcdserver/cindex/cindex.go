@@ -19,8 +19,8 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"go.etcd.io/etcd/server/v3/mvcc/backend"
-	"go.etcd.io/etcd/server/v3/mvcc/buckets"
+	"github.com/ls-2018/server/mvcc/backend"
+	"github.com/ls-2018/server/mvcc/buckets"
 )
 
 type Backend interface {

@@ -22,11 +22,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ls-2018/pkg/traceutil"
+	"github.com/ls-2018/server/mvcc"
+	"github.com/ls-2018/server/mvcc/backend"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
-	"go.etcd.io/etcd/pkg/v3/traceutil"
-	"go.etcd.io/etcd/server/v3/mvcc"
-	"go.etcd.io/etcd/server/v3/mvcc/backend"
 	"go.uber.org/zap/zaptest"
 )
 

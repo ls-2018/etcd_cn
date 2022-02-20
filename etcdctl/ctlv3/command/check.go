@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"gopkg.in/cheggaaa/pb.v1"
 	"math"
 	"math/rand"
 	"os"
@@ -26,13 +27,12 @@ import (
 	"sync"
 	"time"
 
-	v3 "go.etcd.io/etcd/client/v3"
-	"go.etcd.io/etcd/pkg/v3/cobrautl"
-	"go.etcd.io/etcd/pkg/v3/report"
+	v3 "github.com/ls-2018/client/v3"
+	"github.com/ls-2018/pkg/cobrautl"
+	"github.com/ls-2018/pkg/report"
 
 	"github.com/spf13/cobra"
 	"golang.org/x/time/rate"
-	"gopkg.in/cheggaaa/pb.v1"
 )
 
 var (

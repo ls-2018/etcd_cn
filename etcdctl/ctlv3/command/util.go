@@ -26,9 +26,9 @@ import (
 	"strings"
 	"time"
 
+	v3 "github.com/ls-2018/client/v3"
+	"github.com/ls-2018/pkg/cobrautl"
 	pb "go.etcd.io/etcd/api/v3/mvccpb"
-	v3 "go.etcd.io/etcd/client/v3"
-	"go.etcd.io/etcd/pkg/v3/cobrautl"
 
 	"github.com/spf13/cobra"
 )

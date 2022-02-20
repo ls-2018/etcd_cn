@@ -22,10 +22,10 @@ import (
 	"time"
 
 	"github.com/coreos/go-semver/semver"
-	"go.etcd.io/etcd/pkg/v3/pbutil"
-	"go.etcd.io/etcd/server/v3/etcdserver/api"
-	"go.etcd.io/etcd/server/v3/etcdserver/api/membership"
-	"go.etcd.io/etcd/server/v3/etcdserver/api/v2store"
+	"github.com/ls-2018/pkg/pbutil"
+	"github.com/ls-2018/server/etcdserver/api"
+	"github.com/ls-2018/server/etcdserver/api/membership"
+	"github.com/ls-2018/server/etcdserver/api/v2store"
 
 	"go.uber.org/zap"
 )

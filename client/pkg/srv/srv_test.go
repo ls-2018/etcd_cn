@@ -22,7 +22,7 @@ import (
 	"strings"
 	"testing"
 
-	"go.etcd.io/etcd/client/pkg/v3/testutil"
+	"github.com/ls-2018/client/pkg/testutil"
 )
 
 func notFoundErr(service, proto, domain string) error {

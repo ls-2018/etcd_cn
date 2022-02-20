@@ -21,9 +21,9 @@
 // To use, first import the packages:
 //
 //	import (
-//		"go.etcd.io/etcd/client/v3"
-//		"go.etcd.io/etcd/client/v3/naming/endpoints"
-//		"go.etcd.io/etcd/client/v3/naming/resolver"
+//		"github.com/ls-2018/client/v3"
+//		"github.com/ls-2018/client/v3/naming/endpoints"
+//		"github.com/ls-2018/client/v3/naming/resolver"
 //		"google.golang.org/grpc"
 //	)
 //

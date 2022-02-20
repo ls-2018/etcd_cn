@@ -18,10 +18,10 @@ package v3alarm
 import (
 	"sync"
 
+	"github.com/ls-2018/client/pkg/types"
+	"github.com/ls-2018/server/mvcc/backend"
+	"github.com/ls-2018/server/mvcc/buckets"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
-	"go.etcd.io/etcd/client/pkg/v3/types"
-	"go.etcd.io/etcd/server/v3/mvcc/backend"
-	"go.etcd.io/etcd/server/v3/mvcc/buckets"
 
 	"go.uber.org/zap"
 )

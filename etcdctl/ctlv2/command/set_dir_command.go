@@ -15,8 +15,8 @@
 package command
 
 import (
+	clientv2 "github.com/ls-2018/client/v2"
 	"github.com/urfave/cli"
-	"go.etcd.io/etcd/client/v2"
 )
 
 // NewSetDirCommand returns the CLI command for "setDir".
@@ -29,7 +29,7 @@ func NewSetDirCommand() cli.Command {
 			cli.IntFlag{Name: "ttl", Value: 0, Usage: "key time-to-live in seconds"},
 		},
 		Action: func(c *cli.Context) error {
-			mkdirCommandFunc(c, mustNewKeyAPI(c), client.PrevIgnore)
+			mkdirCommandFunc(c, mustNewKeyAPI(c), clientv2.PrevIgnore)
 			return nil
 		},
 	}

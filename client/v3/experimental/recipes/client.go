@@ -18,8 +18,8 @@ import (
 	"context"
 	"errors"
 
+	v3 "github.com/ls-2018/client/v3"
 	spb "go.etcd.io/etcd/api/v3/mvccpb"
-	v3 "go.etcd.io/etcd/client/v3"
 )
 
 var (

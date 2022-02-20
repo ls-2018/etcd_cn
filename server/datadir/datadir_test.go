@@ -3,8 +3,8 @@ package datadir_test
 import (
 	"testing"
 
+	"github.com/ls-2018/server/datadir"
 	"github.com/stretchr/testify/assert"
-	"go.etcd.io/etcd/server/v3/datadir"
 )
 
 func TestToBackendFileName(t *testing.T) {

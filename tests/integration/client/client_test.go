@@ -24,8 +24,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"go.etcd.io/etcd/client/v2"
-	"go.etcd.io/etcd/tests/v3/integration"
+	"github.com/ls-2018/tests/integration"
 )
 
 // TestV2NoRetryEOF tests destructive api calls won't retry on a disconnection.

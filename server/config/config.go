@@ -22,10 +22,10 @@ import (
 	"strings"
 	"time"
 
-	"go.etcd.io/etcd/client/pkg/v3/transport"
-	"go.etcd.io/etcd/client/pkg/v3/types"
-	"go.etcd.io/etcd/pkg/v3/netutil"
-	"go.etcd.io/etcd/server/v3/datadir"
+	"github.com/ls-2018/client/pkg/transport"
+	"github.com/ls-2018/client/pkg/types"
+	"github.com/ls-2018/pkg/netutil"
+	"github.com/ls-2018/server/datadir"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 
 	bolt "go.etcd.io/bbolt"

@@ -17,7 +17,7 @@ package v2store_test
 import (
 	"testing"
 
-	"go.etcd.io/etcd/client/pkg/v3/testutil"
+	"github.com/ls-2018/client/pkg/testutil"
 )
 
 //var endpoints []string

@@ -16,10 +16,10 @@ package command
 
 import (
 	"errors"
+	clientv2 "github.com/ls-2018/client/v2"
 
+	"github.com/ls-2018/pkg/cobrautl"
 	"github.com/urfave/cli"
-	"go.etcd.io/etcd/client/v2"
-	"go.etcd.io/etcd/pkg/v3/cobrautl"
 )
 
 // NewRemoveDirCommand returns the CLI command for "rmdir".
@@ -36,14 +36,14 @@ func NewRemoveDirCommand() cli.Command {
 }
 
 // rmdirCommandFunc executes the "rmdir" command.
-func rmdirCommandFunc(c *cli.Context, ki client.KeysAPI) {
+func rmdirCommandFunc(c *cli.Context, ki clientv2.KeysAPI) {
 	if len(c.Args()) == 0 {
 		handleError(c, cobrautl.ExitBadArgs, errors.New("key required"))
 	}
 	key := c.Args()[0]
 
 	ctx, cancel := contextWithTotalTimeout(c)
-	resp, err := ki.Delete(ctx, key, &client.DeleteOptions{Dir: true})
+	resp, err := ki.Delete(ctx, key, &clientv2.DeleteOptions{Dir: true})
 	cancel()
 	if err != nil {
 		handleError(c, cobrautl.ExitServerError, err)

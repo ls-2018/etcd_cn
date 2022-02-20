@@ -23,11 +23,9 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/ls-2018/server/etcdserver"
+	"github.com/ls-2018/tests/functional/rpcpb"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
-	"go.etcd.io/etcd/client/v3"
-	"go.etcd.io/etcd/raft/v3"
-	"go.etcd.io/etcd/server/v3/etcdserver"
-	"go.etcd.io/etcd/tests/v3/functional/rpcpb"
 
 	"go.uber.org/zap"
 	"golang.org/x/time/rate"

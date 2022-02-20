@@ -16,7 +16,7 @@ package etcdserver
 
 import (
 	"errors"
-	"go.etcd.io/etcd/raft/v3/raftpb"
+	"github.com/ls-2018/raft/raftpb"
 	"testing"
 	"time"
 )

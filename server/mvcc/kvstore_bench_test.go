@@ -18,11 +18,11 @@ import (
 	"context"
 	"testing"
 
+	"github.com/ls-2018/pkg/traceutil"
+	"github.com/ls-2018/server/etcdserver/cindex"
+	"github.com/ls-2018/server/lease"
+	betesting "github.com/ls-2018/server/mvcc/backend/testing"
 	"github.com/stretchr/testify/assert"
-	"go.etcd.io/etcd/pkg/v3/traceutil"
-	"go.etcd.io/etcd/server/v3/etcdserver/cindex"
-	"go.etcd.io/etcd/server/v3/lease"
-	betesting "go.etcd.io/etcd/server/v3/mvcc/backend/testing"
 
 	"go.uber.org/zap"
 )

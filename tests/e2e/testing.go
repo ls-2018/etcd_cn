@@ -18,9 +18,9 @@ import (
 	"os"
 	"testing"
 
+	"github.com/ls-2018/client/pkg/testutil"
+	"github.com/ls-2018/server/verify"
 	"github.com/stretchr/testify/assert"
-	"go.etcd.io/etcd/client/pkg/v3/testutil"
-	"go.etcd.io/etcd/server/v3/verify"
 )
 
 func BeforeTest(t testing.TB) {

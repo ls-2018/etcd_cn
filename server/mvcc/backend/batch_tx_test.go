@@ -19,10 +19,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ls-2018/server/mvcc/backend"
+	betesting "github.com/ls-2018/server/mvcc/backend/testing"
+	"github.com/ls-2018/server/mvcc/buckets"
 	bolt "go.etcd.io/bbolt"
-	"go.etcd.io/etcd/server/v3/mvcc/backend"
-	betesting "go.etcd.io/etcd/server/v3/mvcc/backend/testing"
-	"go.etcd.io/etcd/server/v3/mvcc/buckets"
 )
 
 func TestBatchTxPut(t *testing.T) {

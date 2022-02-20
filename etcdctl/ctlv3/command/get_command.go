@@ -16,11 +16,11 @@ package command
 
 import (
 	"fmt"
+	clientv3 "github.com/ls-2018/client/v3"
 	"strings"
 
+	"github.com/ls-2018/pkg/cobrautl"
 	"github.com/spf13/cobra"
-	"go.etcd.io/etcd/client/v3"
-	"go.etcd.io/etcd/pkg/v3/cobrautl"
 )
 
 var (
@@ -96,7 +96,7 @@ func getGetOp(args []string) (string, []clientv3.OpOption) {
 		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("`--keys-only` and `--count-only` cannot be set at the same time, choose one"))
 	}
 
-	opts := []clientv3.OpOption{}
+	var opts []clientv3.OpOption
 	switch getConsistency {
 	case "s":
 		opts = append(opts, clientv3.WithSerializable())

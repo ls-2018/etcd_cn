@@ -25,10 +25,10 @@ import (
 	"time"
 
 	"github.com/coreos/go-semver/semver"
+	"github.com/ls-2018/server/lease/leasepb"
+	"github.com/ls-2018/server/mvcc/backend"
+	"github.com/ls-2018/server/mvcc/buckets"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
-	"go.etcd.io/etcd/server/v3/lease/leasepb"
-	"go.etcd.io/etcd/server/v3/mvcc/backend"
-	"go.etcd.io/etcd/server/v3/mvcc/buckets"
 	"go.uber.org/zap"
 )
 

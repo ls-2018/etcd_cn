@@ -18,9 +18,9 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/ls-2018/etcdutl/snapshot"
+	"github.com/ls-2018/pkg/cobrautl"
 	"github.com/spf13/cobra"
-	"go.etcd.io/etcd/etcdutl/v3/snapshot"
-	"go.etcd.io/etcd/pkg/v3/cobrautl"
 
 	"github.com/dustin/go-humanize"
 )

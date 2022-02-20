@@ -20,11 +20,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ls-2018/client/v3/concurrency"
+	recipe "github.com/ls-2018/client/v3/experimental/recipes"
+	"github.com/ls-2018/tests/integration"
 	"go.etcd.io/etcd/api/v3/mvccpb"
-	"go.etcd.io/etcd/client/v3"
-	"go.etcd.io/etcd/client/v3/concurrency"
-	recipe "go.etcd.io/etcd/client/v3/experimental/recipes"
-	"go.etcd.io/etcd/tests/v3/integration"
 )
 
 func TestMutexLockSingleNode(t *testing.T) {

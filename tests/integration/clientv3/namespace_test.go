@@ -19,10 +19,9 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/ls-2018/client/v3/namespace"
+	"github.com/ls-2018/tests/integration"
 	"go.etcd.io/etcd/api/v3/mvccpb"
-	"go.etcd.io/etcd/client/v3"
-	"go.etcd.io/etcd/client/v3/namespace"
-	"go.etcd.io/etcd/tests/v3/integration"
 )
 
 func TestNamespacePutGet(t *testing.T) {

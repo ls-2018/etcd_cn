@@ -21,8 +21,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ls-2018/client/pkg/fileutil"
 	"go.etcd.io/etcd/api/v3/version"
-	"go.etcd.io/etcd/client/pkg/v3/fileutil"
 )
 
 // TestReleaseUpgrade ensures that changes to master branch does not affect

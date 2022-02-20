@@ -26,7 +26,7 @@ import (
 	"testing"
 	"time"
 
-	"go.etcd.io/etcd/client/pkg/v3/transport"
+	"github.com/ls-2018/client/pkg/transport"
 )
 
 func TestV2Set(t *testing.T) {

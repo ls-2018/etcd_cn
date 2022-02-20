@@ -24,11 +24,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ls-2018/server/mvcc/backend"
+	betesting "github.com/ls-2018/server/mvcc/backend/testing"
 	"go.etcd.io/etcd/api/v3/authpb"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
-	"go.etcd.io/etcd/server/v3/mvcc/backend"
-	betesting "go.etcd.io/etcd/server/v3/mvcc/backend/testing"
 
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"

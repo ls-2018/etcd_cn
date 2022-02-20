@@ -26,11 +26,11 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/ls-2018/server/mvcc/backend"
+	"github.com/ls-2018/server/mvcc/buckets"
 	"go.etcd.io/etcd/api/v3/authpb"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
-	"go.etcd.io/etcd/server/v3/mvcc/backend"
-	"go.etcd.io/etcd/server/v3/mvcc/buckets"
 
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"

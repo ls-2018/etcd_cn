@@ -19,8 +19,8 @@
 //	import (
 //		"context"
 //
-//		"go.etcd.io/etcd/server/v3/embed"
-//		"go.etcd.io/etcd/server/v3/etcdserver/api/v3client"
+//		"github.com/ls-2018/server/embed"
+//		"github.com/ls-2018/server/etcdserver/api/v3client"
 //	)
 //
 //	...

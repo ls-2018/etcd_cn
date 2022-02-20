@@ -17,7 +17,6 @@ Flags:
 Use "etcd-dump-db [command] --help" for more information about a command.
 ```
 
-
 #### list-bucket [data dir or db file path]
 
 Lists all buckets.
@@ -36,7 +35,6 @@ members
 members_removed
 meta
 ```
-
 
 #### hash [data dir or db file path]
 
@@ -59,7 +57,6 @@ $ etcd-dump-db hash agent03/agent.etcd
 db path: agent03/agent.etcd/member/snap/db
 Hash: 3700260467
 ```
-
 
 #### iterate-bucket [data dir or db file path]
 

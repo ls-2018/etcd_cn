@@ -18,8 +18,8 @@ import (
 	"fmt"
 	"strconv"
 
-	cconfig "go.etcd.io/etcd/server/v3/config"
-	"go.etcd.io/etcd/server/v3/embed"
+	cconfig "github.com/ls-2018/server/config"
+	"github.com/ls-2018/server/embed"
 	"golang.org/x/crypto/bcrypt"
 )
 

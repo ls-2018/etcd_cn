@@ -24,9 +24,9 @@ import (
 	"testing"
 	"time"
 
-	"go.etcd.io/etcd/client/pkg/v3/srv"
-	"go.etcd.io/etcd/client/pkg/v3/transport"
-	"go.etcd.io/etcd/client/pkg/v3/types"
+	"github.com/ls-2018/client/pkg/srv"
+	"github.com/ls-2018/client/pkg/transport"
+	"github.com/ls-2018/client/pkg/types"
 
 	"sigs.k8s.io/yaml"
 )

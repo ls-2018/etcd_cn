@@ -17,12 +17,12 @@ package tester
 import (
 	"context"
 	"fmt"
+	clientv3 "github.com/ls-2018/client/v3"
 	"sort"
 	"strings"
 	"time"
 
-	"go.etcd.io/etcd/client/v3"
-	"go.etcd.io/etcd/tests/v3/functional/rpcpb"
+	"github.com/ls-2018/tests/functional/rpcpb"
 
 	"go.uber.org/zap"
 )

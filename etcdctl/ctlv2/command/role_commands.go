@@ -16,13 +16,13 @@ package command
 
 import (
 	"fmt"
+	clientv2 "github.com/ls-2018/client/v2"
 	"os"
 	"reflect"
 	"strings"
 
+	"github.com/ls-2018/client/pkg/pathutil"
 	"github.com/urfave/cli"
-	"go.etcd.io/etcd/client/pkg/v3/pathutil"
-	"go.etcd.io/etcd/client/v2"
 )
 
 func NewRoleCommands() cli.Command {
@@ -82,14 +82,14 @@ func NewRoleCommands() cli.Command {
 	}
 }
 
-func mustNewAuthRoleAPI(c *cli.Context) client.AuthRoleAPI {
+func mustNewAuthRoleAPI(c *cli.Context) clientv2.AuthRoleAPI {
 	hc := mustNewClient(c)
 
 	if c.GlobalBool("debug") {
 		fmt.Fprintf(os.Stderr, "Cluster-Endpoints: %s\n", strings.Join(hc.Endpoints(), ", "))
 	}
 
-	return client.NewAuthRoleAPI(hc)
+	return clientv2.NewAuthRoleAPI(hc)
 }
 
 func actionRoleList(c *cli.Context) error {
@@ -181,14 +181,14 @@ func roleGrantRevoke(c *cli.Context, grant bool) {
 		fmt.Fprintln(os.Stderr, "Please specify exactly one of --read, --write or --readwrite")
 		os.Exit(1)
 	}
-	var permType client.PermissionType
+	var permType clientv2.PermissionType
 	switch {
 	case read:
-		permType = client.ReadPermission
+		permType = clientv2.ReadPermission
 	case write:
-		permType = client.WritePermission
+		permType = clientv2.WritePermission
 	case rw:
-		permType = client.ReadWritePermission
+		permType = clientv2.ReadWritePermission
 	}
 
 	api, role := mustRoleAPIAndName(c)
@@ -199,7 +199,7 @@ func roleGrantRevoke(c *cli.Context, grant bool) {
 		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)
 	}
-	var newRole *client.Role
+	var newRole *clientv2.Role
 	if grant {
 		newRole, err = api.GrantRoleKV(ctx, role, []string{path}, permType)
 	} else {
@@ -242,7 +242,7 @@ func actionRoleGet(c *cli.Context) error {
 	return nil
 }
 
-func mustRoleAPIAndName(c *cli.Context) (client.AuthRoleAPI, string) {
+func mustRoleAPIAndName(c *cli.Context) (clientv2.AuthRoleAPI, string) {
 	args := c.Args()
 	if len(args) != 1 {
 		fmt.Fprintln(os.Stderr, "Please provide a role name")

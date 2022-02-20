@@ -10,17 +10,17 @@
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
-// limitations under the License.
+// limitations under the License
 
 package command
 
 import (
 	"fmt"
+	clientv3 "github.com/ls-2018/client/v3"
 	"strconv"
 
+	"github.com/ls-2018/pkg/cobrautl"
 	"github.com/spf13/cobra"
-	"go.etcd.io/etcd/client/v3"
-	"go.etcd.io/etcd/pkg/v3/cobrautl"
 )
 
 var compactPhysical bool

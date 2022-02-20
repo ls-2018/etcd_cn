@@ -11,7 +11,7 @@ import (
 
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/golang/protobuf/proto"
-	raftpb "go.etcd.io/etcd/raft/v3/raftpb"
+	raftpb "github.com/ls-2018/raft/raftpb"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.

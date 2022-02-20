@@ -16,8 +16,7 @@ package etcdserver
 
 import (
 	"errors"
-
-	"go.etcd.io/etcd/raft/v3"
+	"github.com/ls-2018/raft"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"

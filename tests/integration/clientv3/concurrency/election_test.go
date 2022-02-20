@@ -21,9 +21,8 @@ import (
 	"testing"
 	"time"
 
-	"go.etcd.io/etcd/client/v3"
-	"go.etcd.io/etcd/client/v3/concurrency"
-	"go.etcd.io/etcd/tests/v3/integration"
+	"github.com/ls-2018/client/v3/concurrency"
+	"github.com/ls-2018/tests/integration"
 )
 
 func TestResumeElection(t *testing.T) {

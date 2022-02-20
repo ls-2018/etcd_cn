@@ -18,7 +18,7 @@ import (
 	"net/url"
 	"testing"
 
-	"go.etcd.io/etcd/client/pkg/v3/testutil"
+	"github.com/ls-2018/client/pkg/testutil"
 )
 
 // TestURLPickerPickTwice tests that pick returns a possible url,

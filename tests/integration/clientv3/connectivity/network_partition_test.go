@@ -23,11 +23,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ls-2018/tests/integration"
+	"github.com/ls-2018/tests/integration/clientv3"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
-	"go.etcd.io/etcd/client/v3"
-	"go.etcd.io/etcd/tests/v3/integration"
-	"go.etcd.io/etcd/tests/v3/integration/clientv3"
 	"go.uber.org/zap/zaptest"
 	"google.golang.org/grpc"
 )

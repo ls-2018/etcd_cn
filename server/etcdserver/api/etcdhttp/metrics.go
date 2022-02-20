@@ -21,12 +21,11 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ls-2018/server/auth"
+	"github.com/ls-2018/server/etcdserver"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.etcd.io/etcd/api/v3/etcdserverpb"
-	"go.etcd.io/etcd/raft/v3"
-	"go.etcd.io/etcd/server/v3/auth"
-	"go.etcd.io/etcd/server/v3/etcdserver"
 	"go.uber.org/zap"
 )
 

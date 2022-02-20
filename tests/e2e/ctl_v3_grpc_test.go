@@ -23,8 +23,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ls-2018/client/pkg/testutil"
 	"github.com/stretchr/testify/assert"
-	"go.etcd.io/etcd/client/pkg/v3/testutil"
 )
 
 func TestAuthority(t *testing.T) {

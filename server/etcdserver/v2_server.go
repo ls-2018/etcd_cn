@@ -18,9 +18,9 @@ import (
 	"context"
 	"time"
 
+	"github.com/ls-2018/server/etcdserver/api/membership"
+	"github.com/ls-2018/server/etcdserver/api/v2store"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
-	"go.etcd.io/etcd/server/v3/etcdserver/api/membership"
-	"go.etcd.io/etcd/server/v3/etcdserver/api/v2store"
 )
 
 type RequestV2 pb.Request

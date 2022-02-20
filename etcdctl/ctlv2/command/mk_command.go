@@ -16,12 +16,12 @@ package command
 
 import (
 	"errors"
+	clientv2 "github.com/ls-2018/client/v2"
 	"os"
 	"time"
 
+	"github.com/ls-2018/pkg/cobrautl"
 	"github.com/urfave/cli"
-	"go.etcd.io/etcd/client/v2"
-	"go.etcd.io/etcd/pkg/v3/cobrautl"
 )
 
 // NewMakeCommand returns the CLI command for "mk".
@@ -42,7 +42,7 @@ func NewMakeCommand() cli.Command {
 }
 
 // mkCommandFunc executes the "mk" command.
-func mkCommandFunc(c *cli.Context, ki client.KeysAPI) {
+func mkCommandFunc(c *cli.Context, ki clientv2.KeysAPI) {
 	if len(c.Args()) == 0 {
 		handleError(c, cobrautl.ExitBadArgs, errors.New("key required"))
 	}
@@ -55,18 +55,18 @@ func mkCommandFunc(c *cli.Context, ki client.KeysAPI) {
 	ttl := c.Int("ttl")
 	inorder := c.Bool("in-order")
 
-	var resp *client.Response
+	var resp *clientv2.Response
 	ctx, cancel := contextWithTotalTimeout(c)
 	if !inorder {
 		// Since PrevNoExist means that the Node must not exist previously,
 		// this Set method always creates a new key. Therefore, mk command
 		// succeeds only if the key did not previously exist, and the command
 		// prevents one from overwriting values accidentally.
-		resp, err = ki.Set(ctx, key, value, &client.SetOptions{TTL: time.Duration(ttl) * time.Second, PrevExist: client.PrevNoExist})
+		resp, err = ki.Set(ctx, key, value, &clientv2.SetOptions{TTL: time.Duration(ttl) * time.Second, PrevExist: clientv2.PrevNoExist})
 	} else {
 		// If in-order flag is specified then create an inorder key under
 		// the directory identified by the key argument.
-		resp, err = ki.CreateInOrder(ctx, key, value, &client.CreateInOrderOptions{TTL: time.Duration(ttl) * time.Second})
+		resp, err = ki.CreateInOrder(ctx, key, value, &clientv2.CreateInOrderOptions{TTL: time.Duration(ttl) * time.Second})
 	}
 	cancel()
 	if err != nil {

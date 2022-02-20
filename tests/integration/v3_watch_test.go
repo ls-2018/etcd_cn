@@ -24,9 +24,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ls-2018/server/etcdserver/api/v3rpc"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 	"go.etcd.io/etcd/api/v3/mvccpb"
-	"go.etcd.io/etcd/server/v3/etcdserver/api/v3rpc"
 )
 
 // TestV3WatchFromCurrentRevision tests Watch APIs from current revision.

@@ -17,7 +17,7 @@ package command
 import (
 	"os"
 
-	v3 "go.etcd.io/etcd/client/v3"
+	v3 "github.com/ls-2018/client/v3"
 
 	"github.com/olekukonko/tablewriter"
 )

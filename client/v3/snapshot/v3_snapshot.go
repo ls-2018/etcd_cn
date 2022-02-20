@@ -23,8 +23,8 @@ import (
 	"time"
 
 	"github.com/dustin/go-humanize"
-	"go.etcd.io/etcd/client/pkg/v3/fileutil"
-	"go.etcd.io/etcd/client/v3"
+	"github.com/ls-2018/client/pkg/fileutil"
+	"github.com/ls-2018/client/v3"
 	"go.uber.org/zap"
 )
 

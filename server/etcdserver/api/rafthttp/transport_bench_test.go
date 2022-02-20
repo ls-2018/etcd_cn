@@ -16,15 +16,15 @@ package rafthttp
 
 import (
 	"context"
+	"github.com/ls-2018/raft"
 	"net/http/httptest"
 	"sync"
 	"testing"
 	"time"
 
-	"go.etcd.io/etcd/client/pkg/v3/types"
-	"go.etcd.io/etcd/raft/v3"
-	"go.etcd.io/etcd/raft/v3/raftpb"
-	stats "go.etcd.io/etcd/server/v3/etcdserver/api/v2stats"
+	"github.com/ls-2018/client/pkg/types"
+	"github.com/ls-2018/raft/raftpb"
+	stats "github.com/ls-2018/server/etcdserver/api/v2stats"
 
 	"go.uber.org/zap"
 )

@@ -16,10 +16,10 @@ package command
 
 import (
 	"fmt"
+	clientv2 "github.com/ls-2018/client/v2"
 
+	"github.com/ls-2018/pkg/cobrautl"
 	"github.com/urfave/cli"
-	"go.etcd.io/etcd/client/v2"
-	"go.etcd.io/etcd/pkg/v3/cobrautl"
 )
 
 func NewLsCommand() cli.Command {
@@ -41,7 +41,7 @@ func NewLsCommand() cli.Command {
 }
 
 // lsCommandFunc executes the "ls" command.
-func lsCommandFunc(c *cli.Context, ki client.KeysAPI) {
+func lsCommandFunc(c *cli.Context, ki clientv2.KeysAPI) {
 	key := "/"
 	if len(c.Args()) != 0 {
 		key = c.Args()[0]
@@ -52,7 +52,7 @@ func lsCommandFunc(c *cli.Context, ki client.KeysAPI) {
 	quorum := c.Bool("quorum")
 
 	ctx, cancel := contextWithTotalTimeout(c)
-	resp, err := ki.Get(ctx, key, &client.GetOptions{Sort: sort, Recursive: recursive, Quorum: quorum})
+	resp, err := ki.Get(ctx, key, &clientv2.GetOptions{Sort: sort, Recursive: recursive, Quorum: quorum})
 	cancel()
 	if err != nil {
 		handleError(c, cobrautl.ExitServerError, err)
@@ -63,7 +63,7 @@ func lsCommandFunc(c *cli.Context, ki client.KeysAPI) {
 
 // printLs writes a response out in a manner similar to the `ls` command in unix.
 // Non-empty directories list their contents and files list their name.
-func printLs(c *cli.Context, resp *client.Response) {
+func printLs(c *cli.Context, resp *clientv2.Response) {
 	if c.GlobalString("output") == "simple" {
 		if !resp.Node.Dir {
 			fmt.Println(resp.Node.Key)
@@ -78,7 +78,7 @@ func printLs(c *cli.Context, resp *client.Response) {
 }
 
 // rPrint recursively prints out the nodes in the node structure.
-func rPrint(c *cli.Context, n *client.Node) {
+func rPrint(c *cli.Context, n *clientv2.Node) {
 	if n.Dir && c.Bool("p") {
 		fmt.Println(fmt.Sprintf("%v/", n.Key))
 	} else {

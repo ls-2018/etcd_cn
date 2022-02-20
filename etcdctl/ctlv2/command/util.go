@@ -18,6 +18,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	clientv2 "github.com/ls-2018/client/v2"
 	"io"
 	"io/ioutil"
 	"net"
@@ -28,9 +29,8 @@ import (
 	"syscall"
 	"time"
 
-	"go.etcd.io/etcd/client/pkg/v3/transport"
-	"go.etcd.io/etcd/client/v2"
-	"go.etcd.io/etcd/pkg/v3/cobrautl"
+	"github.com/ls-2018/client/pkg/transport"
+	"github.com/ls-2018/pkg/cobrautl"
 
 	"github.com/bgentry/speakeasy"
 	"github.com/urfave/cli"
@@ -94,7 +94,7 @@ func getDomainDiscoveryFlagValue(c *cli.Context) ([]string, error) {
 		return []string{}, nil
 	}
 
-	discoverer := client.NewSRVDiscover()
+	discoverer := clientv2.NewSRVDiscover()
 	eps, err := discoverer.Discover(domainstr, serviceName)
 	if err != nil {
 		return nil, err
@@ -212,15 +212,15 @@ func getUsernamePassword(prompt, usernameFlag string) (username string, password
 	return username, password, nil
 }
 
-func mustNewKeyAPI(c *cli.Context) client.KeysAPI {
-	return client.NewKeysAPI(mustNewClient(c))
+func mustNewKeyAPI(c *cli.Context) clientv2.KeysAPI {
+	return clientv2.NewKeysAPI(mustNewClient(c))
 }
 
-func mustNewMembersAPI(c *cli.Context) client.MembersAPI {
-	return client.NewMembersAPI(mustNewClient(c))
+func mustNewMembersAPI(c *cli.Context) clientv2.MembersAPI {
+	return clientv2.NewMembersAPI(mustNewClient(c))
 }
 
-func mustNewClient(c *cli.Context) client.Client {
+func mustNewClient(c *cli.Context) clientv2.Client {
 	hc, err := newClient(c)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
@@ -229,7 +229,7 @@ func mustNewClient(c *cli.Context) client.Client {
 
 	debug := c.GlobalBool("debug")
 	if debug {
-		client.EnablecURLDebug()
+		clientv2.EnablecURLDebug()
 	}
 
 	if !c.GlobalBool("no-sync") {
@@ -240,7 +240,7 @@ func mustNewClient(c *cli.Context) client.Client {
 		err := hc.Sync(ctx)
 		cancel()
 		if err != nil {
-			if err == client.ErrNoEndpoints {
+			if err == clientv2.ErrNoEndpoints {
 				fmt.Fprintf(os.Stderr, "etcd cluster has no published client endpoints.\n")
 				fmt.Fprintf(os.Stderr, "Try '--no-sync' if you want to access non-published client endpoints(%s).\n", strings.Join(hc.Endpoints(), ","))
 				handleError(c, cobrautl.ExitServerError, err)
@@ -263,7 +263,7 @@ func mustNewClient(c *cli.Context) client.Client {
 
 func isConnectionError(err error) bool {
 	switch t := err.(type) {
-	case *client.ClusterError:
+	case *clientv2.ClusterError:
 		for _, cerr := range t.Errors {
 			if !isConnectionError(cerr) {
 				return false
@@ -287,7 +287,7 @@ func isConnectionError(err error) bool {
 	return false
 }
 
-func mustNewClientNoSync(c *cli.Context) client.Client {
+func mustNewClientNoSync(c *cli.Context) clientv2.Client {
 	hc, err := newClient(c)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
@@ -296,13 +296,13 @@ func mustNewClientNoSync(c *cli.Context) client.Client {
 
 	if c.GlobalBool("debug") {
 		fmt.Fprintf(os.Stderr, "Cluster-Endpoints: %s\n", strings.Join(hc.Endpoints(), ", "))
-		client.EnablecURLDebug()
+		clientv2.EnablecURLDebug()
 	}
 
 	return hc
 }
 
-func newClient(c *cli.Context) (client.Client, error) {
+func newClient(c *cli.Context) (clientv2.Client, error) {
 	eps, err := getEndpoints(c)
 	if err != nil {
 		return nil, err
@@ -313,7 +313,7 @@ func newClient(c *cli.Context) (client.Client, error) {
 		return nil, err
 	}
 
-	cfg := client.Config{
+	cfg := clientv2.Config{
 		Transport:               tr,
 		Endpoints:               eps,
 		HeaderTimeoutPerRequest: c.GlobalDuration("timeout"),
@@ -334,7 +334,7 @@ func newClient(c *cli.Context) (client.Client, error) {
 		cfg.Password = password
 	}
 
-	return client.New(cfg)
+	return clientv2.New(cfg)
 }
 
 func contextWithTotalTimeout(c *cli.Context) (context.Context, context.CancelFunc) {

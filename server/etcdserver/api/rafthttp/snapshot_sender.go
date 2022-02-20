@@ -17,18 +17,18 @@ package rafthttp
 import (
 	"bytes"
 	"context"
+	"github.com/dustin/go-humanize"
+	"github.com/ls-2018/raft"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"time"
 
-	"go.etcd.io/etcd/client/pkg/v3/types"
-	"go.etcd.io/etcd/pkg/v3/httputil"
-	pioutil "go.etcd.io/etcd/pkg/v3/ioutil"
-	"go.etcd.io/etcd/raft/v3"
-	"go.etcd.io/etcd/server/v3/etcdserver/api/snap"
+	"github.com/ls-2018/client/pkg/types"
+	"github.com/ls-2018/pkg/httputil"
+	pioutil "github.com/ls-2018/pkg/ioutil"
+	"github.com/ls-2018/server/etcdserver/api/snap"
 
-	"github.com/dustin/go-humanize"
 	"go.uber.org/zap"
 )
 

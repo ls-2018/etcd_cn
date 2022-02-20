@@ -21,7 +21,7 @@ import (
 	"strings"
 	"sync"
 
-	"go.etcd.io/etcd/tests/v3/functional/rpcpb"
+	"github.com/ls-2018/tests/functional/rpcpb"
 )
 
 type failpointStats struct {

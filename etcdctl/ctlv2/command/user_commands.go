@@ -16,12 +16,12 @@ package command
 
 import (
 	"fmt"
+	clientv2 "github.com/ls-2018/client/v2"
 	"os"
 	"strings"
 
 	"github.com/bgentry/speakeasy"
 	"github.com/urfave/cli"
-	"go.etcd.io/etcd/client/v2"
 )
 
 func NewUserCommands() cli.Command {
@@ -77,14 +77,14 @@ func NewUserCommands() cli.Command {
 	}
 }
 
-func mustNewAuthUserAPI(c *cli.Context) client.AuthUserAPI {
+func mustNewAuthUserAPI(c *cli.Context) clientv2.AuthUserAPI {
 	hc := mustNewClient(c)
 
 	if c.GlobalBool("debug") {
 		fmt.Fprintf(os.Stderr, "Cluster-Endpoints: %s\n", strings.Join(hc.Endpoints(), ", "))
 	}
 
-	return client.NewAuthUserAPI(hc)
+	return clientv2.NewAuthUserAPI(hc)
 }
 
 func actionUserList(c *cli.Context) error {
@@ -212,7 +212,7 @@ func actionUserGet(c *cli.Context) error {
 	return nil
 }
 
-func mustUserAPIAndName(c *cli.Context) (client.AuthUserAPI, string) {
+func mustUserAPIAndName(c *cli.Context) (clientv2.AuthUserAPI, string) {
 	args := c.Args()
 	if len(args) != 1 {
 		fmt.Fprintln(os.Stderr, "Please provide a username")

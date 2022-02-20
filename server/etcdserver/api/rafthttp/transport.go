@@ -16,16 +16,16 @@ package rafthttp
 
 import (
 	"context"
+	"github.com/ls-2018/raft"
 	"net/http"
 	"sync"
 	"time"
 
-	"go.etcd.io/etcd/client/pkg/v3/transport"
-	"go.etcd.io/etcd/client/pkg/v3/types"
-	"go.etcd.io/etcd/raft/v3"
-	"go.etcd.io/etcd/raft/v3/raftpb"
-	"go.etcd.io/etcd/server/v3/etcdserver/api/snap"
-	stats "go.etcd.io/etcd/server/v3/etcdserver/api/v2stats"
+	"github.com/ls-2018/client/pkg/transport"
+	"github.com/ls-2018/client/pkg/types"
+	"github.com/ls-2018/raft/raftpb"
+	"github.com/ls-2018/server/etcdserver/api/snap"
+	stats "github.com/ls-2018/server/etcdserver/api/v2stats"
 
 	"github.com/xiang90/probing"
 	"go.uber.org/zap"

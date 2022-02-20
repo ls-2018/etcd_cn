@@ -3,7 +3,7 @@ package endpoints
 import (
 	"context"
 
-	clientv3 "go.etcd.io/etcd/client/v3"
+	clientv3 "github.com/ls-2018/client/v3"
 )
 
 // Endpoint represents a single address the connection can be established with.

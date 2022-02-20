@@ -16,11 +16,11 @@ package command
 
 import (
 	"errors"
+	clientv2 "github.com/ls-2018/client/v2"
 	"time"
 
+	"github.com/ls-2018/pkg/cobrautl"
 	"github.com/urfave/cli"
-	"go.etcd.io/etcd/client/v2"
-	"go.etcd.io/etcd/pkg/v3/cobrautl"
 )
 
 // NewUpdateDirCommand returns the CLI command for "updatedir".
@@ -40,14 +40,14 @@ func NewUpdateDirCommand() cli.Command {
 }
 
 // updatedirCommandFunc executes the "updatedir" command.
-func updatedirCommandFunc(c *cli.Context, ki client.KeysAPI) {
+func updatedirCommandFunc(c *cli.Context, ki clientv2.KeysAPI) {
 	if len(c.Args()) == 0 {
 		handleError(c, cobrautl.ExitBadArgs, errors.New("key required"))
 	}
 	key := c.Args()[0]
 	ttl := c.Int("ttl")
 	ctx, cancel := contextWithTotalTimeout(c)
-	resp, err := ki.Set(ctx, key, "", &client.SetOptions{TTL: time.Duration(ttl) * time.Second, Dir: true, PrevExist: client.PrevExist})
+	resp, err := ki.Set(ctx, key, "", &clientv2.SetOptions{TTL: time.Duration(ttl) * time.Second, Dir: true, PrevExist: clientv2.PrevExist})
 	cancel()
 	if err != nil {
 		handleError(c, cobrautl.ExitServerError, err)

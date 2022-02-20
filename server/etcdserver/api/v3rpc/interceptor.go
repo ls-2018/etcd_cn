@@ -19,11 +19,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ls-2018/client/pkg/types"
+	"github.com/ls-2018/server/etcdserver"
+	"github.com/ls-2018/server/etcdserver/api"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
-	"go.etcd.io/etcd/client/pkg/v3/types"
-	"go.etcd.io/etcd/raft/v3"
-	"go.etcd.io/etcd/server/v3/etcdserver"
-	"go.etcd.io/etcd/server/v3/etcdserver/api"
 
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 	"go.uber.org/zap"

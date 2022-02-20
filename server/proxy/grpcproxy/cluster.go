@@ -21,9 +21,8 @@ import (
 	"os"
 	"sync"
 
+	"github.com/ls-2018/client/v3/naming/endpoints"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
-	"go.etcd.io/etcd/client/v3"
-	"go.etcd.io/etcd/client/v3/naming/endpoints"
 	"golang.org/x/time/rate"
 
 	"go.uber.org/zap"

@@ -17,11 +17,11 @@ package command
 import (
 	"errors"
 	"fmt"
+	clientv2 "github.com/ls-2018/client/v2"
 	"os"
 
+	"github.com/ls-2018/pkg/cobrautl"
 	"github.com/urfave/cli"
-	"go.etcd.io/etcd/client/v2"
-	"go.etcd.io/etcd/pkg/v3/cobrautl"
 )
 
 // NewGetCommand returns the CLI command for "get".
@@ -42,7 +42,7 @@ func NewGetCommand() cli.Command {
 }
 
 // getCommandFunc executes the "get" command.
-func getCommandFunc(c *cli.Context, ki client.KeysAPI) {
+func getCommandFunc(c *cli.Context, ki clientv2.KeysAPI) {
 	if len(c.Args()) == 0 {
 		handleError(c, cobrautl.ExitBadArgs, errors.New("key required"))
 	}
@@ -52,7 +52,7 @@ func getCommandFunc(c *cli.Context, ki client.KeysAPI) {
 	quorum := c.Bool("quorum")
 
 	ctx, cancel := contextWithTotalTimeout(c)
-	resp, err := ki.Get(ctx, key, &client.GetOptions{Sort: sorted, Quorum: quorum})
+	resp, err := ki.Get(ctx, key, &clientv2.GetOptions{Sort: sorted, Quorum: quorum})
 	cancel()
 	if err != nil {
 		handleError(c, cobrautl.ExitServerError, err)

@@ -24,8 +24,8 @@ import (
 	"testing"
 	"time"
 
-	"go.etcd.io/etcd/etcdutl/v3/snapshot"
-	"go.etcd.io/etcd/pkg/v3/expect"
+	"github.com/ls-2018/etcdutl/snapshot"
+	"github.com/ls-2018/pkg/expect"
 )
 
 func TestCtlV3Snapshot(t *testing.T)        { testCtl(t, snapshotTest) }

@@ -30,11 +30,10 @@ import (
 	"testing"
 	"time"
 
-	"go.etcd.io/etcd/client/pkg/v3/testutil"
-	"go.etcd.io/etcd/client/pkg/v3/transport"
-	"go.etcd.io/etcd/client/v3"
-	"go.etcd.io/etcd/server/v3/embed"
-	"go.etcd.io/etcd/tests/v3/integration"
+	"github.com/ls-2018/client/pkg/testutil"
+	"github.com/ls-2018/client/pkg/transport"
+	"github.com/ls-2018/server/embed"
+	"github.com/ls-2018/tests/integration"
 )
 
 var (

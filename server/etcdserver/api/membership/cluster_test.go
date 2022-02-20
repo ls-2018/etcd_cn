@@ -23,16 +23,16 @@ import (
 	"time"
 
 	"github.com/coreos/go-semver/semver"
+	betesting "github.com/ls-2018/server/mvcc/backend/testing"
 	"github.com/stretchr/testify/assert"
-	betesting "go.etcd.io/etcd/server/v3/mvcc/backend/testing"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
 
-	"go.etcd.io/etcd/client/pkg/v3/testutil"
-	"go.etcd.io/etcd/client/pkg/v3/types"
-	"go.etcd.io/etcd/raft/v3/raftpb"
-	"go.etcd.io/etcd/server/v3/etcdserver/api/v2store"
-	"go.etcd.io/etcd/server/v3/mock/mockstore"
+	"github.com/ls-2018/client/pkg/testutil"
+	"github.com/ls-2018/client/pkg/types"
+	"github.com/ls-2018/raft/raftpb"
+	"github.com/ls-2018/server/etcdserver/api/v2store"
+	"github.com/ls-2018/server/mock/mockstore"
 )
 
 func TestClusterMember(t *testing.T) {

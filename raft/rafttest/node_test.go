@@ -18,8 +18,6 @@ import (
 	"context"
 	"testing"
 	"time"
-
-	"go.etcd.io/etcd/raft/v3"
 )
 
 func TestBasicProgress(t *testing.T) {

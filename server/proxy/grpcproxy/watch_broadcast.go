@@ -19,8 +19,8 @@ import (
 	"sync"
 	"time"
 
+	clientv3 "github.com/ls-2018/client/v3"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
-	clientv3 "go.etcd.io/etcd/client/v3"
 
 	"go.uber.org/zap"
 )

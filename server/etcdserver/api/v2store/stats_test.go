@@ -18,7 +18,7 @@ import (
 	"testing"
 	"time"
 
-	"go.etcd.io/etcd/client/pkg/v3/testutil"
+	"github.com/ls-2018/client/pkg/testutil"
 )
 
 // Ensure that a successful Get is recorded in the stats.

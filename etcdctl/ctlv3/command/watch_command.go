@@ -19,12 +19,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	clientv3 "github.com/ls-2018/client/v3"
 	"os"
 	"os/exec"
 	"strings"
 
-	"go.etcd.io/etcd/client/v3"
-	"go.etcd.io/etcd/pkg/v3/cobrautl"
+	"github.com/ls-2018/pkg/cobrautl"
 
 	"github.com/spf13/cobra"
 )

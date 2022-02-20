@@ -20,11 +20,11 @@ import (
 	"sync"
 	"time"
 
+	v3 "github.com/ls-2018/client/v3"
+	"github.com/ls-2018/pkg/cobrautl"
+	"github.com/ls-2018/pkg/flags"
 	"go.etcd.io/etcd/api/v3/etcdserverpb"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
-	v3 "go.etcd.io/etcd/client/v3"
-	"go.etcd.io/etcd/pkg/v3/cobrautl"
-	"go.etcd.io/etcd/pkg/v3/flags"
 
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"

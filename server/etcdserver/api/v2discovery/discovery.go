@@ -13,13 +13,14 @@
 // limitations under the License.
 
 // Package v2discovery provides an implementation of the cluster discovery that
-// is used by etcd with v2 client.
+// is used by etcd with v2 clientv2.
 package v2discovery
 
 import (
 	"context"
 	"errors"
 	"fmt"
+	clientv2 "github.com/ls-2018/client/v2"
 	"math"
 	"net/http"
 	"net/url"
@@ -29,11 +30,9 @@ import (
 	"strings"
 	"time"
 
-	"go.etcd.io/etcd/client/pkg/v3/transport"
-	"go.etcd.io/etcd/client/pkg/v3/types"
-	"go.etcd.io/etcd/client/v2"
-
 	"github.com/jonboulle/clockwork"
+	"github.com/ls-2018/client/pkg/transport"
+	"github.com/ls-2018/client/pkg/types"
 	"go.uber.org/zap"
 )
 
@@ -79,7 +78,7 @@ type discovery struct {
 	lg      *zap.Logger
 	cluster string
 	id      types.ID
-	c       client.KeysAPI
+	c       clientv2.KeysAPI
 	retries uint
 	url     *url.URL
 
@@ -138,15 +137,15 @@ func newDiscovery(lg *zap.Logger, durl, dproxyurl string, id types.ID) (*discove
 		return nil, err
 	}
 	tr.Proxy = pf
-	cfg := client.Config{
+	cfg := clientv2.Config{
 		Transport: tr,
 		Endpoints: []string{u.String()},
 	}
-	c, err := client.New(cfg)
+	c, err := clientv2.New(cfg)
 	if err != nil {
 		return nil, err
 	}
-	dc := client.NewKeysAPIWithPrefix(c, "")
+	dc := clientv2.NewKeysAPIWithPrefix(c, "")
 	return &discovery{
 		lg:      lg,
 		cluster: token,
@@ -201,36 +200,36 @@ func (d *discovery) getCluster() (string, error) {
 }
 
 func (d *discovery) createSelf(contents string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), client.DefaultRequestTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), clientv2.DefaultRequestTimeout)
 	resp, err := d.c.Create(ctx, d.selfKey(), contents)
 	cancel()
 	if err != nil {
-		if eerr, ok := err.(client.Error); ok && eerr.Code == client.ErrorCodeNodeExist {
+		if eerr, ok := err.(clientv2.Error); ok && eerr.Code == clientv2.ErrorCodeNodeExist {
 			return ErrDuplicateID
 		}
 		return err
 	}
 
 	// ensure self appears on the server we connected to
-	w := d.c.Watcher(d.selfKey(), &client.WatcherOptions{AfterIndex: resp.Node.CreatedIndex - 1})
+	w := d.c.Watcher(d.selfKey(), &clientv2.WatcherOptions{AfterIndex: resp.Node.CreatedIndex - 1})
 	_, err = w.Next(context.Background())
 	return err
 }
 
-func (d *discovery) checkCluster() ([]*client.Node, uint64, uint64, error) {
+func (d *discovery) checkCluster() ([]*clientv2.Node, uint64, uint64, error) {
 	configKey := path.Join("/", d.cluster, "_config")
-	ctx, cancel := context.WithTimeout(context.Background(), client.DefaultRequestTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), clientv2.DefaultRequestTimeout)
 	// find cluster size
 	resp, err := d.c.Get(ctx, path.Join(configKey, "size"), nil)
 	cancel()
 	if err != nil {
-		if eerr, ok := err.(*client.Error); ok && eerr.Code == client.ErrorCodeKeyNotFound {
+		if eerr, ok := err.(*clientv2.Error); ok && eerr.Code == clientv2.ErrorCodeKeyNotFound {
 			return nil, 0, 0, ErrSizeNotFound
 		}
-		if err == client.ErrInvalidJSON {
+		if err == clientv2.ErrInvalidJSON {
 			return nil, 0, 0, ErrBadDiscoveryEndpoint
 		}
-		if ce, ok := err.(*client.ClusterError); ok {
+		if ce, ok := err.(*clientv2.ClusterError); ok {
 			d.lg.Warn(
 				"failed to get from discovery server",
 				zap.String("discovery-url", d.url.String()),
@@ -247,11 +246,11 @@ func (d *discovery) checkCluster() ([]*client.Node, uint64, uint64, error) {
 		return nil, 0, 0, ErrBadSizeKey
 	}
 
-	ctx, cancel = context.WithTimeout(context.Background(), client.DefaultRequestTimeout)
+	ctx, cancel = context.WithTimeout(context.Background(), clientv2.DefaultRequestTimeout)
 	resp, err = d.c.Get(ctx, d.cluster, nil)
 	cancel()
 	if err != nil {
-		if ce, ok := err.(*client.ClusterError); ok {
+		if ce, ok := err.(*clientv2.ClusterError); ok {
 			d.lg.Warn(
 				"failed to get from discovery server",
 				zap.String("discovery-url", d.url.String()),
@@ -263,7 +262,7 @@ func (d *discovery) checkCluster() ([]*client.Node, uint64, uint64, error) {
 		}
 		return nil, 0, 0, err
 	}
-	var nodes []*client.Node
+	var nodes []*clientv2.Node
 	// append non-config keys to nodes
 	for _, n := range resp.Node.Nodes {
 		if path.Base(n.Key) != path.Base(configKey) {
@@ -303,7 +302,7 @@ func (d *discovery) logAndBackoffForRetry(step string) {
 	d.clock.Sleep(retryTimeInSecond)
 }
 
-func (d *discovery) checkClusterRetry() ([]*client.Node, uint64, uint64, error) {
+func (d *discovery) checkClusterRetry() ([]*clientv2.Node, uint64, uint64, error) {
 	if d.retries < nRetries {
 		d.logAndBackoffForRetry("cluster status check")
 		return d.checkCluster()
@@ -311,7 +310,7 @@ func (d *discovery) checkClusterRetry() ([]*client.Node, uint64, uint64, error) 
 	return nil, 0, 0, ErrTooManyRetries
 }
 
-func (d *discovery) waitNodesRetry() ([]*client.Node, error) {
+func (d *discovery) waitNodesRetry() ([]*clientv2.Node, error) {
 	if d.retries < nRetries {
 		d.logAndBackoffForRetry("waiting for other nodes")
 		nodes, n, index, err := d.checkCluster()
@@ -323,13 +322,13 @@ func (d *discovery) waitNodesRetry() ([]*client.Node, error) {
 	return nil, ErrTooManyRetries
 }
 
-func (d *discovery) waitNodes(nodes []*client.Node, size uint64, index uint64) ([]*client.Node, error) {
+func (d *discovery) waitNodes(nodes []*clientv2.Node, size uint64, index uint64) ([]*clientv2.Node, error) {
 	if uint64(len(nodes)) > size {
 		nodes = nodes[:size]
 	}
 	// watch from the next index
-	w := d.c.Watcher(d.cluster, &client.WatcherOptions{AfterIndex: index, Recursive: true})
-	all := make([]*client.Node, len(nodes))
+	w := d.c.Watcher(d.cluster, &clientv2.WatcherOptions{AfterIndex: index, Recursive: true})
+	all := make([]*clientv2.Node, len(nodes))
 	copy(all, nodes)
 	for _, n := range all {
 		if path.Base(n.Key) == path.Base(d.selfKey()) {
@@ -357,7 +356,7 @@ func (d *discovery) waitNodes(nodes []*client.Node, size uint64, index uint64) (
 		)
 		resp, err := w.Next(context.Background())
 		if err != nil {
-			if ce, ok := err.(*client.ClusterError); ok {
+			if ce, ok := err.(*clientv2.ClusterError); ok {
 				d.lg.Warn(
 					"error while waiting for peers",
 					zap.String("discovery-url", d.url.String()),
@@ -387,7 +386,7 @@ func (d *discovery) selfKey() string {
 	return path.Join("/", d.cluster, d.id.String())
 }
 
-func nodesToCluster(ns []*client.Node, size uint64) (string, error) {
+func nodesToCluster(ns []*clientv2.Node, size uint64) (string, error) {
 	s := make([]string, len(ns))
 	for i, n := range ns {
 		s[i] = n.Value
@@ -403,7 +402,7 @@ func nodesToCluster(ns []*client.Node, size uint64) (string, error) {
 	return us, nil
 }
 
-type sortableNodes struct{ Nodes []*client.Node }
+type sortableNodes struct{ Nodes []*clientv2.Node }
 
 func (ns sortableNodes) Len() int { return len(ns.Nodes) }
 func (ns sortableNodes) Less(i, j int) bool {

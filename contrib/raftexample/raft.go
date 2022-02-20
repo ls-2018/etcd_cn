@@ -24,15 +24,14 @@ import (
 	"strconv"
 	"time"
 
-	"go.etcd.io/etcd/client/pkg/v3/fileutil"
-	"go.etcd.io/etcd/client/pkg/v3/types"
-	"go.etcd.io/etcd/raft/v3"
-	"go.etcd.io/etcd/raft/v3/raftpb"
-	"go.etcd.io/etcd/server/v3/etcdserver/api/rafthttp"
-	"go.etcd.io/etcd/server/v3/etcdserver/api/snap"
-	stats "go.etcd.io/etcd/server/v3/etcdserver/api/v2stats"
-	"go.etcd.io/etcd/server/v3/wal"
-	"go.etcd.io/etcd/server/v3/wal/walpb"
+	"github.com/ls-2018/client/pkg/fileutil"
+	"github.com/ls-2018/client/pkg/types"
+	"github.com/ls-2018/raft/raftpb"
+	"github.com/ls-2018/server/etcdserver/api/rafthttp"
+	"github.com/ls-2018/server/etcdserver/api/snap"
+	stats "github.com/ls-2018/server/etcdserver/api/v2stats"
+	"github.com/ls-2018/server/wal"
+	"github.com/ls-2018/server/wal/walpb"
 
 	"go.uber.org/zap"
 )

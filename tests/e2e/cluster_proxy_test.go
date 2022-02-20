@@ -26,7 +26,7 @@ import (
 	"strconv"
 	"strings"
 
-	"go.etcd.io/etcd/pkg/v3/expect"
+	"github.com/ls-2018/pkg/expect"
 	"go.uber.org/zap"
 )
 

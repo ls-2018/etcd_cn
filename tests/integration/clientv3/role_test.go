@@ -18,8 +18,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/ls-2018/tests/integration"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
-	"go.etcd.io/etcd/tests/v3/integration"
 )
 
 func TestRoleError(t *testing.T) {

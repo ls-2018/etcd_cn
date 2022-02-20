@@ -24,7 +24,7 @@ import (
 	"strconv"
 	"time"
 
-	"go.etcd.io/etcd/client/pkg/v3/fileutil"
+	"github.com/ls-2018/client/pkg/fileutil"
 )
 
 // TODO: support separate WAL directory

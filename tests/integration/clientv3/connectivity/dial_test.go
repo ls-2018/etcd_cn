@@ -21,11 +21,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ls-2018/client/pkg/transport"
+	"github.com/ls-2018/tests/integration"
+	clientv3test "github.com/ls-2018/tests/integration/clientv3"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
-	"go.etcd.io/etcd/client/pkg/v3/transport"
-	"go.etcd.io/etcd/client/v3"
-	"go.etcd.io/etcd/tests/v3/integration"
-	clientv3test "go.etcd.io/etcd/tests/v3/integration/clientv3"
 	"google.golang.org/grpc"
 )
 

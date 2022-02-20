@@ -19,10 +19,10 @@ import (
 	"fmt"
 	"os"
 
+	snapshot "github.com/ls-2018/client/v3/snapshot"
+	"github.com/ls-2018/etcdutl/etcdutl"
+	"github.com/ls-2018/pkg/cobrautl"
 	"github.com/spf13/cobra"
-	snapshot "go.etcd.io/etcd/client/v3/snapshot"
-	"go.etcd.io/etcd/etcdutl/v3/etcdutl"
-	"go.etcd.io/etcd/pkg/v3/cobrautl"
 	"go.uber.org/zap"
 )
 

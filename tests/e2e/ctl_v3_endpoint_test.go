@@ -20,8 +20,6 @@ import (
 	"net/url"
 	"testing"
 	"time"
-
-	"go.etcd.io/etcd/client/v3"
 )
 
 func TestCtlV3EndpointHealth(t *testing.T) { testCtl(t, endpointHealthTest, withQuorum()) }

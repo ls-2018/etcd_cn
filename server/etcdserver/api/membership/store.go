@@ -20,10 +20,10 @@ import (
 	"fmt"
 	"path"
 
-	"go.etcd.io/etcd/client/pkg/v3/types"
-	"go.etcd.io/etcd/server/v3/etcdserver/api/v2store"
-	"go.etcd.io/etcd/server/v3/mvcc/backend"
-	"go.etcd.io/etcd/server/v3/mvcc/buckets"
+	"github.com/ls-2018/client/pkg/types"
+	"github.com/ls-2018/server/etcdserver/api/v2store"
+	"github.com/ls-2018/server/mvcc/backend"
+	"github.com/ls-2018/server/mvcc/buckets"
 
 	"github.com/coreos/go-semver/semver"
 	"go.uber.org/zap"

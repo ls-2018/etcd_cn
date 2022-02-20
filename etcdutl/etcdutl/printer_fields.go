@@ -17,7 +17,7 @@ package etcdutl
 import (
 	"fmt"
 
-	"go.etcd.io/etcd/etcdutl/v3/snapshot"
+	"github.com/ls-2018/etcdutl/snapshot"
 )
 
 type fieldsPrinter struct{ printer }

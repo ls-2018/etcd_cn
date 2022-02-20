@@ -17,8 +17,6 @@ package runner
 import (
 	"fmt"
 	"os"
-
-	"go.etcd.io/etcd/client/v2"
 )
 
 const (

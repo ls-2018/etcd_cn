@@ -21,12 +21,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ls-2018/server/auth"
+	"github.com/ls-2018/server/etcdserver"
+	"github.com/ls-2018/server/mvcc"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 	"go.etcd.io/etcd/api/v3/mvccpb"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
-	"go.etcd.io/etcd/server/v3/auth"
-	"go.etcd.io/etcd/server/v3/etcdserver"
-	"go.etcd.io/etcd/server/v3/mvcc"
 
 	"go.uber.org/zap"
 )

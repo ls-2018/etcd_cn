@@ -22,9 +22,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ls-2018/server/lease"
+	betesting "github.com/ls-2018/server/mvcc/backend/testing"
 	"go.etcd.io/etcd/api/v3/mvccpb"
-	"go.etcd.io/etcd/server/v3/lease"
-	betesting "go.etcd.io/etcd/server/v3/mvcc/backend/testing"
 	"go.uber.org/zap"
 )
 

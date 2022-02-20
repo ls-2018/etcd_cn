@@ -11,11 +11,13 @@
 [![Releases](https://img.shields.io/github/release/etcd-io/etcd/all.svg?style=flat-square)](https://github.com/etcd-io/etcd/releases)
 [![LICENSE](https://img.shields.io/github/license/etcd-io/etcd.svg?style=flat-square)](https://github.com/etcd-io/etcd/blob/main/LICENSE)
 
-**Note**: The `main` branch may be in an *unstable or even broken state* during development. For stable versions, see [releases][github-release].
+**Note**: The `main` branch may be in an *unstable or even broken state* during development. For stable versions,
+see [releases][github-release].
 
 ![etcd Logo](logos/etcd-horizontal-color.svg)
 
-etcd is a distributed reliable key-value store for the most critical data of a distributed system, with a focus on being:
+etcd is a distributed reliable key-value store for the most critical data of a distributed system, with a focus on
+being:
 
 * *Simple*: well-defined, user-facing API (gRPC)
 * *Secure*: automatic TLS with optional client cert authentication
@@ -24,27 +26,37 @@ etcd is a distributed reliable key-value store for the most critical data of a d
 
 etcd is written in Go and uses the [Raft][] consensus algorithm to manage a highly-available replicated log.
 
-etcd is used [in production by many companies](./ADOPTERS.md), and the development team stands behind it in critical deployment scenarios, where etcd is frequently teamed with applications such as [Kubernetes][k8s], [locksmith][], [vulcand][], [Doorman][], and many others. Reliability is further ensured by [**rigorous testing**](https://github.com/etcd-io/etcd/tree/main/tests/functional).
+etcd is used [in production by many companies](./ADOPTERS.md), and the development team stands behind it in critical
+deployment scenarios, where etcd is frequently teamed with applications such as [Kubernetes][k8s], [locksmith][]
+, [vulcand][], [Doorman][], and many others. Reliability is further ensured by [**rigorous
+testing**](https://github.com/etcd-io/etcd/tree/main/tests/functional).
 
 See [etcdctl][etcdctl] for a simple command line client.
 
 [raft]: https://raft.github.io/
+
 [k8s]: http://kubernetes.io/
+
 [doorman]: https://github.com/youtube/doorman
+
 [locksmith]: https://github.com/coreos/locksmith
+
 [vulcand]: https://github.com/vulcand/vulcand
+
 [etcdctl]: https://github.com/etcd-io/etcd/tree/main/etcdctl
 
 ## Community meetings
 
 etcd contributors and maintainers have monthly (every four weeks) meetings at 11:00 AM (USA Pacific) on Thursday.
 
-An initial agenda will be posted to the [shared Google docs][shared-meeting-notes] a day before each meeting, and everyone is welcome to suggest additional topics or other agendas.
+An initial agenda will be posted to the [shared Google docs][shared-meeting-notes] a day before each meeting, and
+everyone is welcome to suggest additional topics or other agendas.
 
 [shared-meeting-notes]: https://docs.google.com/document/d/16XEGyPBisZvmmoIHSZzv__LoyOeluC5a4x353CX0SIM/edit
 
 
 Time:
+
 - [Jan 10th, 2019 11:00 AM video](https://www.youtube.com/watch?v=0Cphtbd1OSc&feature=youtu.be)
 - [Feb 7th, 2019 11:00 AM video](https://youtu.be/U80b--oAlYM)
 - [Mar 7th, 2019 11:00 AM video](https://youtu.be/w9TI5B7D1zg)
@@ -75,26 +87,33 @@ Join Hangouts Meet: [meet.google.com/umg-nrxn-qvs](https://meet.google.com/umg-n
 
 Join by phone: +1 405-792-0633‬ PIN: ‪299 906‬#
 
-
 ## Getting started
 
 ### Getting etcd
 
-The easiest way to get etcd is to use one of the pre-built release binaries which are available for OSX, Linux, Windows, and Docker on the [release page][github-release].
+The easiest way to get etcd is to use one of the pre-built release binaries which are available for OSX, Linux, Windows,
+and Docker on the [release page][github-release].
 
-For more installation guides, please check out [play.etcd.io](http://play.etcd.io) and [operating etcd](https://etcd.io/docs/latest/op-guide).
+For more installation guides, please check out [play.etcd.io](http://play.etcd.io)
+and [operating etcd](https://etcd.io/docs/latest/op-guide).
 
-For those wanting to try the very latest version, [build the latest version of etcd][dl-build] from the `main` branch. This first needs [*Go*](https://golang.org/) installed ([version 1.16+](/go.mod#L3) is required). All development occurs on `main`, including new features and bug fixes. Bug fixes are first targeted at `main` and subsequently ported to release branches, as described in the [branch management][branch-management] guide.
+For those wanting to try the very latest version, [build the latest version of etcd][dl-build] from the `main` branch.
+This first needs [*Go*](https://golang.org/) installed ([version 1.16+](/go.mod#L3) is required). All development occurs
+on `main`, including new features and bug fixes. Bug fixes are first targeted at `main` and subsequently ported to
+release branches, as described in the [branch management][branch-management] guide.
 
 [github-release]: https://github.com/etcd-io/etcd/releases
+
 [branch-management]: https://etcd.io/docs/latest/branch_management
+
 [dl-build]: https://etcd.io/docs/latest/dl-build#build-the-latest-version
 
 ### Running etcd
 
 First start a single-member cluster of etcd.
 
-If etcd is installed using the [pre-built release binaries][github-release], run it from the installation location as below:
+If etcd is installed using the [pre-built release binaries][github-release], run it from the installation location as
+below:
 
 ```bash
 /tmp/etcd-download-test/etcd
@@ -113,7 +132,8 @@ If etcd is [built from the main branch][dl-build], run it as below:
 ./bin/etcd
 ```
 
-This will bring up etcd listening on port 2379 for client communication and on port 2380 for server-to-server communication.
+This will bring up etcd listening on port 2379 for client communication and on port 2380 for server-to-server
+communication.
 
 Next, let's set a single key, and then retrieve it:
 
@@ -143,11 +163,13 @@ Our [Procfile script](./Procfile) will set up a local example cluster. Start it 
 goreman start
 ```
 
-This will bring up 3 etcd members `infra1`, `infra2` and `infra3` and optionally etcd `grpc-proxy`, which runs locally and composes a cluster.
+This will bring up 3 etcd members `infra1`, `infra2` and `infra3` and optionally etcd `grpc-proxy`, which runs locally
+and composes a cluster.
 
 Every cluster member and proxy accepts key value reads and key value writes.
 
-Follow the steps in [Procfile.learner](./Procfile.learner) to add a learner node to the cluster. Start the learner node with:
+Follow the steps in [Procfile.learner](./Procfile.learner) to add a learner node to the cluster. Start the learner node
+with:
 
 ```bash
 goreman -f ./Procfile.learner start
@@ -166,11 +188,17 @@ Now it's time to dig into the full etcd API and other guides.
 - [Tune etcd][tuning].
 
 [documentation]: https://etcd.io/docs/latest
+
 [api]: https://etcd.io/docs/latest/learning/api
+
 [clustering]: https://etcd.io/docs/latest/op-guide/clustering
+
 [configuration]: https://etcd.io/docs/latest/op-guide/configuration
+
 [integrations]: https://etcd.io/docs/latest/integrations
+
 [security]: https://etcd.io/docs/latest/op-guide/security
+
 [tuning]: https://etcd.io/docs/latest/tuning
 
 ## Contact
@@ -190,7 +218,8 @@ See [reporting bugs](https://etcd.io/docs/latest/reporting-bugs) for details abo
 
 ## Reporting a security vulnerability
 
-See [security disclosure and release process](security/README.md) for details on how to report a security vulnerability and how the etcd team manages it.
+See [security disclosure and release process](security/README.md) for details on how to report a security vulnerability
+and how the etcd team manages it.
 
 ## Issue and PR management
 
@@ -200,7 +229,8 @@ See [PR management](https://etcd.io/docs/current/triage/prs/) for guidelines on 
 
 ## etcd Emeritus Maintainers
 
-These emeritus maintainers dedicated a part of their career to etcd and reviewed code, triaged bugs, and pushed the project forward over a substantial period of time. Their contribution is greatly appreciated.
+These emeritus maintainers dedicated a part of their career to etcd and reviewed code, triaged bugs, and pushed the
+project forward over a substantial period of time. Their contribution is greatly appreciated.
 
 * Fanmin Shi
 * Anthony Romano

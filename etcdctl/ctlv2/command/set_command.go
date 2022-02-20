@@ -16,12 +16,12 @@ package command
 
 import (
 	"errors"
+	clientv2 "github.com/ls-2018/client/v2"
 	"os"
 	"time"
 
+	"github.com/ls-2018/pkg/cobrautl"
 	"github.com/urfave/cli"
-	"go.etcd.io/etcd/client/v2"
-	"go.etcd.io/etcd/pkg/v3/cobrautl"
 )
 
 // NewSetCommand returns the CLI command for "set".
@@ -49,7 +49,7 @@ func NewSetCommand() cli.Command {
 }
 
 // setCommandFunc executes the "set" command.
-func setCommandFunc(c *cli.Context, ki client.KeysAPI) {
+func setCommandFunc(c *cli.Context, ki clientv2.KeysAPI) {
 	if len(c.Args()) == 0 {
 		handleError(c, cobrautl.ExitBadArgs, errors.New("key required"))
 	}
@@ -64,7 +64,7 @@ func setCommandFunc(c *cli.Context, ki client.KeysAPI) {
 	prevIndex := c.Int("swap-with-index")
 
 	ctx, cancel := contextWithTotalTimeout(c)
-	resp, err := ki.Set(ctx, key, value, &client.SetOptions{TTL: time.Duration(ttl) * time.Second, PrevIndex: uint64(prevIndex), PrevValue: prevValue})
+	resp, err := ki.Set(ctx, key, value, &clientv2.SetOptions{TTL: time.Duration(ttl) * time.Second, PrevIndex: uint64(prevIndex), PrevValue: prevValue})
 	cancel()
 	if err != nil {
 		handleError(c, cobrautl.ExitServerError, err)

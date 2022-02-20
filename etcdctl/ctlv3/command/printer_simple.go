@@ -19,9 +19,9 @@ import (
 	"os"
 	"strings"
 
+	"github.com/ls-2018/client/pkg/types"
+	v3 "github.com/ls-2018/client/v3"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
-	"go.etcd.io/etcd/client/pkg/v3/types"
-	v3 "go.etcd.io/etcd/client/v3"
 )
 
 type simplePrinter struct {

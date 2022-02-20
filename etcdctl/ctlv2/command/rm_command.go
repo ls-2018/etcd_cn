@@ -16,10 +16,10 @@ package command
 
 import (
 	"errors"
+	clientv2 "github.com/ls-2018/client/v2"
 
+	"github.com/ls-2018/pkg/cobrautl"
 	"github.com/urfave/cli"
-	"go.etcd.io/etcd/client/v2"
-	"go.etcd.io/etcd/pkg/v3/cobrautl"
 )
 
 // NewRemoveCommand returns the CLI command for "rm".
@@ -42,7 +42,7 @@ func NewRemoveCommand() cli.Command {
 }
 
 // rmCommandFunc executes the "rm" command.
-func rmCommandFunc(c *cli.Context, ki client.KeysAPI) {
+func rmCommandFunc(c *cli.Context, ki clientv2.KeysAPI) {
 	if len(c.Args()) == 0 {
 		handleError(c, cobrautl.ExitBadArgs, errors.New("key required"))
 	}
@@ -53,7 +53,7 @@ func rmCommandFunc(c *cli.Context, ki client.KeysAPI) {
 	prevIndex := c.Int("with-index")
 
 	ctx, cancel := contextWithTotalTimeout(c)
-	resp, err := ki.Delete(ctx, key, &client.DeleteOptions{PrevIndex: uint64(prevIndex), PrevValue: prevValue, Dir: dir, Recursive: recursive})
+	resp, err := ki.Delete(ctx, key, &clientv2.DeleteOptions{PrevIndex: uint64(prevIndex), PrevValue: prevValue, Dir: dir, Recursive: recursive})
 	cancel()
 	if err != nil {
 		handleError(c, cobrautl.ExitServerError, err)

@@ -16,12 +16,12 @@ package command
 
 import (
 	"errors"
+	clientv2 "github.com/ls-2018/client/v2"
 	"os"
 	"time"
 
+	"github.com/ls-2018/pkg/cobrautl"
 	"github.com/urfave/cli"
-	"go.etcd.io/etcd/client/v2"
-	"go.etcd.io/etcd/pkg/v3/cobrautl"
 )
 
 // NewUpdateCommand returns the CLI command for "update".
@@ -41,7 +41,7 @@ func NewUpdateCommand() cli.Command {
 }
 
 // updateCommandFunc executes the "update" command.
-func updateCommandFunc(c *cli.Context, ki client.KeysAPI) {
+func updateCommandFunc(c *cli.Context, ki clientv2.KeysAPI) {
 	if len(c.Args()) == 0 {
 		handleError(c, cobrautl.ExitBadArgs, errors.New("key required"))
 	}
@@ -54,7 +54,7 @@ func updateCommandFunc(c *cli.Context, ki client.KeysAPI) {
 	ttl := c.Int("ttl")
 
 	ctx, cancel := contextWithTotalTimeout(c)
-	resp, err := ki.Set(ctx, key, value, &client.SetOptions{TTL: time.Duration(ttl) * time.Second, PrevExist: client.PrevExist})
+	resp, err := ki.Set(ctx, key, value, &clientv2.SetOptions{TTL: time.Duration(ttl) * time.Second, PrevExist: clientv2.PrevExist})
 	cancel()
 	if err != nil {
 		handleError(c, cobrautl.ExitServerError, err)

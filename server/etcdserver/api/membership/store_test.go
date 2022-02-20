@@ -4,11 +4,11 @@ import (
 	"testing"
 
 	"github.com/coreos/go-semver/semver"
+	"github.com/ls-2018/client/pkg/types"
+	betesting "github.com/ls-2018/server/mvcc/backend/testing"
 	"github.com/stretchr/testify/assert"
-	"go.etcd.io/etcd/client/pkg/v3/types"
-	betesting "go.etcd.io/etcd/server/v3/mvcc/backend/testing"
 
-	"go.etcd.io/etcd/server/v3/mvcc/backend"
+	"github.com/ls-2018/server/mvcc/backend"
 	"go.uber.org/zap"
 )
 

@@ -20,8 +20,8 @@ import (
 	"sync"
 	"time"
 
-	"go.etcd.io/etcd/client/pkg/v3/testutil"
-	"go.etcd.io/etcd/client/pkg/v3/transport"
+	"github.com/ls-2018/client/pkg/testutil"
+	"github.com/ls-2018/client/pkg/transport"
 )
 
 // Infrastructure to provision a single shared cluster for tests - only

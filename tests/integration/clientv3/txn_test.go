@@ -20,10 +20,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ls-2018/server/embed"
+	"github.com/ls-2018/tests/integration"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
-	"go.etcd.io/etcd/client/v3"
-	"go.etcd.io/etcd/server/v3/embed"
-	"go.etcd.io/etcd/tests/v3/integration"
 )
 
 func TestTxnError(t *testing.T) {

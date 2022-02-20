@@ -15,7 +15,7 @@
 package membership
 
 import (
-	"go.etcd.io/etcd/server/v3/etcdserver/api/v2store"
+	"github.com/ls-2018/server/etcdserver/api/v2store"
 )
 
 // IsMetaStoreOnly verifies if the given `store` contains only

@@ -10,12 +10,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/ls-2018/client/pkg/testutil"
+	"github.com/ls-2018/client/pkg/types"
+	"github.com/ls-2018/server/etcdserver"
+	stats "github.com/ls-2018/server/etcdserver/api/v2stats"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
-	"go.etcd.io/etcd/client/pkg/v3/testutil"
-	"go.etcd.io/etcd/client/pkg/v3/types"
-	"go.etcd.io/etcd/raft/v3"
-	"go.etcd.io/etcd/server/v3/etcdserver"
-	stats "go.etcd.io/etcd/server/v3/etcdserver/api/v2stats"
 	"go.uber.org/zap"
 )
 

@@ -22,10 +22,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ls-2018/server/datadir"
 	bolt "go.etcd.io/bbolt"
 	"go.etcd.io/etcd/api/v3/mvccpb"
-	"go.etcd.io/etcd/client/v3"
-	"go.etcd.io/etcd/server/v3/datadir"
 )
 
 // TODO: test with embedded etcd in integration package

@@ -19,8 +19,6 @@ import (
 	"fmt"
 	"log"
 	"time"
-
-	"go.etcd.io/etcd/client/v3"
 )
 
 func mockWatcher_watch() {

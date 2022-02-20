@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/golang/protobuf/descriptor"
-	"go.etcd.io/etcd/raft/v3/raftpb"
+	"github.com/ls-2018/raft/raftpb"
 )
 
 func TestSnapshotMetadataCompatibility(t *testing.T) {

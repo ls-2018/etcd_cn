@@ -16,11 +16,10 @@ package command
 
 import (
 	"errors"
-	"time"
-
+	clientv2 "github.com/ls-2018/client/v2"
+	"github.com/ls-2018/pkg/cobrautl"
 	"github.com/urfave/cli"
-	"go.etcd.io/etcd/client/v2"
-	"go.etcd.io/etcd/pkg/v3/cobrautl"
+	"time"
 )
 
 // NewMakeDirCommand returns the CLI command for "mkdir".
@@ -33,14 +32,14 @@ func NewMakeDirCommand() cli.Command {
 			cli.IntFlag{Name: "ttl", Value: 0, Usage: "key time-to-live in seconds"},
 		},
 		Action: func(c *cli.Context) error {
-			mkdirCommandFunc(c, mustNewKeyAPI(c), client.PrevNoExist)
+			mkdirCommandFunc(c, mustNewKeyAPI(c), clientv2.PrevNoExist)
 			return nil
 		},
 	}
 }
 
 // mkdirCommandFunc executes the "mkdir" command.
-func mkdirCommandFunc(c *cli.Context, ki client.KeysAPI, prevExist client.PrevExistType) {
+func mkdirCommandFunc(c *cli.Context, ki clientv2.KeysAPI, prevExist clientv2.PrevExistType) {
 	if len(c.Args()) == 0 {
 		handleError(c, cobrautl.ExitBadArgs, errors.New("key required"))
 	}
@@ -49,7 +48,7 @@ func mkdirCommandFunc(c *cli.Context, ki client.KeysAPI, prevExist client.PrevEx
 	ttl := c.Int("ttl")
 
 	ctx, cancel := contextWithTotalTimeout(c)
-	resp, err := ki.Set(ctx, key, "", &client.SetOptions{TTL: time.Duration(ttl) * time.Second, Dir: true, PrevExist: prevExist})
+	resp, err := ki.Set(ctx, key, "", &clientv2.SetOptions{TTL: time.Duration(ttl) * time.Second, Dir: true, PrevExist: prevExist})
 	cancel()
 	if err != nil {
 		handleError(c, cobrautl.ExitServerError, err)

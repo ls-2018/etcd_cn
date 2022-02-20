@@ -18,11 +18,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	clientv2 "github.com/ls-2018/client/v2"
 	"os"
 	"os/signal"
 
-	"go.etcd.io/etcd/client/v2"
-	"go.etcd.io/etcd/pkg/v3/cobrautl"
+	"github.com/ls-2018/pkg/cobrautl"
 
 	"github.com/urfave/cli"
 )
@@ -46,7 +46,7 @@ func NewWatchCommand() cli.Command {
 }
 
 // watchCommandFunc executes the "watch" command.
-func watchCommandFunc(c *cli.Context, ki client.KeysAPI) {
+func watchCommandFunc(c *cli.Context, ki clientv2.KeysAPI) {
 	if len(c.Args()) == 0 {
 		handleError(c, cobrautl.ExitBadArgs, errors.New("key required"))
 	}
@@ -56,7 +56,7 @@ func watchCommandFunc(c *cli.Context, ki client.KeysAPI) {
 	index := c.Int("after-index")
 
 	stop := false
-	w := ki.Watcher(key, &client.WatcherOptions{AfterIndex: uint64(index), Recursive: recursive})
+	w := ki.Watcher(key, &clientv2.WatcherOptions{AfterIndex: uint64(index), Recursive: recursive})
 
 	sigch := make(chan os.Signal, 1)
 	signal.Notify(sigch, os.Interrupt)

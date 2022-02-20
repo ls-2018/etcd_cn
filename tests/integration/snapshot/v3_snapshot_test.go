@@ -17,6 +17,7 @@ package snapshot_test
 import (
 	"context"
 	"fmt"
+	clientv3 "github.com/ls-2018/client/v3"
 	"math/rand"
 	"net/url"
 	"os"
@@ -25,11 +26,10 @@ import (
 	"testing"
 	"time"
 
-	"go.etcd.io/etcd/client/pkg/v3/testutil"
-	"go.etcd.io/etcd/client/v3"
-	"go.etcd.io/etcd/etcdutl/v3/snapshot"
-	"go.etcd.io/etcd/server/v3/embed"
-	"go.etcd.io/etcd/tests/v3/integration"
+	"github.com/ls-2018/client/pkg/testutil"
+	"github.com/ls-2018/etcdutl/snapshot"
+	"github.com/ls-2018/server/embed"
+	"github.com/ls-2018/tests/integration"
 	"go.uber.org/zap/zapcore"
 	"go.uber.org/zap/zaptest"
 )

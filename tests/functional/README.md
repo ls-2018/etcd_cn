@@ -1,10 +1,14 @@
 ## etcd Functional Testing
 
-[`functional`](https://godoc.org/github.com/coreos/etcd/functional) verifies the correct behavior of etcd under various system and network malfunctions. It sets up an etcd cluster under high pressure loads and continuously injects failures into the cluster. Then it expects the etcd cluster to recover within a few seconds. This has been extremely helpful to find critical bugs.
+[`functional`](https://godoc.org/github.com/coreos/etcd/functional) verifies the correct behavior of etcd under various
+system and network malfunctions. It sets up an etcd cluster under high pressure loads and continuously injects failures
+into the cluster. Then it expects the etcd cluster to recover within a few seconds. This has been extremely helpful to
+find critical bugs.
 
 See [`rpcpb.Case`](https://godoc.org/github.com/coreos/etcd/functional/rpcpb#Case) for all failure cases.
 
-See [functional.yaml](https://github.com/etcd-io/etcd/blob/main/tests/functional/functional.yaml) for an example configuration.
+See [functional.yaml](https://github.com/etcd-io/etcd/blob/main/tests/functional/functional.yaml) for an example
+configuration.
 
 ### Run locally
 

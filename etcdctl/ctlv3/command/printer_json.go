@@ -18,10 +18,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	clientv3 "github.com/ls-2018/client/v3"
 	"os"
 	"strconv"
-
-	"go.etcd.io/etcd/client/v3"
 )
 
 type jsonPrinter struct {

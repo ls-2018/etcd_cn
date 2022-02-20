@@ -24,12 +24,12 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/ls-2018/client/pkg/logutil"
+	"github.com/ls-2018/pkg/flags"
+	cconfig "github.com/ls-2018/server/config"
+	"github.com/ls-2018/server/embed"
+	"github.com/ls-2018/server/etcdserver/api/rafthttp"
 	"go.etcd.io/etcd/api/v3/version"
-	"go.etcd.io/etcd/client/pkg/v3/logutil"
-	"go.etcd.io/etcd/pkg/v3/flags"
-	cconfig "go.etcd.io/etcd/server/v3/config"
-	"go.etcd.io/etcd/server/v3/embed"
-	"go.etcd.io/etcd/server/v3/etcdserver/api/rafthttp"
 
 	"go.uber.org/zap"
 	"sigs.k8s.io/yaml"

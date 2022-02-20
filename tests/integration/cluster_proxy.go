@@ -21,10 +21,9 @@ import (
 	"context"
 	"sync"
 
-	"go.etcd.io/etcd/client/v3"
-	"go.etcd.io/etcd/client/v3/namespace"
-	"go.etcd.io/etcd/server/v3/proxy/grpcproxy"
-	"go.etcd.io/etcd/server/v3/proxy/grpcproxy/adapter"
+	"github.com/ls-2018/client/v3/namespace"
+	"github.com/ls-2018/server/proxy/grpcproxy"
+	"github.com/ls-2018/server/proxy/grpcproxy/adapter"
 	"go.uber.org/zap"
 )
 

@@ -21,8 +21,6 @@ import (
 	"syscall"
 	"testing"
 	"time"
-
-	"go.etcd.io/etcd/client/v3"
 )
 
 func TestCtlV3AuthEnable(t *testing.T) {

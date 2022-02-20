@@ -23,10 +23,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ls-2018/client/v3/credentials"
+	"github.com/ls-2018/client/v3/internal/endpoint"
+	"github.com/ls-2018/client/v3/internal/resolver"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
-	"go.etcd.io/etcd/client/v3/credentials"
-	"go.etcd.io/etcd/client/v3/internal/endpoint"
-	"go.etcd.io/etcd/client/v3/internal/resolver"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"

@@ -19,9 +19,9 @@ import (
 	"testing"
 	"time"
 
+	betesting "github.com/ls-2018/server/mvcc/backend/testing"
+	"github.com/ls-2018/server/mvcc/buckets"
 	"github.com/stretchr/testify/assert"
-	betesting "go.etcd.io/etcd/server/v3/mvcc/backend/testing"
-	"go.etcd.io/etcd/server/v3/mvcc/buckets"
 )
 
 func BenchmarkBackendPut(b *testing.B) {

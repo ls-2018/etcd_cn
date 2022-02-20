@@ -20,8 +20,8 @@ import (
 	"strings"
 	"time"
 
-	v3 "go.etcd.io/etcd/client/v3"
-	"go.etcd.io/etcd/client/v3/concurrency"
+	v3 "github.com/ls-2018/client/v3"
+	"github.com/ls-2018/client/v3/concurrency"
 )
 
 // RemoteKV is a key/revision pair created by the client and stored on etcd

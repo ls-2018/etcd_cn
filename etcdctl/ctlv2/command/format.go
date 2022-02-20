@@ -17,13 +17,12 @@ package command
 import (
 	"encoding/json"
 	"fmt"
+	clientv2 "github.com/ls-2018/client/v2"
 	"os"
-
-	"go.etcd.io/etcd/client/v2"
 )
 
 // printResponseKey only supports to print key correctly.
-func printResponseKey(resp *client.Response, format string) {
+func printResponseKey(resp *clientv2.Response, format string) {
 	// Format the result.
 	switch format {
 	case "simple":

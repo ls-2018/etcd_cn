@@ -23,7 +23,7 @@ import (
 	"reflect"
 	"testing"
 
-	"go.etcd.io/etcd/server/v3/wal/walpb"
+	"github.com/ls-2018/server/wal/walpb"
 )
 
 var (

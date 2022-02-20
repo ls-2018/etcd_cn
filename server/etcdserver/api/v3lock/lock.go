@@ -17,9 +17,8 @@ package v3lock
 import (
 	"context"
 
-	"go.etcd.io/etcd/client/v3"
-	"go.etcd.io/etcd/client/v3/concurrency"
-	"go.etcd.io/etcd/server/v3/etcdserver/api/v3lock/v3lockpb"
+	"github.com/ls-2018/client/v3/concurrency"
+	"github.com/ls-2018/server/etcdserver/api/v3lock/v3lockpb"
 )
 
 type lockServer struct {

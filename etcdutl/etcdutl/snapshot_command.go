@@ -18,9 +18,9 @@ import (
 	"fmt"
 	"strings"
 
-	"go.etcd.io/etcd/etcdutl/v3/snapshot"
-	"go.etcd.io/etcd/pkg/v3/cobrautl"
-	"go.etcd.io/etcd/server/v3/datadir"
+	"github.com/ls-2018/etcdutl/snapshot"
+	"github.com/ls-2018/pkg/cobrautl"
+	"github.com/ls-2018/server/datadir"
 
 	"github.com/spf13/cobra"
 )

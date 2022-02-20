@@ -28,6 +28,7 @@ Flags:
     	must process hex encoded lines of binary input (from etcd-dump-logs)
 	    and output a hex encoded line of binary for each input line
 ```
+
 #### etcd-dump-logs -entry-type <ENTRY_TYPE_NAME(S)> [data dir]
 
 Filter entries by type from WAL log.
@@ -63,12 +64,15 @@ term	     index	type	data
 
 Entry types (ConfigChange,IRRCompaction) count is : 5
 ```
+
 #### etcd-dump-logs -stream-decoder <EXECUTABLE_DECODER> [data dir]
 
-Decode each entry based on logic in the passed decoder. Decoder status and decoded data are listed in separated tab/columns in the ouput. For parsing purpose, the output from decoder are expected to be in format of "<DECODER_STATUS>|<DECODED_DATA>". Please refer to [decoder_correctoutputformat.sh] as an example.
+Decode each entry based on logic in the passed decoder. Decoder status and decoded data are listed in separated
+tab/columns in the ouput. For parsing purpose, the output from decoder are expected to be in format of "<DECODER_STATUS>
+|<DECODED_DATA>". Please refer to [decoder_correctoutputformat.sh] as an example.
 
-However, if the decoder output format is not as expected, "decoder_status" will be "decoder output format is not right, print output anyway", and all output from decoder will be considered as "decoded_data"
-
+However, if the decoder output format is not as expected, "decoder_status" will be "decoder output format is not right,
+print output anyway", and all output from decoder will be considered as "decoded_data"
 
 ```
 $ etcd-dump-logs -stream-decoder decoder_correctoutputformat.sh  /tmp/datadir
@@ -112,7 +116,8 @@ term	     index	type	data	decoder_status	decoded_data
 Entry types () count is : 8
 
 ```
-####  etcd-dump-logs -start-index <INDEX NUMBER> [data dir]
+
+#### etcd-dump-logs -start-index <INDEX NUMBER> [data dir]
 
 Only shows WAL log entries after the specified start-index number, exclusively.
 
@@ -130,4 +135,5 @@ term	     index	type	data
   27	        34	norm	???
 Entry types () count is : 4
 ```
+
 [decoder_correctoutputformat.sh]: ./testdecoder/decoder_correctoutputformat.sh

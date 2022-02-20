@@ -17,15 +17,15 @@ package command
 import (
 	"encoding/json"
 	"fmt"
+	clientv2 "github.com/ls-2018/client/v2"
 	"os"
 
 	"github.com/urfave/cli"
-	"go.etcd.io/etcd/client/v2"
 )
 
 func handleError(c *cli.Context, code int, err error) {
 	if c.GlobalString("output") == "json" {
-		if err, ok := err.(*client.Error); ok {
+		if err, ok := err.(*clientv2.Error); ok {
 			b, err := json.Marshal(err)
 			if err != nil {
 				panic(err)
@@ -36,7 +36,7 @@ func handleError(c *cli.Context, code int, err error) {
 	}
 
 	fmt.Fprintln(os.Stderr, "Error: ", err)
-	if cerr, ok := err.(*client.ClusterError); ok {
+	if cerr, ok := err.(*clientv2.ClusterError); ok {
 		fmt.Fprintln(os.Stderr, cerr.Detail())
 	}
 	os.Exit(code)

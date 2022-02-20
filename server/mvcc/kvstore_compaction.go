@@ -18,7 +18,7 @@ import (
 	"encoding/binary"
 	"time"
 
-	"go.etcd.io/etcd/server/v3/mvcc/buckets"
+	"github.com/ls-2018/server/mvcc/buckets"
 	"go.uber.org/zap"
 )
 

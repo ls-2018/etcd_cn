@@ -19,8 +19,8 @@ import (
 	"sort"
 	"strings"
 
-	"go.etcd.io/etcd/raft/v3/quorum"
-	pb "go.etcd.io/etcd/raft/v3/raftpb"
+	"github.com/ls-2018/raft/quorum"
+	pb "github.com/ls-2018/raft/raftpb"
 )
 
 // Config reflects the configuration tracked in a ProgressTracker.

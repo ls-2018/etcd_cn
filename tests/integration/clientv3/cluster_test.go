@@ -22,8 +22,8 @@ import (
 	"testing"
 	"time"
 
-	"go.etcd.io/etcd/client/pkg/v3/types"
-	"go.etcd.io/etcd/tests/v3/integration"
+	"github.com/ls-2018/client/pkg/types"
+	"github.com/ls-2018/tests/integration"
 )
 
 func TestMemberList(t *testing.T) {
