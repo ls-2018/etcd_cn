@@ -28,7 +28,7 @@ for file in get_files('.'):
         # if flag:
         #     with open(file, 'w', encoding='utf8', )as f:
         #         f.write(data)
-        with open(file, 'r', encoding='utf8')as f:
+        with open(file, 'r', encoding='utf8') as f:
             if 'package main' in f.read():
                 main_set.add(os.path.dirname(file))
 
@@ -38,3 +38,7 @@ for file in get_files('.'):
 for item in main_set:
     # print(item)
     print('cd %s ; go build . ; cd -' % item.replace('\\', '/'))
+
+for item in main_set:
+    # print(item)
+    print('rm %s' % os.path.join(item, item.split('/')[-1]))
