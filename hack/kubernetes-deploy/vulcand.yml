@@ -17,6 +17,6 @@ spec:
           name: api
           protocol: TCP
         - containerPort: 8082
-          name: server
+          name: etcd
           protocol: TCP
   restartPolicy: Always

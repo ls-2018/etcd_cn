@@ -22,7 +22,7 @@ import (
 	"sync"
 
 	"github.com/ls-2018/raft/raftpb"
-	"github.com/ls-2018/server/etcdserver/api/snap"
+	"github.com/ls-2018/etcd/etcdserver/api/snap"
 )
 
 // a key-value store backed by raft

@@ -211,7 +211,7 @@ func testIssue6361(t *testing.T, etcdutl bool) {
 		t.Fatal(err)
 	}
 
-	t.Log("Stopping the original server...")
+	t.Log("Stopping the original etcd...")
 	if err = epc.procs[0].Stop(); err != nil {
 		t.Fatal(err)
 	}

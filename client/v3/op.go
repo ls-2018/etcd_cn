@@ -345,9 +345,9 @@ func WithRev(rev int64) OpOption { return func(op *Op) { op.rev = rev } }
 func WithSort(target SortTarget, order SortOrder) OpOption {
 	return func(op *Op) {
 		if target == SortByKey && order == SortAscend {
-			// If order != SortNone, server fetches the entire key-space,
+			// If order != SortNone, etcd fetches the entire key-space,
 			// and then applies the sort and limit, if provided.
-			// Since by default the server returns results sorted by keys
+			// Since by default the etcd returns results sorted by keys
 			// in lexicographically ascending order, the client should ignore
 			// SortOrder if the target is SortByKey.
 			order = SortNone
@@ -462,7 +462,7 @@ func withTop(target SortTarget, order SortOrder) []OpOption {
 	return []OpOption{WithPrefix(), WithSort(target, order), WithLimit(1)}
 }
 
-// WithProgressNotify makes watch server send periodic progress updates
+// WithProgressNotify makes watch etcd send periodic progress updates
 // every 10 minutes when there is no incoming events.
 // Progress updates have zero events in WatchResponse.
 func WithProgressNotify() OpOption {
@@ -471,7 +471,7 @@ func WithProgressNotify() OpOption {
 	}
 }
 
-// WithCreatedNotify makes watch server sends the created event.
+// WithCreatedNotify makes watch etcd sends the created event.
 func WithCreatedNotify() OpOption {
 	return func(op *Op) {
 		op.createdNotify = true
@@ -498,9 +498,9 @@ func WithPrevKV() OpOption {
 
 // WithFragment to receive raw watch response with fragmentation.
 // Fragmentation is disabled by default. If fragmentation is enabled,
-// etcd watch server will split watch response before sending to clients
-// when the total size of watch events exceed server-side request limit.
-// The default server-side request limit is 1.5 MiB, which can be configured
+// etcd watch etcd will split watch response before sending to clients
+// when the total size of watch events exceed etcd-side request limit.
+// The default etcd-side request limit is 1.5 MiB, which can be configured
 // as "--max-request-bytes" flag value + gRPC-overhead 512 bytes.
 // See "etcdserver/api/v3rpc/watch.go" for more details.
 func WithFragment() OpOption {

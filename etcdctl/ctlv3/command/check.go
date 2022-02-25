@@ -295,7 +295,7 @@ func interruptableContext(ctx context.Context, attemptCleanup func()) (context.C
 func NewCheckDatascaleCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "datascale [options]",
-		Short: "Check the memory usage of holding data for different workloads on a given server endpoint.",
+		Short: "Check the memory usage of holding data for different workloads on a given etcd endpoint.",
 		Long:  "If no endpoint is provided, localhost will be used. If multiple endpoints are provided, first endpoint will be used.",
 		Run:   newCheckDatascaleCommand,
 	}

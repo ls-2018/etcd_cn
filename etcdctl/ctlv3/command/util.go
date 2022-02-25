@@ -92,7 +92,7 @@ func isCommandTimeoutFlagSet(cmd *cobra.Command) bool {
 	return commandTimeoutFlag.Changed
 }
 
-// get the process_resident_memory_bytes from <server>/metrics
+// get the process_resident_memory_bytes from <etcd>/metrics
 func endpointMemoryMetrics(host string, scfg *secureCfg) float64 {
 	residentMemoryKey := "process_resident_memory_bytes"
 	var residentMemoryValue string

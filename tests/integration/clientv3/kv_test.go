@@ -909,11 +909,11 @@ func TestKVPutAtMostOnce(t *testing.T) {
 	}
 }
 
-// TestKVLargeRequests tests various client/server side request limits.
+// TestKVLargeRequests tests various client/etcd side request limits.
 func TestKVLargeRequests(t *testing.T) {
 	integration.BeforeTest(t)
 	tests := []struct {
-		// make sure that "MaxCallSendMsgSize" < server-side default send/recv limit
+		// make sure that "MaxCallSendMsgSize" < etcd-side default send/recv limit
 		maxRequestBytesServer  uint
 		maxCallSendBytesClient int
 		maxCallRecvBytesClient int

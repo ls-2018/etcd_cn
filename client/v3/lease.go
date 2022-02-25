@@ -120,7 +120,7 @@ type Lease interface {
 
 	// KeepAlive attempts to keep the given lease alive forever. If the keepalive responses posted
 	// to the channel are not consumed promptly the channel may become full. When full, the lease
-	// client will continue sending keep alive requests to the etcd server, but will drop responses
+	// client will continue sending keep alive requests to the etcd etcd, but will drop responses
 	// until there is capacity on the channel to send more responses.
 	//
 	// If client keep alive loop halts with an unexpected error (e.g. "etcdserver: no leader") or
@@ -143,7 +143,7 @@ type Lease interface {
 	KeepAliveOnce(ctx context.Context, id LeaseID) (*LeaseKeepAliveResponse, error)
 
 	// Close releases all resources Lease keeps for efficient communication
-	// with the etcd server.
+	// with the etcd etcd.
 	Close() error
 }
 

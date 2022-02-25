@@ -467,7 +467,7 @@ func TestV3TxnCmpHeaderRev(t *testing.T) {
 			revc <- presp.Header.Revision
 		}()
 
-		// The read-only txn uses the optimized readindex server path.
+		// The read-only txn uses the optimized readindex etcd path.
 		txnget := &pb.RequestOp{Request: &pb.RequestOp_RequestRange{
 			RequestRange: &pb.RangeRequest{Key: []byte("k")}}}
 		txn := &pb.TxnRequest{Success: []*pb.RequestOp{txnget}}
@@ -1235,7 +1235,7 @@ func TestV3HashRestart(t *testing.T) {
 	}
 }
 
-// TestV3StorageQuotaAPI tests the V3 server respects quotas at the API layer
+// TestV3StorageQuotaAPI tests the V3 etcd respects quotas at the API layer
 func TestV3StorageQuotaAPI(t *testing.T) {
 	BeforeTest(t)
 	quotasize := int64(16 * os.Getpagesize())
@@ -1549,7 +1549,7 @@ func newClusterV3NoClients(t *testing.T, cfg *ClusterConfig) *ClusterV3 {
 	return clus
 }
 
-// TestTLSGRPCRejectInsecureClient checks that connection is rejected if server is TLS but not client.
+// TestTLSGRPCRejectInsecureClient checks that connection is rejected if etcd is TLS but not client.
 func TestTLSGRPCRejectInsecureClient(t *testing.T) {
 	BeforeTest(t)
 
@@ -1584,7 +1584,7 @@ func TestTLSGRPCRejectInsecureClient(t *testing.T) {
 	}
 }
 
-// TestTLSGRPCRejectSecureClient checks that connection is rejected if client is TLS but not server.
+// TestTLSGRPCRejectSecureClient checks that connection is rejected if client is TLS but not etcd.
 func TestTLSGRPCRejectSecureClient(t *testing.T) {
 	BeforeTest(t)
 
@@ -1604,7 +1604,7 @@ func TestTLSGRPCRejectSecureClient(t *testing.T) {
 	}
 }
 
-// TestTLSGRPCAcceptSecureAll checks that connection is accepted if both client and server are TLS
+// TestTLSGRPCAcceptSecureAll checks that connection is accepted if both client and etcd are TLS
 func TestTLSGRPCAcceptSecureAll(t *testing.T) {
 	BeforeTest(t)
 
@@ -1624,9 +1624,9 @@ func TestTLSGRPCAcceptSecureAll(t *testing.T) {
 	}
 }
 
-// TestTLSReloadAtomicReplace ensures server reloads expired/valid certs
+// TestTLSReloadAtomicReplace ensures etcd reloads expired/valid certs
 // when all certs are atomically replaced by directory renaming.
-// And expects server to reject client requests, and vice versa.
+// And expects etcd to reject client requests, and vice versa.
 func TestTLSReloadAtomicReplace(t *testing.T) {
 	tmpDir, err := ioutil.TempDir(t.TempDir(), "fixtures-tmp")
 	if err != nil {
@@ -1683,8 +1683,8 @@ func TestTLSReloadAtomicReplace(t *testing.T) {
 	testTLSReload(t, cloneFunc, replaceFunc, revertFunc, false)
 }
 
-// TestTLSReloadCopy ensures server reloads expired/valid certs
-// when new certs are copied over, one by one. And expects server
+// TestTLSReloadCopy ensures etcd reloads expired/valid certs
+// when new certs are copied over, one by one. And expects etcd
 // to reject client requests, and vice versa.
 func TestTLSReloadCopy(t *testing.T) {
 	certsDir, err := ioutil.TempDir(t.TempDir(), "fixtures-to-load")
@@ -1713,8 +1713,8 @@ func TestTLSReloadCopy(t *testing.T) {
 	testTLSReload(t, cloneFunc, replaceFunc, revertFunc, false)
 }
 
-// TestTLSReloadCopyIPOnly ensures server reloads expired/valid certs
-// when new certs are copied over, one by one. And expects server
+// TestTLSReloadCopyIPOnly ensures etcd reloads expired/valid certs
+// when new certs are copied over, one by one. And expects etcd
 // to reject client requests, and vice versa.
 func TestTLSReloadCopyIPOnly(t *testing.T) {
 	certsDir, err := ioutil.TempDir(t.TempDir(), "fixtures-to-load")
@@ -1935,7 +1935,7 @@ func TestV3LargeRequests(t *testing.T) {
 			t.Errorf("#%d: expected error %v, got %v", i, test.expectError, err)
 		}
 
-		// request went through, expect large response back from server
+		// request went through, expect large response back from etcd
 		if test.expectError == nil {
 			reqget := &pb.RangeRequest{Key: []byte("foo")}
 			// limit receive call size with original value + gRPC overhead bytes
@@ -1953,7 +1953,7 @@ func eqErrGRPC(err1 error, err2 error) bool {
 	return !(err1 == nil && err2 != nil) || err1.Error() == err2.Error()
 }
 
-// waitForRestart tries a range request until the client's server responds.
+// waitForRestart tries a range request until the client's etcd responds.
 // This is mainly a stop-gap function until grpcproxy's KVClient adapter
 // (and by extension, clientv3) supports grpc.CallOption pass-through so
 // FailFast=false works with Put.

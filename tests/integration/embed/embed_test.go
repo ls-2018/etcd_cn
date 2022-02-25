@@ -33,14 +33,14 @@ import (
 
 	"github.com/ls-2018/client/pkg/testutil"
 	"github.com/ls-2018/client/pkg/transport"
-	"github.com/ls-2018/server/embed"
+	"github.com/ls-2018/etcd/embed"
 	"github.com/ls-2018/tests/integration"
 )
 
 var (
 	testTLSInfo = transport.TLSInfo{
-		KeyFile:        integration.MustAbsPath("../../fixtures/server.key.insecure"),
-		CertFile:       integration.MustAbsPath("../../fixtures/server.crt"),
+		KeyFile:        integration.MustAbsPath("../../fixtures/etcd.key.insecure"),
+		CertFile:       integration.MustAbsPath("../../fixtures/etcd.crt"),
 		TrustedCAFile:  integration.MustAbsPath("../../fixtures/ca.crt"),
 		ClientCertAuth: true,
 	}
@@ -129,7 +129,7 @@ func TestEmbedEtcd(t *testing.T) {
 func TestEmbedEtcdGracefulStopSecure(t *testing.T)   { testEmbedEtcdGracefulStop(t, true) }
 func TestEmbedEtcdGracefulStopInsecure(t *testing.T) { testEmbedEtcdGracefulStop(t, false) }
 
-// testEmbedEtcdGracefulStop ensures embedded server stops
+// testEmbedEtcdGracefulStop ensures embedded etcd stops
 // cutting existing transports.
 func testEmbedEtcdGracefulStop(t *testing.T, secure bool) {
 	testutil.SkipTestIfShortMode(t, "Cannot start embedded cluster in --short tests")
@@ -177,7 +177,7 @@ func testEmbedEtcdGracefulStop(t *testing.T, secure bool) {
 	select {
 	case <-donec:
 	case <-time.After(2*time.Second + e.Server.Cfg.ReqTimeout()):
-		t.Fatalf("took too long to close server")
+		t.Fatalf("took too long to close etcd")
 	}
 	err = <-e.Err()
 	if err != nil {

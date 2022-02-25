@@ -46,20 +46,20 @@ type WatchChan <-chan WatchResponse
 type Watcher interface {
 	// Watch watches on a key or prefix. The watched events will be returned
 	// through the returned channel. If revisions waiting to be sent over the
-	// watch are compacted, then the watch will be canceled by the server, the
+	// watch are compacted, then the watch will be canceled by the etcd, the
 	// client will post a compacted error watch response, and the channel will close.
 	// If the requested revision is 0 or unspecified, the returned channel will
-	// return watch events that happen after the server receives the watch request.
+	// return watch events that happen after the etcd receives the watch request.
 	// If the context "ctx" is canceled or timed out, returned "WatchChan" is closed,
 	// and "WatchResponse" from this closed channel has zero events and nil "Err()".
 	// The context "ctx" MUST be canceled, as soon as watcher is no longer being used,
 	// to release the associated resources.
 	//
 	// If the context is "context.Background/TODO", returned "WatchChan" will
-	// not be closed and block until event is triggered, except when server
+	// not be closed and block until event is triggered, except when etcd
 	// returns a non-recoverable error (e.g. ErrCompacted).
 	// For example, when context passed with "WithRequireLeader" and the
-	// connected server has no leader (e.g. due to network partition),
+	// connected etcd has no leader (e.g. due to network partition),
 	// error "etcdserver: no leader" (ErrNoLeader) will be returned,
 	// and then "WatchChan" is closed with non-nil "Err()".
 	// In order to prevent a watch stream being stuck in a partitioned node,
@@ -525,7 +525,7 @@ func (w *watchGrpcStream) run() {
 		w.owner.closeStream(w)
 	}()
 
-	// start a stream with the etcd grpc server
+	// start a stream with the etcd grpc etcd
 	if wc, closeErr = w.newWatchClient(); closeErr != nil {
 		return
 	}
@@ -670,7 +670,7 @@ func (w *watchGrpcStream) run() {
 				return
 			}
 			if ws.id != -1 {
-				// client is closing an established watch; close it on the server proactively instead of waiting
+				// client is closing an established watch; close it on the etcd proactively instead of waiting
 				// to close when the next message arrives
 				cancelSet[ws.id] = struct{}{}
 				cr := &pb.WatchRequest_CancelRequest{

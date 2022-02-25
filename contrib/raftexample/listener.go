@@ -48,7 +48,7 @@ func (ln stoppableListener) Accept() (c net.Conn, err error) {
 	}()
 	select {
 	case <-ln.stopc:
-		return nil, errors.New("server stopped")
+		return nil, errors.New("etcd stopped")
 	case err := <-errc:
 		return nil, err
 	case tc := <-connc:

@@ -322,7 +322,7 @@ func TestLeasingRevGet(t *testing.T) {
 	}
 }
 
-// TestLeasingGetWithOpts checks options that can be served through the cache do not depend on the server.
+// TestLeasingGetWithOpts checks options that can be served through the cache do not depend on the etcd.
 func TestLeasingGetWithOpts(t *testing.T) {
 	integration.BeforeTest(t)
 	clus := integration.NewClusterV3(t, &integration.ClusterConfig{Size: 1, UseBridge: true})
@@ -1224,7 +1224,7 @@ func TestLeasingDeleteRangeBounds(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// leases still on server?
+	// leases still on etcd?
 	for _, k := range []string{"j", "m"} {
 		resp, geterr := clus.Client(0).Get(context.TODO(), "0/"+k, clientv3.WithPrefix())
 		if geterr != nil {
@@ -1486,7 +1486,7 @@ func TestLeasingReconnectOwnerRevokeCompact(t *testing.T) {
 }
 
 // TestLeasingReconnectOwnerConsistency checks a write error on an owner will
-// not cause inconsistency between the server and the client.
+// not cause inconsistency between the etcd and the client.
 func TestLeasingReconnectOwnerConsistency(t *testing.T) {
 	integration.BeforeTest(t)
 	clus := integration.NewClusterV3(t, &integration.ClusterConfig{Size: 1, UseBridge: true})
@@ -1682,7 +1682,7 @@ func TestLeasingReconnectTxn(t *testing.T) {
 }
 
 // TestLeasingReconnectNonOwnerGet checks a get error on an owner will
-// not cause inconsistency between the server and the client.
+// not cause inconsistency between the etcd and the client.
 func TestLeasingReconnectNonOwnerGet(t *testing.T) {
 	integration.BeforeTest(t)
 	clus := integration.NewClusterV3(t, &integration.ClusterConfig{Size: 1, UseBridge: true})
@@ -1836,7 +1836,7 @@ func TestLeasingTxnOwnerPutBranch(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// lkv shouldn't need to call out to server for updated leased keys
+	// lkv shouldn't need to call out to etcd for updated leased keys
 	clus.Members[0].Stop(t)
 
 	for i := 0; i < n; i++ {
@@ -2011,7 +2011,7 @@ func TestLeasingSessionExpireCancel(t *testing.T) {
 			select {
 			case err := <-errc:
 				if err != ctx.Err() {
-					t.Errorf("#%d: expected %v of server unavailable, got %v", i, ctx.Err(), err)
+					t.Errorf("#%d: expected %v of etcd unavailable, got %v", i, ctx.Err(), err)
 				}
 			case <-time.After(5 * time.Second):
 				t.Errorf("#%d: timed out waiting for cancel", i)
@@ -2029,7 +2029,7 @@ func waitForLeasingExpire(kv clientv3.KV, lkey string) error {
 			return err
 		}
 		if len(resp.Kvs) == 0 {
-			// server expired the leasing key
+			// etcd expired the leasing key
 			return nil
 		}
 	}

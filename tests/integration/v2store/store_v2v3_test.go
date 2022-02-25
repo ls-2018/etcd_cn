@@ -19,8 +19,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ls-2018/server/etcdserver/api/v2store"
-	"github.com/ls-2018/server/etcdserver/api/v2v3"
+	"github.com/ls-2018/etcd/etcdserver/api/v2store"
+	"github.com/ls-2018/etcd/etcdserver/api/v2v3"
 	"github.com/ls-2018/tests/integration"
 )
 

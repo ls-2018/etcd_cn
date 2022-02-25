@@ -113,7 +113,7 @@ func TestV3AuthWithLeaseRevokeWithRoot(t *testing.T) {
 }
 
 // TestV3AuthWithLeaseRevokeWithRootJWT creates a lease with a JWT-token enabled cluster.
-// And tests if server is able to revoke expiry lease item.
+// And tests if etcd is able to revoke expiry lease item.
 func TestV3AuthWithLeaseRevokeWithRootJWT(t *testing.T) {
 	testV3AuthWithLeaseRevokeWithRoot(t, ClusterConfig{Size: 1, AuthToken: defaultTokenJWT})
 }

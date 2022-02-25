@@ -153,7 +153,7 @@ function run {
 
 # run_for_module [module] [cmd]
 # executes given command in the given module for given pkgs.
-#   module_name - "." (in future: tests, client, server)
+#   module_name - "." (in future: tests, client, etcd)
 #   cmd         - cmd to be executed - that takes package as last argument
 function run_for_module {
   local module=${1:-"."}

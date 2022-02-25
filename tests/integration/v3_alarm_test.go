@@ -23,14 +23,14 @@ import (
 	"time"
 
 	"github.com/ls-2018/pkg/traceutil"
-	"github.com/ls-2018/server/mvcc"
-	"github.com/ls-2018/server/mvcc/backend"
+	"github.com/ls-2018/etcd/mvcc"
+	"github.com/ls-2018/etcd/mvcc/backend"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
 	"go.uber.org/zap/zaptest"
 )
 
-// TestV3StorageQuotaApply tests the V3 server respects quotas during apply
+// TestV3StorageQuotaApply tests the V3 etcd respects quotas during apply
 func TestV3StorageQuotaApply(t *testing.T) {
 	BeforeTest(t)
 	quotasize := int64(16 * os.Getpagesize())

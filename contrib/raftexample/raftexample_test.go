@@ -185,7 +185,7 @@ func TestPutAndGetKeyValue(t *testing.T) {
 	})
 	defer srv.Close()
 
-	// wait server started
+	// wait etcd started
 	<-time.After(time.Second * 3)
 
 	wantKey, wantValue := "test-key", "test-value"

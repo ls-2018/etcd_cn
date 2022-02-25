@@ -733,7 +733,7 @@ func TestV3LeaseRecoverAndRevoke(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// restart server and ensure lease still exists
+	// restart etcd and ensure lease still exists
 	clus.Members[0].Stop(t)
 	clus.Members[0].Restart(t)
 	clus.waitLeader(t, clus.Members)
@@ -790,7 +790,7 @@ func TestV3LeaseRevokeAndRecover(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// restart server and ensure revoked key doesn't exist
+	// restart etcd and ensure revoked key doesn't exist
 	clus.Members[0].Stop(t)
 	clus.Members[0].Restart(t)
 	clus.waitLeader(t, clus.Members)
@@ -842,7 +842,7 @@ func TestV3LeaseRecoverKeyWithDetachedLease(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// restart server and ensure lease still exists
+	// restart etcd and ensure lease still exists
 	clus.Members[0].Stop(t)
 	clus.Members[0].Restart(t)
 	clus.waitLeader(t, clus.Members)
@@ -897,7 +897,7 @@ func TestV3LeaseRecoverKeyWithMutipleLease(t *testing.T) {
 		}
 	}
 
-	// restart server and ensure lease still exists
+	// restart etcd and ensure lease still exists
 	clus.Members[0].Stop(t)
 	clus.Members[0].Restart(t)
 	clus.waitLeader(t, clus.Members)

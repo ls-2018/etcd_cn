@@ -122,11 +122,11 @@ type Config struct {
 	// header in a single request made by the Client. The timeout includes
 	// connection time, any redirects, and header wait time.
 	//
-	// For non-watch GET request, server returns the response body immediately.
-	// For PUT/POST/DELETE request, server will attempt to commit request
+	// For non-watch GET request, etcd returns the response body immediately.
+	// For PUT/POST/DELETE request, etcd will attempt to commit request
 	// before responding, which is expected to take `100ms + 2 * RTT`.
-	// For watch request, server returns the header immediately to notify Client
-	// watch start. But if server is behind some kind of proxy, the response
+	// For watch request, etcd returns the header immediately to notify Client
+	// watch start. But if etcd is behind some kind of proxy, the response
 	// header may be cached at proxy, and Client cannot rely on this behavior.
 	//
 	// Especially, wait request will ignore this timeout.
@@ -179,7 +179,7 @@ type Client interface {
 
 	// AutoSync periodically calls Sync() every given interval.
 	// The recommended sync interval is 10 seconds to 1 minute, which does
-	// not bring too much overhead to server and makes client catch up the
+	// not bring too much overhead to etcd and makes client catch up the
 	// cluster change in time.
 	//
 	// The example to use it:
@@ -203,7 +203,7 @@ type Client interface {
 	// returned
 	SetEndpoints(eps []string) error
 
-	// GetVersion retrieves the current etcd server and cluster version
+	// GetVersion retrieves the current etcd etcd and cluster version
 	GetVersion(ctx context.Context) (*version.Versions, error)
 
 	httpClient
@@ -377,7 +377,7 @@ func (c *httpClusterClient) Do(ctx context.Context, act httpAction) (*http.Respo
 				// TODO: make sure this is a no leader response
 				cerr.Errors = append(cerr.Errors, fmt.Errorf("client: etcd member %s has no leader", eps[k].String()))
 			default:
-				cerr.Errors = append(cerr.Errors, fmt.Errorf("client: etcd member %s returns server error [%s]", eps[k].String(), http.StatusText(resp.StatusCode)))
+				cerr.Errors = append(cerr.Errors, fmt.Errorf("client: etcd member %s returns etcd error [%s]", eps[k].String(), http.StatusText(resp.StatusCode)))
 			}
 			err = cerr.Errors[0]
 		}

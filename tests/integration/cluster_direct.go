@@ -19,8 +19,8 @@ package integration
 
 import (
 	clientv3 "github.com/ls-2018/client/v3"
-	"github.com/ls-2018/server/etcdserver/api/v3election/v3electionpb"
-	"github.com/ls-2018/server/etcdserver/api/v3lock/v3lockpb"
+	"github.com/ls-2018/etcd/etcdserver/api/v3election/v3electionpb"
+	"github.com/ls-2018/etcd/etcdserver/api/v3lock/v3lockpb"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 	"go.uber.org/zap"
 )

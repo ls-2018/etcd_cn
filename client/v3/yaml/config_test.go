@@ -25,8 +25,8 @@ import (
 )
 
 var (
-	certPath       = "../../../tests/fixtures/server.crt"
-	privateKeyPath = "../../../tests/fixtures/server.key.insecure"
+	certPath       = "../../../tests/fixtures/etcd.crt"
+	privateKeyPath = "../../../tests/fixtures/etcd.key.insecure"
 	caPath         = "../../../tests/fixtures/ca.crt"
 )
 

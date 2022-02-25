@@ -15,24 +15,24 @@ sleep 7s
 
 ETCDCTL_API=3 ./etcdctl \
  --cacert=/certs-san-dns/ca.crt \
- --cert=/certs-san-dns/server-1.crt \
- --key=/certs-san-dns/server-1.key.insecure \
+ --cert=/certs-san-dns/etcd-1.crt \
+ --key=/certs-san-dns/etcd-1.key.insecure \
  --endpoints=https://m1.etcd.local:2379,https://m2.etcd.local:22379,https://m3.etcd.local:32379 \
  endpoint health --cluster
 
 printf "\nPut abc \n"
 ETCDCTL_API=3 ./etcdctl \
  --cacert=/certs-san-dns/ca.crt \
- --cert=/certs-san-dns/server-2.crt \
- --key=/certs-san-dns/server-2.key.insecure \
+ --cert=/certs-san-dns/etcd-2.crt \
+ --key=/certs-san-dns/etcd-2.key.insecure \
  --endpoints=https://m1.etcd.local:2379,https://m2.etcd.local:22379,https://m3.etcd.local:32379 \
  put abc def
 
 printf "\nGet abc \n"
 ETCDCTL_API=3 ./etcdctl \
  --cacert=/certs-san-dns/ca.crt \
- --cert=/certs-san-dns/server-3.crt \
- --key=/certs-san-dns/server-3.key.insecure \
+ --cert=/certs-san-dns/etcd-3.crt \
+ --key=/certs-san-dns/etcd-3.key.insecure \
  --endpoints=https://m1.etcd.local:2379,https://m2.etcd.local:22379,https://m3.etcd.local:32379 \
  get abc
 
@@ -43,8 +43,8 @@ sleep 7s
 printf "\nGet abc after killing server 1\n"
 ETCDCTL_API=3 ./etcdctl \
  --cacert=/certs-san-dns/ca.crt \
- --cert=/certs-san-dns/server-2.crt \
- --key=/certs-san-dns/server-2.key.insecure \
+ --cert=/certs-san-dns/etcd-2.crt \
+ --key=/certs-san-dns/etcd-2.key.insecure \
  --endpoints=https://m1.etcd.local:2379,https://m2.etcd.local:22379,https://m3.etcd.local:32379 \
  get abc
 printf "\n\nDone!!!\n\n"

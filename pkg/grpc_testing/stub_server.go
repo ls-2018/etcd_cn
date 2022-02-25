@@ -14,7 +14,7 @@ import (
 // Since it cannot be imported directly, we have to copy and paste it here,
 // and useless code for our testing is removed.
 
-// StubServer is a server that is easy to customize within individual test
+// StubServer is a etcd that is easy to customize within individual test
 // cases.
 type StubServer struct {
 	testService testpb.TestServiceServer
@@ -32,7 +32,7 @@ func New(testService testpb.TestServiceServer) *StubServer {
 	return &StubServer{testService: testService}
 }
 
-// Start starts the server and creates a client connected to it.
+// Start starts the etcd and creates a client connected to it.
 func (ss *StubServer) Start(sopts []grpc.ServerOption, dopts ...grpc.DialOption) error {
 	if ss.Network == "" {
 		ss.Network = "tcp"
@@ -64,7 +64,7 @@ func (ss *StubServer) Stop() {
 	}
 }
 
-// Addr gets the address the server listening on.
+// Addr gets the address the etcd listening on.
 func (ss *StubServer) Addr() string {
 	return ss.Address
 }
@@ -83,7 +83,7 @@ func (d dummyStubServer) UnaryCall(context.Context, *testpb.SimpleRequest) (*tes
 	}, nil
 }
 
-// NewDummyStubServer creates a simple test server that serves Unary calls with
+// NewDummyStubServer creates a simple test etcd that serves Unary calls with
 // responses with the given payload.
 func NewDummyStubServer(body []byte) *StubServer {
 	return New(dummyStubServer{body: body})

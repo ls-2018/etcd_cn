@@ -23,7 +23,7 @@ import (
 	"time"
 
 	"github.com/ls-2018/client/pkg/transport"
-	"github.com/ls-2018/server/etcdserver"
+	"github.com/ls-2018/etcd/etcdserver"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 )
 

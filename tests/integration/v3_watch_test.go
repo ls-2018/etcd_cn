@@ -24,7 +24,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ls-2018/server/etcdserver/api/v3rpc"
+	"github.com/ls-2018/etcd/etcdserver/api/v3rpc"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 	"go.etcd.io/etcd/api/v3/mvccpb"
 )
@@ -1215,7 +1215,7 @@ func TestV3WatchWithPrevKV(t *testing.T) {
 	}
 }
 
-// TestV3WatchCancellation ensures that watch cancellation frees up server resources.
+// TestV3WatchCancellation ensures that watch cancellation frees up etcd resources.
 func TestV3WatchCancellation(t *testing.T) {
 	BeforeTest(t)
 

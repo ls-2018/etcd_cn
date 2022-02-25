@@ -293,7 +293,7 @@ func TestLeaseGrantErrConnClosed(t *testing.T) {
 		_, err := cli.Grant(context.TODO(), 5)
 		if !clientv3.IsConnCanceled(err) {
 			// context.Canceled if grpc-go balancer calls 'Get' with an inflight client.Close.
-			t.Errorf("expected %v, or server unavailable, got %v", context.Canceled, err)
+			t.Errorf("expected %v, or etcd unavailable, got %v", context.Canceled, err)
 		}
 	}()
 
@@ -363,7 +363,7 @@ func TestLeaseGrantNewAfterClose(t *testing.T) {
 	go func() {
 		_, err := cli.Grant(context.TODO(), 5)
 		if !clientv3.IsConnCanceled(err) {
-			t.Errorf("expected %v or server unavailable, got %v", context.Canceled, err)
+			t.Errorf("expected %v or etcd unavailable, got %v", context.Canceled, err)
 		}
 		close(donec)
 	}()
@@ -396,7 +396,7 @@ func TestLeaseRevokeNewAfterClose(t *testing.T) {
 	go func() {
 		_, err := cli.Revoke(context.TODO(), leaseID)
 		if !clientv3.IsConnCanceled(err) {
-			errMsgCh <- fmt.Sprintf("expected %v or server unavailable, got %v", context.Canceled, err)
+			errMsgCh <- fmt.Sprintf("expected %v or etcd unavailable, got %v", context.Canceled, err)
 		} else {
 			errMsgCh <- ""
 		}
@@ -549,7 +549,7 @@ func TestLeaseTimeToLive(t *testing.T) {
 		}
 	}
 
-	// linearized read to ensure Puts propagated to server backing lapi
+	// linearized read to ensure Puts propagated to etcd backing lapi
 	if _, err := c.Get(context.TODO(), "abc"); err != nil {
 		t.Fatal(err)
 	}
@@ -688,7 +688,7 @@ func TestLeaseRenewLostQuorum(t *testing.T) {
 	clus.Members[2].Restart(t)
 
 	if time.Since(lastKa) > time.Duration(r.TTL)*time.Second {
-		t.Skip("waited too long for server stop and restart")
+		t.Skip("waited too long for etcd stop and restart")
 	}
 
 	select {
@@ -818,7 +818,7 @@ func TestLeaseWithRequireLeader(t *testing.T) {
 
 	clus.Members[1].Stop(t)
 	// kaReqLeader may issue multiple requests while waiting for the first
-	// response from proxy server; drain any stray keepalive responses
+	// response from proxy etcd; drain any stray keepalive responses
 	time.Sleep(100 * time.Millisecond)
 	for {
 		<-kaReqLeader

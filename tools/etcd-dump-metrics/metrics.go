@@ -67,7 +67,7 @@ func (mss metricSlice) String() (s string) {
 			s += "\n\n"
 		}
 	}
-	return "# server version: " + ver + "\n\n" + s
+	return "# etcd version: " + ver + "\n\n" + s
 }
 
 type metricSlice []metric

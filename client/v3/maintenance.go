@@ -226,7 +226,7 @@ func (m *maintenance) Snapshot(ctx context.Context) (io.ReadCloser, error) {
 
 			// can "resp == nil && err == nil"
 			// before we receive snapshot SHA digest?
-			// No, server sends EOF with an empty response
+			// No, etcd sends EOF with an empty response
 			// after it sends SHA digest at the end
 
 			if _, werr := pw.Write(resp.Blob); werr != nil {

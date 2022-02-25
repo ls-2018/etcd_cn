@@ -38,7 +38,7 @@ type Stresser interface {
 // newStresser creates stresser from a comma separated list of stresser types.
 func newStresser(clus *Cluster, m *rpcpb.Member) (stressers []Stresser) {
 	// TODO: Too intensive stressing clients can panic etcd member with
-	// 'out of memory' error. Put rate limits in server side.
+	// 'out of memory' error. Put rate limits in etcd side.
 	ks := &keyStresser{
 		lg:                clus.lg,
 		m:                 m,

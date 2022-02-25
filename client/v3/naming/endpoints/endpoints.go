@@ -11,7 +11,7 @@ import (
 // Inspired by: https://pkg.go.dev/google.golang.org/grpc/resolver#Address.
 // Please document etcd version since which version each field is supported.
 type Endpoint struct {
-	// Addr is the server address on which a connection will be established.
+	// Addr is the etcd address on which a connection will be established.
 	// Since etcd 3.1
 	Addr string
 

@@ -37,14 +37,14 @@ func TestEtcdGrpcResolver(t *testing.T) {
 	s1PayloadBody := []byte{'1'}
 	s1 := grpc_testing.NewDummyStubServer(s1PayloadBody)
 	if err := s1.Start(nil); err != nil {
-		t.Fatal("failed to start dummy grpc server (s1)", err)
+		t.Fatal("failed to start dummy grpc etcd (s1)", err)
 	}
 	defer s1.Stop()
 
 	s2PayloadBody := []byte{'2'}
 	s2 := grpc_testing.NewDummyStubServer(s2PayloadBody)
 	if err := s2.Start(nil); err != nil {
-		t.Fatal("failed to start dummy grpc server (s2)", err)
+		t.Fatal("failed to start dummy grpc etcd (s2)", err)
 	}
 	defer s2.Stop()
 

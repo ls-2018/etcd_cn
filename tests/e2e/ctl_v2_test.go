@@ -277,7 +277,7 @@ func testUtlCtlV2Backup(t *testing.T, snapCount int, v3 bool, utl bool) {
 	cfg2.forceNewCluster = true
 	cfg2.enableV2 = true
 	epc2 := setupEtcdctlTest(t, cfg2, false)
-	// Make sure a failing test is not leaking resources (running server).
+	// Make sure a failing test is not leaking resources (running etcd).
 	defer epc2.Close()
 
 	t.Log("Getting examplar key")

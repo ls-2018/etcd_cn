@@ -403,7 +403,7 @@ func newClient(cfg *Config) (*Client, error) {
 		return nil, fmt.Errorf("at least one Endpoint is required in client config")
 	}
 	// Use a provided endpoint target so that for https:// without any tls config given, then
-	// grpc will assume the certificate server name is the endpoint host.
+	// grpc will assume the certificate etcd name is the endpoint host.
 	conn, err := client.dialWithBalancer()
 	if err != nil {
 		client.cancel()
@@ -591,7 +591,7 @@ func IsConnCanceled(err error) bool {
 	// >= gRPC v1.23.x
 	s, ok := status.FromError(err)
 	if ok {
-		// connection is canceled or server has already closed the connection
+		// connection is canceled or etcd has already closed the connection
 		return s.Code() == codes.Canceled || s.Message() == "transport is closing"
 	}
 

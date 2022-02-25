@@ -23,7 +23,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ls-2018/server/datadir"
+	"github.com/ls-2018/etcd/datadir"
 	bolt "go.etcd.io/bbolt"
 	"go.etcd.io/etcd/api/v3/mvccpb"
 )

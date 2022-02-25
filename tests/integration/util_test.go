@@ -25,8 +25,8 @@ import (
 // copyTLSFiles clones certs files to dst directory.
 func copyTLSFiles(ti transport.TLSInfo, dst string) (transport.TLSInfo, error) {
 	ci := transport.TLSInfo{
-		KeyFile:        filepath.Join(dst, "server-key.pem"),
-		CertFile:       filepath.Join(dst, "server.pem"),
+		KeyFile:        filepath.Join(dst, "etcd-key.pem"),
+		CertFile:       filepath.Join(dst, "etcd.pem"),
 		TrustedCAFile:  filepath.Join(dst, "etcd-root-ca.pem"),
 		ClientCertAuth: ti.ClientCertAuth,
 	}

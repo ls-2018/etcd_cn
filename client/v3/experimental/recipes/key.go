@@ -92,7 +92,7 @@ func newSequentialKV(kv v3.KV, prefix, val string) (*RemoteKV, error) {
 	}
 	newKey := fmt.Sprintf("%s/%016d", prefix, newSeqNum)
 
-	// base prefix key must be current (i.e., <=) with the server update;
+	// base prefix key must be current (i.e., <=) with the etcd update;
 	// the base key is important to avoid the following:
 	// N1: LastKey() == 1, start txn.
 	// N2: new Key 2, new Key 3, Delete Key 2

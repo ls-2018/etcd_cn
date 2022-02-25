@@ -56,7 +56,7 @@ func TestV3MaintenanceDefragmentInflightRange(t *testing.T) {
 }
 
 // TestV3KVInflightRangeRequests ensures that inflight requests
-// (sent before server shutdown) are gracefully handled by server-side.
+// (sent before etcd shutdown) are gracefully handled by etcd-side.
 // They are either finished or canceled, but never crash the backend.
 // See https://github.com/etcd-io/etcd/issues/7322 for more detail.
 func TestV3KVInflightRangeRequests(t *testing.T) {

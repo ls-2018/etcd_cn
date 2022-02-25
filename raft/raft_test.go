@@ -2009,7 +2009,7 @@ func TestDisruptiveFollower(t *testing.T) {
 		t.Fatalf("node 3 state: %s, want %s", n3.state, StateFollower)
 	}
 
-	// etcd server "advanceTicksForElection" on restart;
+	// etcd etcd "advanceTicksForElection" on restart;
 	// this is to expedite campaign trigger when given larger
 	// election timeouts (e.g. multi-datacenter deploy)
 	// Or leader messages are being delayed while ticks elapse

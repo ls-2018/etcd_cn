@@ -34,8 +34,8 @@ func init() {
 }
 
 func main() {
-	network := flag.String("network", "tcp", "network to serve agent server")
-	address := flag.String("address", "127.0.0.1:9027", "address to serve agent server")
+	network := flag.String("network", "tcp", "network to serve agent etcd")
+	address := flag.String("address", "127.0.0.1:9027", "address to serve agent etcd")
 	flag.Parse()
 
 	defer logger.Sync()

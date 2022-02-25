@@ -28,7 +28,7 @@ import (
 	"github.com/ls-2018/client/pkg/fileutil"
 	"github.com/ls-2018/client/pkg/testutil"
 	"github.com/ls-2018/client/v3/snapshot"
-	"github.com/ls-2018/server/embed"
+	"github.com/ls-2018/etcd/embed"
 	"github.com/ls-2018/tests/integration"
 	"go.uber.org/zap/zaptest"
 )

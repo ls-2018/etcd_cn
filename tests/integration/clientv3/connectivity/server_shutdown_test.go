@@ -272,7 +272,7 @@ type pinTestOpt struct {
 }
 
 // testBalancerUnderServerStopInflightRangeOnRestart expects
-// inflight range request reconnects on server restart.
+// inflight range request reconnects on etcd restart.
 func testBalancerUnderServerStopInflightRangeOnRestart(t *testing.T, linearizable bool, opt pinTestOpt) {
 	integration.BeforeTest(t)
 

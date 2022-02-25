@@ -199,7 +199,7 @@ type GetOptions struct {
 	// should be returned.
 	Recursive bool
 
-	// Sort instructs the server whether or not to sort the Nodes.
+	// Sort instructs the etcd whether or not to sort the Nodes.
 	// If true, the Nodes are sorted alphabetically by key in
 	// ascending order (A to z). If false (default), the Nodes will
 	// not be sorted and the ordering used should not be considered
@@ -270,7 +270,7 @@ type Response struct {
 	// This index is not tied to the Node(s) contained in this Response.
 	Index uint64 `json:"-"`
 
-	// ClusterID holds the cluster-level ID reported by the server.  This
+	// ClusterID holds the cluster-level ID reported by the etcd.  This
 	// should be different for different etcd clusters.
 	ClusterID string `json:"-"`
 }
@@ -297,7 +297,7 @@ type Node struct {
 	// ModifiedIndex is the etcd index at-which this Node was last modified.
 	ModifiedIndex uint64 `json:"modifiedIndex"`
 
-	// Expiration is the server side expiration time of the key.
+	// Expiration is the etcd side expiration time of the key.
 	Expiration *time.Time `json:"expiration,omitempty"`
 
 	// TTL is the time to live of the key in second.
@@ -470,7 +470,7 @@ func (hw *httpWatcher) Next(ctx context.Context) (*Response, error) {
 
 // v2KeysURL forms a URL representing the location of a key.
 // The endpoint argument represents the base URL of an etcd
-// server. The prefix is the path needed to route from the
+// etcd. The prefix is the path needed to route from the
 // provided endpoint's path to the root of the keys API
 // (typically "/v2/keys").
 func v2KeysURL(ep url.URL, prefix, key string) *url.URL {

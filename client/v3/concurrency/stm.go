@@ -33,7 +33,7 @@ type STM interface {
 	// Del deletes a key.
 	Del(key string)
 
-	// commit attempts to apply the txn's changes to the server.
+	// commit attempts to apply the txn's changes to the etcd.
 	commit() *v3.TxnResponse
 	reset()
 }

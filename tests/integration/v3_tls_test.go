@@ -28,7 +28,7 @@ func TestTLSClientCipherSuitesValid(t *testing.T)    { testTLSCipherSuites(t, tr
 func TestTLSClientCipherSuitesMismatch(t *testing.T) { testTLSCipherSuites(t, false) }
 
 // testTLSCipherSuites ensures mismatching client-side cipher suite
-// fail TLS handshake with the server.
+// fail TLS handshake with the etcd.
 func testTLSCipherSuites(t *testing.T, valid bool) {
 	BeforeTest(t)
 

@@ -55,7 +55,7 @@ log_callout -e "\\nRunning swagger & grpc_gateway proto generation..."
 
 # remove old swagger files so it's obvious whether the files fail to generate
 rm -rf Documentation/dev-guide/apispec/swagger/*json
-for pb in api/etcdserverpb/rpc server/etcdserver/api/v3lock/v3lockpb/v3lock server/etcdserver/api/v3election/v3electionpb/v3election; do
+for pb in api/etcdserverpb/rpc etcd/etcdserver/api/v3lock/v3lockpb/v3lock etcd/etcdserver/api/v3election/v3electionpb/v3election; do
   log_callout "grpc & swagger for: ${pb}.proto"
   run protoc -I. \
       -I"${GRPC_GATEWAY_ROOT}"/third_party/googleapis \

@@ -21,7 +21,7 @@ import (
 	"testing"
 
 	"github.com/ls-2018/client/pkg/testutil"
-	"github.com/ls-2018/server/etcdserver/api/v2store"
+	"github.com/ls-2018/etcd/etcdserver/api/v2store"
 	"github.com/ls-2018/tests/integration"
 )
 

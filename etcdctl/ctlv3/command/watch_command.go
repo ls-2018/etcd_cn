@@ -56,7 +56,7 @@ func NewWatchCommand() *cobra.Command {
 	cmd.Flags().BoolVar(&watchPrefix, "prefix", false, "Watch on a prefix if prefix is set")
 	cmd.Flags().Int64Var(&watchRev, "rev", 0, "Revision to start watching")
 	cmd.Flags().BoolVar(&watchPrevKey, "prev-kv", false, "get the previous key-value pair before the event happens")
-	cmd.Flags().BoolVar(&progressNotify, "progress-notify", false, "get periodic watch progress notification from server")
+	cmd.Flags().BoolVar(&progressNotify, "progress-notify", false, "get periodic watch progress notification from etcd")
 
 	return cmd
 }
@@ -88,7 +88,7 @@ func watchCommandFunc(cmd *cobra.Command, args []string) {
 	if err = c.Close(); err != nil {
 		cobrautl.ExitWithError(cobrautl.ExitBadConnection, err)
 	}
-	cobrautl.ExitWithError(cobrautl.ExitInterrupted, fmt.Errorf("watch is canceled by the server"))
+	cobrautl.ExitWithError(cobrautl.ExitInterrupted, fmt.Errorf("watch is canceled by the etcd"))
 }
 
 func watchInteractiveFunc(cmd *cobra.Command, osArgs []string, envKey, envRange string) {

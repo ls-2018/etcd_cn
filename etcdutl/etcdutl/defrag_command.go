@@ -20,8 +20,8 @@ import (
 	"time"
 
 	"github.com/ls-2018/pkg/cobrautl"
-	"github.com/ls-2018/server/datadir"
-	"github.com/ls-2018/server/mvcc/backend"
+	"github.com/ls-2018/etcd/datadir"
+	"github.com/ls-2018/etcd/mvcc/backend"
 	"github.com/spf13/cobra"
 )
 

@@ -13,7 +13,7 @@ import "path"
 // 2. replace multiple slashes with a single slash
 // 3. replace each '.' '..' path name element with equivalent one
 // 4. keep the trailing slash
-// The function is borrowed from stdlib http.cleanPath in server.go.
+// The function is borrowed from stdlib http.cleanPath in etcd.go.
 func CanonicalURLPath(p string) string {
 	if p == "" {
 		return "/"

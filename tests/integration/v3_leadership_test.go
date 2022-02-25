@@ -242,7 +242,7 @@ func checkFirstCommitNotification(
 	leaderAppliedIndex uint64,
 	notifier <-chan struct{},
 ) error {
-	// wait until server applies all the changes of leader
+	// wait until etcd applies all the changes of leader
 	for member.s.AppliedIndex() < leaderAppliedIndex {
 		t.Logf("member.s.AppliedIndex():%v <= leaderAppliedIndex:%v", member.s.AppliedIndex(), leaderAppliedIndex)
 		select {

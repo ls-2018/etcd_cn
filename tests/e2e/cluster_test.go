@@ -23,7 +23,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ls-2018/server/etcdserver"
+	"github.com/ls-2018/etcd/etcdserver"
 	"github.com/ls-2018/tests/integration"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
@@ -123,8 +123,8 @@ func newConfigJWT() *etcdProcessClusterConfig {
 	return &etcdProcessClusterConfig{
 		clusterSize:  1,
 		initialToken: "new",
-		authTokenOpts: "jwt,pub-key=" + path.Join(fixturesDir, "server.crt") +
-			",priv-key=" + path.Join(fixturesDir, "server.key.insecure") + ",sign-method=RS256,ttl=1s",
+		authTokenOpts: "jwt,pub-key=" + path.Join(fixturesDir, "etcd.crt") +
+			",priv-key=" + path.Join(fixturesDir, "etcd.key.insecure") + ",sign-method=RS256,ttl=1s",
 	}
 }
 

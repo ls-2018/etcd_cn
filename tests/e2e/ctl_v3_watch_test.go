@@ -81,7 +81,7 @@ func ctlV3WatchFailPerm(cx ctlCtx, args []string) error {
 	// TODO(mitake): after printing accurate error message that includes
 	// "permission denied", the above string argument of proc.Expect()
 	// should be updated.
-	_, err = proc.Expect("watch is canceled by the server")
+	_, err = proc.Expect("watch is canceled by the etcd")
 	if err != nil {
 		return err
 	}

@@ -179,7 +179,7 @@ func (clus *Cluster) doRound() error {
 			return fmt.Errorf("injection error: %v", err)
 		}
 
-		// if run local, recovering server may conflict
+		// if run local, recovering etcd may conflict
 		// with stressing client ports
 		// TODO: use unix for local tests
 		clus.lg.Info(

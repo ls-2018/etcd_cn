@@ -21,7 +21,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ls-2018/server/embed"
+	"github.com/ls-2018/etcd/embed"
 	"github.com/ls-2018/tests/integration"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
 )

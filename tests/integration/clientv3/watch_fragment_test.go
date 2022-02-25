@@ -30,14 +30,14 @@ import (
 )
 
 // TestWatchFragmentDisable ensures that large watch
-// response exceeding server-side request limit can
+// response exceeding etcd-side request limit can
 // arrive even without watch response fragmentation.
 func TestWatchFragmentDisable(t *testing.T) {
 	testWatchFragment(t, false, false)
 }
 
 // TestWatchFragmentDisableWithGRPCLimit verifies
-// large watch response exceeding server-side request
+// large watch response exceeding etcd-side request
 // limit and client-side gRPC response receive limit
 // cannot arrive without watch events fragmentation,
 // because multiple events exceed client-side gRPC
@@ -47,14 +47,14 @@ func TestWatchFragmentDisableWithGRPCLimit(t *testing.T) {
 }
 
 // TestWatchFragmentEnable ensures that large watch
-// response exceeding server-side request limit arrive
+// response exceeding etcd-side request limit arrive
 // with watch response fragmentation.
 func TestWatchFragmentEnable(t *testing.T) {
 	testWatchFragment(t, true, false)
 }
 
 // TestWatchFragmentEnableWithGRPCLimit verifies
-// large watch response exceeding server-side request
+// large watch response exceeding etcd-side request
 // limit and client-side gRPC response receive limit
 // can arrive only when watch events are fragmented.
 func TestWatchFragmentEnableWithGRPCLimit(t *testing.T) {
@@ -62,7 +62,7 @@ func TestWatchFragmentEnableWithGRPCLimit(t *testing.T) {
 }
 
 // testWatchFragment triggers watch response that spans over multiple
-// revisions exceeding server request limits when combined.
+// revisions exceeding etcd request limits when combined.
 func testWatchFragment(t *testing.T, fragment, exceedRecvLimit bool) {
 	integration.BeforeTest(t)
 

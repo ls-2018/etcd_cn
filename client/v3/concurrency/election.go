@@ -62,7 +62,7 @@ func ResumeElection(s *Session, pfx string, leaderKey string, leaderRev int64) *
 // same prefix, but only one can be the leader at a time.
 //
 // If the context is 'context.TODO()/context.Background()', the Campaign
-// will continue to be blocked for other keys to be deleted, unless server
+// will continue to be blocked for other keys to be deleted, unless etcd
 // returns a non-recoverable error (e.g. ErrCompacted).
 // Otherwise, until the context is not cancelled or timed-out, Campaign will
 // continue to be blocked until it becomes the leader.

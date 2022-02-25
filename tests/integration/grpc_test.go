@@ -36,7 +36,7 @@ func TestAuthority(t *testing.T) {
 		// %s - will be filled with member name
 		clientURLPattern string
 
-		// Pattern used to validate authority received by server. Fields filled:
+		// Pattern used to validate authority received by etcd. Fields filled:
 		// %d - will be filled with first member grpc port
 		// %s - will be filled with first member name
 		expectAuthorityPattern string

@@ -222,9 +222,9 @@ func TestMemberPromote(t *testing.T) {
 	clus := integration.NewClusterV3(t, &integration.ClusterConfig{Size: 3})
 	defer clus.Terminate(t)
 
-	// member promote request can be sent to any server in cluster,
-	// the request will be auto-forwarded to leader on server-side.
-	// This test explicitly includes the server-side forwarding by
+	// member promote request can be sent to any etcd in cluster,
+	// the request will be auto-forwarded to leader on etcd-side.
+	// This test explicitly includes the etcd-side forwarding by
 	// sending the request to follower.
 	leaderIdx := clus.WaitLeader(t)
 	followerIdx := (leaderIdx + 1) % 3
@@ -299,9 +299,9 @@ func TestMemberPromoteMemberNotLearner(t *testing.T) {
 	clus := integration.NewClusterV3(t, &integration.ClusterConfig{Size: 3})
 	defer clus.Terminate(t)
 
-	// member promote request can be sent to any server in cluster,
-	// the request will be auto-forwarded to leader on server-side.
-	// This test explicitly includes the server-side forwarding by
+	// member promote request can be sent to any etcd in cluster,
+	// the request will be auto-forwarded to leader on etcd-side.
+	// This test explicitly includes the etcd-side forwarding by
 	// sending the request to follower.
 	leaderIdx := clus.WaitLeader(t)
 	followerIdx := (leaderIdx + 1) % 3
@@ -335,9 +335,9 @@ func TestMemberPromoteMemberNotExist(t *testing.T) {
 	clus := integration.NewClusterV3(t, &integration.ClusterConfig{Size: 3})
 	defer clus.Terminate(t)
 
-	// member promote request can be sent to any server in cluster,
-	// the request will be auto-forwarded to leader on server-side.
-	// This test explicitly includes the server-side forwarding by
+	// member promote request can be sent to any etcd in cluster,
+	// the request will be auto-forwarded to leader on etcd-side.
+	// This test explicitly includes the etcd-side forwarding by
 	// sending the request to follower.
 	leaderIdx := clus.WaitLeader(t)
 	followerIdx := (leaderIdx + 1) % 3

@@ -128,7 +128,7 @@ func (srv *Server) runEtcd() error {
 	errc := make(chan error)
 	go func() {
 		time.Sleep(5 * time.Second)
-		// server advertise client/peer listener had to start first
+		// etcd advertise client/peer listener had to start first
 		// before setting up proxy listener
 		errc <- srv.startProxy()
 	}()
@@ -468,7 +468,7 @@ func (srv *Server) handle_INITIAL_START_ETCD(req *rpcpb.Request) (*rpcpb.Respons
 	if srv.last != rpcpb.Operation_NOT_STARTED {
 		return &rpcpb.Response{
 			Success: false,
-			Status:  fmt.Sprintf("%q is not valid; last server operation was %q", rpcpb.Operation_INITIAL_START_ETCD.String(), srv.last.String()),
+			Status:  fmt.Sprintf("%q is not valid; last etcd operation was %q", rpcpb.Operation_INITIAL_START_ETCD.String(), srv.last.String()),
 			Member:  req.Member,
 		}, nil
 	}
@@ -698,7 +698,7 @@ func (srv *Server) handle_SIGQUIT_ETCD_AND_REMOVE_DATA_AND_STOP_AGENT() (*rpcpb.
 	}
 	srv.lg.Info("removed base directory", zap.String("dir", srv.Member.BaseDir))
 
-	// stop agent server
+	// stop agent etcd
 	srv.Stop()
 
 	return &rpcpb.Response{

@@ -23,7 +23,7 @@ import (
 )
 
 // TestNewTransportTLSInvalidCipherSuitesTLS12 expects a client with invalid
-// cipher suites fail to handshake with the server.
+// cipher suites fail to handshake with the etcd.
 func TestNewTransportTLSInvalidCipherSuitesTLS12(t *testing.T) {
 	tlsInfo, del, err := createSelfCert()
 	if err != nil {
@@ -40,7 +40,7 @@ func TestNewTransportTLSInvalidCipherSuitesTLS12(t *testing.T) {
 		tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
 	}
 
-	// make server and client have unmatched cipher suites
+	// make etcd and client have unmatched cipher suites
 	srvTLS, cliTLS := *tlsInfo, *tlsInfo
 	srvTLS.CipherSuites, cliTLS.CipherSuites = cipherSuites[:2], cipherSuites[2:]
 

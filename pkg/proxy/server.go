@@ -48,7 +48,7 @@ func init() {
 	}
 }
 
-// Server defines proxy server layer that simulates common network faults:
+// Server defines proxy etcd layer that simulates common network faults:
 // latency spikes and packet drop or corruption. The proxy overhead is very
 // small overhead (<500μs per request). Please run tests to compute actual
 // overhead.
@@ -137,7 +137,7 @@ type Server interface {
 	ResetListener() error
 }
 
-// ServerConfig defines proxy server configuration.
+// ServerConfig defines proxy etcd configuration.
 type ServerConfig struct {
 	Logger        *zap.Logger
 	From          url.URL

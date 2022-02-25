@@ -241,7 +241,7 @@ func testBalancerUnderNetworkPartitionWatch(t *testing.T, isolateLeader bool) {
 
 	// wait for eps[target] to be connected
 	clientv3test.MustWaitPinReady(t, watchCli)
-	t.Logf("successful connection with server: %v", target)
+	t.Logf("successful connection with etcd: %v", target)
 
 	// We stick to the original endpoint, so when the one fails we don't switch
 	// under the cover to other available eps, but expose the failure to the

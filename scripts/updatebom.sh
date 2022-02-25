@@ -31,7 +31,7 @@ function bom_fixlet {
 function bom_fix {
   # We regenerate bom from the tests directory, as it's a module
   # that depends on all other modules, so we can generate comprehensive content.
-  # TODO: Migrate to root module, when root module depends on everything (including server & tests).
+  # TODO: Migrate to root module, when root module depends on everything (including etcd & tests).
   run_for_module "." bom_fixlet
 }
 

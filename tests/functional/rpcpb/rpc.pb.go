@@ -147,7 +147,7 @@ const (
 	// thus need to archive etcd data directories.
 	Operation_SIGQUIT_ETCD_AND_ARCHIVE_DATA Operation = 40
 	// SIGQUIT_ETCD_AND_REMOVE_DATA_AND_STOP_AGENT destroys etcd process,
-	// etcd data, and agent server.
+	// etcd data, and agent etcd.
 	Operation_SIGQUIT_ETCD_AND_REMOVE_DATA_AND_STOP_AGENT Operation = 41
 	// BLACKHOLE_PEER_PORT_TX_RX drops all outgoing/incoming packets from/to
 	// the peer port on target member's peer port.
@@ -507,7 +507,7 @@ const (
 	// Note: this is how Google Chubby does failure injection testing
 	// https://static.googleusercontent.com/media/research.google.com/en//archive/paxos_made_live.pdf.
 	Case_NO_FAIL_WITH_NO_STRESS_FOR_LIVENESS Case = 301
-	// FAILPOINTS injects failpoints to etcd server runtime, triggering panics
+	// FAILPOINTS injects failpoints to etcd etcd runtime, triggering panics
 	// in critical code paths.
 	Case_FAILPOINTS Case = 400
 	// FAILPOINTS_WITH_DISK_IO_LATENCY injects high disk I/O latency failure in raftAfterSave code paths.
@@ -737,11 +737,11 @@ func (m *Response) XXX_DiscardUnknown() {
 var xxx_messageInfo_Response proto.InternalMessageInfo
 
 type Member struct {
-	// EtcdExec is the executable etcd binary path in agent server.
+	// EtcdExec is the executable etcd binary path in agent etcd.
 	EtcdExec string `protobuf:"bytes,1,opt,name=EtcdExec,proto3" json:"EtcdExec,omitempty" yaml:"etcd-exec"`
-	// AgentAddr is the agent HTTP server address.
+	// AgentAddr is the agent HTTP etcd address.
 	AgentAddr string `protobuf:"bytes,11,opt,name=AgentAddr,proto3" json:"AgentAddr,omitempty" yaml:"agent-addr"`
-	// FailpointHTTPAddr is the agent's failpoints HTTP server address.
+	// FailpointHTTPAddr is the agent's failpoints HTTP etcd address.
 	FailpointHTTPAddr string `protobuf:"bytes,12,opt,name=FailpointHTTPAddr,proto3" json:"FailpointHTTPAddr,omitempty" yaml:"failpoint-http-addr"`
 	// BaseDir is the base directory where all logs and etcd data are stored.
 	BaseDir string `protobuf:"bytes,101,opt,name=BaseDir,proto3" json:"BaseDir,omitempty" yaml:"base-dir"`
@@ -758,22 +758,22 @@ type Member struct {
 	// EtcdOnSnapshotRestore defines one-time use configuration during etcd
 	// snapshot recovery process.
 	EtcdOnSnapshotRestore *Etcd `protobuf:"bytes,303,opt,name=EtcdOnSnapshotRestore,proto3" json:"EtcdOnSnapshotRestore,omitempty"`
-	// ClientCertData contains cert file contents from this member's etcd server.
+	// ClientCertData contains cert file contents from this member's etcd etcd.
 	ClientCertData string `protobuf:"bytes,401,opt,name=ClientCertData,proto3" json:"ClientCertData,omitempty" yaml:"client-cert-data"`
 	ClientCertPath string `protobuf:"bytes,402,opt,name=ClientCertPath,proto3" json:"ClientCertPath,omitempty" yaml:"client-cert-path"`
-	// ClientKeyData contains key file contents from this member's etcd server.
+	// ClientKeyData contains key file contents from this member's etcd etcd.
 	ClientKeyData string `protobuf:"bytes,403,opt,name=ClientKeyData,proto3" json:"ClientKeyData,omitempty" yaml:"client-key-data"`
 	ClientKeyPath string `protobuf:"bytes,404,opt,name=ClientKeyPath,proto3" json:"ClientKeyPath,omitempty" yaml:"client-key-path"`
-	// ClientTrustedCAData contains trusted CA file contents from this member's etcd server.
+	// ClientTrustedCAData contains trusted CA file contents from this member's etcd etcd.
 	ClientTrustedCAData string `protobuf:"bytes,405,opt,name=ClientTrustedCAData,proto3" json:"ClientTrustedCAData,omitempty" yaml:"client-trusted-ca-data"`
 	ClientTrustedCAPath string `protobuf:"bytes,406,opt,name=ClientTrustedCAPath,proto3" json:"ClientTrustedCAPath,omitempty" yaml:"client-trusted-ca-path"`
-	// PeerCertData contains cert file contents from this member's etcd server.
+	// PeerCertData contains cert file contents from this member's etcd etcd.
 	PeerCertData string `protobuf:"bytes,501,opt,name=PeerCertData,proto3" json:"PeerCertData,omitempty" yaml:"peer-cert-data"`
 	PeerCertPath string `protobuf:"bytes,502,opt,name=PeerCertPath,proto3" json:"PeerCertPath,omitempty" yaml:"peer-cert-path"`
-	// PeerKeyData contains key file contents from this member's etcd server.
+	// PeerKeyData contains key file contents from this member's etcd etcd.
 	PeerKeyData string `protobuf:"bytes,503,opt,name=PeerKeyData,proto3" json:"PeerKeyData,omitempty" yaml:"peer-key-data"`
 	PeerKeyPath string `protobuf:"bytes,504,opt,name=PeerKeyPath,proto3" json:"PeerKeyPath,omitempty" yaml:"peer-key-path"`
-	// PeerTrustedCAData contains trusted CA file contents from this member's etcd server.
+	// PeerTrustedCAData contains trusted CA file contents from this member's etcd etcd.
 	PeerTrustedCAData string `protobuf:"bytes,505,opt,name=PeerTrustedCAData,proto3" json:"PeerTrustedCAData,omitempty" yaml:"peer-trusted-ca-data"`
 	PeerTrustedCAPath string `protobuf:"bytes,506,opt,name=PeerTrustedCAPath,proto3" json:"PeerTrustedCAPath,omitempty" yaml:"peer-trusted-ca-path"`
 	// SnapshotPath is the snapshot file path to store or restore from.
@@ -989,7 +989,7 @@ type Etcd struct {
 	PreVote             bool     `protobuf:"varint,63,opt,name=PreVote,proto3" json:"PreVote,omitempty" yaml:"pre-vote"`
 	InitialCorruptCheck bool     `protobuf:"varint,64,opt,name=InitialCorruptCheck,proto3" json:"InitialCorruptCheck,omitempty" yaml:"initial-corrupt-check"`
 	Logger              string   `protobuf:"bytes,71,opt,name=Logger,proto3" json:"Logger,omitempty" yaml:"logger"`
-	// LogOutputs is the log file to store current etcd server logs.
+	// LogOutputs is the log file to store current etcd etcd logs.
 	LogOutputs           []string `protobuf:"bytes,72,rep,name=LogOutputs,proto3" json:"LogOutputs,omitempty" yaml:"log-outputs"`
 	LogLevel             string   `protobuf:"bytes,73,opt,name=LogLevel,proto3" json:"LogLevel,omitempty" yaml:"log-level"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -1294,7 +1294,7 @@ func (x *transportTransportClient) Recv() (*Response, error) {
 	return m, nil
 }
 
-// TransportServer is the server API for Transport service.
+// TransportServer is the etcd API for Transport service.
 type TransportServer interface {
 	Transport(Transport_TransportServer) error
 }

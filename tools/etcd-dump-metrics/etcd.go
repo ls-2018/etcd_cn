@@ -24,7 +24,7 @@ import (
 	"time"
 
 	clientv3 "github.com/ls-2018/client/v3"
-	"github.com/ls-2018/server/embed"
+	"github.com/ls-2018/etcd/embed"
 
 	"go.uber.org/zap"
 )
@@ -41,7 +41,7 @@ func newEmbedURLs(n int) (urls []url.URL) {
 func setupEmbedCfg(cfg *embed.Config, curls, purls, ics []url.URL) {
 	cfg.Logger = "zap"
 	cfg.LogOutputs = []string{"/dev/null"}
-	// []string{"stderr"} to enable server logging
+	// []string{"stderr"} to enable etcd logging
 
 	var err error
 	cfg.Dir, err = ioutil.TempDir(os.TempDir(), fmt.Sprintf("%016X", time.Now().UnixNano()))

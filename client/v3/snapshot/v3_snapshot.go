@@ -36,7 +36,7 @@ func hasChecksum(n int64) bool {
 	return (n % 512) == sha256.Size
 }
 
-// Save fetches snapshot from remote etcd server and saves data
+// Save fetches snapshot from remote etcd etcd and saves data
 // to target path. If the context "ctx" is canceled or timed out,
 // snapshot save stream will error out (e.g. context.Canceled,
 // context.DeadlineExceeded). Make sure to specify only one endpoint

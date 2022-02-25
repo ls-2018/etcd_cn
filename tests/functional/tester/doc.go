@@ -12,5 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package tester implements functional-tester tester server.
+// Package tester implements functional-tester tester etcd.
 package tester

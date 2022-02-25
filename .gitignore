@@ -8,7 +8,6 @@
 *.etcd
 *.log
 *.swp
-/etcd
 /hack/insta-discovery/.env
 *.coverprofile
 *.test

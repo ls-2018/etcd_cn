@@ -28,11 +28,11 @@ import (
 	"github.com/ls-2018/client/pkg/fileutil"
 	"github.com/ls-2018/client/pkg/types"
 	"github.com/ls-2018/raft/raftpb"
-	"github.com/ls-2018/server/etcdserver/api/rafthttp"
-	"github.com/ls-2018/server/etcdserver/api/snap"
-	stats "github.com/ls-2018/server/etcdserver/api/v2stats"
-	"github.com/ls-2018/server/wal"
-	"github.com/ls-2018/server/wal/walpb"
+	"github.com/ls-2018/etcd/etcdserver/api/rafthttp"
+	"github.com/ls-2018/etcd/etcdserver/api/snap"
+	stats "github.com/ls-2018/etcd/etcdserver/api/v2stats"
+	"github.com/ls-2018/etcd/wal"
+	"github.com/ls-2018/etcd/wal/walpb"
 
 	"go.uber.org/zap"
 )
@@ -71,8 +71,8 @@ type raftNode struct {
 	snapCount uint64
 	transport *rafthttp.Transport
 	stopc     chan struct{} // signals proposal channel closed
-	httpstopc chan struct{} // signals http server to shutdown
-	httpdonec chan struct{} // signals http server shutdown complete
+	httpstopc chan struct{} // signals http etcd to shutdown
+	httpdonec chan struct{} // signals http etcd shutdown complete
 
 	logger *zap.Logger
 }
@@ -365,7 +365,7 @@ func (rc *raftNode) maybeTriggerSnapshot(applyDoneC <-chan struct{}) {
 		return
 	}
 
-	// wait until all committed entries are applied (or server is closed)
+	// wait until all committed entries are applied (or etcd is closed)
 	if applyDoneC != nil {
 		select {
 		case <-applyDoneC:

@@ -32,16 +32,16 @@ import (
 	"github.com/ls-2018/client/v3"
 	"github.com/ls-2018/client/v3/snapshot"
 	"github.com/ls-2018/raft/raftpb"
-	"github.com/ls-2018/server/config"
-	"github.com/ls-2018/server/etcdserver"
-	"github.com/ls-2018/server/etcdserver/api/membership"
-	"github.com/ls-2018/server/etcdserver/api/snap"
-	"github.com/ls-2018/server/etcdserver/api/v2store"
-	"github.com/ls-2018/server/etcdserver/cindex"
-	"github.com/ls-2018/server/mvcc/backend"
-	"github.com/ls-2018/server/verify"
-	"github.com/ls-2018/server/wal"
-	"github.com/ls-2018/server/wal/walpb"
+	"github.com/ls-2018/etcd/config"
+	"github.com/ls-2018/etcd/etcdserver"
+	"github.com/ls-2018/etcd/etcdserver/api/membership"
+	"github.com/ls-2018/etcd/etcdserver/api/snap"
+	"github.com/ls-2018/etcd/etcdserver/api/v2store"
+	"github.com/ls-2018/etcd/etcdserver/cindex"
+	"github.com/ls-2018/etcd/mvcc/backend"
+	"github.com/ls-2018/etcd/verify"
+	"github.com/ls-2018/etcd/wal"
+	"github.com/ls-2018/etcd/wal/walpb"
 	bolt "go.etcd.io/bbolt"
 	"go.etcd.io/etcd/api/v3/etcdserverpb"
 	"go.uber.org/zap"
@@ -49,7 +49,7 @@ import (
 
 // Manager defines snapshot methods.
 type Manager interface {
-	// Save fetches snapshot from remote etcd server and saves data
+	// Save fetches snapshot from remote etcd etcd and saves data
 	// to target path. If the context "ctx" is canceled or timed out,
 	// snapshot save stream will error out (e.g. context.Canceled,
 	// context.DeadlineExceeded). Make sure to specify only one endpoint
@@ -95,7 +95,7 @@ func hasChecksum(n int64) bool {
 	return (n % 512) == sha256.Size
 }
 
-// Save fetches snapshot from remote etcd server and saves data to target path.
+// Save fetches snapshot from remote etcd etcd and saves data to target path.
 func (s *v3Manager) Save(ctx context.Context, cfg clientv3.Config, dbPath string) error {
 	return snapshot.Save(ctx, s.lg, cfg, dbPath)
 }

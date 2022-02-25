@@ -75,8 +75,8 @@ func (c *Client) unaryClientInterceptor(optFuncs ...retryOption) grpc.UnaryClien
 			}
 			if c.shouldRefreshToken(lastErr, callOpts) {
 				// clear auth token before refreshing it.
-				// call c.Auth.Authenticate with an invalid token will always fail the auth check on the server-side,
-				// if the server has not apply the patch of pr #12165 (https://github.com/etcd-io/etcd/pull/12165)
+				// call c.Auth.Authenticate with an invalid token will always fail the auth check on the etcd-side,
+				// if the etcd has not apply the patch of pr #12165 (https://github.com/etcd-io/etcd/pull/12165)
 				// and a rpctypes.ErrInvalidAuthToken will recursively call c.getToken until system run out of resource.
 				c.authTokenBundle.UpdateAuthToken("")
 
@@ -99,7 +99,7 @@ func (c *Client) unaryClientInterceptor(optFuncs ...retryOption) grpc.UnaryClien
 	}
 }
 
-// streamClientInterceptor returns a new retrying stream client interceptor for server side streaming calls.
+// streamClientInterceptor returns a new retrying stream client interceptor for etcd side streaming calls.
 //
 // The default configuration of the interceptor is to not retry *at all*. This behaviour can be
 // changed through options (e.g. WithMax) on creation of the interceptor or on call (through grpc.CallOptions).
@@ -152,7 +152,7 @@ func (c *Client) streamClientInterceptor(optFuncs ...retryOption) grpc.StreamCli
 // and returns a boolean value.
 func (c *Client) shouldRefreshToken(err error, callOpts *options) bool {
 	if rpctypes.Error(err) == rpctypes.ErrUserEmpty {
-		// refresh the token when username, password is present but the server returns ErrUserEmpty
+		// refresh the token when username, password is present but the etcd returns ErrUserEmpty
 		// which is possible when the client token is cleared somehow
 		return c.authTokenBundle != nil // equal to c.Username != "" && c.Password != ""
 	}

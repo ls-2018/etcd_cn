@@ -38,19 +38,19 @@ import (
 	"github.com/ls-2018/client/pkg/transport"
 	"github.com/ls-2018/client/pkg/types"
 	"github.com/ls-2018/pkg/grpc_testing"
-	"github.com/ls-2018/server/config"
-	"github.com/ls-2018/server/embed"
-	"github.com/ls-2018/server/etcdserver"
-	"github.com/ls-2018/server/etcdserver/api/etcdhttp"
-	"github.com/ls-2018/server/etcdserver/api/rafthttp"
-	"github.com/ls-2018/server/etcdserver/api/v2http"
-	"github.com/ls-2018/server/etcdserver/api/v3client"
-	"github.com/ls-2018/server/etcdserver/api/v3election"
-	epb "github.com/ls-2018/server/etcdserver/api/v3election/v3electionpb"
-	"github.com/ls-2018/server/etcdserver/api/v3lock"
-	lockpb "github.com/ls-2018/server/etcdserver/api/v3lock/v3lockpb"
-	"github.com/ls-2018/server/etcdserver/api/v3rpc"
-	"github.com/ls-2018/server/verify"
+	"github.com/ls-2018/etcd/config"
+	"github.com/ls-2018/etcd/embed"
+	"github.com/ls-2018/etcd/etcdserver"
+	"github.com/ls-2018/etcd/etcdserver/api/etcdhttp"
+	"github.com/ls-2018/etcd/etcdserver/api/rafthttp"
+	"github.com/ls-2018/etcd/etcdserver/api/v2http"
+	"github.com/ls-2018/etcd/etcdserver/api/v3client"
+	"github.com/ls-2018/etcd/etcdserver/api/v3election"
+	epb "github.com/ls-2018/etcd/etcdserver/api/v3election/v3electionpb"
+	"github.com/ls-2018/etcd/etcdserver/api/v3lock"
+	lockpb "github.com/ls-2018/etcd/etcdserver/api/v3lock/v3lockpb"
+	"github.com/ls-2018/etcd/etcdserver/api/v3rpc"
+	"github.com/ls-2018/etcd/verify"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 	"go.uber.org/zap/zapcore"
 	"go.uber.org/zap/zaptest"
@@ -83,15 +83,15 @@ var (
 	localListenCount = int64(0)
 
 	testTLSInfo = transport.TLSInfo{
-		KeyFile:        MustAbsPath("../fixtures/server.key.insecure"),
-		CertFile:       MustAbsPath("../fixtures/server.crt"),
+		KeyFile:        MustAbsPath("../fixtures/etcd.key.insecure"),
+		CertFile:       MustAbsPath("../fixtures/etcd.crt"),
 		TrustedCAFile:  MustAbsPath("../fixtures/ca.crt"),
 		ClientCertAuth: true,
 	}
 
 	testTLSInfoWithSpecificUsage = transport.TLSInfo{
-		KeyFile:        MustAbsPath("../fixtures/server-serverusage.key.insecure"),
-		CertFile:       MustAbsPath("../fixtures/server-serverusage.crt"),
+		KeyFile:        MustAbsPath("../fixtures/etcd-serverusage.key.insecure"),
+		CertFile:       MustAbsPath("../fixtures/etcd-serverusage.crt"),
 		ClientKeyFile:  MustAbsPath("../fixtures/client-clientusage.key.insecure"),
 		ClientCertFile: MustAbsPath("../fixtures/client-clientusage.crt"),
 		TrustedCAFile:  MustAbsPath("../fixtures/ca.crt"),
@@ -99,28 +99,28 @@ var (
 	}
 
 	testTLSInfoIP = transport.TLSInfo{
-		KeyFile:        MustAbsPath("../fixtures/server-ip.key.insecure"),
-		CertFile:       MustAbsPath("../fixtures/server-ip.crt"),
+		KeyFile:        MustAbsPath("../fixtures/etcd-ip.key.insecure"),
+		CertFile:       MustAbsPath("../fixtures/etcd-ip.crt"),
 		TrustedCAFile:  MustAbsPath("../fixtures/ca.crt"),
 		ClientCertAuth: true,
 	}
 
 	testTLSInfoExpired = transport.TLSInfo{
-		KeyFile:        MustAbsPath("./fixtures-expired/server.key.insecure"),
-		CertFile:       MustAbsPath("./fixtures-expired/server.crt"),
+		KeyFile:        MustAbsPath("./fixtures-expired/etcd.key.insecure"),
+		CertFile:       MustAbsPath("./fixtures-expired/etcd.crt"),
 		TrustedCAFile:  MustAbsPath("./fixtures-expired/ca.crt"),
 		ClientCertAuth: true,
 	}
 
 	testTLSInfoExpiredIP = transport.TLSInfo{
-		KeyFile:        MustAbsPath("./fixtures-expired/server-ip.key.insecure"),
-		CertFile:       MustAbsPath("./fixtures-expired/server-ip.crt"),
+		KeyFile:        MustAbsPath("./fixtures-expired/etcd-ip.key.insecure"),
+		CertFile:       MustAbsPath("./fixtures-expired/etcd-ip.crt"),
 		TrustedCAFile:  MustAbsPath("./fixtures-expired/ca.crt"),
 		ClientCertAuth: true,
 	}
 
 	defaultTokenJWT = fmt.Sprintf("jwt,pub-key=%s,priv-key=%s,sign-method=RS256,ttl=1s",
-		MustAbsPath("../fixtures/server.crt"), MustAbsPath("../fixtures/server.key.insecure"))
+		MustAbsPath("../fixtures/etcd.crt"), MustAbsPath("../fixtures/etcd.key.insecure"))
 
 	// uniqueNumber is used to generate unique port numbers
 	// Should only be accessed via atomic package methods.
@@ -157,10 +157,10 @@ type ClusterConfig struct {
 
 	// UseIP is true to use only IP for gRPC requests.
 	UseIP bool
-	// UseBridge adds bridge between client and grpc server. Should be used in tests that
-	// want to manipulate connection or require connection not breaking despite server stop/restart.
+	// UseBridge adds bridge between client and grpc etcd. Should be used in tests that
+	// want to manipulate connection or require connection not breaking despite etcd stop/restart.
 	UseBridge bool
-	// UseTCP configures server listen on tcp socket. If disabled unix socket is used.
+	// UseTCP configures etcd listen on tcp socket. If disabled unix socket is used.
 	UseTCP bool
 
 	EnableLeaseCheckpoint   bool
@@ -758,7 +758,7 @@ func memberLogger(t testutil.TB, name string) *zap.Logger {
 	return zaptest.NewLogger(t, zaptest.Level(level), options).Named(name)
 }
 
-// listenGRPC starts a grpc server over a unix domain socket on the member
+// listenGRPC starts a grpc etcd over a unix domain socket on the member
 func (m *member) listenGRPC() error {
 	// prefix with localhost so cert has right domain
 	network, host, port := m.grpcAddr()
@@ -883,7 +883,7 @@ func NewClientV3(m *member) (*clientv3.Client, error) {
 	return newClientV3(cfg, m.Logger.Named("client"))
 }
 
-// Clone returns a member with the same server configuration. The returned
+// Clone returns a member with the same etcd configuration. The returned
 // member will not set PeerListeners and ClientListeners.
 func (m *member) Clone(t testutil.TB) *member {
 	mm := &member{}
@@ -928,7 +928,7 @@ func (m *member) Launch() error {
 	)
 	var err error
 	if m.s, err = etcdserver.NewServer(m.ServerConfig); err != nil {
-		return fmt.Errorf("failed to initialize the etcd server: %v", err)
+		return fmt.Errorf("failed to initialize the etcd etcd: %v", err)
 	}
 	m.s.SyncTicker = time.NewTicker(500 * time.Millisecond)
 	m.s.Start()
@@ -1043,7 +1043,7 @@ func (m *member) Launch() error {
 			//
 			// When (*tls.Config).Certificates is always populated on initial handshake,
 			// client is expected to provide a valid matching SNI to pass the TLS
-			// verification, thus trigger server (*tls.Config).GetCertificate to reload
+			// verification, thus trigger etcd (*tls.Config).GetCertificate to reload
 			// TLS assets. However, a cert whose SAN field does not include domain names
 			// but only IP addresses, has empty (*tls.ClientHelloInfo).ServerName, thus
 			// it was never able to trigger TLS reload on initial handshake; first
@@ -1055,11 +1055,11 @@ func (m *member) Launch() error {
 			// SNI is empty (e.g. cert only includes IPs).
 			//
 			// This introduces another problem with "httptest.Server":
-			// when server initial certificates are empty, certificates
+			// when etcd initial certificates are empty, certificates
 			// are overwritten by Go's internal test certs, which have
 			// different SAN fields (e.g. example.com). To work around,
 			// re-overwrite (*tls.Config).Certificates before starting
-			// test server.
+			// test etcd.
 			tlsCert, err := tlsutil.NewCert(info.CertFile, info.KeyFile, nil)
 			if err != nil {
 				return err
@@ -1592,12 +1592,12 @@ func (c *ClusterV3) getMembers() []*pb.Member {
 //
 // Note:
 // A successful match means the Member.clientURLs are matched. This means member has already
-// finished publishing its server attributes to cluster. Publishing attributes is a cluster-wide
-// write request (in v2 server). Therefore, at this point, any raft log entries prior to this
+// finished publishing its etcd attributes to cluster. Publishing attributes is a cluster-wide
+// write request (in v2 etcd). Therefore, at this point, any raft log entries prior to this
 // would have already been applied.
 //
 // If a new member was added to an existing cluster, at this point, it has finished publishing
-// its own server attributes to the cluster. And therefore by the same argument, it has already
+// its own etcd attributes to the cluster. And therefore by the same argument, it has already
 // applied the raft log entries (especially those of type raftpb.ConfChangeType). At this point,
 // the new member has the correct view of the cluster configuration.
 //

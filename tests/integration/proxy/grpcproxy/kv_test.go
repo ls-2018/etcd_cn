@@ -21,7 +21,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ls-2018/server/proxy/grpcproxy"
+	"github.com/ls-2018/etcd/proxy/grpcproxy"
 	"github.com/ls-2018/tests/integration"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 

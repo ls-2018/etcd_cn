@@ -24,7 +24,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/ls-2018/server/etcdserver"
+	"github.com/ls-2018/etcd/etcdserver"
 	"github.com/ls-2018/tests/functional/rpcpb"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
 

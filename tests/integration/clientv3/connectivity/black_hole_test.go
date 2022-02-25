@@ -31,7 +31,7 @@ import (
 
 // TestBalancerUnderBlackholeKeepAliveWatch tests when watch discovers it cannot talk to
 // blackholed endpoint, client balancer switches to healthy one.
-// TODO: test server-to-client keepalive ping
+// TODO: test etcd-to-client keepalive ping
 func TestBalancerUnderBlackholeKeepAliveWatch(t *testing.T) {
 	integration.BeforeTest(t)
 

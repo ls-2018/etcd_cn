@@ -64,7 +64,7 @@ func TestSRVGetCluster(t *testing.T) {
 		werr       bool
 	}{
 		{
-			"etcd-server-ssl",
+			"etcd-etcd-ssl",
 			"https",
 			srvNone,
 			srvNone,
@@ -73,7 +73,7 @@ func TestSRVGetCluster(t *testing.T) {
 			true,
 		},
 		{
-			"etcd-server-ssl",
+			"etcd-etcd-ssl",
 			"https",
 			srvAll,
 			srvNone,
@@ -82,7 +82,7 @@ func TestSRVGetCluster(t *testing.T) {
 			false,
 		},
 		{
-			"etcd-server",
+			"etcd-etcd",
 			"http",
 			srvNone,
 			srvAll,
@@ -91,7 +91,7 @@ func TestSRVGetCluster(t *testing.T) {
 			false,
 		},
 		{
-			"etcd-server-ssl",
+			"etcd-etcd-ssl",
 			"https",
 			srvAll,
 			srvNone,
@@ -101,7 +101,7 @@ func TestSRVGetCluster(t *testing.T) {
 		},
 		// matching local member with resolved addr and return unresolved hostnames
 		{
-			"etcd-server-ssl",
+			"etcd-etcd-ssl",
 			"https",
 			srvAll,
 			srvNone,
@@ -111,7 +111,7 @@ func TestSRVGetCluster(t *testing.T) {
 		},
 		// reject if apurls are TLS but SRV is only http
 		{
-			"etcd-server",
+			"etcd-etcd",
 			"http",
 			srvNone,
 			srvAll,
@@ -134,13 +134,13 @@ func TestSRVGetCluster(t *testing.T) {
 
 	for i, tt := range tests {
 		lookupSRV = func(service string, proto string, domain string) (string, []*net.SRV, error) {
-			if service == "etcd-server-ssl" {
+			if service == "etcd-etcd-ssl" {
 				if len(tt.withSSL) > 0 {
 					return "", tt.withSSL, nil
 				}
 				return "", nil, notFoundErr(service, proto, domain)
 			}
-			if service == "etcd-server" {
+			if service == "etcd-etcd" {
 				if len(tt.withoutSSL) > 0 {
 					return "", tt.withoutSSL, nil
 				}

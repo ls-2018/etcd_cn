@@ -23,8 +23,8 @@ import (
 	"sync"
 
 	"github.com/ls-2018/client/v3/namespace"
-	"github.com/ls-2018/server/proxy/grpcproxy"
-	"github.com/ls-2018/server/proxy/grpcproxy/adapter"
+	"github.com/ls-2018/etcd/proxy/grpcproxy"
+	"github.com/ls-2018/etcd/proxy/grpcproxy/adapter"
 	"go.uber.org/zap"
 )
 

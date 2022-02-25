@@ -46,14 +46,14 @@ func (rp retryPolicy) String() string {
 // isSafeRetryImmutableRPC returns "true" when an immutable request is safe for retry.
 //
 // immutable requests (e.g. Get) should be retried unless it's
-// an obvious server-side error (e.g. rpctypes.ErrRequestTooLarge).
+// an obvious etcd-side error (e.g. rpctypes.ErrRequestTooLarge).
 //
 // Returning "false" means retry should stop, since client cannot
 // handle itself even with retries.
 func isSafeRetryImmutableRPC(err error) bool {
 	eErr := rpctypes.Error(err)
 	if serverErr, ok := eErr.(rpctypes.EtcdError); ok && serverErr.Code() != codes.Unavailable {
-		// interrupted by non-transient server-side or gRPC-side error
+		// interrupted by non-transient etcd-side or gRPC-side error
 		// client cannot handle itself (e.g. rpctypes.ErrCompacted)
 		return false
 	}

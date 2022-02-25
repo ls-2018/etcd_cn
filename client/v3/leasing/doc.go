@@ -15,7 +15,7 @@
 // Package leasing serves linearizable reads from a local cache by acquiring
 // exclusive write access to keys through a client-side leasing protocol. This
 // leasing layer can either directly wrap the etcd client or it can be exposed
-// through the etcd grpc proxy server, granting multiple clients write access.
+// through the etcd grpc proxy etcd, granting multiple clients write access.
 //
 // First, create a leasing KV from a clientv3.Client 'cli':
 //
@@ -25,7 +25,7 @@
 //     }
 //
 // A range request for a key "abc" tries to acquire a leasing key so it can cache the range's
-// key locally. On the server, the leasing key is stored to "leasing-prefix/abc":
+// key locally. On the etcd, the leasing key is stored to "leasing-prefix/abc":
 //
 //     resp, err := lkv.Get(context.TODO(), "abc")
 //

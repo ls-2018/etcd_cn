@@ -207,8 +207,8 @@ func main() {
 	flag.BoolVar(&cfg.corruptSend, "corrupt-send", false, "corrupt packets sent to destination")
 	flag.BoolVar(&cfg.reorder, "reorder", false, "reorder packet delivery")
 
-	flag.StringVar(&cfg.txDelay, "tx-delay", "0", "duration to delay client transmission to server")
-	flag.StringVar(&cfg.rxDelay, "rx-delay", "0", "duration to delay client receive from server")
+	flag.StringVar(&cfg.txDelay, "tx-delay", "0", "duration to delay client transmission to etcd")
+	flag.StringVar(&cfg.rxDelay, "rx-delay", "0", "duration to delay client receive from etcd")
 
 	flag.Parse()
 

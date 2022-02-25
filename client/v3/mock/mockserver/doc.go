@@ -12,5 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package mockserver provides mock implementations for etcdserver's server interface.
+// Package mockserver provides mock implementations for etcdserver's etcd interface.
 package mockserver

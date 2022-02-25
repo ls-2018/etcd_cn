@@ -45,7 +45,7 @@ spec:
           name: client
           protocol: TCP
         - containerPort: 2380
-          name: server
+          name: etcd
           protocol: TCP
   restartPolicy: Always
 
@@ -63,7 +63,7 @@ spec:
       port: 2379
       protocol: TCP
       targetPort: 2379
-    - name: server
+    - name: etcd
       port: 2380
       protocol: TCP
       targetPort: 2380
@@ -104,7 +104,7 @@ spec:
           name: client
           protocol: TCP
         - containerPort: 2380
-          name: server
+          name: etcd
           protocol: TCP
   restartPolicy: Always
 
@@ -122,7 +122,7 @@ spec:
       port: 2379
       protocol: TCP
       targetPort: 2379
-    - name: server
+    - name: etcd
       port: 2380
       protocol: TCP
       targetPort: 2380
@@ -163,7 +163,7 @@ spec:
           name: client
           protocol: TCP
         - containerPort: 2380
-          name: server
+          name: etcd
           protocol: TCP
   restartPolicy: Always
 
@@ -181,7 +181,7 @@ spec:
       port: 2379
       protocol: TCP
       targetPort: 2379
-    - name: server
+    - name: etcd
       port: 2380
       protocol: TCP
       targetPort: 2380

@@ -258,7 +258,7 @@ func TestMutexWaitsOnCurrentHolder(t *testing.T) {
 	// simulate losing the client that's next in line to acquire the lock
 	victimSession.Close()
 
-	// ensures the deletion of victim waiter from server side.
+	// ensures the deletion of victim waiter from etcd side.
 	select {
 	case wrp := <-wch:
 		if len(wrp.Events) != 1 {

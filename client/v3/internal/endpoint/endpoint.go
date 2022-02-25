@@ -75,7 +75,7 @@ func schemeToCredsRequirement(schema string) CredsRequirement {
 	}
 }
 
-// This function translates endpoints names supported by etcd server into
+// This function translates endpoints names supported by etcd etcd into
 // endpoints as supported by grpc with additional information
 // (server_name for cert validation, requireCreds - whether certs are needed).
 // The main differences:
@@ -130,7 +130,7 @@ func RequiresCredentials(ep string) CredsRequirement {
 // Interpret endpoint parses an endpoint of the form
 // (http|https)://<host>*|(unix|unixs)://<path>)
 // and returns low-level address (supported by 'net') to connect to,
-// and a server name used for x509 certificate matching.
+// and a etcd name used for x509 certificate matching.
 func Interpret(ep string) (address string, serverName string) {
 	addr, serverName, _ := translateEndpoint(ep)
 	return addr, serverName

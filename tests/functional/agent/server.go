@@ -22,7 +22,7 @@ import (
 	"strings"
 
 	"github.com/ls-2018/pkg/proxy"
-	"github.com/ls-2018/server/embed"
+	"github.com/ls-2018/etcd/embed"
 	"github.com/ls-2018/tests/functional/rpcpb"
 
 	"go.uber.org/zap"
@@ -57,7 +57,7 @@ type Server struct {
 	advertisePeerPortToProxy   map[int]proxy.Server
 }
 
-// NewServer returns a new agent server.
+// NewServer returns a new agent etcd.
 func NewServer(
 	lg *zap.Logger,
 	network string,
@@ -80,7 +80,7 @@ const (
 	maxSendBytes      = math.MaxInt32
 )
 
-// StartServe starts serving agent server.
+// StartServe starts serving agent etcd.
 func (srv *Server) StartServe() error {
 	var err error
 	srv.ln, err = net.Listen(srv.network, srv.address)
@@ -97,20 +97,20 @@ func (srv *Server) StartServe() error {
 	rpcpb.RegisterTransportServer(srv.grpcServer, srv)
 
 	srv.lg.Info(
-		"gRPC server started",
+		"gRPC etcd started",
 		zap.String("address", srv.address),
 		zap.String("listener-address", srv.ln.Addr().String()),
 	)
 	err = srv.grpcServer.Serve(srv.ln)
 	if err != nil && strings.Contains(err.Error(), "use of closed network connection") {
 		srv.lg.Info(
-			"gRPC server is shut down",
+			"gRPC etcd is shut down",
 			zap.String("address", srv.address),
 			zap.Error(err),
 		)
 	} else {
 		srv.lg.Warn(
-			"gRPC server returned with error",
+			"gRPC etcd returned with error",
 			zap.String("address", srv.address),
 			zap.Error(err),
 		)
@@ -118,11 +118,11 @@ func (srv *Server) StartServe() error {
 	return err
 }
 
-// Stop stops serving gRPC server.
+// Stop stops serving gRPC etcd.
 func (srv *Server) Stop() {
-	srv.lg.Info("gRPC server stopping", zap.String("address", srv.address))
+	srv.lg.Info("gRPC etcd stopping", zap.String("address", srv.address))
 	srv.grpcServer.Stop()
-	srv.lg.Info("gRPC server stopped", zap.String("address", srv.address))
+	srv.lg.Info("gRPC etcd stopped", zap.String("address", srv.address))
 }
 
 // Transport communicates with etcd tester.

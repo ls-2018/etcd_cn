@@ -134,12 +134,12 @@ func (clus *Cluster) EtcdClientEndpoints() (css []string) {
 
 func (clus *Cluster) serveTesterServer() {
 	clus.lg.Info(
-		"started tester HTTP server",
+		"started tester HTTP etcd",
 		zap.String("tester-address", clus.Tester.Addr),
 	)
 	err := clus.testerHTTPServer.ListenAndServe()
 	clus.lg.Info(
-		"tester HTTP server returned",
+		"tester HTTP etcd returned",
 		zap.String("tester-address", clus.Tester.Addr),
 		zap.Error(err),
 	)
@@ -429,7 +429,7 @@ func (clus *Cluster) broadcast(op rpcpb.Operation) error {
 				}
 				if strings.Contains(err.Error(),
 					"rpc error: code = Unavailable desc = transport is closing") {
-					// agent server has already closed;
+					// agent etcd has already closed;
 					// so this error is expected
 					destroyed = true
 				}
@@ -592,7 +592,7 @@ func (clus *Cluster) Send_SIGQUIT_ETCD_AND_REMOVE_DATA_AND_STOP_AGENT() {
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		err := clus.testerHTTPServer.Shutdown(ctx)
 		cancel()
-		clus.lg.Info("closed tester HTTP server", zap.String("tester-address", clus.Tester.Addr), zap.Error(err))
+		clus.lg.Info("closed tester HTTP etcd", zap.String("tester-address", clus.Tester.Addr), zap.Error(err))
 	}
 }
 

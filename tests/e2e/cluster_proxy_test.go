@@ -276,7 +276,7 @@ func newProxyV3Proc(cfg *etcdServerProcessConfig) *proxyV3Proc {
 			tlsArgs = append(tlsArgs, cfg.tlsArgs[i])
 		}
 
-		// Configure certificates for connection proxy ---> server.
+		// Configure certificates for connection proxy ---> etcd.
 		// This certificate must NOT have CN set.
 		tlsArgs = append(tlsArgs,
 			"--cert", path.Join(fixturesDir, "client-nocn.crt"),

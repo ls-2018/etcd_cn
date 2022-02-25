@@ -160,8 +160,8 @@ func testServer(t *testing.T, scheme string, secure bool, delayTx bool) {
 func createTLSInfo(lg *zap.Logger, secure bool) transport.TLSInfo {
 	if secure {
 		return transport.TLSInfo{
-			KeyFile:        "../../tests/fixtures/server.key.insecure",
-			CertFile:       "../../tests/fixtures/server.crt",
+			KeyFile:        "../../tests/fixtures/etcd.key.insecure",
+			CertFile:       "../../tests/fixtures/etcd.crt",
 			TrustedCAFile:  "../../tests/fixtures/ca.crt",
 			ClientCertAuth: true,
 			Logger:         lg,
@@ -526,9 +526,9 @@ func testServerHTTP(t *testing.T, secure, delayTx bool) {
 	p := NewServer(cfg)
 	<-p.Ready()
 	defer func() {
-		lg.Info("closing Proxy server...")
+		lg.Info("closing Proxy etcd...")
 		p.Close()
-		lg.Info("closed Proxy server.")
+		lg.Info("closed Proxy etcd.")
 	}()
 
 	data := "Hello World!"

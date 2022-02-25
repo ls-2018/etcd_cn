@@ -205,15 +205,15 @@ $ ./bin/etcdctl --endpoints localhost:23790 put foo bar`)
 
 	go func() {
 		s := <-sig
-		fmt.Printf("\n\nreceived signal %q, shutting down HTTP server\n\n", s)
+		fmt.Printf("\n\nreceived signal %q, shutting down HTTP etcd\n\n", s)
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		err := srv.Shutdown(ctx)
 		cancel()
-		fmt.Printf("gracefully stopped HTTP server with %v\n\n", err)
+		fmt.Printf("gracefully stopped HTTP etcd with %v\n\n", err)
 		os.Exit(0)
 	}()
 
-	fmt.Printf("\nserving HTTP server http://localhost:%d\n\n", httpPort)
+	fmt.Printf("\nserving HTTP etcd http://localhost:%d\n\n", httpPort)
 	err := srv.ListenAndServe()
-	fmt.Printf("HTTP server exit with error %v\n", err)
+	fmt.Printf("HTTP etcd exit with error %v\n", err)
 }

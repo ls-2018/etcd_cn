@@ -19,7 +19,7 @@ import (
 	"testing"
 
 	"github.com/ls-2018/client/pkg/testutil"
-	"github.com/ls-2018/server/verify"
+	"github.com/ls-2018/etcd/verify"
 	"github.com/stretchr/testify/assert"
 )
 

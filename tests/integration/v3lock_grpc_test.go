@@ -19,7 +19,7 @@ import (
 	"testing"
 	"time"
 
-	lockpb "github.com/ls-2018/server/etcdserver/api/v3lock/v3lockpb"
+	lockpb "github.com/ls-2018/etcd/etcdserver/api/v3lock/v3lockpb"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 )
 

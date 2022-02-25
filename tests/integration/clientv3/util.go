@@ -38,8 +38,8 @@ func MustWaitPinReady(t *testing.T, cli *clientv3.Client) {
 }
 
 // IsServerCtxTimeout checks reason of the error.
-// e.g. due to clock drifts in server-side,
-// client context times out first in server-side
+// e.g. due to clock drifts in etcd-side,
+// client context times out first in etcd-side
 // while original client-side context is not timed out yet
 func IsServerCtxTimeout(err error) bool {
 	if err == nil {

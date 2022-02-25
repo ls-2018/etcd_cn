@@ -45,7 +45,7 @@ func TestLeaderUpdateTermFromMessage(t *testing.T) {
 	testUpdateTermFromMessage(t, StateLeader)
 }
 
-// testUpdateTermFromMessage tests that if one server’s current term is
+// testUpdateTermFromMessage tests that if one etcd’s current term is
 // smaller than the other’s, then it updates its current term to the larger
 // value. If a candidate or leader discovers that its term is out of date,
 // it immediately reverts to follower state.
@@ -72,7 +72,7 @@ func testUpdateTermFromMessage(t *testing.T, state StateType) {
 	}
 }
 
-// TestRejectStaleTermMessage tests that if a server receives a request with
+// TestRejectStaleTermMessage tests that if a etcd receives a request with
 // a stale term number, it rejects the request.
 // Our implementation ignores the request instead.
 // Reference: section 5.1
@@ -264,7 +264,7 @@ func TestFollowerVote(t *testing.T) {
 }
 
 // TestCandidateFallback tests that while waiting for votes,
-// if a candidate receives an AppendEntries RPC from another server claiming
+// if a candidate receives an AppendEntries RPC from another etcd claiming
 // to be leader whose term is at least as large as the candidate's current term,
 // it recognizes the leader as legitimate and returns to follower state.
 // Reference: section 5.2
@@ -344,7 +344,7 @@ func TestCandidatesElectionTimeoutNonconflict(t *testing.T) {
 }
 
 // testNonleadersElectionTimeoutNonconflict tests that in most cases only a
-// single server(follower or candidate) will time out, which reduces the
+// single etcd(follower or candidate) will time out, which reduces the
 // likelihood of split vote in the new election.
 // Reference: section 5.2
 func testNonleadersElectionTimeoutNonconflict(t *testing.T, state StateType) {

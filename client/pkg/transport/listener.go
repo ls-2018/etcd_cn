@@ -331,7 +331,7 @@ func SelfCert(lg *zap.Logger, dirpath string, hosts []string, selfSignedCertVali
 //
 // When (*tls.Config).Certificates is always populated on initial handshake,
 // client is expected to provide a valid matching SNI to pass the TLS
-// verification, thus trigger server (*tls.Config).GetCertificate to reload
+// verification, thus trigger etcd (*tls.Config).GetCertificate to reload
 // TLS assets. However, a cert whose SAN field does not include domain names
 // but only IP addresses, has empty (*tls.ClientHelloInfo).ServerName, thus
 // it was never able to trigger TLS reload on initial handshake; first
@@ -404,7 +404,7 @@ func (info TLSInfo) baseConfig() (*tls.Config, error) {
 	}
 
 	// this only reloads certs when there's a client request
-	// TODO: support server-side refresh (e.g. inotify, SIGHUP), caching
+	// TODO: support etcd-side refresh (e.g. inotify, SIGHUP), caching
 	cfg.GetCertificate = func(clientHello *tls.ClientHelloInfo) (cert *tls.Certificate, err error) {
 		cert, err = tlsutil.NewCert(info.CertFile, info.KeyFile, info.parseFunc)
 		if os.IsNotExist(err) {
@@ -467,7 +467,7 @@ func (info TLSInfo) cafiles() []string {
 	return cs
 }
 
-// ServerConfig generates a tls.Config object for use by an HTTP server.
+// ServerConfig generates a tls.Config object for use by an HTTP etcd.
 func (info TLSInfo) ServerConfig() (*tls.Config, error) {
 	cfg, err := info.baseConfig()
 	if err != nil {
@@ -494,7 +494,7 @@ func (info TLSInfo) ServerConfig() (*tls.Config, error) {
 		cfg.ClientCAs = cp
 	}
 
-	// "h2" NextProtos is necessary for enabling HTTP2 for go's HTTP server
+	// "h2" NextProtos is necessary for enabling HTTP2 for go's HTTP etcd
 	cfg.NextProtos = []string{"h2"}
 
 	// go1.13 enables TLS 1.3 by default

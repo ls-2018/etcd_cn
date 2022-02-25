@@ -48,3 +48,28 @@ See [etcdctl][etcdctl] for a simple command line client.
 ```
 自己看源码 用
 ```
+
+## 空间占用整理
+```模拟 
+设置etcd存储大小
+etcd --quota-backend-bytes=$((16*1024*1024))
+
+写爆磁盘
+while [ 1 ]; do dd if=/dev/urandom bs=1024 count=1024 | ETCDCTL_API=3 etcdctl put key || break;done
+
+查看endpoint状态
+ETCDCTL_API=3 etcdctl --write-out=table endpoint status
+
+查看alarm
+ETCDCTL_API=3 etcdctl alarm list
+
+清理碎片
+ETCDCTL_API=3 etcdctl defrag
+
+清理alarm
+ETCDCTL_API=3 etcdctl alarm disarm
+```
+
+- 只保存一个小时的历史版本```etcd --auto-compaction-retention=1```
+- 只保留最近的3个版本```etcdctl compact 3```
+- 碎片整理```etcdctl defrag```

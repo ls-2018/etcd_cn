@@ -28,7 +28,7 @@ import (
 
 // shared flags
 var (
-	totalClientConnections int // total number of client connections to be made with server
+	totalClientConnections int // total number of client connections to be made with etcd
 	endpoints              []string
 	dialTimeout            time.Duration
 	rounds                 int // total number of rounds to run; set to <= 0 to run forever.

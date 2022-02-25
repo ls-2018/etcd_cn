@@ -29,9 +29,9 @@ import (
 	"go.uber.org/zap/zaptest"
 	"google.golang.org/grpc"
 
-	"github.com/ls-2018/server/lease"
-	"github.com/ls-2018/server/mvcc"
-	"github.com/ls-2018/server/mvcc/backend"
+	"github.com/ls-2018/etcd/lease"
+	"github.com/ls-2018/etcd/mvcc"
+	"github.com/ls-2018/etcd/mvcc/backend"
 	"github.com/ls-2018/tests/integration"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
 )

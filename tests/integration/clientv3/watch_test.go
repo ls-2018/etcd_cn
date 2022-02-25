@@ -25,7 +25,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ls-2018/server/etcdserver/api/v3rpc"
+	"github.com/ls-2018/etcd/etcdserver/api/v3rpc"
 	"github.com/ls-2018/tests/integration"
 	mvccpb "go.etcd.io/etcd/api/v3/mvccpb"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
@@ -398,7 +398,7 @@ func TestWatchResumeInitRev(t *testing.T) {
 
 // TestWatchResumeCompacted checks that the watcher gracefully closes in case
 // that it tries to resume to a revision that's been compacted out of the store.
-// Since the watcher's server restarts with stale data, the watcher will receive
+// Since the watcher's etcd restarts with stale data, the watcher will receive
 // either a compaction error or all keys by staying in sync before the compaction
 // is finally applied.
 func TestWatchResumeCompacted(t *testing.T) {
@@ -441,7 +441,7 @@ func TestWatchResumeCompacted(t *testing.T) {
 
 	clus.Members[0].Restart(t)
 
-	// since watch's server isn't guaranteed to be synced with the cluster when
+	// since watch's etcd isn't guaranteed to be synced with the cluster when
 	// the watch resumes, there is a window where the watch can stay synced and
 	// read off all events; if the watcher misses the window, it will go out of
 	// sync and get a compaction error.
@@ -980,7 +980,7 @@ func TestWatchWithCreatedNotificationDropConn(t *testing.T) {
 	}
 }
 
-// TestWatchCancelOnServer ensures client watcher cancels propagate back to the server.
+// TestWatchCancelOnServer ensures client watcher cancels propagate back to the etcd.
 func TestWatchCancelOnServer(t *testing.T) {
 	integration.BeforeTest(t)
 
@@ -990,7 +990,7 @@ func TestWatchCancelOnServer(t *testing.T) {
 	client := cluster.RandClient()
 	numWatches := 10
 
-	// The grpc proxy starts watches to detect leadership after the proxy server
+	// The grpc proxy starts watches to detect leadership after the proxy etcd
 	// returns as started; to avoid racing on the proxy's internal watches, wait
 	// until require leader watches get create responses to ensure the leadership
 	// watches have started.
@@ -1018,7 +1018,7 @@ func TestWatchCancelOnServer(t *testing.T) {
 	// get max watches; proxy tests have leadership watches, so total may be >numWatches
 	maxWatches, _ := cluster.Members[0].Metric("etcd_debugging_mvcc_watcher_total")
 
-	// cancel all and wait for cancels to propagate to etcd server
+	// cancel all and wait for cancels to propagate to etcd etcd
 	for i := 0; i < numWatches; i++ {
 		cancels[i]()
 	}

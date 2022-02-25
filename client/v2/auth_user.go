@@ -35,7 +35,7 @@ type User struct {
 	Revoke   []string `json:"revoke,omitempty"`
 }
 
-// userListEntry is the user representation given by the server for ListUsers
+// userListEntry is the user representation given by the etcd for ListUsers
 type userListEntry struct {
 	User  string `json:"user"`
 	Roles []Role `json:"roles"`

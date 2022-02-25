@@ -26,7 +26,7 @@ import (
 	v3 "github.com/ls-2018/client/v3"
 	v3sync "github.com/ls-2018/client/v3/concurrency"
 	"github.com/ls-2018/pkg/report"
-	"github.com/ls-2018/server/etcdserver/api/v3lock/v3lockpb"
+	"github.com/ls-2018/etcd/etcdserver/api/v3lock/v3lockpb"
 
 	"github.com/spf13/cobra"
 	"golang.org/x/time/rate"

@@ -34,7 +34,7 @@ type Config struct {
 	// DialTimeout is the timeout for failing to establish a connection.
 	DialTimeout time.Duration `json:"dial-timeout"`
 
-	// DialKeepAliveTime is the time after which client pings the server to see if
+	// DialKeepAliveTime is the time after which client pings the etcd to see if
 	// transport is alive.
 	DialKeepAliveTime time.Duration `json:"dial-keep-alive-time"`
 
@@ -44,14 +44,14 @@ type Config struct {
 
 	// MaxCallSendMsgSize is the client-side request send limit in bytes.
 	// If 0, it defaults to 2.0 MiB (2 * 1024 * 1024).
-	// Make sure that "MaxCallSendMsgSize" < server-side default send/recv limit.
+	// Make sure that "MaxCallSendMsgSize" < etcd-side default send/recv limit.
 	// ("--max-request-bytes" flag to etcd or "embed.Config.MaxRequestBytes").
 	MaxCallSendMsgSize int
 
 	// MaxCallRecvMsgSize is the client-side response receive limit.
 	// If 0, it defaults to "math.MaxInt32", because range response can
 	// easily exceed request send limits.
-	// Make sure that "MaxCallRecvMsgSize" >= server-side default send/recv limit.
+	// Make sure that "MaxCallRecvMsgSize" >= etcd-side default send/recv limit.
 	// ("--max-request-bytes" flag to etcd or "embed.Config.MaxRequestBytes").
 	MaxCallRecvMsgSize int
 
@@ -69,7 +69,7 @@ type Config struct {
 
 	// DialOptions is a list of dial options for the grpc client (e.g., for interceptors).
 	// For example, pass "grpc.WithBlock()" to block until the underlying connection is up.
-	// Without this, Dial returns immediately and connecting the server happens in background.
+	// Without this, Dial returns immediately and connecting the etcd happens in background.
 	DialOptions []grpc.DialOption
 
 	// Context is the default client context; it can be used to cancel grpc dial out and
@@ -85,7 +85,7 @@ type Config struct {
 	// TODO: configure gRPC logger
 	LogConfig *zap.Config
 
-	// PermitWithoutStream when set will allow client to send keepalive pings to server without any active streams(RPCs).
+	// PermitWithoutStream when set will allow client to send keepalive pings to etcd without any active streams(RPCs).
 	PermitWithoutStream bool `json:"permit-without-stream"`
 
 	// TODO: support custom balancer picker

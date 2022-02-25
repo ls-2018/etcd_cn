@@ -23,7 +23,7 @@ import (
 	"testing"
 
 	"github.com/ls-2018/client/pkg/testutil"
-	epb "github.com/ls-2018/server/etcdserver/api/v3election/v3electionpb"
+	epb "github.com/ls-2018/etcd/etcdserver/api/v3election/v3electionpb"
 	"go.etcd.io/etcd/api/v3/authpb"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
@@ -176,7 +176,7 @@ func testV3CurlTxn(cx ctlCtx) {
 		cx.t.Fatalf("failed testV3CurlTxn txn with curl using prefix (%s) (%v)", p, err)
 	}
 
-	// was crashing etcd server
+	// was crashing etcd etcd
 	malformed := `{"compare":[{"result":0,"target":1,"key":"Zm9v","TargetUnion":null}],"success":[{"Request":{"RequestPut":{"key":"Zm9v","value":"YmFy"}}}]}`
 	if err := cURLPost(cx.epc, cURLReq{endpoint: path.Join(p, "/kv/txn"), value: malformed, expected: "error"}); err != nil {
 		cx.t.Fatalf("failed testV3CurlTxn put with curl using prefix (%s) (%v)", p, err)

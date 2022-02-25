@@ -28,7 +28,7 @@ import (
 	"google.golang.org/grpc/resolver"
 )
 
-// MockServer provides a mocked out grpc server of the etcdserver interface.
+// MockServer provides a mocked out grpc etcd of the etcdserver interface.
 type MockServer struct {
 	ln         net.Listener
 	Network    string
@@ -119,7 +119,7 @@ func startMockServers(network string, addrs []string) (ms *MockServers, err erro
 	return ms, nil
 }
 
-// StartAt restarts mock server at given index.
+// StartAt restarts mock etcd at given index.
 func (ms *MockServers) StartAt(idx int) (err error) {
 	ms.mu.Lock()
 	defer ms.mu.Unlock()
@@ -142,7 +142,7 @@ func (ms *MockServers) StartAt(idx int) (err error) {
 	return nil
 }
 
-// StopAt stops mock server at given index.
+// StopAt stops mock etcd at given index.
 func (ms *MockServers) StopAt(idx int) {
 	ms.mu.Lock()
 	defer ms.mu.Unlock()
@@ -157,7 +157,7 @@ func (ms *MockServers) StopAt(idx int) {
 	ms.wg.Done()
 }
 
-// Stop stops the mock server, immediately closing all open connections and listeners.
+// Stop stops the mock etcd, immediately closing all open connections and listeners.
 func (ms *MockServers) Stop() {
 	for idx := range ms.Servers {
 		ms.StopAt(idx)

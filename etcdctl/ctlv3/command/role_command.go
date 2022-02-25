@@ -208,7 +208,7 @@ func permRange(args []string) (string, string) {
 		if rolePermPrefix || rolePermFromKey {
 			// For the both cases of prefix and from-key, a permission with an empty key
 			// should allow access to the entire key space.
-			// 0x00 will be treated as open ended in server side.
+			// 0x00 will be treated as open ended in etcd side.
 			rangeEnd = "\x00"
 		}
 	} else {
