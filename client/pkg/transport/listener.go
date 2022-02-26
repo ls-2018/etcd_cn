@@ -134,9 +134,9 @@ type TLSInfo struct {
 	// ClientKeyFile is the key for the ClientCertFile
 	ClientKeyFile string
 
-	TrustedCAFile       string
-	ClientCertAuth      bool
-	CRLFile             string
+	TrustedCAFile       string // ca证书
+	ClientCertAuth      bool   // 客户端证书验证;默认false
+	CRLFile             string // 证书吊销列表文件的路径
 	InsecureSkipVerify  bool
 	SkipClientSANVerify bool
 
@@ -374,7 +374,7 @@ func (info TLSInfo) baseConfig() (*tls.Config, error) {
 		cfg.CipherSuites = info.CipherSuites
 	}
 
-	// 客户端证书可以通过CN上的精确匹配来验证,也可以通过对CN和san进行更一般的检查来验证。
+	// 客户端证书可以通过CN上的精确匹配来验证,也可以通过对CN和san进行更一般的检查来验证.
 	var verifyCertificate func(*x509.Certificate) bool
 	if info.AllowedCN != "" {
 		if info.AllowedHostname != "" {

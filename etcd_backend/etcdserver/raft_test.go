@@ -17,6 +17,7 @@ package etcdserver
 import (
 	"encoding/json"
 	"expvar"
+	"github.com/ls-2018/etcd_cn/raft"
 	"reflect"
 	"sync"
 	"testing"

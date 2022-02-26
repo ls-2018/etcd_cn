@@ -35,9 +35,6 @@ import (
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/etcdhttp"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/rafthttp"
-	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v2http"
-	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v2v3"
-	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v3client"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v3rpc"
 	"github.com/ls-2018/etcd_cn/etcd_backend/verify"
 	"github.com/ls-2018/etcd_cn/pkg/debugutil"
@@ -181,7 +178,7 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 		SnapshotCount:                            cfg.SnapshotCount,
 		SnapshotCatchUpEntries:                   cfg.SnapshotCatchUpEntries,
 		MaxSnapFiles:                             cfg.MaxSnapFiles,
-		MaxWALFiles:                              cfg.MaxWalFiles,
+		MaxWALFiles:                              cfg.MaxWalFiles, // 要保留的最大wal文件数（0表示不受限制）. 5
 		InitialPeerURLsMap:                       urlsmap,
 		InitialClusterToken:                      token,
 		DiscoveryURL:                             cfg.Durl,
@@ -194,16 +191,16 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 		AutoCompactionRetention:                  autoCompactionRetention,
 		AutoCompactionMode:                       cfg.AutoCompactionMode,
 		QuotaBackendBytes:                        cfg.QuotaBackendBytes,
-		BackendBatchLimit:                        cfg.BackendBatchLimit,
+		BackendBatchLimit:                        cfg.BackendBatchLimit, // BackendBatchLimit是提交后端事务前的最大操作数
 		BackendFreelistType:                      backendFreelistType,
-		BackendBatchInterval:                     cfg.BackendBatchInterval,
+		BackendBatchInterval:                     cfg.BackendBatchInterval, // BackendBatchInterval是提交后端事务前的最长时间.
 		MaxTxnOps:                                cfg.MaxTxnOps,
-		MaxRequestBytes:                          cfg.MaxRequestBytes,
+		MaxRequestBytes:                          cfg.MaxRequestBytes, // 服务器将接受的最大客户端请求大小（字节）.
 		SocketOpts:                               cfg.SocketOpts,
 		StrictReconfigCheck:                      cfg.StrictReconfigCheck,
 		ClientCertAuthEnabled:                    cfg.ClientTLSInfo.ClientCertAuth,
 		AuthToken:                                cfg.AuthToken,
-		BcryptCost:                               cfg.BcryptCost,
+		BcryptCost:                               cfg.BcryptCost, // 为散列身份验证密码指定bcrypt算法的成本/强度
 		TokenTTL:                                 cfg.AuthTokenTTL,
 		CORS:                                     cfg.CORS,
 		HostWhitelist:                            cfg.HostWhitelist,
@@ -219,12 +216,11 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 		LeaseCheckpointPersist:                   cfg.ExperimentalEnableLeaseCheckpointPersist,
 		CompactionBatchLimit:                     cfg.ExperimentalCompactionBatchLimit,
 		WatchProgressNotifyInterval:              cfg.ExperimentalWatchProgressNotifyInterval,
-		DowngradeCheckTime:                       cfg.ExperimentalDowngradeCheckTime,
-		WarningApplyDuration:                     cfg.ExperimentalWarningApplyDuration,
+		DowngradeCheckTime:                       cfg.ExperimentalDowngradeCheckTime,   // 两次降级状态检查之间的时间间隔。
+		WarningApplyDuration:                     cfg.ExperimentalWarningApplyDuration, //是时间长度.如果应用请求的时间超过这个值.就会产生一个警告.
 		ExperimentalMemoryMlock:                  cfg.ExperimentalMemoryMlock,
 		ExperimentalTxnModeWriteWithSharedBuffer: cfg.ExperimentalTxnModeWriteWithSharedBuffer,
 		ExperimentalBootstrapDefragThresholdMegabytes: cfg.ExperimentalBootstrapDefragThresholdMegabytes,
-		V2Deprecation: cfg.V2DeprecationEffective(),
 	}
 
 	if srvcfg.ExperimentalEnableDistributedTracing {
@@ -694,26 +690,13 @@ func (e *Etcd) serveClients() (err error) {
 
 	// Start a client etcd goroutine for each listen address
 	var h http.Handler
-	if e.Config().EnableV2 {
-		if e.Config().V2DeprecationEffective().IsAtLeast(config.V2_DEPR_1_WRITE_ONLY) {
-			return fmt.Errorf("--enable-v2 and --v2-deprecation=%s are mutually exclusive", e.Config().V2DeprecationEffective())
-		}
-		e.cfg.logger.Warn("Flag `enable-v2` is deprecated and will get removed in etcd 3.6.")
-		if len(e.Config().ExperimentalEnableV2V3) > 0 {
-			e.cfg.logger.Warn("Flag `experimental-enable-v2v3` is deprecated and will get removed in etcd 3.6.")
-			srv := v2v3.NewServer(e.cfg.logger, v3client.New(e.Server), e.cfg.ExperimentalEnableV2V3)
-			h = v2http.NewClientHandler(e.GetLogger(), srv, e.Server.Cfg.ReqTimeout())
-		} else {
-			h = v2http.NewClientHandler(e.GetLogger(), e.Server, e.Server.Cfg.ReqTimeout())
-		}
-	} else {
-		mux := http.NewServeMux()
-		etcdhttp.HandleBasic(e.cfg.logger, mux, e.Server)
-		etcdhttp.HandleMetricsHealthForV3(e.cfg.logger, mux, e.Server)
-		h = mux
-	}
 
-	gopts := []grpc.ServerOption{}
+	mux := http.NewServeMux()
+	etcdhttp.HandleBasic(e.cfg.logger, mux, e.Server)
+	etcdhttp.HandleMetricsHealthForV3(e.cfg.logger, mux, e.Server)
+	h = mux
+
+	var gopts []grpc.ServerOption
 	if e.cfg.GRPCKeepAliveMinTime > time.Duration(0) {
 		gopts = append(gopts, grpc.KeepaliveEnforcementPolicy(keepalive.EnforcementPolicy{
 			MinTime:             e.cfg.GRPCKeepAliveMinTime,

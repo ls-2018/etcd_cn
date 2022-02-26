@@ -49,7 +49,7 @@ var (
 	dirEmpty  = dirType("empty")
 )
 
-func startEtcdOrProxyV2(args []string) {
+func startEtcdOrProxy(args []string) {
 	grpc.EnableTracing = false
 
 	cfg := newConfig()

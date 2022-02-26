@@ -16,15 +16,11 @@ func (ctls Controls) Control(network, addr string, conn syscall.RawConn) error {
 }
 
 type SocketOpts struct {
-	// ReusePort enables socket option SO_REUSEPORT [1] which allows rebind of
-	// a port already in use. User should keep in mind that flock can fail
-	// in which case lock on data file could result in unexpected
-	// condition. User should take caution to protect against lock race.
 	// [1] https://man7.org/linux/man-pages/man7/socket.7.html
+	//启用在监听器上设置套接字选项SO_REUSEPORT.允许重新绑定一个已经在使用的端口.
+	//用户应该记住.在这种情况下.数据文件上的锁可能会导致意外情况的发生.用户应该注意防止锁竞争.
 	ReusePort bool
-	// ReuseAddress enables a socket option SO_REUSEADDR which allows
-	// binding to an address in `TIME_WAIT` state. Useful to improve MTTR
-	// in cases where etcd slow to restart due to excessive `TIME_WAIT`.
+	//ReuseAddress启用了一个套接字选项SO_REUSEADDR.允许绑定到`TIME_WAIT`状态下的地址.在etcd因过多的`TIME_WAIT'而缓慢重启的情况下.这对提高MTTR很有用.
 	// [1] https://man7.org/linux/man-pages/man7/socket.7.html
 	ReuseAddress bool
 }

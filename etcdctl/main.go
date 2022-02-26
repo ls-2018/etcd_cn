@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Etcdctl是一个控制etcd的命令行应用程序。
+// Etcdctl是一个控制etcd的命令行应用程序.
 package main
 
 import (

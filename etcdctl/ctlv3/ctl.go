@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//  ctlv3 包含用于v3 API的etcdctl的主入口点。
+//  ctlv3 包含用于v3 API的etcdctl的主入口点.
 package ctlv3
 
 import (
@@ -27,7 +27,7 @@ import (
 
 const (
 	cliName        = "etcdctl"
-	cliDescription = "etcd3的一个简单的命令行客户机。"
+	cliDescription = "etcd3的一个简单的命令行客户机."
 
 	defaultDialTimeout      = 2 * time.Second
 	defaultCommandTimeOut   = 5 * time.Second

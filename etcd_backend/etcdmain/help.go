@@ -47,84 +47,80 @@ var (
 	flagsline = `
 Member:
   --name 'default'
-    Human-readable name for this member.
+    本节点.人类可读的名字
   --data-dir '${name}.etcd'
-    Path to the data directory.
+    服务运行数据保存的路径. ${name}.etcd
   --wal-dir ''
-    Path to the dedicated wal directory.
+    专用wal目录的路径.默认值：--data-dir的路径下
   --snapshot-count '100000'
-    Number of committed transactions to trigger a snapshot to disk.
+    触发快照到磁盘的已提交事务数.
   --heartbeat-interval '100'
-    Time (in milliseconds) of a heartbeat interval.
+    心跳间隔 100ms
   --election-timeout '1000'
-    Time (in milliseconds) for an election to timeout. See tuning documentation for details.
+    选举超时
   --initial-election-tick-advance 'true'
-    Whether to fast-forward initial election ticks on boot for faster election.
+    是否在开机时快进初始选举点.以加快选举速度.
   --listen-peer-urls 'http://localhost:2380'
-    List of URLs to listen on for peer traffic.
+    和成员之间通信的地址.用于监听其他etcd member的url
   --listen-client-urls 'http://localhost:2379'
     List of URLs to listen on for client traffic.
   --max-snapshots '` + strconv.Itoa(embed.DefaultMaxSnapshots) + `'
-    Maximum number of snapshot files to retain (0 is unlimited).
+    要保留的最大快照文件数（0表示不受限制）.5
   --max-wals '` + strconv.Itoa(embed.DefaultMaxWALs) + `'
-    wal文件的最大保留数量(0不受限制)。
+    要保留的最大wal文件数（0表示不受限制）. 5
   --quota-backend-bytes '0'
-    Raise alarms when backend size exceeds the given quota (0 defaults to low space quota).
+    当后端大小超过给定配额时（0默认为低空间配额）.引发警报.
   --backend-bbolt-freelist-type 'map'
-    BackendFreelistType specifies the type of freelist that boltdb backend uses(array and map are supported types).
+    BackendFreelistType指定boltdb后端使用的freelist的类型（array and map是支持的类型）. map 
   --backend-batch-interval ''
-    BackendBatchInterval is the maximum time before commit the backend transaction.
+    BackendBatchInterval是提交后端事务前的最长时间.
   --backend-batch-limit '0'
-    BackendBatchLimit is the maximum operations before commit the backend transaction.
+    BackendBatchLimit是提交后端事务前的最大操作数.
   --max-txn-ops '128'
-    Maximum number of operations permitted in a transaction.
+    事务中允许的最大操作数.
   --max-request-bytes '1572864'
-    Maximum client request size in bytes the etcd will accept.
+    服务器将接受的最大客户端请求大小（字节）.
   --grpc-keepalive-min-time '5s'
-    Minimum duration interval that a client should wait before pinging etcd.
+    客户端在ping服务器之前应等待的最短持续时间间隔.
   --grpc-keepalive-interval '2h'
-    Frequency duration of etcd-to-client ping to check if a connection is alive (0 to disable).
+    服务器到客户端ping的频率持续时间.以检查连接是否处于活动状态（0表示禁用）.
   --grpc-keepalive-timeout '20s'
-    Additional duration of wait before closing a non-responsive connection (0 to disable).
+    关闭非响应连接之前的额外持续等待时间（0表示禁用）.20s
   --socket-reuse-port 'false'
-    Enable to set socket option SO_REUSEPORT on listeners allowing rebinding of a port already in use.
+    启用在监听器上设置套接字选项SO_REUSEPORT.允许重新绑定一个已经在使用的端口.false
   --socket-reuse-address 'false'
-	Enable to set socket option SO_REUSEADDR on listeners allowing binding to an address in TIME_WAIT state.
+    启用在监听器上设置套接字选项SO_REUSEADDR 允许重新绑定一个已经在使用的端口 在TIME_WAIT 状态.
 
 Clustering:
   --initial-advertise-peer-urls 'http://localhost:2380'
-	本节点的通信地址,且会通告群集的其余成员节点。
+    集群成员的 URL地址.且会通告群集的其余成员节点.
   --initial-cluster 'default=http://localhost:2380'
-    Initial cluster configuration for bootstrapping.
+    集群中所有节点的信息.
   --initial-cluster-state 'new'
-    Initial cluster state ('new' or 'existing').
+    初始集群状态 ('new' or 'existing').
   --initial-cluster-token 'etcd-cluster'
-    Initial cluster token for the etcd cluster during bootstrap.
-    Specifying this can protect you from unintended cross-cluster interaction when running multiple clusters.
+    创建集群的 token.这个值每个集群保持唯一.
   --advertise-client-urls 'http://localhost:2379'
     List of this member's client URLs to advertise to the public.
     The client URLs advertised should be accessible to machines that talk to etcd cluster. etcd client libraries parse these URLs to connect to the cluster.
   --discovery ''
-    Discovery URL used to bootstrap the cluster.
+    用于引导群集的发现URL.
   --discovery-fallback 'proxy'
-    Expected behavior ('exit' or 'proxy') when discovery services fails.
-    "proxy" supports v2 API only.
+    发现服务失败时的预期行为（“退出”或“代理”）.“proxy”仅支持v2 API. %q
   --discovery-proxy ''
-    HTTP proxy to use for traffic to discovery service.
+    用于流量到发现服务的HTTP代理.
   --discovery-srv ''
-    DNS srv domain used to bootstrap the cluster.
+    DNS srv域用于引导群集.
   --discovery-srv-name ''
-    Suffix to the dns srv name queried when bootstrapping.
+    使用DNS引导时查询的DNS srv名称的后缀.
   --strict-reconfig-check '` + strconv.FormatBool(embed.DefaultStrictReconfigCheck) + `'
-    Reject reconfiguration requests that would cause quorum loss.
+    拒绝可能导致仲裁丢失的重新配置请求.true
   --pre-vote 'true'
     Enable to run an additional Raft election phase.
   --auto-compaction-retention '0'
     Auto compaction retention length. 0 means disable auto compaction.
   --auto-compaction-mode 'periodic'
     Interpret 'auto-compaction-retention' one of: periodic|revision. 'periodic' for duration based retention, defaulting to hours if no time unit is provided (e.g. '5m'). 'revision' for revision number based retention.
-  --enable-v2 '` + strconv.FormatBool(embed.DefaultEnableV2) + `'
-    Accept etcd V2 client requests. Deprecated and to be decommissioned in v3.6.
   --v2-deprecation '` + string(cconfig.V2_DEPR_DEFAULT) + `'
     Phase of v2store deprecation. Allows to opt-in for higher compatibility mode.
     Supported values:
@@ -135,39 +131,39 @@ Clustering:
 
 Security:
   --cert-file ''
-    Path to the client etcd TLS cert file.
+    客户端证书
   --key-file ''
-    Path to the client etcd TLS key file.
+    客户端私钥
   --client-cert-auth 'false'
-    Enable client cert authentication.
+    启用客户端证书验证;默认false
   --client-crl-file ''
-    Path to the client certificate revocation list file.
+    客户端证书吊销列表文件的路径.
   --client-cert-allowed-hostname ''
-    Allowed TLS hostname for client cert authentication.
+    允许客户端证书认证使用TLS主机名
   --trusted-ca-file ''
-    Path to the client etcd TLS trusted CA cert file.
+    客户端etcd通信 的可信CA证书文件
   --auto-tls 'false'
-    Client TLS using generated certificates.
+    节点之间使用生成的证书通信;默认false
   --peer-cert-file ''
-    Path to the peer etcd TLS cert file.
+    证书路径
   --peer-key-file ''
-    Path to the peer etcd TLS key file.
+    私钥路径
   --peer-client-cert-auth 'false'
-    Enable peer client cert authentication.
+    启用server客户端证书验证;默认false
   --peer-trusted-ca-file ''
-    Path to the peer etcd TLS trusted CA file.
+    服务器端ca证书
   --peer-cert-allowed-cn ''
-    Required CN for client certs connecting to the peer endpoint.
+    允许的server客户端证书CommonName
   --peer-cert-allowed-hostname ''
-    Allowed TLS hostname for inter peer authentication.
+    允许的server客户端证书hostname
   --peer-auto-tls 'false'
-    Peer TLS using self-generated certificates if --peer-key-file and --peer-cert-file are not provided.
+    节点之间使用生成的证书通信;默认false
   --self-signed-cert-validity '1'
-    The validity period of the client and peer certificates that are automatically generated by etcd when you specify ClientAutoTLS and PeerAutoTLS, the unit is year, and the default is 1.
+    客户端证书和同级证书的有效期,单位为年 ;etcd自动生成的 如果指定了ClientAutoTLS and PeerAutoTLS,
   --peer-crl-file ''
-    Path to the peer certificate revocation list file.
+    服务端证书吊销列表文件的路径.
   --cipher-suites ''
-    Comma-separated list of supported TLS cipher suites between client/etcd and peers (empty will be auto-populated by Go).
+    客户端/etcds之间支持的TLS加密套件的逗号分隔列表(空将由Go自动填充).
   --cors '*'
     Comma-separated whitelist of origins for CORS, or cross-origin resource sharing, (empty or * means allow all).
   --host-whitelist '*'
@@ -175,17 +171,17 @@ Security:
 
 Auth:
   --auth-token 'simple'
-    Specify a v3 authentication token type and its options ('simple' or 'jwt').
+    指定验证令牌的具体选项. ('simple' or 'jwt')
   --bcrypt-cost ` + fmt.Sprintf("%d", bcrypt.DefaultCost) + `
-    Specify the cost / strength of the bcrypt algorithm for hashing auth passwords. Valid values are between ` + fmt.Sprintf("%d", bcrypt.MinCost) + ` and ` + fmt.Sprintf("%d", bcrypt.MaxCost) + `.
+    为散列身份验证密码指定bcrypt算法的成本/强度.有效值介于4和31之间.
   --auth-token-ttl 300
-    Time (in seconds) of the auth-token-ttl.
+    token过期时间
 
 Profiling and Monitoring:
   --enable-pprof 'false'
-    Enable runtime profiling data via HTTP etcd. Address is at client URL + "/debug/pprof/"
+    通过HTTP服务器启用运行时分析数据.地址位于客户端URL +“/ debug / pprof /”
   --metrics 'basic'
-    Set level of detail for exported metrics, specify 'extensive' to include etcd side grpc histogram metrics.
+    设置导出的指标的详细程度,指定“扩展”以包括直方图指标(extensive,basic)
   --listen-metrics-urls ''
     List of URLs to listen on for the metrics and health endpoints.
 
@@ -193,13 +189,13 @@ Logging:
   --logger 'zap'
     Currently only supports 'zap' for structured logging.
   --log-outputs 'default'
-    Specify 'stdout' or 'stderr' to skip journald logging even when running under systemd, or list of comma separated output targets.
+    指定'stdout'或'stderr'以跳过日志记录,即使在systemd或逗号分隔的输出目标列表下运行也是如此.
   --log-level 'info'
-    Configures log level. Only supports debug, info, warn, error, panic, or fatal.
+    日志等级,只支持 debug, info, warn, error, panic, or fatal. Default 'info'.
   --enable-log-rotation 'false'
-    Enable log rotation of a single log-outputs file target.
+    启用单个日志输出文件目标的日志旋转.
   --log-rotation-config-json '{"maxsize": 100, "maxage": 0, "maxbackups": 0, "localtime": false, "compress": false}'
-    Configures log rotation if enabled with a JSON logger config. MaxSize(MB), MaxAge(days,0=no limit), MaxBackups(0=no limit), LocalTime(use computers local time), Compress(gzip)". 
+    是用于日志轮换的默认配置。 默认情况下，日志轮换是禁用的。  MaxSize(MB), MaxAge(days,0=no limit), MaxBackups(0=no limit), LocalTime(use computers local time), Compress(gzip)". 
 
 Experimental distributed tracing:
   --experimental-enable-distributed-tracing 'false'
@@ -213,17 +209,17 @@ Experimental distributed tracing:
 
 v2 Proxy (to be deprecated in v3.6):
   --proxy 'off'
-    Proxy mode setting ('off', 'readonly' or 'on').
+    代理模式设置  ('off', 'readonly' or 'on').
   --proxy-failure-wait 5000
-    Time (in milliseconds) an endpoint will be held in a failed state.
+    在重新考虑代理请求之前.endpoints 将处于失败状态的时间（以毫秒为单位）.
   --proxy-refresh-interval 30000
-    Time (in milliseconds) of the endpoints refresh interval.
+    endpoints 刷新间隔的时间（以毫秒为单位）.
   --proxy-dial-timeout 1000
-    Time (in milliseconds) for a dial to timeout.
+    拨号超时的时间（以毫秒为单位）或0表示禁用超时
   --proxy-write-timeout 5000
-    Time (in milliseconds) for a write to timeout.
+    写入超时的时间（以毫秒为单位）或0以禁用超时.
   --proxy-read-timeout 0
-    Time (in milliseconds) for a read to timeout.
+    读取超时的时间（以毫秒为单位）或0以禁用超时.
 
 Experimental feature:
   --experimental-initial-corrupt-check 'false'
@@ -237,21 +233,21 @@ Experimental feature:
   --experimental-compaction-batch-limit 1000
     ExperimentalCompactionBatchLimit sets the maximum revisions deleted in each compaction batch.
   --experimental-peer-skip-client-san-verification 'false'
-    Skip verification of SAN field in client certificate for peer connections.
+    跳过server 客户端证书中SAN字段的验证.默认false
   --experimental-watch-progress-notify-interval '10m'
-    Duration of periodical watch progress notification.
+    Duration of periodic watch progress notifications.
   --experimental-warning-apply-duration '100ms'
-	Warning is generated if requests take more than this duration.
+    时间长度.如果应用请求的时间超过这个值.就会产生一个警告.
   --experimental-txn-mode-write-with-shared-buffer 'true'
-    Enable the write transaction to use a shared buffer in its readonly check operations.
+    启用写事务在其只读检查操作中使用共享缓冲区。
   --experimental-bootstrap-defrag-threshold-megabytes
     Enable the defrag during etcd etcd bootstrap on condition that it will free at least the provided threshold of disk space. Needs to be set to non-zero value to take effect.
 
 Unsafe feature:
   --force-new-cluster 'false'
-    Force to create a new one-member cluster.
+    强制创建新的单成员群集.它提交配置更改,强制删除集群中的所有现有成员并添加自身.需要将其设置为还原备份.
   --unsafe-no-fsync 'false'
-    Disables fsync, unsafe, will cause data loss.
+    禁用fsync，不安全，会导致数据丢失。
 
 CAUTIOUS with unsafe flag! It may break the guarantees given by the consensus protocol!
 `

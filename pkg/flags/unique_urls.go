@@ -66,7 +66,7 @@ func (us *UniqueURLs) String() string {
 	return strings.Join(all, ",")
 }
 
-// NewUniqueURLsWithExceptions implements "url.URL" slice as flag.Value interface.
+// NewUniqueURLsWithExceptions 实现 "url.URL "切片作为flag.Value接口.
 // Given value is to be separated by comma.
 func NewUniqueURLsWithExceptions(s string, exceptions ...string) *UniqueURLs {
 	us := &UniqueURLs{Values: make(map[string]struct{}), Allowed: make(map[string]struct{})}

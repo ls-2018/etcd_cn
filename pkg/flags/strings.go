@@ -36,7 +36,7 @@ func (ss *StringsValue) Set(s string) error {
 // String implements "flag.Value" interface.
 func (ss *StringsValue) String() string { return strings.Join(*ss, ",") }
 
-// NewStringsValue  实现字符串切片转为"flag.Value"接口。给定的值用逗号分隔。
+// NewStringsValue  实现字符串切片转为"flag.Value"接口.给定的值用逗号分隔.
 func NewStringsValue(s string) (ss *StringsValue) {
 	if s == "" {
 		return &StringsValue{}

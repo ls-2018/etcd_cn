@@ -169,7 +169,6 @@ type etcdProcessClusterConfig struct {
 	initialToken        string
 	quotaBackendBytes   int64
 	noStrictReconfig    bool
-	enableV2            bool
 	initialCorruptCheck bool
 	authTokenOpts       string
 	v2deprecation       string
@@ -289,9 +288,6 @@ func (cfg *etcdProcessClusterConfig) etcdServerProcessConfigs(tb testing.TB) []*
 		}
 		if cfg.noStrictReconfig {
 			args = append(args, "--strict-reconfig-check=false")
-		}
-		if cfg.enableV2 {
-			args = append(args, "--enable-v2")
 		}
 		if cfg.initialCorruptCheck {
 			args = append(args, "--experimental-initial-corrupt-check")

@@ -38,14 +38,30 @@ ETCDCTL_API=3 etcdctl alarm disarm
 - 只保留最近的3个版本```etcdctl compact 3```
 - 碎片整理```etcdctl defrag```
 
-
-
-
 ### issue
--   1、CertFile与ClientCertFile  KeyFile与ClientKeyFile的区别
-    ```
-    在运行的过程中是配置的相同的;
-    一般情况下,client与server是使用相同的ca进行的签发,   所有server端可以使用自己的私钥与证书验证client证书
-    但如果不是同一个ca签发的; 那么就需要一个与client相同ca签发的证书文件与key
-    
-    ```
+
+- 1、CertFile与ClientCertFile KeyFile与ClientKeyFile的区别
+  ```
+  在运行的过程中是配置的相同的;
+  一般情况下,client与server是使用相同的ca进行的签发,   所有server端可以使用自己的私钥与证书验证client证书
+  但如果不是同一个ca签发的; 那么就需要一个与client相同ca签发的证书文件与key
+  
+  ```
+- 2、url
+  ```
+  # member  
+    对外提供服务的地址
+    --listen-client-urls        DefaultListenClientURLs = "http://localhost:2379"
+    和成员之间通信的地址.用于监听其他etcd member的url
+    --listen-peer-urls          DefaultListenPeerURLs   = "http://localhost:2380"
+
+  # cluster
+    --advertise-client-urls http://127.0.0.1:2379 
+    集群成员的 URL地址.且会通告群集的其余成员节点.  
+    --initial-advertise-peer-urls http://127.0.0.1:12380                  
+    --initial-cluster-token etcd-cluster-1 
+    # 集群中所有节点的信息
+    --initial-cluster 'infra1=http://127.0.0.1:12380,infra2=http://127.0.0.1:22380,infra3=http://127.0.0.1:32380' 
+    --initial-cluster-state new --enable-pprof --logger=zap --log-outputs=stderr
+
+  ```

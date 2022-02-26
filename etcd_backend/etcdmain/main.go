@@ -37,18 +37,18 @@ func Main(args []string) {
 		}
 	}
 
-	startEtcdOrProxyV2(args)
+	startEtcdOrProxy(args)
 }
 
 func notifySystemd(lg *zap.Logger) {
 	if lg == nil {
 		lg = zap.NewExample()
 	}
-	lg.Info("notifying init daemon")
+	lg.Info("通知init守护进程")
 	_, err := daemon.SdNotify(false, daemon.SdNotifyReady)
 	if err != nil {
-		lg.Error("failed to notify systemd for readiness", zap.Error(err))
+		lg.Error("未能通知 systemd 准备就绪", zap.Error(err))
 		return
 	}
-	lg.Info("successfully notified init daemon")
+	lg.Info("成功地通知了init守护程序")
 }

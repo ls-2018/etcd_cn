@@ -56,7 +56,7 @@ const (
 )
 
 var (
-	ConnReadTimeout  = DefaultConnReadTimeout
+	ConnReadTimeout  = DefaultConnReadTimeout // 在每个rafthttp连接上设置的读取超时 5s
 	ConnWriteTimeout = DefaultConnWriteTimeout
 )
 

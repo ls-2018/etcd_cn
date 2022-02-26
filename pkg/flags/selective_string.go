@@ -66,7 +66,7 @@ func NewSelectiveStringValue(valids ...string) *SelectiveStringValue {
 	return &SelectiveStringValue{valids: vm, v: valids[0]}
 }
 
-// SelectiveStringsValue implements the flag.Value interface.
+// SelectiveStringsValue 实现了 flag.Value 接口.
 type SelectiveStringsValue struct {
 	vs     []string
 	valids map[string]struct{}

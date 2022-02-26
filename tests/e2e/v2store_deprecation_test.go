@@ -88,11 +88,4 @@ func TestV2Deprecation(t *testing.T) {
 
 }
 
-func TestV2DeprecationWriteOnlyNoV2Api(t *testing.T) {
-	BeforeTest(t)
-	proc, err := spawnCmd([]string{binDir + "/etcd", "--v2-deprecation=write-only", "--enable-v2"}, nil)
-	assert.NoError(t, err)
 
-	_, err = proc.Expect("--enable-v2 and --v2-deprecation=write-only are mutually exclusive")
-	assert.NoError(t, err)
-}

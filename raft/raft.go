@@ -683,7 +683,7 @@ func (r *raft) becomeFollower(term uint64, lead uint64) {
 	r.tick = r.tickElection
 	r.lead = lead
 	r.state = StateFollower
-	r.logger.Infof("%x became follower at term %d", r.id, r.Term)
+	r.logger.Infof("%x 成为候选者 在任期: %d", r.id, r.Term)
 }
 
 func (r *raft) becomeCandidate() {
@@ -696,7 +696,7 @@ func (r *raft) becomeCandidate() {
 	r.tick = r.tickElection
 	r.Vote = r.id
 	r.state = StateCandidate
-	r.logger.Infof("%x became candidate at term %d", r.id, r.Term)
+	r.logger.Infof("%x 成为候选者 在任期: %d", r.id, r.Term)
 }
 
 func (r *raft) becomePreCandidate() {
