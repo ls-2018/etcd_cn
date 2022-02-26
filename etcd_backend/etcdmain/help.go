@@ -195,7 +195,7 @@ Logging:
   --enable-log-rotation 'false'
     启用单个日志输出文件目标的日志旋转.
   --log-rotation-config-json '{"maxsize": 100, "maxage": 0, "maxbackups": 0, "localtime": false, "compress": false}'
-    是用于日志轮换的默认配置。 默认情况下，日志轮换是禁用的。  MaxSize(MB), MaxAge(days,0=no limit), MaxBackups(0=no limit), LocalTime(use computers local time), Compress(gzip)". 
+    是用于日志轮换的默认配置. 默认情况下,日志轮换是禁用的.  MaxSize(MB), MaxAge(days,0=no limit), MaxBackups(0=no limit), LocalTime(use computers local time), Compress(gzip)". 
 
 Experimental distributed tracing:
   --experimental-enable-distributed-tracing 'false'
@@ -203,9 +203,9 @@ Experimental distributed tracing:
   --experimental-distributed-tracing-address 'localhost:4317'
     Distributed tracing collector address.
   --experimental-distributed-tracing-service-name 'etcd'
-    Distributed tracing service name, must be same across all etcd instances.
+    Distributed tracing service name,必须是same across all etcd instances.
   --experimental-distributed-tracing-instance-id ''
-    Distributed tracing instance ID, must be unique per each etcd instance.
+    Distributed tracing instance ID,必须是unique per each etcd instance.
 
 v2 Proxy (to be deprecated in v3.6):
   --proxy 'off'
@@ -239,7 +239,7 @@ Experimental feature:
   --experimental-warning-apply-duration '100ms'
     时间长度.如果应用请求的时间超过这个值.就会产生一个警告.
   --experimental-txn-mode-write-with-shared-buffer 'true'
-    启用写事务在其只读检查操作中使用共享缓冲区。
+    启用写事务在其只读检查操作中使用共享缓冲区.
   --experimental-bootstrap-defrag-threshold-megabytes
     Enable the defrag during etcd etcd bootstrap on condition that it will free at least the provided threshold of disk space. Needs to be set to non-zero value to take effect.
 
@@ -247,7 +247,7 @@ Unsafe feature:
   --force-new-cluster 'false'
     强制创建新的单成员群集.它提交配置更改,强制删除集群中的所有现有成员并添加自身.需要将其设置为还原备份.
   --unsafe-no-fsync 'false'
-    禁用fsync，不安全，会导致数据丢失。
+    禁用fsync,不安全,会导致数据丢失.
 
 CAUTIOUS with unsafe flag! It may break the guarantees given by the consensus protocol!
 `

@@ -84,7 +84,7 @@ type Ready struct {
 	// when the snapshot has been received or has failed by calling ReportSnapshot.
 	Messages []pb.Message
 
-	// MustSync indicates whether the HardState and Entries must be synchronously
+	// MustSync indicates whether the HardState and Entries必须是synchronously
 	// written to disk or if an asynchronous write is permissible.
 	MustSync bool
 }
@@ -167,12 +167,12 @@ type Node interface {
 	// progress, it can call Advance before finishing applying the last ready.
 	Advance()
 	// ApplyConfChange applies a config change (previously passed to
-	// ProposeConfChange) to the node. This must be called whenever a config
+	// ProposeConfChange) to the node. This必须是called whenever a config
 	// change is observed in Ready.CommittedEntries, except when the app decides
 	// to reject the configuration change (i.e. treats it as a noop instead), in
 	// which case it must not be called.
 	//
-	// Returns an opaque non-nil ConfState protobuf which must be recorded in
+	// Returns an opaque non-nil ConfState protobuf which必须是recorded in
 	// snapshots.
 	ApplyConfChange(cc pb.ConfChangeI) *pb.ConfState
 

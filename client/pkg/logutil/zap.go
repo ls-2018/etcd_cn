@@ -21,7 +21,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-// DefaultZapLoggerConfig defines default zap logger configuration.
+// DefaultZapLoggerConfig 定义了默认的zap logger  配置。
 var DefaultZapLoggerConfig = zap.Config{
 	Level: zap.NewAtomicLevelAt(ConvertToZapLevel(DefaultLogLevel)),
 
@@ -33,7 +33,7 @@ var DefaultZapLoggerConfig = zap.Config{
 
 	Encoding: "json",
 
-	// copied from "zap.NewProductionEncoderConfig" with some updates
+	// 复制自 "zap.NewProductionEncoderConfig"，并进行了一些更新。
 	EncoderConfig: zapcore.EncoderConfig{
 		TimeKey:        "ts",
 		LevelKey:       "level",
@@ -48,20 +48,21 @@ var DefaultZapLoggerConfig = zap.Config{
 		EncodeCaller:   zapcore.ShortCallerEncoder,
 	},
 
-	// Use "/dev/null" to discard all
+	// Use "/dev/null" 弃用所有
 	OutputPaths:      []string{"stderr"},
 	ErrorOutputPaths: []string{"stderr"},
 }
 
-// MergeOutputPaths merges logging output paths, resolving conflicts.
+// MergeOutputPaths 合并日志输出路径，解决冲突。,如果有/dev/null , 就丢弃其他所有
 func MergeOutputPaths(cfg zap.Config) zap.Config {
+	_ = zap.NewProductionEncoderConfig
 	outputs := make(map[string]struct{})
 	for _, v := range cfg.OutputPaths {
 		outputs[v] = struct{}{}
 	}
 	outputSlice := make([]string, 0)
 	if _, ok := outputs["/dev/null"]; ok {
-		// "/dev/null" to discard all
+		// "/dev/null" 丢弃所有
 		outputSlice = []string{"/dev/null"}
 	} else {
 		for k := range outputs {

@@ -68,7 +68,7 @@ type Progress struct {
 	// and the bandwidth each Progress can use.
 	// When inflights is Full, no more message should be sent.
 	// When a leader sends out a message, the index of the last
-	// entry should be added to inflights. The index MUST be added
+	// entry should be added to inflights. The index必须是added
 	// into inflights in order.
 	// When a leader receives a reply, the previous inflights should
 	// be freed by calling inflights.FreeLE with the index of the last
@@ -169,7 +169,7 @@ func (pr *Progress) OptimisticUpdate(n uint64) { pr.Next = n + 1 }
 // cleared for sending log entries.
 func (pr *Progress) MaybeDecrTo(rejected, matchHint uint64) bool {
 	if pr.State == StateReplicate {
-		// The rejection must be stale if the progress has matched and "rejected"
+		// The rejection必须是stale if the progress has matched and "rejected"
 		// is smaller than "match".
 		if rejected <= pr.Match {
 			return false
@@ -181,7 +181,7 @@ func (pr *Progress) MaybeDecrTo(rejected, matchHint uint64) bool {
 		return true
 	}
 
-	// The rejection must be stale if "rejected" does not match next - 1. This
+	// The rejection必须是stale if "rejected" does not match next - 1. This
 	// is because non-replicating followers are probed one entry at a time.
 	if pr.Next-1 != rejected {
 		return false

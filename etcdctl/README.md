@@ -304,7 +304,7 @@ put key2 "some extra key"
 
 #### Remarks
 
-When using multi-line values within a TXN command, newlines must be represented as `\n`. Literal newlines will cause
+When using multi-line values within a TXN command, newlines必须是represented as `\n`. Literal newlines will cause
 parsing failures. This differs from other commands (such as PUT) where the shell will convert literal newlines for us.
 For example:
 
@@ -351,7 +351,7 @@ etcdctl compaction 1234
 ### WATCH [options] [key or prefix] [range_end] [--] [exec-command arg1 arg2 ...]
 
 Watch watches events stream on keys or prefixes, [key or prefix, range_end) if range_end is given. The watch command
-runs until it encounters an error or is terminated by the user. If range_end is given, it must be lexicographically
+runs until it encounters an error or is terminated by the user. If range_end is given, it必须是lexicographically
 greater than key or "\x00".
 
 RPC: Watch

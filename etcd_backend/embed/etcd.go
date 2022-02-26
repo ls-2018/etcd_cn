@@ -216,7 +216,7 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 		LeaseCheckpointPersist:                   cfg.ExperimentalEnableLeaseCheckpointPersist,
 		CompactionBatchLimit:                     cfg.ExperimentalCompactionBatchLimit,
 		WatchProgressNotifyInterval:              cfg.ExperimentalWatchProgressNotifyInterval,
-		DowngradeCheckTime:                       cfg.ExperimentalDowngradeCheckTime,   // 两次降级状态检查之间的时间间隔。
+		DowngradeCheckTime:                       cfg.ExperimentalDowngradeCheckTime,   // 两次降级状态检查之间的时间间隔.
 		WarningApplyDuration:                     cfg.ExperimentalWarningApplyDuration, //是时间长度.如果应用请求的时间超过这个值.就会产生一个警告.
 		ExperimentalMemoryMlock:                  cfg.ExperimentalMemoryMlock,
 		ExperimentalTxnModeWriteWithSharedBuffer: cfg.ExperimentalTxnModeWriteWithSharedBuffer,
@@ -607,7 +607,7 @@ func configureClientListeners(cfg *Config) (sctxs map[string]*serveCtx, err erro
 			}
 		}
 		if (u.Scheme == "https" || u.Scheme == "unixs") && cfg.ClientTLSInfo.Empty() {
-			return nil, fmt.Errorf("TLS key/cert (--cert-file, --key-file) must be provided for client url %s with HTTPS scheme", u.String())
+			return nil, fmt.Errorf("TLS key/cert (--cert-file, --key-file)必须是provided for client url %s with HTTPS scheme", u.String())
 		}
 
 		network := "tcp"
@@ -805,7 +805,7 @@ func (e *Etcd) setupTracing(ctx context.Context) (exporter tracesdk.SpanExporter
 	res := resource.NewWithAttributes(
 		semconv.ServiceNameKey.String(e.cfg.ExperimentalDistributedTracingServiceName),
 	)
-	// As Tracing service Instance ID must be unique, it should
+	// As Tracing service Instance ID必须是unique, it should
 	// never use the empty default string value, so we only set it
 	// if it's a non empty string.
 	if e.cfg.ExperimentalDistributedTracingServiceInstanceID != "" {

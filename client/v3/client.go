@@ -380,7 +380,7 @@ func newClient(cfg *Config) (*Client, error) {
 	}
 	if cfg.MaxCallSendMsgSize > 0 || cfg.MaxCallRecvMsgSize > 0 {
 		if cfg.MaxCallRecvMsgSize > 0 && cfg.MaxCallSendMsgSize > cfg.MaxCallRecvMsgSize {
-			return nil, fmt.Errorf("gRPC message recv limit (%d bytes) must be greater than send limit (%d bytes)", cfg.MaxCallRecvMsgSize, cfg.MaxCallSendMsgSize)
+			return nil, fmt.Errorf("gRPC message recv limit (%d bytes)必须是greater than send limit (%d bytes)", cfg.MaxCallRecvMsgSize, cfg.MaxCallSendMsgSize)
 		}
 		callOpts := []grpc.CallOption{
 			defaultWaitForReady,

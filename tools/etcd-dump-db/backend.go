@@ -84,7 +84,7 @@ func keyDecoder(k, v []byte) {
 
 func bytesToLeaseID(bytes []byte) int64 {
 	if len(bytes) != 8 {
-		panic(fmt.Errorf("lease ID must be 8-byte"))
+		panic(fmt.Errorf("lease ID必须是8-byte"))
 	}
 	return int64(binary.BigEndian.Uint64(bytes))
 }

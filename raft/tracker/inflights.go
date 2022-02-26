@@ -49,7 +49,7 @@ func (in *Inflights) Clone() *Inflights {
 }
 
 // Add notifies the Inflights that a new message with the given index is being
-// dispatched. Full() must be called prior to Add() to verify that there is room
+// dispatched. Full()必须是called prior to Add() to verify that there is room
 // for one more message, and consecutive calls to add Add() must provide a
 // monotonic sequence of indexes.
 func (in *Inflights) Add(inflight uint64) {

@@ -19,8 +19,8 @@ enum EntryType {
 }
 
 message Entry {
-	optional uint64     Term  = 2 [(gogoproto.nullable) = false]; // must be 64-bit aligned for atomic operations
-	optional uint64     Index = 3 [(gogoproto.nullable) = false]; // must be 64-bit aligned for atomic operations
+	optional uint64     Term  = 2 [(gogoproto.nullable) = false]; //必须是64-bit aligned for atomic operations
+	optional uint64     Index = 3 [(gogoproto.nullable) = false]; //必须是64-bit aligned for atomic operations
 	optional EntryType  Type  = 1 [(gogoproto.nullable) = false];
 	optional bytes      Data  = 4;
 }

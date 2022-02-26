@@ -120,7 +120,7 @@ type Config struct {
 	// ElectionTick is the number of Node.Tick invocations that must pass between
 	// elections. That is, if a follower does not receive any message from the
 	// leader of current term before ElectionTick has elapsed, it will become
-	// candidate and start an election. ElectionTick must be greater than
+	// candidate and start an election. ElectionTick必须是greater than
 	// HeartbeatTick. We suggest ElectionTick = 10 * HeartbeatTick to avoid
 	// unnecessary leader switching.
 	ElectionTick int
@@ -180,7 +180,7 @@ type Config struct {
 	// If the clock drift is unbounded, leader might keep the lease longer than it
 	// should (clock can move backward/pause without any bound). ReadIndex is not safe
 	// in that case.
-	// CheckQuorum MUST be enabled if ReadOnlyOption is ReadOnlyLeaseBased.
+	// CheckQuorum必须是enabled if ReadOnlyOption is ReadOnlyLeaseBased.
 	ReadOnlyOption ReadOnlyOption
 
 	// Logger is the logger used for raft log. For multinode which can host
@@ -204,11 +204,11 @@ func (c *Config) validate() error {
 	}
 
 	if c.HeartbeatTick <= 0 {
-		return errors.New("heartbeat tick must be greater than 0")
+		return errors.New("heartbeat tick必须是greater than 0")
 	}
 
 	if c.ElectionTick <= c.HeartbeatTick {
-		return errors.New("election tick must be greater than heartbeat tick")
+		return errors.New("election tick必须是greater than heartbeat tick")
 	}
 
 	if c.Storage == nil {
@@ -226,7 +226,7 @@ func (c *Config) validate() error {
 	}
 
 	if c.MaxInflightMsgs <= 0 {
-		return errors.New("max inflight messages must be greater than 0")
+		return errors.New("max inflight messages必须是greater than 0")
 	}
 
 	if c.Logger == nil {
@@ -234,7 +234,7 @@ func (c *Config) validate() error {
 	}
 
 	if c.ReadOnlyOption == ReadOnlyLeaseBased && !c.CheckQuorum {
-		return errors.New("CheckQuorum must be enabled when ReadOnlyOption is ReadOnlyLeaseBased")
+		return errors.New("CheckQuorum必须是enabled when ReadOnlyOption is ReadOnlyLeaseBased")
 	}
 
 	return nil
@@ -930,7 +930,7 @@ func (r *raft) Step(m pb.Message) error {
 			(m.Type == pb.MsgPreVote && m.Term > r.Term)
 		// ...and we believe the candidate is up to date.
 		if canVote && r.raftLog.isUpToDate(m.Index, m.LogTerm) {
-			// Note: it turns out that that learners must be allowed to cast votes.
+			// Note: it turns out that that learners必须是allowed to cast votes.
 			// This seems counter- intuitive but is necessary in the situation in which
 			// a learner has been promoted (i.e. is now a voter) but has not learned
 			// about this yet.
@@ -1491,7 +1491,7 @@ func (r *raft) handleAppendEntries(m pb.Message) {
 		hintIndex = r.raftLog.findConflictByTerm(hintIndex, m.LogTerm)
 		hintTerm, err := r.raftLog.term(hintIndex)
 		if err != nil {
-			panic(fmt.Sprintf("term(%d) must be valid, but got %v", hintIndex, err))
+			panic(fmt.Sprintf("term(%d)必须是valid, but got %v", hintIndex, err))
 		}
 		r.send(pb.Message{
 			To:         m.From,

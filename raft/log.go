@@ -123,7 +123,7 @@ func (l *raftLog) append(ents ...pb.Entry) uint64 {
 // entries, the index of the first new entry will be returned.
 // An entry is considered to be conflicting if it has the same index but
 // a different term.
-// The index of the given entries MUST be continuously increasing.
+// The index of the given entries必须是continuously increasing.
 func (l *raftLog) findConflict(ents []pb.Entry) uint64 {
 	for _, ne := range ents {
 		if !l.matchTerm(ne.Index, ne.Term) {
@@ -142,7 +142,7 @@ func (l *raftLog) findConflict(ents []pb.Entry) uint64 {
 // log l with a term <= `term` and an index <= `index`. If no such index exists
 // in the log, the log's first index is returned.
 //
-// The index provided MUST be equal to or less than l.lastIndex(). Invalid
+// The index provided必须是equal to or less than l.lastIndex(). Invalid
 // inputs log a warning and the input index is returned.
 func (l *raftLog) findConflictByTerm(index uint64, term uint64) uint64 {
 	if li := l.lastIndex(); index > li {

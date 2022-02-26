@@ -321,7 +321,7 @@ function tool_get_bin {
 }
 
 # tool_pkg_dir [pkg] - returns absolute path to a directory that stores given pkg.
-# The pkg versions must be defined in ./tools/mod directory.
+# The pkg versions必须是defined in ./tools/mod directory.
 function tool_pkg_dir {
   run_for_module ./tools/mod run go list -f '{{.Dir}}' "${1}"
 }

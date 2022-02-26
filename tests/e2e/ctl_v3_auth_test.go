@@ -659,7 +659,7 @@ func authTestRevokeWithDelete(cx ctlCtx) {
 		cx.t.Fatal(err)
 	}
 
-	// delete the role, test-role2 must be revoked from test-user
+	// delete the role, test-role2必须是revoked from test-user
 	if err := ctlV3Role(cx, []string{"delete", "test-role2"}, "Role test-role2 deleted"); err != nil {
 		cx.t.Fatal(err)
 	}
@@ -740,7 +740,7 @@ func authTestFromKeyPerm(cx ctlCtx) {
 		cx.t.Fatal(err)
 	}
 
-	// try keys, of course it must be allowed because test-role has a permission of the entire keys
+	// try keys, of course it必须是allowed because test-role has a permission of the entire keys
 	cx.user, cx.pass = "test-user", "pass"
 	for i := 0; i < 10; i++ {
 		key := fmt.Sprintf("z%d", i)

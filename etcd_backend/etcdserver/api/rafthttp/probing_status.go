@@ -31,7 +31,7 @@ const (
 )
 
 var (
-	// proberInterval must be shorter than read timeout.
+	// proberInterval必须是shorter than read timeout.
 	// Or the connection will time-out.
 	proberInterval           = ConnReadTimeout - time.Second
 	statusMonitoringInterval = 30 * time.Second

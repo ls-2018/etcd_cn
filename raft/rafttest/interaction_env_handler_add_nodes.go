@@ -85,7 +85,7 @@ func (env *InteractionEnv) AddNodes(n int, snap pb.Snapshot) error {
 			// NB: we could make this work with 1, but MemoryStorage just
 			// doesn't play well with that and it's not a loss of generality.
 			if snap.Metadata.Index <= 1 {
-				return errors.New("index must be specified as > 1 due to bootstrap")
+				return errors.New("index必须是specified as > 1 due to bootstrap")
 			}
 			snap.Metadata.Term = 1
 			if err := s.ApplySnapshot(snap); err != nil {

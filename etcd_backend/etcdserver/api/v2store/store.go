@@ -332,7 +332,7 @@ func (s *store) CompareAndSwap(nodePath string, prevValue string, prevIndex uint
 }
 
 // Delete deletes the node at the given path.
-// If the node is a directory, recursive must be true to delete it.
+// If the node is a directory, recursive必须是true to delete it.
 func (s *store) Delete(nodePath string, dir, recursive bool) (*Event, error) {
 	var err *v2error.Error
 

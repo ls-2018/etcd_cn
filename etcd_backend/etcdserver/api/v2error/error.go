@@ -51,7 +51,7 @@ var errors = map[int]string{
 	EcodeInvalidField:         "Invalid field",
 	EcodeInvalidForm:          "Invalid POST form",
 	EcodeRefreshValue:         "Value provided on refresh",
-	EcodeRefreshTTLRequired:   "A TTL must be provided on refresh",
+	EcodeRefreshTTLRequired:   "A TTL必须是provided on refresh",
 
 	// raft related errors
 	EcodeRaftInternal: "Raft Internal Error",

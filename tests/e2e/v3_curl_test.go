@@ -344,7 +344,7 @@ func testV3CurlProclaimMissiongLeaderKey(cx ctlCtx) {
 	if err = cURLPost(cx.epc, cURLReq{
 		endpoint: path.Join(cx.apiPrefix, "/election/proclaim"),
 		value:    string(pdata),
-		expected: `{"error":"\"leader\" field must be provided","code":2,"message":"\"leader\" field must be provided"}`,
+		expected: `{"error":"\"leader\" field必须是provided","code":2,"message":"\"leader\" field必须是provided"}`,
 	}); err != nil {
 		cx.t.Fatalf("failed post proclaim request (%s) (%v)", cx.apiPrefix, err)
 	}
@@ -360,7 +360,7 @@ func testV3CurlResignMissiongLeaderKey(cx ctlCtx) {
 	if err := cURLPost(cx.epc, cURLReq{
 		endpoint: path.Join(cx.apiPrefix, "/election/resign"),
 		value:    `{}`,
-		expected: `{"error":"\"leader\" field must be provided","code":2,"message":"\"leader\" field must be provided"}`,
+		expected: `{"error":"\"leader\" field必须是provided","code":2,"message":"\"leader\" field必须是provided"}`,
 	}); err != nil {
 		cx.t.Fatalf("failed post resign request (%s) (%v)", cx.apiPrefix, err)
 	}

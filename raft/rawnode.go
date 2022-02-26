@@ -129,7 +129,7 @@ func (rn *RawNode) Ready() Ready {
 }
 
 // readyWithoutAccept returns a Ready. This is a read-only operation, i.e. there
-// is no obligation that the Ready must be handled.
+// is no obligation that the Ready必须是handled.
 func (rn *RawNode) readyWithoutAccept() Ready {
 	return newReady(rn.raft, rn.prevSoftSt, rn.prevHardSt)
 }

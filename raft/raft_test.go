@@ -2444,7 +2444,7 @@ func TestLeaderAppResp(t *testing.T) {
 
 	for i, tt := range tests {
 		// sm term is 1 after it becomes the leader.
-		// thus the last log term must be 1 to be committed.
+		// thus the last log term必须是1 to be committed.
 		sm := newTestRaft(1, 10, 1, newTestMemoryStorage(withPeers(1, 2, 3)))
 		sm.raftLog = &raftLog{
 			storage:  &MemoryStorage{ents: []pb.Entry{{}, {Index: 1, Term: 0}, {Index: 2, Term: 1}}},

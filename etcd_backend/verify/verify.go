@@ -117,14 +117,14 @@ func validateConsistentIndex(cfg Config, hardstate *raftpb.HardState, snapshot *
 		return fmt.Errorf("backend.Term (%v) expected == WAL.HardState.term, (%v)", term, hardstate.Term)
 	}
 	if index > hardstate.Commit {
-		return fmt.Errorf("backend.ConsistentIndex (%v) must be <= WAL.HardState.commit (%v)", index, hardstate.Commit)
+		return fmt.Errorf("backend.ConsistentIndex (%v)必须是<= WAL.HardState.commit (%v)", index, hardstate.Commit)
 	}
 	if term > hardstate.Term {
-		return fmt.Errorf("backend.Term (%v) must be <= WAL.HardState.term, (%v)", term, hardstate.Term)
+		return fmt.Errorf("backend.Term (%v)必须是<= WAL.HardState.term, (%v)", term, hardstate.Term)
 	}
 
 	if index < snapshot.Index {
-		return fmt.Errorf("backend.ConsistentIndex (%v) must be >= last snapshot index (%v)", index, snapshot.Index)
+		return fmt.Errorf("backend.ConsistentIndex (%v)必须是>= last snapshot index (%v)", index, snapshot.Index)
 	}
 
 	cfg.Logger.Info("verification: consistentIndex OK", zap.Uint64("backend-consistent-index", index), zap.Uint64("hardstate-commit", hardstate.Commit))

@@ -56,7 +56,7 @@ func read(lg *zap.Logger, fpath string) (*Cluster, error) {
 		return nil, errors.New("cases not found")
 	}
 	if clus.Tester.DelayLatencyMs <= clus.Tester.DelayLatencyMsRv*5 {
-		return nil, fmt.Errorf("delay latency %d ms must be greater than 5x of delay latency random variable %d ms", clus.Tester.DelayLatencyMs, clus.Tester.DelayLatencyMsRv)
+		return nil, fmt.Errorf("delay latency %d ms必须是greater than 5x of delay latency random variable %d ms", clus.Tester.DelayLatencyMs, clus.Tester.DelayLatencyMsRv)
 	}
 	if clus.Tester.UpdatedDelayLatencyMs == 0 {
 		clus.Tester.UpdatedDelayLatencyMs = clus.Tester.DelayLatencyMs
@@ -124,7 +124,7 @@ func read(lg *zap.Logger, fpath string) (*Cluster, error) {
 			return nil, fmt.Errorf("'--election-timeout' cannot be 0 (got %+v)", mem.Etcd)
 		}
 		if int64(clus.Tester.DelayLatencyMs) <= mem.Etcd.ElectionTimeoutMs {
-			return nil, fmt.Errorf("delay latency %d ms must be greater than election timeout %d ms", clus.Tester.DelayLatencyMs, mem.Etcd.ElectionTimeoutMs)
+			return nil, fmt.Errorf("delay latency %d ms必须是greater than election timeout %d ms", clus.Tester.DelayLatencyMs, mem.Etcd.ElectionTimeoutMs)
 		}
 
 		port := ""
@@ -175,12 +175,12 @@ func read(lg *zap.Logger, fpath string) (*Cluster, error) {
 		}
 
 		if !strings.HasPrefix(mem.Etcd.DataDir, mem.BaseDir) {
-			return nil, fmt.Errorf("Etcd.DataDir must be prefixed with BaseDir (got %q)", mem.Etcd.DataDir)
+			return nil, fmt.Errorf("Etcd.DataDir必须是prefixed with BaseDir (got %q)", mem.Etcd.DataDir)
 		}
 
 		// TODO: support separate WALDir that can be handled via failure-archive
 		if !strings.HasPrefix(mem.Etcd.WALDir, mem.BaseDir) {
-			return nil, fmt.Errorf("Etcd.WALDir must be prefixed with BaseDir (got %q)", mem.Etcd.WALDir)
+			return nil, fmt.Errorf("Etcd.WALDir必须是prefixed with BaseDir (got %q)", mem.Etcd.WALDir)
 		}
 
 		// TODO: only support generated certs with TLS generator
@@ -227,7 +227,7 @@ func read(lg *zap.Logger, fpath string) (*Cluster, error) {
 			return nil, fmt.Errorf("Etcd.PeerClientCertAuth and Etcd.PeerAutoTLS cannot be both 'true'")
 		}
 		if (mem.Etcd.PeerCertFile == "") != (mem.Etcd.PeerKeyFile == "") {
-			return nil, fmt.Errorf("both Etcd.PeerCertFile %q and Etcd.PeerKeyFile %q must be either empty or non-empty", mem.Etcd.PeerCertFile, mem.Etcd.PeerKeyFile)
+			return nil, fmt.Errorf("both Etcd.PeerCertFile %q and Etcd.PeerKeyFile %q必须是either empty or non-empty", mem.Etcd.PeerCertFile, mem.Etcd.PeerKeyFile)
 		}
 		if mem.Etcd.ClientCertAuth && mem.Etcd.ClientAutoTLS {
 			return nil, fmt.Errorf("Etcd.ClientCertAuth and Etcd.ClientAutoTLS cannot be both 'true'")
@@ -251,7 +251,7 @@ func read(lg *zap.Logger, fpath string) (*Cluster, error) {
 			return nil, fmt.Errorf("Etcd.ClientCertAuth 'false', but Etcd.ClientTrustedCAFile is %q", mem.Etcd.PeerCertFile)
 		}
 		if (mem.Etcd.ClientCertFile == "") != (mem.Etcd.ClientKeyFile == "") {
-			return nil, fmt.Errorf("both Etcd.ClientCertFile %q and Etcd.ClientKeyFile %q must be either empty or non-empty", mem.Etcd.ClientCertFile, mem.Etcd.ClientKeyFile)
+			return nil, fmt.Errorf("both Etcd.ClientCertFile %q and Etcd.ClientKeyFile %q必须是either empty or non-empty", mem.Etcd.ClientCertFile, mem.Etcd.ClientKeyFile)
 		}
 
 		peerTLS := mem.Etcd.PeerAutoTLS ||
@@ -365,7 +365,7 @@ func read(lg *zap.Logger, fpath string) (*Cluster, error) {
 				case "stderr", "stdout", "/dev/null", "default":
 				default:
 					if !strings.HasPrefix(v, mem.BaseDir) {
-						return nil, fmt.Errorf("LogOutput %q must be prefixed with BaseDir %q", v, mem.BaseDir)
+						return nil, fmt.Errorf("LogOutput %q必须是prefixed with BaseDir %q", v, mem.BaseDir)
 					}
 				}
 			}

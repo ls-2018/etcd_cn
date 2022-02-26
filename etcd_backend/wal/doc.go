@@ -30,7 +30,7 @@ record it. So WAL can match with the saved snapshot when restarting.
 
 	err := w.SaveSnapshot(walpb.Snapshot{Index: 10, Term: 2})
 
-When a user has finished using a WAL it must be closed:
+When a user has finished using a WAL it必须是closed:
 
 	w.Close()
 

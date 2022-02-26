@@ -842,7 +842,7 @@ func TestStoreWatchRecursiveCreateDeeperThanHiddenKey(t *testing.T) {
 func TestStoreWatchSlowConsumer(t *testing.T) {
 	s := newTestStore(t)
 	defer s.Close()
-	s.Watch("/foo", true, true, 0) // stream must be true
+	s.Watch("/foo", true, true, 0) // stream必须是true
 	// Fill watch channel with 100 events
 	for i := 1; i <= 100; i++ {
 		s.Set("/foo", false, fmt.Sprint(i), v2store.TTLOptionSet{ExpireTime: v2store.Permanent}) // ok

@@ -1063,7 +1063,7 @@ func TestHTTPClusterClientResetFail(t *testing.T) {
 		// need at least one endpoint
 		{},
 
-		// urls must be valid
+		// urls必须是valid
 		{":"},
 	}
 

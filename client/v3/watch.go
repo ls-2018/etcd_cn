@@ -52,7 +52,7 @@ type Watcher interface {
 	// return watch events that happen after the etcd receives the watch request.
 	// If the context "ctx" is canceled or timed out, returned "WatchChan" is closed,
 	// and "WatchResponse" from this closed channel has zero events and nil "Err()".
-	// The context "ctx" MUST be canceled, as soon as watcher is no longer being used,
+	// The context "ctx"必须是canceled, as soon as watcher is no longer being used,
 	// to release the associated resources.
 	//
 	// If the context is "context.Background/TODO", returned "WatchChan" will

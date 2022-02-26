@@ -40,13 +40,9 @@ func (cfg Config) GetLogger() *zap.Logger {
 	return l
 }
 
-// setupLogging initializes etcd logging.
-// Must be called after flag parsing or finishing configuring embed.Config.
+// setupLogging 初始化etcd日志。必须在标志解析或完成配置embed.Config后调用。
 func (cfg *Config) setupLogging() error {
 	switch cfg.Logger {
-	case "capnslog": // removed in v3.5
-		return fmt.Errorf("--logger=capnslog is removed in v3.5")
-
 	case "zap":
 		if len(cfg.LogOutputs) == 0 {
 			cfg.LogOutputs = []string{DefaultLogOutput}
@@ -54,10 +50,11 @@ func (cfg *Config) setupLogging() error {
 		if len(cfg.LogOutputs) > 1 {
 			for _, v := range cfg.LogOutputs {
 				if v == DefaultLogOutput {
-					return fmt.Errorf("multi logoutput for %q is not supported yet", DefaultLogOutput)
+					return fmt.Errorf("目前还不支持%q的多重日志输出", DefaultLogOutput)
 				}
 			}
 		}
+		// todo
 		if cfg.EnableLogRotation {
 			if err := setupLogRotation(cfg.LogOutputs, cfg.LogRotationConfigJSON); err != nil {
 				return err
@@ -104,10 +101,10 @@ func (cfg *Config) setupLogging() error {
 			copied := logutil.DefaultZapLoggerConfig
 			copied.OutputPaths = outputPaths
 			copied.ErrorOutputPaths = errOutputPaths
-			copied = logutil.MergeOutputPaths(copied)
-			copied.Level = zap.NewAtomicLevelAt(logutil.ConvertToZapLevel(cfg.LogLevel))
+			copied = logutil.MergeOutputPaths(copied)                                    // /dev/null 判断
+			copied.Level = zap.NewAtomicLevelAt(logutil.ConvertToZapLevel(cfg.LogLevel)) // 是一个方便的函数，它创建一个AtomicLevel，然后用给定的级别调用SetLevel。
 			if cfg.ZapLoggerBuilder == nil {
-				lg, err := copied.Build()
+				lg, err := copied.Build() // 从配置和选项中构建一个logger
 				if err != nil {
 					return err
 				}
@@ -117,12 +114,12 @@ func (cfg *Config) setupLogging() error {
 			if len(cfg.LogOutputs) > 1 {
 				for _, v := range cfg.LogOutputs {
 					if v != DefaultLogOutput {
-						return fmt.Errorf("running with systemd/journal but other '--log-outputs' values (%q) are configured with 'default'; override 'default' value with something else", cfg.LogOutputs)
+						return fmt.Errorf("运行systemd/journal，但其他 '--log-outputs' values (%q) 被配置为 'default'; 用其他的值重写 'default'", cfg.LogOutputs)
 					}
 				}
 			}
 
-			// use stderr as fallback
+			// 使用stderr作为后备方案
 			syncer, lerr := getJournalWriteSyncer()
 			if lerr != nil {
 				return lerr
@@ -130,12 +127,10 @@ func (cfg *Config) setupLogging() error {
 
 			lvl := zap.NewAtomicLevelAt(logutil.ConvertToZapLevel(cfg.LogLevel))
 
-			// WARN: do not change field names in encoder config
-			// journald logging writer assumes field names of "level" and "caller"
+			// WARN: 不要改变encoder 配置中的字段名 journald日志编写者假定字段名为"level" and "caller"
 			cr := zapcore.NewCore(
 				zapcore.NewJSONEncoder(logutil.DefaultZapLoggerConfig.EncoderConfig),
-				syncer,
-				lvl,
+				syncer, lvl,
 			)
 			if cfg.ZapLoggerBuilder == nil {
 				cfg.ZapLoggerBuilder = NewZapLoggerBuilder(zap.New(cr, zap.AddCaller(), zap.ErrorOutput(syncer)))
@@ -148,6 +143,7 @@ func (cfg *Config) setupLogging() error {
 		}
 
 		logTLSHandshakeFailure := func(conn *tls.Conn, err error) {
+			// 记录tls握手失败
 			state := conn.ConnectionState()
 			remoteAddr := conn.RemoteAddr().String()
 			serverName := state.ServerName
@@ -158,7 +154,7 @@ func (cfg *Config) setupLogging() error {
 					ips[i] = cert.IPAddresses[i].String()
 				}
 				cfg.logger.Warn(
-					"rejected connection",
+					"拒绝连接",
 					zap.String("remote-addr", remoteAddr),
 					zap.String("etcd-name", serverName),
 					zap.Strings("ip-addresses", ips),
@@ -167,7 +163,7 @@ func (cfg *Config) setupLogging() error {
 				)
 			} else {
 				cfg.logger.Warn(
-					"rejected connection",
+					"拒绝连接",
 					zap.String("remote-addr", remoteAddr),
 					zap.String("etcd-name", serverName),
 					zap.Error(err),
@@ -178,14 +174,13 @@ func (cfg *Config) setupLogging() error {
 		cfg.PeerTLSInfo.HandshakeFailure = logTLSHandshakeFailure
 
 	default:
-		return fmt.Errorf("unknown logger option %q", cfg.Logger)
+		return fmt.Errorf("未知的Logger选项 %q", cfg.Logger)
 	}
 
 	return nil
 }
 
-// NewZapLoggerBuilder generates a zap logger builder that sets given loger
-// for embedded etcd.
+// NewZapLoggerBuilder 生成一个zap logger builder，为embedded  etcd设置给定的loger。
 func NewZapLoggerBuilder(lg *zap.Logger) func(*Config) error {
 	return func(cfg *Config) error {
 		cfg.loggerMu.Lock()
@@ -226,7 +221,7 @@ type logRotationConfig struct {
 // Sync implements zap.Sink
 func (logRotationConfig) Sync() error { return nil }
 
-// setupLogRotation initializes log rotation for a single file path target.
+// setupLogRotation 初始化单个文件路径目标的日志旋转。
 func setupLogRotation(logOutputs []string, logRotateConfigJSON string) error {
 	var logRotationConfig logRotationConfig
 	outputFilePaths := 0
@@ -238,7 +233,7 @@ func setupLogRotation(logOutputs []string, logRotateConfigJSON string) error {
 			outputFilePaths++
 		}
 	}
-	// log rotation requires file target
+	// 日志旋转需要文件目标
 	if len(logOutputs) == 1 && outputFilePaths == 0 {
 		return ErrLogRotationInvalidLogOutput
 	}

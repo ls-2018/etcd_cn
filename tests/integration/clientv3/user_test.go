@@ -127,7 +127,7 @@ func TestGetTokenWithoutAuth(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// "Username" and "Password" must be used
+	// "Username" and "Password"必须是used
 	cfg := clientv3.Config{
 		Endpoints:   authapi.Endpoints(),
 		DialTimeout: 5 * time.Second,

@@ -292,7 +292,7 @@ func Test_read(t *testing.T) {
 	}
 
 	// shuffle ensures visit all exactly once
-	// so when sorted, failure cases must be equal
+	// so when sorted, failure cases必须是equal
 	sort.Strings(fs1)
 	sort.Strings(fs2)
 	sort.Strings(fs3)

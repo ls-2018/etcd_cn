@@ -57,10 +57,10 @@ message Member {
   string BaseDir = 101 [(gogoproto.moretags) = "yaml:\"base-dir\""];
 
   // EtcdClientProxy is true when client traffic needs to be proxied.
-  // If true, listen client URL port must be different than advertise client URL port.
+  // If true, listen client URL port必须是different than advertise client URL port.
   bool EtcdClientProxy = 201 [(gogoproto.moretags) = "yaml:\"etcd-client-proxy\""];
   // EtcdPeerProxy is true when peer traffic needs to be proxied.
-  // If true, listen peer URL port must be different than advertise peer URL port.
+  // If true, listen peer URL port必须是different than advertise peer URL port.
   bool EtcdPeerProxy = 202 [(gogoproto.moretags) = "yaml:\"etcd-peer-proxy\""];
 
   // EtcdClientEndpoint is the etcd client endpoint.
@@ -307,7 +307,7 @@ enum Case {
   // The expected behavior is that the follower comes back online and
   // rejoins the cluster, and then active leader sends snapshot
   // to the follower to force it to follow the leader's log.
-  // As always, after recovery, each member must be able to process
+  // As always, after recovery, each member必须是able to process
   // client requests.
   SIGTERM_ONE_FOLLOWER_UNTIL_TRIGGER_SNAPSHOT = 1;
 
@@ -316,7 +316,7 @@ enum Case {
   // before recovering this failure, in order to trigger election timeouts.
   // The expected behavior is that a new leader gets elected, and the
   // old leader comes back online and rejoins the cluster as a follower.
-  // As always, after recovery, each member must be able to process
+  // As always, after recovery, each member必须是able to process
   // client requests.
   SIGTERM_LEADER = 2;
 
@@ -327,7 +327,7 @@ enum Case {
   // The expected behavior is that cluster elects a new leader, and the
   // old leader comes back online and rejoins the cluster as a follower.
   // And it receives the snapshot from the new leader to overwrite its
-  // store. As always, after recovery, each member must be able to
+  // store. As always, after recovery, each member必须是able to
   // process client requests.
   SIGTERM_LEADER_UNTIL_TRIGGER_SNAPSHOT = 3;
 
@@ -336,7 +336,7 @@ enum Case {
   // for next restart. And it waits "delay-ms" before recovering failure.
   // The expected behavior is that nodes come back online, thus cluster
   // comes back operative as well. As always, after recovery, each member
-  // must be able to process client requests.
+  //必须是able to process client requests.
   SIGTERM_QUORUM = 4;
 
   // SIGTERM_ALL stops the whole cluster but does not delete data directories
@@ -344,7 +344,7 @@ enum Case {
   // this failure.
   // The expected behavior is that nodes come back online, thus cluster
   // comes back operative as well. As always, after recovery, each member
-  // must be able to process client requests.
+  //必须是able to process client requests.
   SIGTERM_ALL = 5;
 
   // SIGQUIT_AND_REMOVE_ONE_FOLLOWER stops a randomly chosen follower
@@ -368,7 +368,7 @@ enum Case {
   // a new member from a fresh machine.
   // The expected behavior is that a new member joins the existing cluster,
   // and receives a snapshot from the active leader. As always, after
-  // recovery, each member must be able to process client requests.
+  // recovery, each member必须是able to process client requests.
   SIGQUIT_AND_REMOVE_ONE_FOLLOWER_UNTIL_TRIGGER_SNAPSHOT = 11;
 
   // SIGQUIT_AND_REMOVE_LEADER stops the active leader node, deletes its
@@ -392,7 +392,7 @@ enum Case {
   // The expected behavior is that on member remove, cluster elects a new
   // leader, and a new member joins the existing cluster and receives a
   // snapshot from the newly elected leader. As always, after recovery, each
-  // member must be able to process client requests.
+  // member必须是able to process client requests.
   SIGQUIT_AND_REMOVE_LEADER_UNTIL_TRIGGER_SNAPSHOT = 13;
 
   // SIGQUIT_AND_REMOVE_QUORUM_AND_RESTORE_LEADER_SNAPSHOT_FROM_SCRATCH first
@@ -419,14 +419,14 @@ enum Case {
   // disastrous situation as only 1-node survives out of 3-node cluster,
   // new members joins the existing cluster, and previous data from snapshot
   // are still preserved after recovery process. As always, after recovery,
-  // each member must be able to process client requests.
+  // each member必须是able to process client requests.
   SIGQUIT_AND_REMOVE_QUORUM_AND_RESTORE_LEADER_SNAPSHOT_FROM_SCRATCH = 14;
 
   // BLACKHOLE_PEER_PORT_TX_RX_ONE_FOLLOWER drops all outgoing/incoming
   // packets from/to the peer port on a randomly chosen follower
   // (non-leader), and waits for "delay-ms" until recovery.
   // The expected behavior is that once dropping operation is undone,
-  // each member must be able to process client requests.
+  // each member必须是able to process client requests.
   BLACKHOLE_PEER_PORT_TX_RX_ONE_FOLLOWER = 100;
 
   // BLACKHOLE_PEER_PORT_TX_RX_ONE_FOLLOWER_UNTIL_TRIGGER_SNAPSHOT drops
@@ -446,7 +446,7 @@ enum Case {
   // The expected behavior is that after election timeout, a new leader gets
   // elected, and once dropping operation is undone, the old leader comes
   // back and rejoins the cluster as a follower. As always, after recovery,
-  // each member must be able to process client requests.
+  // each member必须是able to process client requests.
   BLACKHOLE_PEER_PORT_TX_RX_LEADER = 102;
 
   // BLACKHOLE_PEER_PORT_TX_RX_LEADER_UNTIL_TRIGGER_SNAPSHOT drops all
@@ -457,7 +457,7 @@ enum Case {
   // dropping operation is undone, the old leader comes back and rejoins
   // the cluster as a follower. The slow follower tries to catch up, likely
   // receiving the snapshot from the new active leader. As always, after
-  // recovery, each member must be able to process client requests.
+  // recovery, each member必须是able to process client requests.
   BLACKHOLE_PEER_PORT_TX_RX_LEADER_UNTIL_TRIGGER_SNAPSHOT = 103;
 
   // BLACKHOLE_PEER_PORT_TX_RX_QUORUM drops all outgoing/incoming packets
@@ -466,7 +466,7 @@ enum Case {
   // until recovery.
   // The expected behavior is that once packet drop operation is undone,
   // nodes come back online, thus cluster comes back operative. As always,
-  // after recovery, each member must be able to process client requests.
+  // after recovery, each member必须是able to process client requests.
   BLACKHOLE_PEER_PORT_TX_RX_QUORUM = 104;
 
   // BLACKHOLE_PEER_PORT_TX_RX_ALL drops all outgoing/incoming packets
@@ -474,7 +474,7 @@ enum Case {
   // inoperable. It waits for "delay-ms" until recovery.
   // The expected behavior is that once packet drop operation is undone,
   // nodes come back online, thus cluster comes back operative. As always,
-  // after recovery, each member must be able to process client requests.
+  // after recovery, each member必须是able to process client requests.
   BLACKHOLE_PEER_PORT_TX_RX_ALL = 105;
 
   // DELAY_PEER_PORT_TX_RX_ONE_FOLLOWER delays outgoing/incoming packets
@@ -482,7 +482,7 @@ enum Case {
   // It waits for "delay-ms" until recovery.
   // The expected behavior is that once packet delay operation is undone,
   // the follower comes back and tries to catch up with latest changes from
-  // cluster. And as always, after recovery, each member must be able to
+  // cluster. And as always, after recovery, each member必须是able to
   // process client requests.
   DELAY_PEER_PORT_TX_RX_ONE_FOLLOWER = 200;
 
@@ -491,7 +491,7 @@ enum Case {
   // (non-leader) with a randomized time duration (thus isolated). It
   // waits for "delay-ms" until recovery.
   // The expected behavior is that once packet delay operation is undone,
-  // each member must be able to process client requests.
+  // each member必须是able to process client requests.
   RANDOM_DELAY_PEER_PORT_TX_RX_ONE_FOLLOWER = 201;
 
   // DELAY_PEER_PORT_TX_RX_ONE_FOLLOWER_UNTIL_TRIGGER_SNAPSHOT delays
@@ -514,7 +514,7 @@ enum Case {
   // and behind the current active leader, and once delay operation is undone,
   // the slow follower comes back and catches up, possibly receiving a
   // snapshot from the active leader. As always, after recovery, each member
-  // must be able to process client requests.
+  //必须是able to process client requests.
   RANDOM_DELAY_PEER_PORT_TX_RX_ONE_FOLLOWER_UNTIL_TRIGGER_SNAPSHOT = 203;
 
   // DELAY_PEER_PORT_TX_RX_LEADER delays outgoing/incoming packets from/to
@@ -523,7 +523,7 @@ enum Case {
   // The expected behavior is that cluster may elect a new leader, and
   // once packet delay operation is undone, the (old) leader comes back
   // and tries to catch up with latest changes from cluster. As always,
-  // after recovery, each member must be able to process client requests.
+  // after recovery, each member必须是able to process client requests.
   DELAY_PEER_PORT_TX_RX_LEADER = 204;
 
   // RANDOM_DELAY_PEER_PORT_TX_RX_LEADER delays outgoing/incoming packets
@@ -532,7 +532,7 @@ enum Case {
   // The expected behavior is that cluster may elect a new leader, and
   // once packet delay operation is undone, the (old) leader comes back
   // and tries to catch up with latest changes from cluster. As always,
-  // after recovery, each member must be able to process client requests.
+  // after recovery, each member必须是able to process client requests.
   RANDOM_DELAY_PEER_PORT_TX_RX_LEADER = 205;
 
   // DELAY_PEER_PORT_TX_RX_LEADER_UNTIL_TRIGGER_SNAPSHOT delays
@@ -543,7 +543,7 @@ enum Case {
   // the old leader gets isolated and behind the current active leader,
   // and once delay operation is undone, the slow follower comes back
   // and catches up, likely receiving a snapshot from the active leader.
-  // As always, after recovery, each member must be able to process client
+  // As always, after recovery, each member必须是able to process client
   // requests.
   DELAY_PEER_PORT_TX_RX_LEADER_UNTIL_TRIGGER_SNAPSHOT = 206;
 
@@ -556,7 +556,7 @@ enum Case {
   // the old leader gets isolated and behind the current active leader,
   // and once delay operation is undone, the slow follower comes back
   // and catches up, likely receiving a snapshot from the active leader.
-  // As always, after recovery, each member must be able to process client
+  // As always, after recovery, each member必须是able to process client
   // requests.
   RANDOM_DELAY_PEER_PORT_TX_RX_LEADER_UNTIL_TRIGGER_SNAPSHOT = 207;
 
@@ -566,7 +566,7 @@ enum Case {
   // The expected behavior is that cluster may elect a new leader, while
   // quorum of nodes struggle with slow networks, and once delay operation
   // is undone, nodes come back and cluster comes back operative. As always,
-  // after recovery, each member must be able to process client requests.
+  // after recovery, each member必须是able to process client requests.
   DELAY_PEER_PORT_TX_RX_QUORUM = 208;
 
   // RANDOM_DELAY_PEER_PORT_TX_RX_QUORUM delays outgoing/incoming packets
@@ -576,7 +576,7 @@ enum Case {
   // The expected behavior is that cluster may elect a new leader, while
   // quorum of nodes struggle with slow networks, and once delay operation
   // is undone, nodes come back and cluster comes back operative. As always,
-  // after recovery, each member must be able to process client requests.
+  // after recovery, each member必须是able to process client requests.
   RANDOM_DELAY_PEER_PORT_TX_RX_QUORUM = 209;
 
   // DELAY_PEER_PORT_TX_RX_ALL delays outgoing/incoming packets from/to the
@@ -585,7 +585,7 @@ enum Case {
   // The expected behavior is that cluster may become totally inoperable,
   // struggling with slow networks across the whole cluster. Once delay
   // operation is undone, nodes come back and cluster comes back operative.
-  // As always, after recovery, each member must be able to process client
+  // As always, after recovery, each member必须是able to process client
   // requests.
   DELAY_PEER_PORT_TX_RX_ALL = 210;
 
@@ -596,7 +596,7 @@ enum Case {
   // The expected behavior is that cluster may become totally inoperable,
   // struggling with slow networks across the whole cluster. Once delay
   // operation is undone, nodes come back and cluster comes back operative.
-  // As always, after recovery, each member must be able to process client
+  // As always, after recovery, each member必须是able to process client
   // requests.
   RANDOM_DELAY_PEER_PORT_TX_RX_ALL = 211;
 
@@ -606,7 +606,7 @@ enum Case {
   // on recovery, and verify system does not deadlock following a sequence
   // of failure injections.
   // The expected behavior is that cluster remains fully operative in healthy
-  // condition. As always, after recovery, each member must be able to process
+  // condition. As always, after recovery, each member必须是able to process
   // client requests.
   NO_FAIL_WITH_STRESS = 300;
 

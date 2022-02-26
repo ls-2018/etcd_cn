@@ -57,21 +57,18 @@ func startEtcdOrProxy(args []string) {
 
 	err := cfg.parse(args[1:])
 	lg := cfg.ec.GetLogger()
-	// If we failed to parse the whole configuration, print the error using
-	// preferably the resolved logger from the config,
-	// but if does not exists, create a new temporary logger.
+	// 如果我们未能解析整个配置,最好使用配置中已解决的记录器来打印错误,但如果不存在,则创建一个新的临时记录器.
 	if lg == nil {
 		var zapError error
-		// use this logger
 		lg, zapError = zap.NewProduction()
 		if zapError != nil {
-			fmt.Printf("error creating zap logger %v", zapError)
+			fmt.Printf("创建zap logger失败%v", zapError)
 			os.Exit(1)
 		}
 	}
-	lg.Info("Running: ", zap.Strings("args", args))
+	lg.Info("运行中: ", zap.Strings("args", args))
 	if err != nil {
-		lg.Warn("failed to verify flags", zap.Error(err))
+		lg.Warn("未能验证标志", zap.Error(err))
 		switch err {
 		case embed.ErrUnsetAdvertiseClientURLsFlag:
 			lg.Warn("advertise client URLs are not set", zap.Error(err))

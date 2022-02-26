@@ -15,7 +15,7 @@ Usage:
 Flags:
 
   -entry-type string
-    	If set, filters output by entry type. Must be one or more than one of:
+    	If set, filters output by entry type.必须是one or more than one of:
 	    ConfigChange, Normal, Request, InternalRaftRequest,
 	    IRRRange, IRRPut, IRRDeleteRange, IRRTxn,
 	    IRRCompaction, IRRLeaseGrant, IRRLeaseRevoke

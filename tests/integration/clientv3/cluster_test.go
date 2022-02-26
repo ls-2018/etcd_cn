@@ -171,7 +171,7 @@ func TestMemberAddUpdateWrongURLs(t *testing.T) {
 		{"http://127.0.0.1:2379/path"},
 		// first path segment in URL cannot contain colon
 		{"127.0.0.1:1234"},
-		// URL scheme must be http, https, unix, or unixs
+		// URL scheme必须是http, https, unix, or unixs
 		{"localhost:1234"},
 	}
 	for i := range tt {

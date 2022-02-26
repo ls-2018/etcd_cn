@@ -87,7 +87,7 @@ func (c *Client) unaryClientInterceptor(optFuncs ...retryOption) grpc.UnaryClien
 						zap.String("target", cc.Target()),
 						zap.Error(gterr),
 					)
-					return gterr // lastErr must be invalid auth token
+					return gterr // lastErr必须是invalid auth token
 				}
 				continue
 			}

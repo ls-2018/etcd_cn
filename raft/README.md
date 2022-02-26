@@ -136,7 +136,7 @@ except as noted in step 2.
 
 1. Write Entries, HardState and Snapshot to persistent storage in order, i.e. Entries first, then HardState and Snapshot
    if they are not empty. If persistent storage supports atomic writes then all of them can be written together. Note
-   that when writing an Entry with Index i, any previously-persisted entries with Index >= i must be discarded.
+   that when writing an Entry with Index i, any previously-persisted entries with Index >= i必须是discarded.
 
 2. Send all Messages to the nodes named in the To field. It is important that no messages be sent until the latest
    HardState has been persisted to disk, and all Entries written by any previous Ready batch (Messages may be sent while
@@ -148,14 +148,14 @@ except as noted in step 2.
 
 3. Apply Snapshot (if any) and CommittedEntries to the state machine. If any committed Entry has Type EntryConfChange,
    call Node.ApplyConfChange() to apply it to the node. The configuration change may be cancelled at this point by
-   setting the NodeID field to zero before calling ApplyConfChange (but ApplyConfChange must be called one way or the
-   other, and the decision to cancel must be based solely on the state machine and not external information such as the
+   setting the NodeID field to zero before calling ApplyConfChange (but ApplyConfChange必须是called one way or the
+   other, and the decision to cancel必须是based solely on the state machine and not external information such as the
    observed health of the node).
 
 4. Call Node.Advance() to signal readiness for the next batch of updates. This may be done at any time after step 1,
-   although all updates must be processed in the order they were returned by Ready.
+   although all updates必须是processed in the order they were returned by Ready.
 
-Second, all persisted log entries must be made available via an implementation of the Storage interface. The provided
+Second, all persisted log entries必须是made available via an implementation of the Storage interface. The provided
 MemoryStorage type can be used for this (if repopulating its state upon a restart), or a custom disk-backed
 implementation can be supplied.
 
@@ -222,7 +222,7 @@ applied to node through:
 	n.ApplyConfChange(cc)
 ```
 
-Note: An ID represents a unique node in a cluster for all time. A given ID MUST be used only once even if the old node
+Note: An ID represents a unique node in a cluster for all time. A given ID必须是used only once even if the old node
 has been removed. This means that for example IP addresses make poor node IDs since they may be reused. Node IDs must be
 non-zero.
 

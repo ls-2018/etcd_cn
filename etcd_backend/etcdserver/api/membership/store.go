@@ -275,7 +275,7 @@ func mustSaveClusterVersionToStore(lg *zap.Logger, s v2store.Store, ver *semver.
 }
 
 // nodeToMember builds member from a key value node.
-// the child nodes of the given node MUST be sorted by key.
+// the child nodes of the given node必须是sorted by key.
 func nodeToMember(lg *zap.Logger, n *v2store.NodeExtern) (*Member, error) {
 	m := &Member{ID: MustParseMemberIDFromKey(lg, n.Key)}
 	attrs := make(map[string][]byte)

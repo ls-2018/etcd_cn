@@ -53,7 +53,7 @@ type Manager interface {
 	// to target path. If the context "ctx" is canceled or timed out,
 	// snapshot save stream will error out (e.g. context.Canceled,
 	// context.DeadlineExceeded). Make sure to specify only one endpoint
-	// in client configuration. Snapshot API must be requested to a
+	// in client configuration. Snapshot API必须是requested to a
 	// selected node, and saved snapshot is the point-in-time state of
 	// the selected node.
 	Save(ctx context.Context, cfg clientv3.Config, dbPath string) error

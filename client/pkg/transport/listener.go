@@ -143,8 +143,7 @@ type TLSInfo struct {
 	// ServerName ensures the cert matches the given host in case of discovery / virtual hosting
 	ServerName string
 
-	// HandshakeFailure is optionally called when a connection fails to handshake. The
-	// connection will be closed immediately afterwards.
+	// HandshakeFailure  当一个连接无法握手时，会被选择性地调用。之后，连接将被立即关闭。
 	HandshakeFailure func(*tls.Conn, error)
 
 	// CipherSuites is a list of supported cipher suites.

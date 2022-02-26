@@ -209,7 +209,7 @@ func (s *EtcdServer) checkHashKV() error {
 		// leader expects follower's latest revision less than or equal to leader's
 		if p.resp.Header.Revision > rev2 {
 			lg.Warn(
-				"revision from follower must be less than or equal to leader's",
+				"revision from follower必须是less than or equal to leader's",
 				zap.Int64("leader-revision", rev2),
 				zap.Int64("follower-revision", p.resp.Header.Revision),
 				zap.String("follower-peer-id", types.ID(id).String()),
@@ -220,7 +220,7 @@ func (s *EtcdServer) checkHashKV() error {
 		// leader expects follower's latest compact revision less than or equal to leader's
 		if p.resp.CompactRevision > crev2 {
 			lg.Warn(
-				"compact revision from follower must be less than or equal to leader's",
+				"compact revision from follower必须是less than or equal to leader's",
 				zap.Int64("leader-compact-revision", crev2),
 				zap.Int64("follower-compact-revision", p.resp.CompactRevision),
 				zap.String("follower-peer-id", types.ID(id).String()),

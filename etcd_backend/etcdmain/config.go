@@ -90,7 +90,7 @@ type config struct {
 	cp           configProxy // 代理配置
 	cf           configFlags // 是否有一组标志用于命令行解析配置
 	configFile   string      // 从文件加载服务器配置.
-	printVersion bool
+	printVersion bool        //打印版本并退出
 	ignored      []string
 }
 
@@ -229,7 +229,7 @@ func newConfig() *config {
 	fs.Var(flags.NewUniqueStringsValue(embed.DefaultLogOutput), "log-outputs", "指定'stdout'或'stderr'以跳过日志记录,即使在systemd或逗号分隔的输出目标列表下运行也是如此.")
 	fs.StringVar(&cfg.ec.LogLevel, "log-level", logutil.DefaultLogLevel, "日志等级,只支持 debug, info, warn, error, panic, or fatal. Default 'info'.")
 	fs.BoolVar(&cfg.ec.EnableLogRotation, "enable-log-rotation", false, "启用单个日志输出文件目标的日志旋转.")
-	fs.StringVar(&cfg.ec.LogRotationConfigJSON, "log-rotation-config-json", embed.DefaultLogRotationConfig, "是用于日志轮换的默认配置。 默认情况下，日志轮换是禁用的。")
+	fs.StringVar(&cfg.ec.LogRotationConfigJSON, "log-rotation-config-json", embed.DefaultLogRotationConfig, "是用于日志轮换的默认配置. 默认情况下,日志轮换是禁用的.")
 
 	// 版本
 	fs.BoolVar(&cfg.printVersion, "version", false, "打印版本并退出.")
@@ -247,7 +247,7 @@ func newConfig() *config {
 	fs.BoolVar(&cfg.ec.ExperimentalEnableDistributedTracing, "experimental-enable-distributed-tracing", false, "Enable experimental distributed  tracing using OpenTelemetry Tracing.")
 	fs.StringVar(&cfg.ec.ExperimentalDistributedTracingAddress, "experimental-distributed-tracing-address", embed.ExperimentalDistributedTracingAddress, "Address for distributed tracing used for OpenTelemetry Tracing (if enabled with experimental-enable-distributed-tracing flag).")
 	fs.StringVar(&cfg.ec.ExperimentalDistributedTracingServiceName, "experimental-distributed-tracing-service-name", embed.ExperimentalDistributedTracingServiceName, "Configures service name for distributed tracing to be used to define service name for OpenTelemetry Tracing (if enabled with experimental-enable-distributed-tracing flag). 'etcd' is the default service name. Use the same service name for all instances of etcd.")
-	fs.StringVar(&cfg.ec.ExperimentalDistributedTracingServiceInstanceID, "experimental-distributed-tracing-instance-id", "", "Configures service instance ID for distributed tracing to be used to define service instance ID key for OpenTelemetry Tracing (if enabled with experimental-enable-distributed-tracing flag). There is no default value set. This ID must be unique per etcd instance.")
+	fs.StringVar(&cfg.ec.ExperimentalDistributedTracingServiceInstanceID, "experimental-distributed-tracing-instance-id", "", "Configures service instance ID for distributed tracing to be used to define service instance ID key for OpenTelemetry Tracing (if enabled with experimental-enable-distributed-tracing flag). There is no default value set. This ID必须是unique per etcd instance.")
 
 	// auth
 	fs.StringVar(&cfg.ec.AuthToken, "auth-token", cfg.ec.AuthToken, "指定验证令牌的具体选项. ('simple' or 'jwt')")
@@ -266,14 +266,14 @@ func newConfig() *config {
 	fs.BoolVar(&cfg.ec.ExperimentalEnableLeaseCheckpointPersist, "experimental-enable-lease-checkpoint-persist", false, "Enable persisting remainingTTL to prevent indefinite auto-renewal of long lived leases. Always enabled in v3.6. Should be used to ensure smooth upgrade from v3.5 clusters with this feature enabled. Requires experimental-enable-lease-checkpoint to be enabled.")
 	fs.IntVar(&cfg.ec.ExperimentalCompactionBatchLimit, "experimental-compaction-batch-limit", cfg.ec.ExperimentalCompactionBatchLimit, "Sets the maximum revisions deleted in each compaction batch.")
 	fs.DurationVar(&cfg.ec.ExperimentalWatchProgressNotifyInterval, "experimental-watch-progress-notify-interval", cfg.ec.ExperimentalWatchProgressNotifyInterval, "Duration of periodic watch progress notifications.")
-	fs.DurationVar(&cfg.ec.ExperimentalDowngradeCheckTime, "experimental-downgrade-check-time", cfg.ec.ExperimentalDowngradeCheckTime, "两次降级状态检查之间的时间间隔。")
+	fs.DurationVar(&cfg.ec.ExperimentalDowngradeCheckTime, "experimental-downgrade-check-time", cfg.ec.ExperimentalDowngradeCheckTime, "两次降级状态检查之间的时间间隔.")
 	fs.DurationVar(&cfg.ec.ExperimentalWarningApplyDuration, "experimental-warning-apply-duration", cfg.ec.ExperimentalWarningApplyDuration, "时间长度.如果应用请求的时间超过这个值.就会产生一个警告.")
-	fs.BoolVar(&cfg.ec.ExperimentalMemoryMlock, "experimental-memory-mlock", cfg.ec.ExperimentalMemoryMlock, "启用强制执行etcd页面（特别是bbolt）留在RAM中。")
-	fs.BoolVar(&cfg.ec.ExperimentalTxnModeWriteWithSharedBuffer, "experimental-txn-mode-write-with-shared-buffer", true, "启用写事务在其只读检查操作中使用共享缓冲区。")
+	fs.BoolVar(&cfg.ec.ExperimentalMemoryMlock, "experimental-memory-mlock", cfg.ec.ExperimentalMemoryMlock, "启用强制执行etcd页面（特别是bbolt）留在RAM中.")
+	fs.BoolVar(&cfg.ec.ExperimentalTxnModeWriteWithSharedBuffer, "experimental-txn-mode-write-with-shared-buffer", true, "启用写事务在其只读检查操作中使用共享缓冲区.")
 	fs.UintVar(&cfg.ec.ExperimentalBootstrapDefragThresholdMegabytes, "experimental-bootstrap-defrag-threshold-megabytes", 0, "Enable the defrag during etcd etcd bootstrap on condition that it will free at least the provided threshold of disk space. Needs to be set to non-zero value to take effect.")
 
 	// 非安全
-	fs.BoolVar(&cfg.ec.UnsafeNoFsync, "unsafe-no-fsync", false, "禁用fsync，不安全，会导致数据丢失。")
+	fs.BoolVar(&cfg.ec.UnsafeNoFsync, "unsafe-no-fsync", false, "禁用fsync,不安全,会导致数据丢失.")
 	fs.BoolVar(&cfg.ec.ForceNewCluster, "force-new-cluster", false, "强制创建新的单成员群集.它提交配置更改,强制删除集群中的所有现有成员并添加自身.需要将其设置为还原备份.")
 
 	// ignored
@@ -294,7 +294,7 @@ func (cfg *config) parse(arguments []string) error {
 		os.Exit(2)
 	}
 	if len(cfg.cf.flagSet.Args()) != 0 {
-		return fmt.Errorf("'%s' is not a valid flag", cfg.cf.flagSet.Arg(0))
+		return fmt.Errorf("'%s'不是一个有效的标志 ", cfg.cf.flagSet.Arg(0))
 	}
 
 	if cfg.printVersion {
@@ -307,56 +307,37 @@ func (cfg *config) parse(arguments []string) error {
 
 	var err error
 
-	// This env variable must be parsed separately
-	// because we need to determine whether to use or
-	// ignore the env variables based on if the config file is set.
+	// 这个env变量必须被单独解析,因为我们需要根据配置文件是否被设置,来决定是使用还是忽略env变量.
 	if cfg.configFile == "" {
-		cfg.configFile = os.Getenv(flags.FlagToEnv("ETCD", "config-file"))
+		cfg.configFile = os.Getenv(flags.FlagToEnv("ETCD", "config-file")) // ETCD_CONFIG_FILE
 	}
 
 	if cfg.configFile != "" {
 		err = cfg.configFromFile(cfg.configFile)
 		if lg := cfg.ec.GetLogger(); lg != nil {
-			lg.Info(
-				"loaded etcd configuration, other configuration command line flags and environment variables will be ignored if provided",
-				zap.String("path", cfg.configFile),
-			)
+			lg.Info("加载的etcd配置,其他配置的命令行标志和环境变量将被忽略,如果提供了", zap.String("path", cfg.configFile))
 		}
 	} else {
 		err = cfg.configFromCmdLine()
 	}
 
-	// now logger is set up
 	return err
 }
 
 func (cfg *config) configFromCmdLine() error {
-	// user-specified logger is not setup yet, use this logger during flag parsing
+	// 用户指定的记录器尚未设置,在标志解析过程中使用此记录器
 	lg, err := zap.NewProduction()
 	if err != nil {
 		return err
 	}
-
-	verKey := "ETCD_VERSION"
-	if verVal := os.Getenv(verKey); verVal != "" {
-		// unset to avoid any possible side-effect.
-		os.Unsetenv(verKey)
-
-		lg.Warn(
-			"cannot set special environment variable",
-			zap.String("key", verKey),
-			zap.String("value", verVal),
-		)
-	}
-
-	err = flags.SetFlagsFromEnv(lg, "ETCD", cfg.cf.flagSet)
+	err = flags.SetFlagsFromEnv(lg, "ETCD", cfg.cf.flagSet) //解析给定flagset中的所有注册标志,如果它们还没有被设置,则尝试从环境变量中设置其值.
 	if err != nil {
 		return err
 	}
 
 	if rafthttp.ConnReadTimeout < rafthttp.DefaultConnReadTimeout {
 		rafthttp.ConnReadTimeout = rafthttp.DefaultConnReadTimeout
-		lg.Info(fmt.Sprintf("raft-read-timeout increased to minimum value: %v", rafthttp.DefaultConnReadTimeout))
+		lg.Info(fmt.Sprintf("raft-read-timeout : %v", rafthttp.DefaultConnReadTimeout))
 	}
 	if rafthttp.ConnWriteTimeout < rafthttp.DefaultConnWriteTimeout {
 		rafthttp.ConnWriteTimeout = rafthttp.DefaultConnWriteTimeout
@@ -377,21 +358,24 @@ func (cfg *config) configFromCmdLine() error {
 	cfg.ec.LogOutputs = flags.UniqueStringsFromFlag(cfg.cf.flagSet, "log-outputs")
 
 	cfg.ec.ClusterState = cfg.cf.clusterState.String()
-	cfg.cp.Fallback = cfg.cf.fallback.String()
-	cfg.cp.Proxy = cfg.cf.proxy.String()
+	cfg.cp.Fallback = cfg.cf.fallback.String() // proxy
+	cfg.cp.Proxy = cfg.cf.proxy.String()       // off
 
-	// disable default advertise-client-urls if lcurls is set
+	// 如果设置了lcurls,则禁用默认的 advertise-client-urls
+	fmt.Println(`flags.IsSet(cfg.cf.flagSet, "listen-client-urls")`, flags.IsSet(cfg.cf.flagSet, "listen-client-urls"))
+	fmt.Println(`flags.IsSet(cfg.cf.flagSet, "advertise-client-urls")`, flags.IsSet(cfg.cf.flagSet, "advertise-client-urls"))
 	missingAC := flags.IsSet(cfg.cf.flagSet, "listen-client-urls") && !flags.IsSet(cfg.cf.flagSet, "advertise-client-urls")
+	// todo 没看懂
 	if !cfg.mayBeProxy() && missingAC {
 		cfg.ec.ACUrls = nil
 	}
 
-	// disable default initial-cluster if discovery is set
+	// 如果设置了discovery ,则禁用默认初始集群
 	if (cfg.ec.Durl != "" || cfg.ec.DNSCluster != "" || cfg.ec.DNSClusterServiceName != "") && !flags.IsSet(cfg.cf.flagSet, "initial-cluster") {
 		cfg.ec.InitialCluster = ""
 	}
 
-	return cfg.validate()
+	return cfg.validate() // √
 }
 
 func (cfg *config) configFromFile(path string) error {
@@ -433,7 +417,7 @@ func (cfg *config) mayBeProxy() bool {
 
 func (cfg *config) validate() error {
 	err := cfg.ec.Validate()
-	// TODO(yichengq): check this for joining through discovery service case
+	// TODO(yichengq): 通过 discovery service case加入，请检查这一点。
 	if err == embed.ErrUnsetAdvertiseClientURLsFlag && cfg.mayBeProxy() {
 		return nil
 	}

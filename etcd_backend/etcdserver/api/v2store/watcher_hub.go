@@ -31,7 +31,7 @@ import (
 // event happens between the end of the first watch command and the start
 // of the second command.
 type watcherHub struct {
-	// count must be the first element to keep 64-bit alignment for atomic
+	// count必须是the first element to keep 64-bit alignment for atomic
 	// access
 
 	count int64 // current number of watchers.

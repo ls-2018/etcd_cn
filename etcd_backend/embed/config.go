@@ -69,7 +69,7 @@ const (
 	StdErrLogOutput  = "stderr"
 	StdOutLogOutput  = "stdout"
 
-	// DefaultLogRotationConfig 是用于日志轮换的默认配置。 默认情况下，日志轮换是禁用的。
+	// DefaultLogRotationConfig 是用于日志轮换的默认配置. 默认情况下,日志轮换是禁用的.
 	// MaxSize    = 100 // MB
 	// MaxAge     = 0 // days (no limit)
 	// MaxBackups = 0 // no limit
@@ -109,19 +109,13 @@ var (
 )
 
 var (
-	// CompactorModePeriodic is periodic compaction mode
-	// for "Config.AutoCompactionMode" field.
-	// If "AutoCompactionMode" is CompactorModePeriodic and
-	// "AutoCompactionRetention" is "1h", it automatically compacts
-	// compacts storage every hour.
+	// CompactorModePeriodic
+	// 周期性压缩 eg. 1h
 	CompactorModePeriodic = v3compactor.ModePeriodic
 
-	// CompactorModeRevision is revision-based compaction mode
-	// for "Config.AutoCompactionMode" field.
-	// If "AutoCompactionMode" is CompactorModeRevision and
-	// "AutoCompactionRetention" is "1000", it compacts log on
-	// revision 5000 when the current revision is 6000.
-	// This runs every 5-minute if enough of logs have proceeded.
+	// CompactorModeRevision  "AutoCompactionRetention" is "1000",
+	// 当前版本为6000时，它将日志压缩到5000版本。
+	// 如果有足够多的日志，这将每5分钟运行一次。
 	CompactorModeRevision = v3compactor.ModeRevision
 )
 
@@ -269,8 +263,9 @@ type Config struct {
 	ExperimentalEnableV2V3 string `json:"experimental-enable-v2v3"`
 	// ExperimentalEnableLeaseCheckpoint enables leader to send regular checkpoints to other members to prevent reset of remaining TTL on leader change.
 	ExperimentalEnableLeaseCheckpoint bool `json:"experimental-enable-lease-checkpoint"`
-	// ExperimentalEnableLeaseCheckpointPersist enables persisting remainingTTL to prevent indefinite auto-renewal of long lived leases. Always enabled in v3.6. Should be used to ensure smooth upgrade from v3.5 clusters with this feature enabled.
-	// Requires experimental-enable-lease-checkpoint to be enabled.
+	// ExperimentalEnableLeaseCheckpointPersist
+	// 启用持续的剩余TTL，以防止长期租赁的无限期自动续约。在v3.6中始终启用。应该用于确保从启用该功能的v3.5集群顺利升级。
+	// 需要启用 experimental-enable-lease-checkpoint
 	// Deprecated in v3.6.
 	// TODO: Delete in v3.7
 	ExperimentalEnableLeaseCheckpointPersist bool          `json:"experimental-enable-lease-checkpoint-persist"`
@@ -299,7 +294,7 @@ type Config struct {
 	// Can only be used if ExperimentalEnableDistributedTracing is true.
 	ExperimentalDistributedTracingServiceName string `json:"experimental-distributed-tracing-service-name"`
 	// ExperimentalDistributedTracingServiceInstanceID is the ID key of the service.
-	// This ID must be unique, as helps to distinguish instances of the same service
+	// This ID必须是unique, as helps to distinguish instances of the same service
 	// that exist at the same time.
 	// Can only be used if ExperimentalEnableDistributedTracing is true.
 	ExperimentalDistributedTracingServiceInstanceID string `json:"experimental-distributed-tracing-instance-id"`
@@ -313,17 +308,17 @@ type Config struct {
 	//  - "stderr" as os.Stderr,
 	//  - "stdout" as os.Stdout,
 	//  - file path to append etcd logs to.
-	// 当 logger是zap时，它可以是多个。
+	// 当 logger是zap时,它可以是多个.
 	LogOutputs []string `json:"log-outputs"`
 	// EnableLogRotation 启用单个日志输出文件目标的日志旋转.
 	EnableLogRotation bool `json:"enable-log-rotation"`
 	// LogRotationConfigJSON is a passthrough allowing a log rotation JSON config to be passed directly.
 	LogRotationConfigJSON string `json:"log-rotation-config-json"`
-	// ZapLoggerBuilder is used to build the zap logger.
+	// ZapLoggerBuilder 用于给自己构造一个zap logger
 	ZapLoggerBuilder func(*Config) error
 
 	// logger logs etcd-side operations. The default is nil,
-	// and "setupLogging" must be called before starting etcd.
+	// and "setupLogging"必须是called before starting etcd.
 	// Do not set logger directly.
 	loggerMu *sync.RWMutex
 	logger   *zap.Logger
@@ -334,16 +329,16 @@ type Config struct {
 	// UnsafeNoFsync disables all uses of fsync.
 	// Setting this is unsafe and will cause data loss.
 	UnsafeNoFsync bool `json:"unsafe-no-fsync"`
-	// 两次降级状态检查之间的时间间隔。
+	// 两次降级状态检查之间的时间间隔.
 	ExperimentalDowngradeCheckTime time.Duration `json:"experimental-downgrade-check-time"`
 
-	// ExperimentalMemoryMlock 启用对etcd拥有的内存页的锁定。 该设置改善了以下环境中的etcd尾部延迟。
+	// ExperimentalMemoryMlock 启用对etcd拥有的内存页的锁定. 该设置改善了以下环境中的etcd尾部延迟.
 	//   - 内存压力可能会导致将页面交换到磁盘上
 	//   - 磁盘延迟可能是不稳定的
-	// 目前，所有的etcd内存都被锁住了，但在将来，这个标志可以改进为只锁住bbolt的使用区域。
+	// 目前,所有的etcd内存都被锁住了,但在将来,这个标志可以改进为只锁住bbolt的使用区域.
 	ExperimentalMemoryMlock bool `json:"experimental-memory-mlock"`
 
-	// ExperimentalTxnModeWriteWithSharedBuffer 使得写事务在其只读检查操作中使用一个共享缓冲区。
+	// ExperimentalTxnModeWriteWithSharedBuffer 使得写事务在其只读检查操作中使用一个共享缓冲区.
 	ExperimentalTxnModeWriteWithSharedBuffer bool `json:"experimental-txn-mode-write-with-shared-buffer"`
 
 	// V2Deprecation describes phase of API & Storage V2 support
@@ -436,11 +431,11 @@ func NewConfig() *Config {
 		LogLevel:              logutil.DefaultLogLevel,    // info
 		EnableLogRotation:     false,                      // 默认不允许日志旋转
 		LogRotationConfigJSON: DefaultLogRotationConfig,
-		EnableGRPCGateway:     true, // 是用于日志轮换的默认配置。 默认情况下，日志轮换是禁用的。
+		EnableGRPCGateway:     true, // 是用于日志轮换的默认配置. 默认情况下,日志轮换是禁用的.
 		//实验性
-		ExperimentalDowngradeCheckTime:           DefaultDowngradeCheckTime, // 两次降级状态检查之间的时间间隔。
+		ExperimentalDowngradeCheckTime:           DefaultDowngradeCheckTime, // 两次降级状态检查之间的时间间隔.
 		ExperimentalMemoryMlock:                  false,                     // 内存页锁定
-		ExperimentalTxnModeWriteWithSharedBuffer: true,                      // 启用写事务在其只读检查操作中使用共享缓冲区。
+		ExperimentalTxnModeWriteWithSharedBuffer: true,                      // 启用写事务在其只读检查操作中使用共享缓冲区.
 
 		V2Deprecation: config.V2_DEPR_DEFAULT, // not-yet
 	}
@@ -568,7 +563,7 @@ func updateCipherSuites(tls *transport.TLSInfo, ss []string) error {
 	return nil
 }
 
-// Validate ensures that '*embed.Config' fields are properly configured.
+// Validate 确保 '*embed.Config' 字段是正确配置的。
 func (cfg *Config) Validate() error {
 	if err := cfg.setupLogging(); err != nil {
 		return err
@@ -584,13 +579,13 @@ func (cfg *Config) Validate() error {
 	}
 	if err := checkHostURLs(cfg.APUrls); err != nil {
 		addrs := cfg.getAPURLs()
-		return fmt.Errorf(`--initial-advertise-peer-urls %q must be "host:port" (%v)`, strings.Join(addrs, ","), err)
+		return fmt.Errorf(`--initial-advertise-peer-urls %q 必须是 "host:port" (%v)`, strings.Join(addrs, ","), err)
 	}
 	if err := checkHostURLs(cfg.ACUrls); err != nil {
 		addrs := cfg.getACURLs()
-		return fmt.Errorf(`--advertise-client-urls %q must be "host:port" (%v)`, strings.Join(addrs, ","), err)
+		return fmt.Errorf(`--advertise-client-urls %q 必须是 "host:port" (%v)`, strings.Join(addrs, ","), err)
 	}
-	// Check if conflicting flags are passed.
+	// 检查是否有冲突的标志通过。
 	nSet := 0
 	for _, v := range []bool{cfg.Durl != "", cfg.InitialCluster != "", cfg.DNSCluster != ""} {
 		if v {
@@ -599,7 +594,7 @@ func (cfg *Config) Validate() error {
 	}
 
 	if cfg.ClusterState != ClusterStateFlagNew && cfg.ClusterState != ClusterStateFlagExisting {
-		return fmt.Errorf("unexpected clusterState %q", cfg.ClusterState)
+		return fmt.Errorf("意料之外的集群状态 %q", cfg.ClusterState)
 	}
 
 	if nSet > 1 {
@@ -607,19 +602,19 @@ func (cfg *Config) Validate() error {
 	}
 
 	if cfg.TickMs == 0 {
-		return fmt.Errorf("--heartbeat-interval must be >0 (set to %dms)", cfg.TickMs)
+		return fmt.Errorf("--heartbeat-interval必须是>0 (set to %dms)", cfg.TickMs)
 	}
 	if cfg.ElectionMs == 0 {
-		return fmt.Errorf("--election-timeout must be >0 (set to %dms)", cfg.ElectionMs)
+		return fmt.Errorf("--election-timeout必须是>0 (set to %dms)", cfg.ElectionMs)
 	}
 	if 5*cfg.TickMs > cfg.ElectionMs {
-		return fmt.Errorf("--election-timeout[%vms] should be at least as 5 times as --heartbeat-interval[%vms]", cfg.ElectionMs, cfg.TickMs)
+		return fmt.Errorf("--election-timeout[%vms] 必须是5倍 --heartbeat-interval[%vms]", cfg.ElectionMs, cfg.TickMs)
 	}
 	if cfg.ElectionMs > maxElectionMs {
-		return fmt.Errorf("--election-timeout[%vms] is too long, and should be set less than %vms", cfg.ElectionMs, maxElectionMs)
+		return fmt.Errorf("--election-timeout[%vms] 时间太长，应该小于 %vms", cfg.ElectionMs, maxElectionMs)
 	}
 
-	// check this last since proxying in etcdmain may make this OK
+	// 最后检查一下，因为在etcdmain中代理可能会使这个问题得到解决。
 	if cfg.LCUrls != nil && cfg.ACUrls == nil {
 		return ErrUnsetAdvertiseClientURLsFlag
 	}
@@ -628,18 +623,19 @@ func (cfg *Config) Validate() error {
 	case "":
 	case CompactorModeRevision, CompactorModePeriodic:
 	default:
-		return fmt.Errorf("unknown auto-compaction-mode %q", cfg.AutoCompactionMode)
+		return fmt.Errorf("未知的 auto-compaction-mode %q", cfg.AutoCompactionMode)
 	}
-
+	// false,false 不会走
 	if !cfg.ExperimentalEnableLeaseCheckpointPersist && cfg.ExperimentalEnableLeaseCheckpoint {
-		cfg.logger.Warn("Detected that checkpointing is enabled without persistence. Consider enabling experimental-enable-lease-checkpoint-persist")
+		cfg.logger.Warn("检测到启用了Checkpoint而没有持久性。考虑启用experimental-enable-le-checkpoint-persist")
 	}
-
-	if cfg.ExperimentalEnableLeaseCheckpointPersist && !cfg.ExperimentalEnableLeaseCheckpoint {
-		return fmt.Errorf("setting experimental-enable-lease-checkpoint-persist requires experimental-enable-lease-checkpoint")
+	if !cfg.ExperimentalEnableLeaseCheckpoint && !cfg.ExperimentalEnableLeaseCheckpointPersist {
+		// false ,false  默认走这里
+		return nil
+	} else if cfg.ExperimentalEnableLeaseCheckpoint && cfg.ExperimentalEnableLeaseCheckpointPersist {
+		return nil
 	}
-
-	return nil
+	return fmt.Errorf("  experimental-enable-lease-checkpoint-persist   experimental-enable-lease-checkpoint 需要同时开启")
 }
 
 // PeerURLsMapAndToken sets up an initial peer URLsMap and cluster token for bootstrap or discovery.
@@ -848,7 +844,7 @@ func (cfg *Config) UpdateDefaultClusterFromName(defaultInitialCluster string) (s
 	return dhost, defaultHostStatus
 }
 
-// checkBindURLs returns an error if any URL uses a domain name.
+// checkBindURLs 如果任何URL使用域名，则返回错误。
 func checkBindURLs(urls []url.URL) error {
 	for _, url := range urls {
 		if url.Scheme == "unix" || url.Scheme == "unixs" {

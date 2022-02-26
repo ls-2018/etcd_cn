@@ -52,7 +52,7 @@ type Storage interface {
 	// MaxSize limits the total size of the log entries returned, but
 	// Entries returns at least one entry if any.
 	Entries(lo, hi, maxSize uint64) ([]pb.Entry, error)
-	// Term returns the term of entry i, which must be in the range
+	// Term returns the term of entry i, which必须是in the range
 	// [FirstIndex()-1, LastIndex()]. The term of the entry before
 	// FirstIndex is retained for matching purposes even though the
 	// rest of that entry may not be available.
@@ -190,7 +190,7 @@ func (ms *MemoryStorage) ApplySnapshot(snap pb.Snapshot) error {
 // CreateSnapshot makes a snapshot which can be retrieved with Snapshot() and
 // can be used to reconstruct the state at that point.
 // If any configuration changes have been made since the last compaction,
-// the result of the last ApplyConfChange must be passed in.
+// the result of the last ApplyConfChange必须是passed in.
 func (ms *MemoryStorage) CreateSnapshot(i uint64, cs *pb.ConfState, data []byte) (pb.Snapshot, error) {
 	ms.Lock()
 	defer ms.Unlock()

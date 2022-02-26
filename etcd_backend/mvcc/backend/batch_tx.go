@@ -110,12 +110,12 @@ func (t *batchTx) UnsafeDeleteBucket(bucket Bucket) {
 	t.pending++
 }
 
-// UnsafePut must be called holding the lock on the tx.
+// UnsafePut必须是called holding the lock on the tx.
 func (t *batchTx) UnsafePut(bucket Bucket, key []byte, value []byte) {
 	t.unsafePut(bucket, key, value, false)
 }
 
-// UnsafeSeqPut must be called holding the lock on the tx.
+// UnsafeSeqPut必须是called holding the lock on the tx.
 func (t *batchTx) UnsafeSeqPut(bucket Bucket, key []byte, value []byte) {
 	t.unsafePut(bucket, key, value, true)
 }
@@ -144,7 +144,7 @@ func (t *batchTx) unsafePut(bucketType Bucket, key []byte, value []byte, seq boo
 	t.pending++
 }
 
-// UnsafeRange must be called holding the lock on the tx.
+// UnsafeRange必须是called holding the lock on the tx.
 func (t *batchTx) UnsafeRange(bucketType Bucket, key, endKey []byte, limit int64) ([][]byte, [][]byte) {
 	bucket := t.tx.Bucket(bucketType.Name())
 	if bucket == nil {
@@ -179,7 +179,7 @@ func unsafeRange(c *bolt.Cursor, key, endKey []byte, limit int64) (keys [][]byte
 	return keys, vs
 }
 
-// UnsafeDelete must be called holding the lock on the tx.
+// UnsafeDelete必须是called holding the lock on the tx.
 func (t *batchTx) UnsafeDelete(bucketType Bucket, key []byte) {
 	bucket := t.tx.Bucket(bucketType.Name())
 	if bucket == nil {
@@ -200,7 +200,7 @@ func (t *batchTx) UnsafeDelete(bucketType Bucket, key []byte) {
 	t.pending++
 }
 
-// UnsafeForEach must be called holding the lock on the tx.
+// UnsafeForEach必须是called holding the lock on the tx.
 func (t *batchTx) UnsafeForEach(bucket Bucket, visitor func(k, v []byte) error) error {
 	return unsafeForEach(t.tx, bucket, visitor)
 }
@@ -307,7 +307,7 @@ func (t *batchTxBuffered) commit(stop bool) {
 		t.backend.hooks.OnPreCommitUnsafe(t)
 	}
 
-	// all read txs must be closed to acquire boltdb commit rwlock
+	// all read txs必须是closed to acquire boltdb commit rwlock
 	t.backend.readTx.Lock()
 	t.unsafeCommit(stop)
 	t.backend.readTx.Unlock()

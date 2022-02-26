@@ -74,7 +74,7 @@ it contains. These steps may be performed in parallel, except as noted in step
 
 1. Write HardState, Entries, and Snapshot to persistent storage if they are
 not empty. Note that when writing an Entry with Index i, any
-previously-persisted entries with Index >= i must be discarded.
+previously-persisted entries with Index >= i必须是discarded.
 
 2. Send all Messages to the nodes named in the To field. It is important that
 no messages be sent until the latest HardState has been persisted to disk,
@@ -94,15 +94,15 @@ your main raft loop.
 If any committed Entry has Type EntryConfChange, call Node.ApplyConfChange()
 to apply it to the node. The configuration change may be cancelled at this point
 by setting the NodeID field to zero before calling ApplyConfChange
-(but ApplyConfChange must be called one way or the other, and the decision to cancel
+(but ApplyConfChange必须是called one way or the other, and the decision to cancel
 must be based solely on the state machine and not external information such as
 the observed health of the node).
 
 4. Call Node.Advance() to signal readiness for the next batch of updates.
-This may be done at any time after step 1, although all updates must be processed
+This may be done at any time after step 1, although all updates必须是processed
 in the order they were returned by Ready.
 
-Second, all persisted log entries must be made available via an
+Second, all persisted log entries必须是made available via an
 implementation of the Storage interface. The provided MemoryStorage
 type can be used for this (if you repopulate its state upon a
 restart), or you can supply your own disk-backed implementation.
@@ -165,9 +165,9 @@ raftpb.EntryConfChange will be returned. You must apply it to node through:
 	n.ApplyConfChange(cc)
 
 Note: An ID represents a unique node in a cluster for all time. A
-given ID MUST be used only once even if the old node has been removed.
+given ID必须是used only once even if the old node has been removed.
 This means that for example IP addresses make poor node IDs since they
-may be reused. Node IDs must be non-zero.
+may be reused. Node IDs必须是non-zero.
 
 Implementation notes
 

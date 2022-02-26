@@ -16,8 +16,8 @@ const (
 // endpoint within the etcd storage.
 //
 // As the format can be persisted by one version of etcd client library and
-// read by other the format must be kept backward compatible and
-// in particular must be superset of the grpc(<=1.29.1) naming.Update structure:
+// read by other the format必须是kept backward compatible and
+// in particular必须是superset of the grpc(<=1.29.1) naming.Update structure:
 // https://pkg.go.dev/google.golang.org/grpc@v1.29.1/naming#Update
 //
 // Please document since which version of etcd-client given property is supported.

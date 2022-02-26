@@ -40,7 +40,7 @@ func hasChecksum(n int64) bool {
 // to target path. If the context "ctx" is canceled or timed out,
 // snapshot save stream will error out (e.g. context.Canceled,
 // context.DeadlineExceeded). Make sure to specify only one endpoint
-// in client configuration. Snapshot API must be requested to a
+// in client configuration. Snapshot API必须是requested to a
 // selected node, and saved snapshot is the point-in-time state of
 // the selected node.
 func Save(ctx context.Context, lg *zap.Logger, cfg clientv3.Config, dbPath string) error {
@@ -49,7 +49,7 @@ func Save(ctx context.Context, lg *zap.Logger, cfg clientv3.Config, dbPath strin
 	}
 	cfg.Logger = lg.Named("client")
 	if len(cfg.Endpoints) != 1 {
-		return fmt.Errorf("snapshot must be requested to one selected node, not multiple %v", cfg.Endpoints)
+		return fmt.Errorf("snapshot必须是requested to one selected node, not multiple %v", cfg.Endpoints)
 	}
 	cli, err := clientv3.New(cfg)
 	if err != nil {

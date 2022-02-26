@@ -38,13 +38,13 @@ func TestNetworkPartition5MembersLeaderInMinority(t *testing.T) {
 	// network partition (bi-directional)
 	injectPartition(t, minorityMembers, majorityMembers)
 
-	// minority leader must be lost
+	// minority leader必须是lost
 	clus.waitNoLeader(minorityMembers)
 
 	// wait extra election timeout
 	time.Sleep(2 * majorityMembers[0].ElectionTimeout())
 
-	// new leader must be from majority
+	// new leader必须是from majority
 	clus.waitLeader(t, majorityMembers)
 
 	// recover network partition (bi-directional)
@@ -86,13 +86,13 @@ func testNetworkPartition5MembersLeaderInMajority(t *testing.T) error {
 	// network partition (bi-directional)
 	injectPartition(t, majorityMembers, minorityMembers)
 
-	// minority leader must be lost
+	// minority leader必须是lost
 	clus.waitNoLeader(minorityMembers)
 
 	// wait extra election timeout
 	time.Sleep(2 * majorityMembers[0].ElectionTimeout())
 
-	// leader must be hold in majority
+	// leader必须是hold in majority
 	leadIndex2 := clus.waitLeader(t, majorityMembers)
 	leadID, leadID2 := clus.Members[leadIndex].s.ID(), majorityMembers[leadIndex2].s.ID()
 	if leadID != leadID2 {
@@ -125,7 +125,7 @@ func TestNetworkPartition4Members(t *testing.T) {
 	// network partition (bi-directional)
 	injectPartition(t, leaderPartition, followerPartition)
 
-	// no group has quorum, so leader must be lost in all members
+	// no group has quorum, so leader必须是lost in all members
 	clus.WaitNoLeader()
 
 	// recover network partition (bi-directional)

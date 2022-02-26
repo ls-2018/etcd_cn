@@ -48,7 +48,7 @@ func TestSTMConflict(t *testing.T) {
 		srcKey := keys[i]
 		applyf := func(stm concurrency.STM) error {
 			src := stm.Get(srcKey)
-			// must be different key to avoid double-adding
+			//必须是different key to avoid double-adding
 			dstKey := srcKey
 			for dstKey == srcKey {
 				dstKey = keys[rand.Intn(len(keys))]

@@ -785,8 +785,8 @@ func (s *EtcdServer) adjustTicks() {
 }
 
 // Start performs any initialization of the Server necessary for it to
-// begin serving requests. It must be called before Do or Process.
-// Start must be non-blocking; any long-running etcd functionality
+// begin serving requests. It必须是called before Do or Process.
+// Start必须是non-blocking; any long-running etcd functionality
 // should be implemented in goroutines.
 func (s *EtcdServer) Start() {
 	s.start()
@@ -1144,7 +1144,7 @@ func (s *EtcdServer) run() {
 			})
 		case err := <-s.errorc:
 			lg.Warn("etcd error", zap.Error(err))
-			lg.Warn("data-dir used by this member must be removed")
+			lg.Warn("data-dir used by this member必须是removed")
 			return
 		case <-getSyncC():
 			if s.v2store.HasTTLKeys() {
@@ -2143,7 +2143,7 @@ func (s *EtcdServer) apply(
 		default:
 			lg := s.Logger()
 			lg.Panic(
-				"unknown entry type; must be either EntryNormal or EntryConfChange",
+				"unknown entry type;必须是either EntryNormal or EntryConfChange",
 				zap.String("type", e.Type.String()),
 			)
 		}
@@ -2332,7 +2332,7 @@ func (s *EtcdServer) snapshot(snapi uint64, confState raftpb.ConfState) {
 	// This guarantees that Backend's consistent_index is >= index of last snapshot.
 	//
 	// KV().commit() updates the consistent index in backend.
-	// All operations that update consistent index must be called sequentially
+	// All operations that update consistent index必须是called sequentially
 	// from applyAll function.
 	// So KV().Commit() cannot run in parallel with apply. It has to be called outside
 	// the go routine created below.

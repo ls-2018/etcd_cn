@@ -83,7 +83,7 @@ func testMoveLeader(t *testing.T, auto bool) {
 		t.Fatalf("expected same new leader %d == %d", newLeadIDs[0], newLeadIDs[1])
 	}
 
-	// new leader must be different than the old leader
+	// new leader必须是different than the old leader
 	if oldLeadID == newLeadIDs[0] {
 		t.Fatalf("expected old leader %d != new leader %d", oldLeadID, newLeadIDs[0])
 	}

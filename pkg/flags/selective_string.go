@@ -56,7 +56,7 @@ func (ss *SelectiveStringValue) Valids() []string {
 // for which any one of the given strings is a valid value,
 // and any other value is an error.
 //
-// valids[0] will be default value. Caller must be sure
+// valids[0] will be default value. Caller必须是sure
 // len(valids) != 0 or it will panic.
 func NewSelectiveStringValue(valids ...string) *SelectiveStringValue {
 	vm := make(map[string]struct{})

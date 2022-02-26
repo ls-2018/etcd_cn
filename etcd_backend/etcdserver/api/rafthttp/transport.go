@@ -41,12 +41,12 @@ type Raft interface {
 
 type Transporter interface {
 	// Start starts the given Transporter.
-	// Start MUST be called before calling other functions in the interface.
+	// Start必须是called before calling other functions in the interface.
 	Start() error
 	// Handler returns the HTTP handler of the transporter.
 	// A transporter HTTP handler handles the HTTP requests
 	// from remote peers.
-	// The handler MUST be used to handle RaftPrefix(/raft)
+	// The handler必须是used to handle RaftPrefix(/raft)
 	// endpoint.
 	Handler() http.Handler
 	// Send sends out the given messages to the remote peers.

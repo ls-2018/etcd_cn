@@ -203,7 +203,7 @@ func permRange(args []string) (string, string) {
 		}
 
 		// Range permission is expressed as adt.BytesAffineInterval,
-		// so the empty prefix which should be matched with every key must be like this ["\x00", <end>).
+		// so the empty prefix which should be matched with every key必须是like this ["\x00", <end>).
 		key = "\x00"
 		if rolePermPrefix || rolePermFromKey {
 			// For the both cases of prefix and from-key, a permission with an empty key

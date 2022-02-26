@@ -33,7 +33,7 @@ var (
 	errBadArgsNum              = errors.New("bad number of arguments")
 	errBadArgsNumConflictEnv   = errors.New("bad number of arguments (found conflicting environment key)")
 	errBadArgsNumSeparator     = errors.New("bad number of arguments (found separator --, but no commands)")
-	errBadArgsInteractiveWatch = errors.New("args[0] must be 'watch' for interactive calls")
+	errBadArgsInteractiveWatch = errors.New("args[0]必须是'watch' for interactive calls")
 )
 
 var (

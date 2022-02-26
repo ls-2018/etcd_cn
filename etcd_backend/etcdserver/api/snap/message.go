@@ -22,7 +22,7 @@ import (
 )
 
 // Message is a struct that contains a raft Message and a ReadCloser. The type
-// of raft message MUST be MsgSnap, which contains the raft meta-data and an
+// of raft message必须是MsgSnap, which contains the raft meta-data and an
 // additional data []byte field that contains the snapshot of the actual state
 // machine.
 // Message contains the ReadCloser field for handling large snapshot. This avoid

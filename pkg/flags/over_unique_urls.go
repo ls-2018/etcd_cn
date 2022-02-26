@@ -24,17 +24,16 @@ import (
 	"github.com/ls-2018/etcd_cn/client/pkg/types"
 )
 
-// UniqueURLs contains unique URLs
-// with non-URL exceptions.
+// UniqueURLs 包含独特的URL,有非URL例外.
 type UniqueURLs struct {
-	Values  map[string]struct{}
+	Values  map[string]struct{} // url->struct{}
 	uss     []url.URL
-	Allowed map[string]struct{}
+	Allowed map[string]struct{} // url,url -> struct{}
 }
 
-// Set parses a command line set of URLs formatted like:
-// http://127.0.0.1:2380,http://10.1.1.2:80
-// Implements "flag.Value" interface.
+var _ flag.Value = &UniqueURLs{}
+
+// Set parses  http://127.0.0.1:2380,http://10.1.1.2:80
 func (us *UniqueURLs) Set(s string) error {
 	if _, ok := us.Values[s]; ok {
 		return nil
@@ -67,7 +66,6 @@ func (us *UniqueURLs) String() string {
 }
 
 // NewUniqueURLsWithExceptions 实现 "url.URL "切片作为flag.Value接口.
-// Given value is to be separated by comma.
 func NewUniqueURLsWithExceptions(s string, exceptions ...string) *UniqueURLs {
 	us := &UniqueURLs{Values: make(map[string]struct{}), Allowed: make(map[string]struct{})}
 	for _, v := range exceptions {
@@ -77,12 +75,12 @@ func NewUniqueURLsWithExceptions(s string, exceptions ...string) *UniqueURLs {
 		return us
 	}
 	if err := us.Set(s); err != nil {
-		panic(fmt.Sprintf("new UniqueURLs should never fail: %v", err))
+		panic(fmt.Sprintf("new UniqueURLs不应该失败: %v", err))
 	}
 	return us
 }
 
-// UniqueURLsFromFlag returns a slice from urls got from the flag.
+// UniqueURLsFromFlag 从该标志获取的url返回一个切片.
 func UniqueURLsFromFlag(fs *flag.FlagSet, urlsFlagName string) []url.URL {
 	return (*fs.Lookup(urlsFlagName).Value.(*UniqueURLs)).uss
 }

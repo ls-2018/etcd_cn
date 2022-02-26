@@ -63,7 +63,7 @@ type Maintenance interface {
 	Snapshot(ctx context.Context) (io.ReadCloser, error)
 
 	// MoveLeader requests current leader to transfer its leadership to the transferee.
-	// Request must be made to the leader.
+	// Request必须是made to the leader.
 	MoveLeader(ctx context.Context, transfereeID uint64) (*MoveLeaderResponse, error)
 }
 

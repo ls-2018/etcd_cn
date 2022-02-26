@@ -65,7 +65,7 @@ func spawnCmdWithLogger(lg *zap.Logger, args []string) (*expect.ExpectProcess, e
 		return nil, err
 	}
 	// when withFlagByEnv() is used in testCtl(), env variables for ctl is set to os.env.
-	// they must be included in ctl_cov_env.
+	// they必须是included in ctl_cov_env.
 	env = append(env, os.Environ()...)
 	all_args := append(args[1:], covArgs...)
 	lg.Info("spawning process", zap.Strings("args", all_args), zap.String("working-dir", wd))

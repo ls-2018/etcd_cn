@@ -447,7 +447,7 @@ func TestRejectUnhealthyRemove(t *testing.T) {
 	// bring cluster to (4,1)
 	c.Members[0].Restart(t)
 
-	// restarted member must be connected for a HealthInterval before remove is accepted
+	// restarted member必须是connected for a HealthInterval before remove is accepted
 	time.Sleep((3 * etcdserver.HealthInterval) / 2)
 
 	// accept remove member since (4,1)-(1,0) => (3,1) has quorum

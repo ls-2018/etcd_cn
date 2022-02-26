@@ -164,7 +164,7 @@ type SetOptions struct {
 	PrevValue string
 
 	// PrevIndex indicates what the current ModifiedIndex of the
-	// Node must be in order for the Set operation to succeed.
+	// Node必须是in order for the Set operation to succeed.
 	//
 	// If PrevIndex is set to 0 (default), no comparison is made.
 	PrevIndex uint64
@@ -222,7 +222,7 @@ type DeleteOptions struct {
 	PrevValue string
 
 	// PrevIndex indicates what the current ModifiedIndex of the
-	// Node must be in order for the Delete operation to succeed.
+	// Node必须是in order for the Delete operation to succeed.
 	//
 	// If PrevIndex is set to 0 (default), no comparison is made.
 	PrevIndex uint64

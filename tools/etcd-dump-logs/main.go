@@ -47,7 +47,7 @@ func main() {
 	snapfile := flag.String("start-snap", "", "The base name of snapshot file to start dumping")
 	index := flag.Uint64("start-index", 0, "The index to start dumping")
 	// Default entry types are Normal and ConfigChange
-	entrytype := flag.String("entry-type", defaultEntryTypes, `If set, filters output by entry type. Must be one or more than one of:
+	entrytype := flag.String("entry-type", defaultEntryTypes, `If set, filters output by entry type.必须是one or more than one of:
 ConfigChange, Normal, Request, InternalRaftRequest,
 IRRRange, IRRPut, IRRDeleteRange, IRRTxn,
 IRRCompaction, IRRLeaseGrant, IRRLeaseRevoke, IRRLeaseCheckpoint`)

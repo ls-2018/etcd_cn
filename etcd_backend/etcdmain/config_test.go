@@ -466,12 +466,12 @@ func TestConfigFileElectionTimeout(t *testing.T) {
 		{
 			ElectionMs: 100,
 			TickMs:     0,
-			errStr:     "--heartbeat-interval must be >0 (set to 0ms)",
+			errStr:     "--heartbeat-interval必须是>0 (set to 0ms)",
 		},
 		{
 			ElectionMs: 0,
 			TickMs:     100,
-			errStr:     "--election-timeout must be >0 (set to 0ms)",
+			errStr:     "--election-timeout必须是>0 (set to 0ms)",
 		},
 	}
 

@@ -35,7 +35,7 @@ const (
 	// tcp keepalive failing to detect a bad connection, which is at minutes level.
 	// For long term streaming connections, rafthttp pkg sends application level linkHeartbeatMessage
 	// to keep the connection alive.
-	// For short term pipeline connections, the connection MUST be killed to avoid it being
+	// For short term pipeline connections, the connection必须是killed to avoid it being
 	// put back to http pkg connection pool.
 	DefaultConnReadTimeout  = 5 * time.Second
 	DefaultConnWriteTimeout = 5 * time.Second
@@ -187,7 +187,7 @@ func startPeer(t *Transport, urls types.URLs, peerID types.ID, fs *stats.Followe
 	}()
 
 	// r.Process might block for processing proposal when there is no leader.
-	// Thus propc must be put into a separate routine with recvc to avoid blocking
+	// Thus propc必须是put into a separate routine with recvc to avoid blocking
 	// processing other raft messages.
 	go func() {
 		for {

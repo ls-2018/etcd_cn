@@ -117,7 +117,7 @@ func (n *node) start() {
 
 // stop stops the node. stop a stopped node might panic.
 // All in memory state of node is discarded.
-// All stable MUST be unchanged.
+// All stable必须是unchanged.
 func (n *node) stop() {
 	n.iface.disconnect()
 	n.stopc <- struct{}{}

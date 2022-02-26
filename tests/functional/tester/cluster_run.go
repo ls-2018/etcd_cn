@@ -33,7 +33,7 @@ const compactQPS = 50000
 func (clus *Cluster) Run() {
 	defer printReport()
 
-	// updateCases must be executed after etcd is started, because the FAILPOINTS case
+	// updateCases必须是executed after etcd is started, because the FAILPOINTS case
 	// needs to obtain all the failpoints from the etcd member.
 	clus.updateCases()
 

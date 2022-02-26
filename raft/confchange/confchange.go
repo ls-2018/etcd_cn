@@ -320,13 +320,13 @@ func checkInvariants(cfg tracker.Config, prs tracker.ProgressMap) error {
 	if !joint(cfg) {
 		// We enforce that empty maps are nil instead of zero.
 		if outgoing(cfg.Voters) != nil {
-			return fmt.Errorf("cfg.Voters[1] must be nil when not joint")
+			return fmt.Errorf("cfg.Voters[1]必须是nil when not joint")
 		}
 		if cfg.LearnersNext != nil {
-			return fmt.Errorf("cfg.LearnersNext must be nil when not joint")
+			return fmt.Errorf("cfg.LearnersNext必须是nil when not joint")
 		}
 		if cfg.AutoLeave {
-			return fmt.Errorf("AutoLeave must be false when not joint")
+			return fmt.Errorf("AutoLeave必须是false when not joint")
 		}
 	}
 

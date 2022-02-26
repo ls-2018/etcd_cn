@@ -31,10 +31,10 @@ help() {
   echo "Release etcd using the same approach as the etcd-release-runbook (https://goo.gl/Gxwysq)"
   echo ""
   echo "WARNING: This does not perform the 'Add API capabilities', 'Performance testing' "
-  echo "         or 'Documentation' steps. These steps must be performed manually BEFORE running this tool."
+  echo "         or 'Documentation' steps. These steps必须是performed manually BEFORE running this tool."
   echo ""
   echo "WARNING: This script does not sign releases, publish releases to github or sent announcement"
-  echo "         emails. These steps must be performed manually AFTER running this tool."
+  echo "         emails. These steps必须是performed manually AFTER running this tool."
   echo ""
   echo "  args:"
   echo "    version: version of etcd to release, e.g. 'v3.2.18'"
@@ -282,7 +282,7 @@ main() {
 
   # TODO: signing process
   log_warning ""
-  log_warning "WARNING: The release has not been signed and published to github. This must be done manually."
+  log_warning "WARNING: The release has not been signed and published to github. This必须是done manually."
   log_warning ""
   log_success "Success."
   exit 0

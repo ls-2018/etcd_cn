@@ -222,7 +222,7 @@ const (
 	// The expected behavior is that the follower comes back online and
 	// rejoins the cluster, and then active leader sends snapshot
 	// to the follower to force it to follow the leader's log.
-	// As always, after recovery, each member must be able to process
+	// As always, after recovery, each member必须是able to process
 	// client requests.
 	Case_SIGTERM_ONE_FOLLOWER_UNTIL_TRIGGER_SNAPSHOT Case = 1
 	// SIGTERM_LEADER stops the active leader node but does not delete its
@@ -230,7 +230,7 @@ const (
 	// before recovering this failure, in order to trigger election timeouts.
 	// The expected behavior is that a new leader gets elected, and the
 	// old leader comes back online and rejoins the cluster as a follower.
-	// As always, after recovery, each member must be able to process
+	// As always, after recovery, each member必须是able to process
 	// client requests.
 	Case_SIGTERM_LEADER Case = 2
 	// SIGTERM_LEADER_UNTIL_TRIGGER_SNAPSHOT stops the active leader node
@@ -240,7 +240,7 @@ const (
 	// The expected behavior is that cluster elects a new leader, and the
 	// old leader comes back online and rejoins the cluster as a follower.
 	// And it receives the snapshot from the new leader to overwrite its
-	// store. As always, after recovery, each member must be able to
+	// store. As always, after recovery, each member必须是able to
 	// process client requests.
 	Case_SIGTERM_LEADER_UNTIL_TRIGGER_SNAPSHOT Case = 3
 	// SIGTERM_QUORUM stops majority number of nodes to make the whole cluster
@@ -248,14 +248,14 @@ const (
 	// for next restart. And it waits "delay-ms" before recovering failure.
 	// The expected behavior is that nodes come back online, thus cluster
 	// comes back operative as well. As always, after recovery, each member
-	// must be able to process client requests.
+	//必须是able to process client requests.
 	Case_SIGTERM_QUORUM Case = 4
 	// SIGTERM_ALL stops the whole cluster but does not delete data directories
 	// on disk for next restart. And it waits "delay-ms" before  recovering
 	// this failure.
 	// The expected behavior is that nodes come back online, thus cluster
 	// comes back operative as well. As always, after recovery, each member
-	// must be able to process client requests.
+	//必须是able to process client requests.
 	Case_SIGTERM_ALL Case = 5
 	// SIGQUIT_AND_REMOVE_ONE_FOLLOWER stops a randomly chosen follower
 	// (non-leader), deletes its data directories on disk, and removes
@@ -277,7 +277,7 @@ const (
 	// a new member from a fresh machine.
 	// The expected behavior is that a new member joins the existing cluster,
 	// and receives a snapshot from the active leader. As always, after
-	// recovery, each member must be able to process client requests.
+	// recovery, each member必须是able to process client requests.
 	Case_SIGQUIT_AND_REMOVE_ONE_FOLLOWER_UNTIL_TRIGGER_SNAPSHOT Case = 11
 	// SIGQUIT_AND_REMOVE_LEADER stops the active leader node, deletes its
 	// data directories on disk, and removes this member from cluster.
@@ -299,7 +299,7 @@ const (
 	// The expected behavior is that on member remove, cluster elects a new
 	// leader, and a new member joins the existing cluster and receives a
 	// snapshot from the newly elected leader. As always, after recovery, each
-	// member must be able to process client requests.
+	// member必须是able to process client requests.
 	Case_SIGQUIT_AND_REMOVE_LEADER_UNTIL_TRIGGER_SNAPSHOT Case = 13
 	// SIGQUIT_AND_REMOVE_QUORUM_AND_RESTORE_LEADER_SNAPSHOT_FROM_SCRATCH first
 	// stops majority number of nodes, deletes data directories on those quorum
@@ -325,13 +325,13 @@ const (
 	// disastrous situation as only 1-node survives out of 3-node cluster,
 	// new members joins the existing cluster, and previous data from snapshot
 	// are still preserved after recovery process. As always, after recovery,
-	// each member must be able to process client requests.
+	// each member必须是able to process client requests.
 	Case_SIGQUIT_AND_REMOVE_QUORUM_AND_RESTORE_LEADER_SNAPSHOT_FROM_SCRATCH Case = 14
 	// BLACKHOLE_PEER_PORT_TX_RX_ONE_FOLLOWER drops all outgoing/incoming
 	// packets from/to the peer port on a randomly chosen follower
 	// (non-leader), and waits for "delay-ms" until recovery.
 	// The expected behavior is that once dropping operation is undone,
-	// each member must be able to process client requests.
+	// each member必须是able to process client requests.
 	Case_BLACKHOLE_PEER_PORT_TX_RX_ONE_FOLLOWER Case = 100
 	// BLACKHOLE_PEER_PORT_TX_RX_ONE_FOLLOWER_UNTIL_TRIGGER_SNAPSHOT drops
 	// all outgoing/incoming packets from/to the peer port on a randomly
@@ -349,7 +349,7 @@ const (
 	// The expected behavior is that after election timeout, a new leader gets
 	// elected, and once dropping operation is undone, the old leader comes
 	// back and rejoins the cluster as a follower. As always, after recovery,
-	// each member must be able to process client requests.
+	// each member必须是able to process client requests.
 	Case_BLACKHOLE_PEER_PORT_TX_RX_LEADER Case = 102
 	// BLACKHOLE_PEER_PORT_TX_RX_LEADER_UNTIL_TRIGGER_SNAPSHOT drops all
 	// outgoing/incoming packets from/to the peer port on the active leader,
@@ -359,7 +359,7 @@ const (
 	// dropping operation is undone, the old leader comes back and rejoins
 	// the cluster as a follower. The slow follower tries to catch up, likely
 	// receiving the snapshot from the new active leader. As always, after
-	// recovery, each member must be able to process client requests.
+	// recovery, each member必须是able to process client requests.
 	Case_BLACKHOLE_PEER_PORT_TX_RX_LEADER_UNTIL_TRIGGER_SNAPSHOT Case = 103
 	// BLACKHOLE_PEER_PORT_TX_RX_QUORUM drops all outgoing/incoming packets
 	// from/to the peer ports on majority nodes of cluster, thus losing its
@@ -367,21 +367,21 @@ const (
 	// until recovery.
 	// The expected behavior is that once packet drop operation is undone,
 	// nodes come back online, thus cluster comes back operative. As always,
-	// after recovery, each member must be able to process client requests.
+	// after recovery, each member必须是able to process client requests.
 	Case_BLACKHOLE_PEER_PORT_TX_RX_QUORUM Case = 104
 	// BLACKHOLE_PEER_PORT_TX_RX_ALL drops all outgoing/incoming packets
 	// from/to the peer ports on all nodes, thus making cluster totally
 	// inoperable. It waits for "delay-ms" until recovery.
 	// The expected behavior is that once packet drop operation is undone,
 	// nodes come back online, thus cluster comes back operative. As always,
-	// after recovery, each member must be able to process client requests.
+	// after recovery, each member必须是able to process client requests.
 	Case_BLACKHOLE_PEER_PORT_TX_RX_ALL Case = 105
 	// DELAY_PEER_PORT_TX_RX_ONE_FOLLOWER delays outgoing/incoming packets
 	// from/to the peer port on a randomly chosen follower (non-leader).
 	// It waits for "delay-ms" until recovery.
 	// The expected behavior is that once packet delay operation is undone,
 	// the follower comes back and tries to catch up with latest changes from
-	// cluster. And as always, after recovery, each member must be able to
+	// cluster. And as always, after recovery, each member必须是able to
 	// process client requests.
 	Case_DELAY_PEER_PORT_TX_RX_ONE_FOLLOWER Case = 200
 	// RANDOM_DELAY_PEER_PORT_TX_RX_ONE_FOLLOWER delays outgoing/incoming
@@ -389,7 +389,7 @@ const (
 	// (non-leader) with a randomized time duration (thus isolated). It
 	// waits for "delay-ms" until recovery.
 	// The expected behavior is that once packet delay operation is undone,
-	// each member must be able to process client requests.
+	// each member必须是able to process client requests.
 	Case_RANDOM_DELAY_PEER_PORT_TX_RX_ONE_FOLLOWER Case = 201
 	// DELAY_PEER_PORT_TX_RX_ONE_FOLLOWER_UNTIL_TRIGGER_SNAPSHOT delays
 	// outgoing/incoming packets from/to the peer port on a randomly chosen
@@ -410,7 +410,7 @@ const (
 	// and behind the current active leader, and once delay operation is undone,
 	// the slow follower comes back and catches up, possibly receiving a
 	// snapshot from the active leader. As always, after recovery, each member
-	// must be able to process client requests.
+	//必须是able to process client requests.
 	Case_RANDOM_DELAY_PEER_PORT_TX_RX_ONE_FOLLOWER_UNTIL_TRIGGER_SNAPSHOT Case = 203
 	// DELAY_PEER_PORT_TX_RX_LEADER delays outgoing/incoming packets from/to
 	// the peer port on the active leader. And waits for "delay-ms" until
@@ -418,7 +418,7 @@ const (
 	// The expected behavior is that cluster may elect a new leader, and
 	// once packet delay operation is undone, the (old) leader comes back
 	// and tries to catch up with latest changes from cluster. As always,
-	// after recovery, each member must be able to process client requests.
+	// after recovery, each member必须是able to process client requests.
 	Case_DELAY_PEER_PORT_TX_RX_LEADER Case = 204
 	// RANDOM_DELAY_PEER_PORT_TX_RX_LEADER delays outgoing/incoming packets
 	// from/to the peer port on the active leader with a randomized time
@@ -426,7 +426,7 @@ const (
 	// The expected behavior is that cluster may elect a new leader, and
 	// once packet delay operation is undone, the (old) leader comes back
 	// and tries to catch up with latest changes from cluster. As always,
-	// after recovery, each member must be able to process client requests.
+	// after recovery, each member必须是able to process client requests.
 	Case_RANDOM_DELAY_PEER_PORT_TX_RX_LEADER Case = 205
 	// DELAY_PEER_PORT_TX_RX_LEADER_UNTIL_TRIGGER_SNAPSHOT delays
 	// outgoing/incoming packets from/to the peer port on the active leader,
@@ -436,7 +436,7 @@ const (
 	// the old leader gets isolated and behind the current active leader,
 	// and once delay operation is undone, the slow follower comes back
 	// and catches up, likely receiving a snapshot from the active leader.
-	// As always, after recovery, each member must be able to process client
+	// As always, after recovery, each member必须是able to process client
 	// requests.
 	Case_DELAY_PEER_PORT_TX_RX_LEADER_UNTIL_TRIGGER_SNAPSHOT Case = 206
 	// RANDOM_DELAY_PEER_PORT_TX_RX_LEADER_UNTIL_TRIGGER_SNAPSHOT delays
@@ -448,7 +448,7 @@ const (
 	// the old leader gets isolated and behind the current active leader,
 	// and once delay operation is undone, the slow follower comes back
 	// and catches up, likely receiving a snapshot from the active leader.
-	// As always, after recovery, each member must be able to process client
+	// As always, after recovery, each member必须是able to process client
 	// requests.
 	Case_RANDOM_DELAY_PEER_PORT_TX_RX_LEADER_UNTIL_TRIGGER_SNAPSHOT Case = 207
 	// DELAY_PEER_PORT_TX_RX_QUORUM delays outgoing/incoming packets from/to
@@ -457,7 +457,7 @@ const (
 	// The expected behavior is that cluster may elect a new leader, while
 	// quorum of nodes struggle with slow networks, and once delay operation
 	// is undone, nodes come back and cluster comes back operative. As always,
-	// after recovery, each member must be able to process client requests.
+	// after recovery, each member必须是able to process client requests.
 	Case_DELAY_PEER_PORT_TX_RX_QUORUM Case = 208
 	// RANDOM_DELAY_PEER_PORT_TX_RX_QUORUM delays outgoing/incoming packets
 	// from/to the peer ports on majority nodes of cluster, with randomized
@@ -466,7 +466,7 @@ const (
 	// The expected behavior is that cluster may elect a new leader, while
 	// quorum of nodes struggle with slow networks, and once delay operation
 	// is undone, nodes come back and cluster comes back operative. As always,
-	// after recovery, each member must be able to process client requests.
+	// after recovery, each member必须是able to process client requests.
 	Case_RANDOM_DELAY_PEER_PORT_TX_RX_QUORUM Case = 209
 	// DELAY_PEER_PORT_TX_RX_ALL delays outgoing/incoming packets from/to the
 	// peer ports on all nodes. And it waits for "delay-ms" until recovery,
@@ -474,7 +474,7 @@ const (
 	// The expected behavior is that cluster may become totally inoperable,
 	// struggling with slow networks across the whole cluster. Once delay
 	// operation is undone, nodes come back and cluster comes back operative.
-	// As always, after recovery, each member must be able to process client
+	// As always, after recovery, each member必须是able to process client
 	// requests.
 	Case_DELAY_PEER_PORT_TX_RX_ALL Case = 210
 	// RANDOM_DELAY_PEER_PORT_TX_RX_ALL delays outgoing/incoming packets
@@ -484,7 +484,7 @@ const (
 	// The expected behavior is that cluster may become totally inoperable,
 	// struggling with slow networks across the whole cluster. Once delay
 	// operation is undone, nodes come back and cluster comes back operative.
-	// As always, after recovery, each member must be able to process client
+	// As always, after recovery, each member必须是able to process client
 	// requests.
 	Case_RANDOM_DELAY_PEER_PORT_TX_RX_ALL Case = 211
 	// NO_FAIL_WITH_STRESS stops injecting failures while testing the
@@ -493,7 +493,7 @@ const (
 	// on recovery, and verify system does not deadlock following a sequence
 	// of failure injections.
 	// The expected behavior is that cluster remains fully operative in healthy
-	// condition. As always, after recovery, each member must be able to process
+	// condition. As always, after recovery, each member必须是able to process
 	// client requests.
 	Case_NO_FAIL_WITH_STRESS Case = 300
 	// NO_FAIL_WITH_NO_STRESS_FOR_LIVENESS neither injects failures nor
@@ -746,10 +746,10 @@ type Member struct {
 	// BaseDir is the base directory where all logs and etcd data are stored.
 	BaseDir string `protobuf:"bytes,101,opt,name=BaseDir,proto3" json:"BaseDir,omitempty" yaml:"base-dir"`
 	// EtcdClientProxy is true when client traffic needs to be proxied.
-	// If true, listen client URL port must be different than advertise client URL port.
+	// If true, listen client URL port必须是different than advertise client URL port.
 	EtcdClientProxy bool `protobuf:"varint,201,opt,name=EtcdClientProxy,proto3" json:"EtcdClientProxy,omitempty" yaml:"etcd-client-proxy"`
 	// EtcdPeerProxy is true when peer traffic needs to be proxied.
-	// If true, listen peer URL port must be different than advertise peer URL port.
+	// If true, listen peer URL port必须是different than advertise peer URL port.
 	EtcdPeerProxy bool `protobuf:"varint,202,opt,name=EtcdPeerProxy,proto3" json:"EtcdPeerProxy,omitempty" yaml:"etcd-peer-proxy"`
 	// EtcdClientEndpoint is the etcd client endpoint.
 	EtcdClientEndpoint string `protobuf:"bytes,301,opt,name=EtcdClientEndpoint,proto3" json:"EtcdClientEndpoint,omitempty" yaml:"etcd-client-endpoint"`

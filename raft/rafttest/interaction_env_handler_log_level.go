@@ -33,5 +33,5 @@ func (env *InteractionEnv) LogLevel(name string) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("log levels must be either of %v", lvlNames)
+	return fmt.Errorf("log levels必须是either of %v", lvlNames)
 }

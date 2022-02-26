@@ -25,7 +25,7 @@ import (
 
 // ErrMissingLeaderKey is returned when election API request
 // is missing the "leader" field.
-var ErrMissingLeaderKey = errors.New(`"leader" field must be provided`)
+var ErrMissingLeaderKey = errors.New(`"leader" field必须是provided`)
 
 type electionServer struct {
 	c *clientv3.Client

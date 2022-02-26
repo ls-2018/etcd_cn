@@ -36,7 +36,7 @@ type ConsistentIndexer interface {
 	// SetConsistentIndex set the consistent index of current executing entry.
 	SetConsistentIndex(v uint64, term uint64)
 
-	// UnsafeSave must be called holding the lock on the tx.
+	// UnsafeSave必须是called holding the lock on the tx.
 	// It saves consistentIndex to the underlying stable storage.
 	UnsafeSave(tx backend.BatchTx)
 
@@ -48,10 +48,10 @@ type ConsistentIndexer interface {
 type consistentIndex struct {
 	// consistentIndex represents the offset of an entry in a consistent replica log.
 	// It caches the "consistent_index" key's value.
-	// Accessed through atomics so must be 64-bit aligned.
+	// Accessed through atomics so必须是64-bit aligned.
 	consistentIndex uint64
 	// term represents the RAFT term of committed entry in a consistent replica log.
-	// Accessed through atomics so must be 64-bit aligned.
+	// Accessed through atomics so必须是64-bit aligned.
 	// The value is being persisted in the backend since v3.5.
 	term uint64
 
@@ -62,7 +62,7 @@ type consistentIndex struct {
 }
 
 // NewConsistentIndex creates a new consistent index.
-// If `be` is nil, it must be set (SetBackend) before first access using `ConsistentIndex()`.
+// If `be` is nil, it必须是set (SetBackend) before first access using `ConsistentIndex()`.
 func NewConsistentIndex(be Backend) ConsistentIndexer {
 	return &consistentIndex{be: be}
 }

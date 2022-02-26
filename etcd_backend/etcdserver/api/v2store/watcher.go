@@ -47,7 +47,7 @@ func (w *watcher) notify(e *Event, originalPath bool, deleted bool) bool {
 
 	// 1. the path at which the event happens is the path the watcher is watching at.
 	// For example if the watcher is watching at "/foo" and the event happens at "/foo",
-	// the watcher must be interested in that event.
+	// the watcher必须是interested in that event.
 
 	// 2. the watcher is a recursive watcher, it interests in the event happens after
 	// its watching path. For example if watcher A watches at "/foo" and it is a recursive

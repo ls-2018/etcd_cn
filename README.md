@@ -65,3 +65,9 @@ ETCDCTL_API=3 etcdctl alarm disarm
     --initial-cluster-state new --enable-pprof --logger=zap --log-outputs=stderr
 
   ```
+- 3 JournalLogOutput 日志
+  ```
+  systemd-journal是syslog 的补充,收集来自内核、启动过程早期阶段、标准输出、系统日志、守护进程启动和运行期间错误的信息,
+  它会默认把日志记录到/run/log/journal中，仅保留一个月的日志，且系统重启后也会消失。
+  但是当新建 /var/log/journal 目录后，它又会把日志记录到这个目录中，永久保存。
+  ```
