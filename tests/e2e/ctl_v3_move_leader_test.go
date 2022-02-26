@@ -15,10 +15,10 @@
 package e2e
 
 import (
-	clientv3 "github.com/ls-2018/client/v3"
 	"context"
 	"crypto/tls"
 	"fmt"
+	clientv3 "github.com/ls-2018/client/v3"
 	"os"
 	"testing"
 	"time"

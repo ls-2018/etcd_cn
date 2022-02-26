@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/ls-2018/client/pkg/types"
-	"github.com/ls-2018/raft/raftpb"
 	stats "github.com/ls-2018/etcd/etcdserver/api/v2stats"
+	"github.com/ls-2018/raft/raftpb"
 )
 
 func TestMsgAppV2(t *testing.T) {

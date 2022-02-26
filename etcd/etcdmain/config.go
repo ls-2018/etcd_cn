@@ -25,10 +25,10 @@ import (
 	"runtime"
 
 	"github.com/ls-2018/client/pkg/logutil"
-	"github.com/ls-2018/pkg/flags"
 	cconfig "github.com/ls-2018/etcd/config"
 	"github.com/ls-2018/etcd/embed"
 	"github.com/ls-2018/etcd/etcdserver/api/rafthttp"
+	"github.com/ls-2018/pkg/flags"
 	"go.etcd.io/etcd/api/v3/version"
 
 	"go.uber.org/zap"
@@ -75,17 +75,17 @@ type configProxy struct {
 	FallbackJSON           string `json:"discovery-fallback"`
 }
 
-// config holds the config for a command line invocation of etcd
+// config 保存etcd命令行调用的配置
 type config struct {
 	ec           embed.Config
 	cp           configProxy
 	cf           configFlags
-	configFile   string
+	configFile   string // 从文件加载服务器配置。
 	printVersion bool
 	ignored      []string
 }
 
-// configFlags has the set of flags used for command line parsing a Config
+// configFlags 是否有一组标志用于命令行解析配置
 type configFlags struct {
 	flagSet       *flag.FlagSet
 	clusterState  *flags.SelectiveStringValue
@@ -133,7 +133,7 @@ func newConfig() *config {
 		fmt.Fprintln(os.Stderr, usageline)
 	}
 
-	fs.StringVar(&cfg.configFile, "config-file", "", "Path to the etcd configuration file. Note that if a configuration file is provided, other command line flags and environment variables will be ignored.")
+	fs.StringVar(&cfg.configFile, "config-file", "", "从文件加载服务器配置。")
 
 	// member
 	fs.StringVar(&cfg.ec.Dir, "data-dir", cfg.ec.Dir, "Path to the data directory.")
@@ -147,11 +147,7 @@ func newConfig() *config {
 		flags.NewUniqueURLsWithExceptions(embed.DefaultListenClientURLs, ""), "listen-client-urls",
 		"List of URLs to listen on for client traffic.",
 	)
-	fs.Var(
-		flags.NewUniqueURLsWithExceptions("", ""),
-		"listen-metrics-urls",
-		"List of URLs to listen on for the metrics and health endpoints.",
-	)
+	fs.Var(flags.NewUniqueURLsWithExceptions("", ""), "listen-metrics-urls", "要监听指标和运行状况端点的url列表。")
 	fs.UintVar(&cfg.ec.MaxSnapFiles, "max-snapshots", cfg.ec.MaxSnapFiles, "Maximum number of snapshot files to retain (0 is unlimited).")
 	fs.UintVar(&cfg.ec.MaxWalFiles, "max-wals", cfg.ec.MaxWalFiles, "Maximum number of wal files to retain (0 is unlimited).")
 	fs.StringVar(&cfg.ec.Name, "name", cfg.ec.Name, "Human-readable name for this member.")
@@ -171,11 +167,11 @@ func newConfig() *config {
 	fs.BoolVar(&cfg.ec.SocketOpts.ReusePort, "socket-reuse-port", cfg.ec.SocketOpts.ReusePort, "Enable to set socket option SO_REUSEPORT on listeners allowing rebinding of a port already in use.")
 	fs.BoolVar(&cfg.ec.SocketOpts.ReuseAddress, "socket-reuse-address", cfg.ec.SocketOpts.ReuseAddress, "Enable to set socket option SO_REUSEADDR on listeners allowing binding to an address in `TIME_WAIT` state.")
 
-	// raft connection timeouts
+	// raft 连接超时
 	fs.DurationVar(&rafthttp.ConnReadTimeout, "raft-read-timeout", rafthttp.DefaultConnReadTimeout, "Read timeout set on each rafthttp connection")
 	fs.DurationVar(&rafthttp.ConnWriteTimeout, "raft-write-timeout", rafthttp.DefaultConnWriteTimeout, "Write timeout set on each rafthttp connection")
 
-	// clustering
+	// 集群
 	fs.Var(
 		flags.NewUniqueURLsWithExceptions(embed.DefaultInitialAdvertisePeerURLs, ""),
 		"initial-advertise-peer-urls",
@@ -212,55 +208,55 @@ func newConfig() *config {
 	fs.UintVar(&cfg.cp.ProxyWriteTimeoutMs, "proxy-write-timeout", cfg.cp.ProxyWriteTimeoutMs, "Time (in milliseconds) for a write to timeout.")
 	fs.UintVar(&cfg.cp.ProxyReadTimeoutMs, "proxy-read-timeout", cfg.cp.ProxyReadTimeoutMs, "Time (in milliseconds) for a read to timeout.")
 
-	// security
-	fs.StringVar(&cfg.ec.ClientTLSInfo.CertFile, "cert-file", "", "Path to the client etcd TLS cert file.")
-	fs.StringVar(&cfg.ec.ClientTLSInfo.KeyFile, "key-file", "", "Path to the client etcd TLS key file.")
-	fs.StringVar(&cfg.ec.ClientTLSInfo.ClientCertFile, "client-cert-file", "", "Path to an explicit peer client TLS cert file otherwise cert file will be used when client auth is required.")
-	fs.StringVar(&cfg.ec.ClientTLSInfo.ClientKeyFile, "client-key-file", "", "Path to an explicit peer client TLS key file otherwise key file will be used when client auth is required.")
-	fs.BoolVar(&cfg.ec.ClientTLSInfo.ClientCertAuth, "client-cert-auth", false, "Enable client cert authentication.")
-	fs.StringVar(&cfg.ec.ClientTLSInfo.CRLFile, "client-crl-file", "", "Path to the client certificate revocation list file.")
-	fs.StringVar(&cfg.ec.ClientTLSInfo.AllowedHostname, "client-cert-allowed-hostname", "", "Allowed TLS hostname for client cert authentication.")
-	fs.StringVar(&cfg.ec.ClientTLSInfo.TrustedCAFile, "trusted-ca-file", "", "Path to the client etcd TLS trusted CA cert file.")
-	fs.BoolVar(&cfg.ec.ClientAutoTLS, "auto-tls", false, "Client TLS using generated certificates")
-	fs.StringVar(&cfg.ec.PeerTLSInfo.CertFile, "peer-cert-file", "", "Path to the peer etcd TLS cert file.")
-	fs.StringVar(&cfg.ec.PeerTLSInfo.KeyFile, "peer-key-file", "", "Path to the peer etcd TLS key file.")
-	fs.StringVar(&cfg.ec.PeerTLSInfo.ClientCertFile, "peer-client-cert-file", "", "Path to an explicit peer client TLS cert file otherwise peer cert file will be used when client auth is required.")
-	fs.StringVar(&cfg.ec.PeerTLSInfo.ClientKeyFile, "peer-client-key-file", "", "Path to an explicit peer client TLS key file otherwise peer key file will be used when client auth is required.")
-	fs.BoolVar(&cfg.ec.PeerTLSInfo.ClientCertAuth, "peer-client-cert-auth", false, "Enable peer client cert authentication.")
-	fs.StringVar(&cfg.ec.PeerTLSInfo.TrustedCAFile, "peer-trusted-ca-file", "", "Path to the peer etcd TLS trusted CA file.")
-	fs.BoolVar(&cfg.ec.PeerAutoTLS, "peer-auto-tls", false, "Peer TLS using generated certificates")
-	fs.UintVar(&cfg.ec.SelfSignedCertValidity, "self-signed-cert-validity", 1, "The validity period of the client and peer certificates, unit is year")
-	fs.StringVar(&cfg.ec.PeerTLSInfo.CRLFile, "peer-crl-file", "", "Path to the peer certificate revocation list file.")
-	fs.StringVar(&cfg.ec.PeerTLSInfo.AllowedCN, "peer-cert-allowed-cn", "", "Allowed CN for inter peer authentication.")
-	fs.StringVar(&cfg.ec.PeerTLSInfo.AllowedHostname, "peer-cert-allowed-hostname", "", "Allowed TLS hostname for inter peer authentication.")
-	fs.Var(flags.NewStringsValue(""), "cipher-suites", "Comma-separated list of supported TLS cipher suites between client/etcd and peers (empty will be auto-populated by Go).")
-	fs.BoolVar(&cfg.ec.PeerTLSInfo.SkipClientSANVerify, "experimental-peer-skip-client-san-verification", false, "Skip verification of SAN field in client certificate for peer connections.")
+	// etcdctl通信的证书配置
+	fs.StringVar(&cfg.ec.ClientTLSInfo.CertFile, "cert-file", "", "客户端证书")
+	fs.StringVar(&cfg.ec.ClientTLSInfo.KeyFile, "key-file", "", "客户端私钥")
 
-	fs.Var(
-		flags.NewUniqueURLsWithExceptions("*", "*"),
-		"cors",
-		"Comma-separated white list of origins for CORS, or cross-origin resource sharing, (empty or * means allow all)",
-	)
-	fs.Var(flags.NewUniqueStringsValue("*"), "host-whitelist", "Comma-separated acceptable hostnames from HTTP client requests, if etcd is not secure (empty means allow all).")
+	fs.StringVar(&cfg.ec.ClientTLSInfo.ClientCertFile, "client-cert-file", "", "验证client客户端时使用的 证书文件路径,否则在需要客户认证时将使用cert-file文件")
+	fs.StringVar(&cfg.ec.ClientTLSInfo.ClientKeyFile, "client-key-file", "", "验证client客户端时使用的 密钥文件路径,否则在需要客户认证时将使用key-file文件。")
+	fs.BoolVar(&cfg.ec.ClientTLSInfo.ClientCertAuth, "client-cert-auth", false, "启用客户端证书验证;默认false")
+	fs.StringVar(&cfg.ec.ClientTLSInfo.CRLFile, "client-crl-file", "", "客户端证书吊销列表文件的路径。")
+	fs.StringVar(&cfg.ec.ClientTLSInfo.AllowedHostname, "client-cert-allowed-hostname", "", "允许客户端证书认证使用TLS主机名。")
+	fs.StringVar(&cfg.ec.ClientTLSInfo.TrustedCAFile, "trusted-ca-file", "", "客户端etcd通信 的可信CA证书文件")
+	fs.BoolVar(&cfg.ec.ClientAutoTLS, "auto-tls", false, "客户端TLS使用生成的证书")
+	// etcd通信之间的证书配置
+	fs.StringVar(&cfg.ec.PeerTLSInfo.CertFile, "peer-cert-file", "", "证书路径")
+	fs.StringVar(&cfg.ec.PeerTLSInfo.KeyFile, "peer-key-file", "", "私钥路径")
 
-	// logging
-	fs.StringVar(&cfg.ec.Logger, "logger", "zap", "Currently only supports 'zap' for structured logging.")
-	fs.Var(flags.NewUniqueStringsValue(embed.DefaultLogOutput), "log-outputs", "Specify 'stdout' or 'stderr' to skip journald logging even when running under systemd, or list of comma separated output targets.")
-	fs.StringVar(&cfg.ec.LogLevel, "log-level", logutil.DefaultLogLevel, "Configures log level. Only supports debug, info, warn, error, panic, or fatal. Default 'info'.")
+	fs.StringVar(&cfg.ec.PeerTLSInfo.ClientCertFile, "peer-client-cert-file", "", "验证server客户端时使用的 证书文件路径,否则在需要客户认证时将使用cert-file文件")
+	fs.StringVar(&cfg.ec.PeerTLSInfo.ClientKeyFile, "peer-client-key-file", "", "验证server客户端时使用的 密钥文件路径,否则在需要客户认证时将使用key-file文件。")
+
+	fs.BoolVar(&cfg.ec.PeerTLSInfo.ClientCertAuth, "peer-client-cert-auth", false, "启用server客户端证书验证;默认false")
+	fs.StringVar(&cfg.ec.PeerTLSInfo.TrustedCAFile, "peer-trusted-ca-file", "", "服务器端ca证书")
+	fs.BoolVar(&cfg.ec.PeerAutoTLS, "peer-auto-tls", false, "节点之间使用生成的证书通信;默认false")
+	fs.UintVar(&cfg.ec.SelfSignedCertValidity, "self-signed-cert-validity", 1, "客户端证书和同级证书的有效期,单位为年")
+	fs.StringVar(&cfg.ec.PeerTLSInfo.CRLFile, "peer-crl-file", "", "服务端证书吊销列表文件的路径。")
+	fs.StringVar(&cfg.ec.PeerTLSInfo.AllowedCN, "peer-cert-allowed-cn", "", "允许的server客户端证书CommonName")
+	fs.StringVar(&cfg.ec.PeerTLSInfo.AllowedHostname, "peer-cert-allowed-hostname", "", "允许的server客户端证书hostname")
+	fs.Var(flags.NewStringsValue(""), "cipher-suites", "客户端/etcds之间支持的TLS加密套件的逗号分隔列表(空将由Go自动填充)。")
+	fs.BoolVar(&cfg.ec.PeerTLSInfo.SkipClientSANVerify, "experimental-peer-skip-client-san-verification", false, "跳过server 客户端证书中SAN字段的验证。默认false")
+
+	fs.Var(flags.NewUniqueURLsWithExceptions("*", "*"), "cors", "逗号分隔的CORS白名单，或跨来源资源共享，(空或*表示允许所有)")
+	fs.Var(flags.NewUniqueStringsValue("*"), "host-whitelist", "如果etcd是不安全的(空意味着允许所有)，用逗号分隔HTTP客户端请求中的可接受主机名。")
+
+	// 日志
+	fs.StringVar(&cfg.ec.Logger, "logger", "zap", "当前只支持zap,结构化数据")
+	fs.Var(flags.NewUniqueStringsValue(embed.DefaultLogOutput), "log-outputs", "指定'stdout'或'stderr'以跳过日志记录,即使在systemd或逗号分隔的输出目标列表下运行也是如此。")
+	fs.StringVar(&cfg.ec.LogLevel, "log-level", logutil.DefaultLogLevel, "日志等级,只支持 debug, info, warn, error, panic, or fatal. Default 'info'.")
 	fs.BoolVar(&cfg.ec.EnableLogRotation, "enable-log-rotation", false, "Enable log rotation of a single log-outputs file target.")
 	fs.StringVar(&cfg.ec.LogRotationConfigJSON, "log-rotation-config-json", embed.DefaultLogRotationConfig, "Configures log rotation if enabled with a JSON logger config. Default: MaxSize=100(MB), MaxAge=0(days,no limit), MaxBackups=0(no limit), LocalTime=false(UTC), Compress=false(gzip)")
 
-	// version
-	fs.BoolVar(&cfg.printVersion, "version", false, "Print the version and exit.")
+	// 版本
+	fs.BoolVar(&cfg.printVersion, "version", false, "打印版本并退出。")
 
 	fs.StringVar(&cfg.ec.AutoCompactionRetention, "auto-compaction-retention", "0", "Auto compaction retention for mvcc key value store. 0 means disable auto compaction.")
 	fs.StringVar(&cfg.ec.AutoCompactionMode, "auto-compaction-mode", "periodic", "interpret 'auto-compaction-retention' one of: periodic|revision. 'periodic' for duration based retention, defaulting to hours if no time unit is provided (e.g. '5m'). 'revision' for revision number based retention.")
 
-	// pprof profiler via HTTP
-	fs.BoolVar(&cfg.ec.EnablePprof, "enable-pprof", false, "Enable runtime profiling data via HTTP etcd. Address is at client URL + \"/debug/pprof/\"")
+	// 性能分析器 通过 HTTP
+	fs.BoolVar(&cfg.ec.EnablePprof, "enable-pprof", false, "通过HTTP服务器启用运行时分析数据。地址位于客户端URL +“/ debug / pprof /”")
 
 	// additional metrics
-	fs.StringVar(&cfg.ec.Metrics, "metrics", cfg.ec.Metrics, "Set level of detail for exported metrics, specify 'extensive' to include etcd side grpc histogram metrics")
+	fs.StringVar(&cfg.ec.Metrics, "metrics", cfg.ec.Metrics, "设置导出的指标的详细程度,指定“扩展”以包括直方图指标")
 
 	// experimental distributed tracing
 	fs.BoolVar(&cfg.ec.ExperimentalEnableDistributedTracing, "experimental-enable-distributed-tracing", false, "Enable experimental distributed  tracing using OpenTelemetry Tracing.")
@@ -291,9 +287,9 @@ func newConfig() *config {
 	fs.BoolVar(&cfg.ec.ExperimentalTxnModeWriteWithSharedBuffer, "experimental-txn-mode-write-with-shared-buffer", true, "Enable the write transaction to use a shared buffer in its readonly check operations.")
 	fs.UintVar(&cfg.ec.ExperimentalBootstrapDefragThresholdMegabytes, "experimental-bootstrap-defrag-threshold-megabytes", 0, "Enable the defrag during etcd etcd bootstrap on condition that it will free at least the provided threshold of disk space. Needs to be set to non-zero value to take effect.")
 
-	// unsafe
+	// 非安全
 	fs.BoolVar(&cfg.ec.UnsafeNoFsync, "unsafe-no-fsync", false, "Disables fsync, unsafe, will cause data loss.")
-	fs.BoolVar(&cfg.ec.ForceNewCluster, "force-new-cluster", false, "Force to create a new one member cluster.")
+	fs.BoolVar(&cfg.ec.ForceNewCluster, "force-new-cluster", false, "强制创建新的单成员群集。它提交配置更改,强制删除集群中的所有现有成员并添加自身。需要将其设置为还原备份。")
 
 	// ignored
 	for _, f := range cfg.ignored {

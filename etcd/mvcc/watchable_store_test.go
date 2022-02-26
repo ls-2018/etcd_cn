@@ -23,9 +23,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ls-2018/pkg/traceutil"
 	"github.com/ls-2018/etcd/lease"
 	betesting "github.com/ls-2018/etcd/mvcc/backend/testing"
+	"github.com/ls-2018/pkg/traceutil"
 	"go.etcd.io/etcd/api/v3/mvccpb"
 	"go.uber.org/zap"
 )

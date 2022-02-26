@@ -15,8 +15,8 @@
 package tester
 
 import (
-	clientv3 "github.com/ls-2018/client/v3"
 	"fmt"
+	clientv3 "github.com/ls-2018/client/v3"
 	"time"
 
 	"github.com/ls-2018/tests/functional/rpcpb"

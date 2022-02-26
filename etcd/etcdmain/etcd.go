@@ -29,13 +29,13 @@ import (
 	"github.com/ls-2018/client/pkg/fileutil"
 	"github.com/ls-2018/client/pkg/transport"
 	"github.com/ls-2018/client/pkg/types"
-	pkgioutil "github.com/ls-2018/pkg/ioutil"
-	"github.com/ls-2018/pkg/osutil"
 	"github.com/ls-2018/etcd/embed"
 	"github.com/ls-2018/etcd/etcdserver"
 	"github.com/ls-2018/etcd/etcdserver/api/etcdhttp"
 	"github.com/ls-2018/etcd/etcdserver/api/v2discovery"
 	"github.com/ls-2018/etcd/proxy/httpproxy"
+	pkgioutil "github.com/ls-2018/pkg/ioutil"
+	"github.com/ls-2018/pkg/osutil"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -463,21 +463,19 @@ func identifyDataDirOrDie(lg *zap.Logger, dir string) dirType {
 }
 
 func checkSupportArch() {
-	// to add a new platform, check https://github.com/etcd-io/website/blob/main/content/en/docs/next/op-guide/supported-platform.md
 	if runtime.GOARCH == "amd64" ||
 		runtime.GOARCH == "arm64" ||
 		runtime.GOARCH == "ppc64le" ||
 		runtime.GOARCH == "s390x" {
 		return
 	}
-	// unsupported arch only configured via environment variable
-	// so unset here to not parse through flag
+	//不支持的架构 仅通过环境变量配置,因此在这里取消设置不通过解析标志
 	defer os.Unsetenv("ETCD_UNSUPPORTED_ARCH")
 	if env, ok := os.LookupEnv("ETCD_UNSUPPORTED_ARCH"); ok && env == runtime.GOARCH {
-		fmt.Printf("running etcd on unsupported architecture %q since ETCD_UNSUPPORTED_ARCH is set\n", env)
+		fmt.Printf("在不支持的体系结构上运行etcd%q 当 ETCD_UNSUPPORTED_ARCH 设置了\n", env)
 		return
 	}
 
-	fmt.Printf("etcd on unsupported platform without ETCD_UNSUPPORTED_ARCH=%s set\n", runtime.GOARCH)
+	fmt.Printf("etcd在不支持ETCD_UNSUPPORTED_ARCH的平台上=%s set\n", runtime.GOARCH)
 	os.Exit(1)
 }

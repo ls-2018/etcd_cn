@@ -15,10 +15,10 @@
 package integration
 
 import (
-	clientv3 "github.com/ls-2018/client/v3"
 	"bytes"
 	"context"
 	"fmt"
+	clientv3 "github.com/ls-2018/client/v3"
 	"io/ioutil"
 	"math/rand"
 	"os"

@@ -24,6 +24,8 @@ import (
 // StringsValue wraps "sort.StringSlice".
 type StringsValue sort.StringSlice
 
+var _ flag.Value = &StringsValue{}
+
 // Set parses a command line set of strings, separated by comma.
 // Implements "flag.Value" interface.
 func (ss *StringsValue) Set(s string) error {
@@ -34,15 +36,14 @@ func (ss *StringsValue) Set(s string) error {
 // String implements "flag.Value" interface.
 func (ss *StringsValue) String() string { return strings.Join(*ss, ",") }
 
-// NewStringsValue implements string slice as "flag.Value" interface.
-// Given value is to be separated by comma.
+// NewStringsValue  实现字符串切片转为"flag.Value"接口。给定的值用逗号分隔。
 func NewStringsValue(s string) (ss *StringsValue) {
 	if s == "" {
 		return &StringsValue{}
 	}
 	ss = new(StringsValue)
 	if err := ss.Set(s); err != nil {
-		panic(fmt.Sprintf("new StringsValue should never fail: %v", err))
+		panic(fmt.Sprintf("new StringsValue应该永远不会失败: %v", err))
 	}
 	return ss
 }

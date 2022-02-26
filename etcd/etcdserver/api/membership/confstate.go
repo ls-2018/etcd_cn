@@ -18,9 +18,9 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/ls-2018/raft/raftpb"
 	"github.com/ls-2018/etcd/mvcc/backend"
 	"github.com/ls-2018/etcd/mvcc/buckets"
+	"github.com/ls-2018/raft/raftpb"
 	"go.uber.org/zap"
 )
 

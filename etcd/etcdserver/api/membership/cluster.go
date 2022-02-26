@@ -30,12 +30,12 @@ import (
 	"time"
 
 	"github.com/ls-2018/client/pkg/types"
-	"github.com/ls-2018/pkg/netutil"
-	"github.com/ls-2018/raft/raftpb"
 	"github.com/ls-2018/etcd/etcdserver/api/v2error"
 	"github.com/ls-2018/etcd/etcdserver/api/v2store"
 	"github.com/ls-2018/etcd/mvcc/backend"
 	"github.com/ls-2018/etcd/mvcc/buckets"
+	"github.com/ls-2018/pkg/netutil"
+	"github.com/ls-2018/raft/raftpb"
 	"go.etcd.io/etcd/api/v3/version"
 
 	"github.com/coreos/go-semver/semver"

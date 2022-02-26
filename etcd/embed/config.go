@@ -31,11 +31,11 @@ import (
 	"github.com/ls-2018/client/pkg/tlsutil"
 	"github.com/ls-2018/client/pkg/transport"
 	"github.com/ls-2018/client/pkg/types"
-	"github.com/ls-2018/pkg/flags"
-	"github.com/ls-2018/pkg/netutil"
 	"github.com/ls-2018/etcd/config"
 	"github.com/ls-2018/etcd/etcdserver"
 	"github.com/ls-2018/etcd/etcdserver/api/v3compactor"
+	"github.com/ls-2018/pkg/flags"
+	"github.com/ls-2018/pkg/netutil"
 
 	bolt "go.etcd.io/bbolt"
 	"go.uber.org/multierr"
@@ -133,25 +133,20 @@ func init() {
 	defaultHostname, defaultHostStatus = netutil.GetDefaultHost()
 }
 
-// Config holds the arguments for configuring an etcd etcd.
+// Config 保存配置etcd的参数etcd。
 type Config struct {
-	Name   string `json:"name"`
+	Name   string `json:"name"` // 节点的名字
 	Dir    string `json:"data-dir"`
 	WalDir string `json:"wal-dir"`
 
 	SnapshotCount uint64 `json:"snapshot-count"`
 
-	// SnapshotCatchUpEntries is the number of entries for a slow follower
-	// to catch-up after compacting the raft storage entries.
-	// We expect the follower has a millisecond level latency with the leader.
-	// The max throughput is around 10K. Keep a 5K entries is enough for helping
-	// follower to catch up.
-	// WARNING: only change this for tests.
-	// Always use "DefaultSnapshotCatchUpEntries"
+	// SnapshotCatchUpEntries 是在压缩raft存储条目后,慢的follower要追赶的条目数。我们预计follower与leader之间有毫秒级的延迟。
+	//最大吞吐量大约为10K。保持一个5K的条目就足够帮助follower赶上了。
 	SnapshotCatchUpEntries uint64
 
-	MaxSnapFiles uint `json:"max-snapshots"`
-	MaxWalFiles  uint `json:"max-wals"`
+	MaxSnapFiles uint `json:"max-snapshots"` // 最大快照数
+	MaxWalFiles  uint `json:"max-wals"`      // wal文件的最大保留数量(0不受限制)。
 
 	// TickMs is the number of milliseconds between heartbeat ticks.
 	// TODO: decouple tickMs and heartbeat tick (current heartbeat tick = 1).
@@ -302,8 +297,8 @@ type Config struct {
 	//	embed.StartEtcd(cfg)
 	ServiceRegister func(*grpc.Server) `json:"-"`
 
-	AuthToken  string `json:"auth-token"`
-	BcryptCost uint   `json:"bcrypt-cost"`
+	AuthToken  string `json:"auth-token"`  // 认证相关标识
+	BcryptCost uint   `json:"bcrypt-cost"` // 为散列身份验证密码指定bcrypt算法的成本/强度。有效值介于4和31之间。默认值：10
 
 	//The AuthTokenTTL in seconds of the simple token
 	AuthTokenTTL uint `json:"auth-token-ttl"`
@@ -431,20 +426,20 @@ type securityConfig struct {
 	AutoTLS        bool   `json:"auto-tls"`
 }
 
-// NewConfig creates a new Config populated with default values.
+// NewConfig 创建一个用默认值填充的新配置。
 func NewConfig() *Config {
-	lpurl, _ := url.Parse(DefaultListenPeerURLs)
-	apurl, _ := url.Parse(DefaultInitialAdvertisePeerURLs)
-	lcurl, _ := url.Parse(DefaultListenClientURLs)
-	acurl, _ := url.Parse(DefaultAdvertiseClientURLs)
+	lpurl, _ := url.Parse(DefaultListenPeerURLs)           // "http://localhost:2380"
+	apurl, _ := url.Parse(DefaultInitialAdvertisePeerURLs) // "http://localhost:2380"
+	lcurl, _ := url.Parse(DefaultListenClientURLs)         // "http://localhost:2379"
+	acurl, _ := url.Parse(DefaultAdvertiseClientURLs)      // "http://localhost:2379"
 	cfg := &Config{
-		MaxSnapFiles: DefaultMaxSnapshots,
-		MaxWalFiles:  DefaultMaxWALs,
+		MaxSnapFiles: DefaultMaxSnapshots, // 最大快照数
+		MaxWalFiles:  DefaultMaxWALs,      // wal文件的最大保留数量(0不受限制)。
 
-		Name: DefaultName,
+		Name: DefaultName, // 节点的名字
 
-		SnapshotCount:          etcdserver.DefaultSnapshotCount,
-		SnapshotCatchUpEntries: etcdserver.DefaultSnapshotCatchUpEntries,
+		SnapshotCount:          etcdserver.DefaultSnapshotCount,          // 快照数量
+		SnapshotCatchUpEntries: etcdserver.DefaultSnapshotCatchUpEntries, // 快照日志追赶的条数
 
 		MaxTxnOps:                        DefaultMaxTxnOps,
 		MaxRequestBytes:                  DefaultMaxRequestBytes,
@@ -845,7 +840,7 @@ func (cfg *Config) PeerSelfCert() (err error) {
 		return nil
 	}
 	if !cfg.PeerTLSInfo.Empty() {
-		cfg.logger.Warn("ignoring peer auto TLS since certs given")
+		cfg.logger.Warn("如果证书给出  则忽略peer自动TLS")
 		return nil
 	}
 	phosts := make([]string, len(cfg.LPUrls))

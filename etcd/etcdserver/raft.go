@@ -26,14 +26,14 @@ import (
 
 	"github.com/ls-2018/client/pkg/logutil"
 	"github.com/ls-2018/client/pkg/types"
-	"github.com/ls-2018/pkg/contention"
-	"github.com/ls-2018/pkg/pbutil"
-	"github.com/ls-2018/raft/raftpb"
 	"github.com/ls-2018/etcd/config"
 	"github.com/ls-2018/etcd/etcdserver/api/membership"
 	"github.com/ls-2018/etcd/etcdserver/api/rafthttp"
 	"github.com/ls-2018/etcd/wal"
 	"github.com/ls-2018/etcd/wal/walpb"
+	"github.com/ls-2018/pkg/contention"
+	"github.com/ls-2018/pkg/pbutil"
+	"github.com/ls-2018/raft/raftpb"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 	"go.uber.org/zap"
 )

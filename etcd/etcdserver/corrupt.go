@@ -25,8 +25,8 @@ import (
 	"time"
 
 	"github.com/ls-2018/client/pkg/types"
-	"github.com/ls-2018/pkg/traceutil"
 	"github.com/ls-2018/etcd/mvcc"
+	"github.com/ls-2018/pkg/traceutil"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
 

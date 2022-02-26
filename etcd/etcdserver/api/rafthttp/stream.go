@@ -27,9 +27,9 @@ import (
 
 	"github.com/ls-2018/client/pkg/transport"
 	"github.com/ls-2018/client/pkg/types"
+	stats "github.com/ls-2018/etcd/etcdserver/api/v2stats"
 	"github.com/ls-2018/pkg/httputil"
 	"github.com/ls-2018/raft/raftpb"
-	stats "github.com/ls-2018/etcd/etcdserver/api/v2stats"
 	"go.etcd.io/etcd/api/v3/version"
 
 	"github.com/coreos/go-semver/semver"

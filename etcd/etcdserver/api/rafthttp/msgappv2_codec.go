@@ -21,9 +21,9 @@ import (
 	"time"
 
 	"github.com/ls-2018/client/pkg/types"
+	stats "github.com/ls-2018/etcd/etcdserver/api/v2stats"
 	"github.com/ls-2018/pkg/pbutil"
 	"github.com/ls-2018/raft/raftpb"
-	stats "github.com/ls-2018/etcd/etcdserver/api/v2stats"
 )
 
 const (

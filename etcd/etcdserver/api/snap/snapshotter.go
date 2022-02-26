@@ -27,11 +27,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ls-2018/etcd/etcdserver/api/snap/snappb"
+	"github.com/ls-2018/etcd/wal/walpb"
 	pioutil "github.com/ls-2018/pkg/ioutil"
 	"github.com/ls-2018/pkg/pbutil"
 	"github.com/ls-2018/raft/raftpb"
-	"github.com/ls-2018/etcd/etcdserver/api/snap/snappb"
-	"github.com/ls-2018/etcd/wal/walpb"
 
 	"go.uber.org/zap"
 )

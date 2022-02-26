@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// etcdctl is a command line application that controls etcd.
+// Etcdctl是一个控制etcd的命令行应用程序。
 package main
 
 import (
@@ -25,15 +25,9 @@ const (
 	apiEnv = "ETCDCTL_API"
 )
 
-/**
-mainWithError is fully analogous to main, but instead of signaling errors
-by os.Exit, it exposes the error explicitly, such that test-logic can intercept
-control to e.g. dump coverage data (even for test-for-failure scenarios).
-*/
-func mainWithError() error {
+func MainWithError() error {
 	apiv := os.Getenv(apiEnv)
 
-	// unset apiEnv to avoid side-effect for future env and flag parsing.
 	os.Unsetenv(apiEnv)
 
 	if len(apiv) == 0 || apiv == "3" {
@@ -47,7 +41,6 @@ func mainWithError() error {
 func main() {
 	apiv := os.Getenv(apiEnv)
 
-	// unset apiEnv to avoid side-effect for future env and flag parsing.
 	os.Unsetenv(apiEnv)
 	if len(apiv) == 0 || apiv == "3" {
 		ctlv3.MustStart()

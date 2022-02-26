@@ -26,8 +26,6 @@ import (
 
 	"github.com/ls-2018/client/pkg/transport"
 	"github.com/ls-2018/client/v3/credentials"
-	"github.com/ls-2018/pkg/debugutil"
-	"github.com/ls-2018/pkg/httputil"
 	"github.com/ls-2018/etcd/etcdserver"
 	"github.com/ls-2018/etcd/etcdserver/api/v3client"
 	"github.com/ls-2018/etcd/etcdserver/api/v3election"
@@ -37,6 +35,8 @@ import (
 	"github.com/ls-2018/etcd/etcdserver/api/v3lock/v3lockpb"
 	v3lockgw "github.com/ls-2018/etcd/etcdserver/api/v3lock/v3lockpb/gw"
 	"github.com/ls-2018/etcd/etcdserver/api/v3rpc"
+	"github.com/ls-2018/pkg/debugutil"
+	"github.com/ls-2018/pkg/httputil"
 	etcdservergw "go.etcd.io/etcd/api/v3/etcdserverpb/gw"
 
 	gw "github.com/grpc-ecosystem/grpc-gateway/runtime"

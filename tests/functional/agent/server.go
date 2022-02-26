@@ -21,8 +21,8 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/ls-2018/pkg/proxy"
 	"github.com/ls-2018/etcd/embed"
+	"github.com/ls-2018/pkg/proxy"
 	"github.com/ls-2018/tests/functional/rpcpb"
 
 	"go.uber.org/zap"

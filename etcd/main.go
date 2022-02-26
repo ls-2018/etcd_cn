@@ -23,9 +23,8 @@
 package main
 
 import (
-	"os"
-
 	"github.com/ls-2018/etcd/etcdmain"
+	"os"
 )
 
 func main() {

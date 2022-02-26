@@ -28,9 +28,9 @@ import (
 	"testing"
 
 	"github.com/ls-2018/client/pkg/fileutil"
+	"github.com/ls-2018/etcd/wal/walpb"
 	"github.com/ls-2018/pkg/pbutil"
 	"github.com/ls-2018/raft/raftpb"
-	"github.com/ls-2018/etcd/wal/walpb"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap/zaptest"
 

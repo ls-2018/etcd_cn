@@ -31,12 +31,12 @@ import (
 	"time"
 
 	"github.com/ls-2018/client/pkg/testutil"
-	"github.com/ls-2018/pkg/schedule"
-	"github.com/ls-2018/pkg/traceutil"
 	"github.com/ls-2018/etcd/lease"
 	"github.com/ls-2018/etcd/mvcc/backend"
 	betesting "github.com/ls-2018/etcd/mvcc/backend/testing"
 	"github.com/ls-2018/etcd/mvcc/buckets"
+	"github.com/ls-2018/pkg/schedule"
+	"github.com/ls-2018/pkg/traceutil"
 	"go.etcd.io/etcd/api/v3/mvccpb"
 
 	"go.uber.org/zap"

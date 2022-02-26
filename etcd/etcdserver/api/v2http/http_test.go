@@ -23,10 +23,10 @@ import (
 	"testing"
 
 	"github.com/ls-2018/client/pkg/types"
-	"github.com/ls-2018/raft/raftpb"
 	"github.com/ls-2018/etcd/etcdserver"
 	"github.com/ls-2018/etcd/etcdserver/api/membership"
 	"github.com/ls-2018/etcd/etcdserver/api/v2error"
+	"github.com/ls-2018/raft/raftpb"
 	"go.etcd.io/etcd/api/v3/etcdserverpb"
 
 	"github.com/coreos/go-semver/semver"

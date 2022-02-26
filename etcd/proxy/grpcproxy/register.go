@@ -15,8 +15,8 @@
 package grpcproxy
 
 import (
-	clientv3 "github.com/ls-2018/client/v3"
 	"encoding/json"
+	clientv3 "github.com/ls-2018/client/v3"
 	"os"
 
 	"github.com/ls-2018/client/v3/concurrency"

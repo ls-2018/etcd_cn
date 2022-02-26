@@ -158,7 +158,7 @@ type TLSInfo struct {
 	// should be left nil. In that case, tls.X509KeyPair will be used.
 	parseFunc func([]byte, []byte) (tls.Certificate, error)
 
-	// AllowedCN is a CN which must be provided by a client.
+	// AllowedCN  客户端必须提供的common Name;在证书里
 	AllowedCN string
 
 	// AllowedHostname is an IP address or hostname that must match the TLS
@@ -374,12 +374,11 @@ func (info TLSInfo) baseConfig() (*tls.Config, error) {
 		cfg.CipherSuites = info.CipherSuites
 	}
 
-	// Client certificates may be verified by either an exact match on the CN,
-	// or a more general check of the CN and SANs.
+	// 客户端证书可以通过CN上的精确匹配来验证,也可以通过对CN和san进行更一般的检查来验证。
 	var verifyCertificate func(*x509.Certificate) bool
 	if info.AllowedCN != "" {
 		if info.AllowedHostname != "" {
-			return nil, fmt.Errorf("AllowedCN and AllowedHostname are mutually exclusive (cn=%q, hostname=%q)", info.AllowedCN, info.AllowedHostname)
+			return nil, fmt.Errorf("AllowedCN and AllowedHostname 只能指定一个 (cn=%q, hostname=%q)", info.AllowedCN, info.AllowedHostname)
 		}
 		verifyCertificate = func(cert *x509.Certificate) bool {
 			return info.AllowedCN == cert.Subject.CommonName

@@ -21,9 +21,9 @@ import (
 	"os"
 	"sync"
 
+	"github.com/ls-2018/etcd/wal/walpb"
 	"github.com/ls-2018/pkg/crc"
 	"github.com/ls-2018/pkg/ioutil"
-	"github.com/ls-2018/etcd/wal/walpb"
 )
 
 // walPageBytes is the alignment for flushing records to the backing Writer.

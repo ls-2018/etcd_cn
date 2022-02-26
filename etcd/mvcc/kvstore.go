@@ -23,11 +23,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ls-2018/pkg/schedule"
-	"github.com/ls-2018/pkg/traceutil"
 	"github.com/ls-2018/etcd/lease"
 	"github.com/ls-2018/etcd/mvcc/backend"
 	"github.com/ls-2018/etcd/mvcc/buckets"
+	"github.com/ls-2018/pkg/schedule"
+	"github.com/ls-2018/pkg/traceutil"
 	"go.etcd.io/etcd/api/v3/mvccpb"
 
 	"go.uber.org/zap"

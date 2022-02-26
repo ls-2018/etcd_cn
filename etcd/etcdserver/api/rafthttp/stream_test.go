@@ -28,8 +28,8 @@ import (
 
 	"github.com/ls-2018/client/pkg/testutil"
 	"github.com/ls-2018/client/pkg/types"
-	"github.com/ls-2018/raft/raftpb"
 	stats "github.com/ls-2018/etcd/etcdserver/api/v2stats"
+	"github.com/ls-2018/raft/raftpb"
 	"go.etcd.io/etcd/api/v3/version"
 
 	"github.com/coreos/go-semver/semver"

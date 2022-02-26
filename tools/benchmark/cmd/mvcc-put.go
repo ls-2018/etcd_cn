@@ -21,9 +21,9 @@ import (
 	"runtime/pprof"
 	"time"
 
+	"github.com/ls-2018/etcd/lease"
 	"github.com/ls-2018/pkg/report"
 	"github.com/ls-2018/pkg/traceutil"
-	"github.com/ls-2018/etcd/lease"
 
 	"github.com/spf13/cobra"
 )

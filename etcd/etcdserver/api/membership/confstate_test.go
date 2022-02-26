@@ -17,10 +17,10 @@ package membership_test
 import (
 	"testing"
 
-	"github.com/ls-2018/raft/raftpb"
 	"github.com/ls-2018/etcd/etcdserver/api/membership"
 	"github.com/ls-2018/etcd/etcdserver/cindex"
 	betesting "github.com/ls-2018/etcd/mvcc/backend/testing"
+	"github.com/ls-2018/raft/raftpb"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap/zaptest"
 )

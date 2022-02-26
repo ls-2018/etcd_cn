@@ -22,10 +22,10 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/ls-2018/client/pkg/types"
-	"github.com/ls-2018/raft/raftpb"
 	"github.com/ls-2018/etcd/etcdserver/api/membership"
 	"github.com/ls-2018/etcd/etcdserver/api/rafthttp"
 	"github.com/ls-2018/etcd/etcdserver/api/snap"
+	"github.com/ls-2018/raft/raftpb"
 )
 
 func TestLongestConnected(t *testing.T) {

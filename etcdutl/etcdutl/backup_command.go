@@ -22,9 +22,6 @@ import (
 
 	"github.com/ls-2018/client/pkg/fileutil"
 	"github.com/ls-2018/client/pkg/types"
-	"github.com/ls-2018/pkg/idutil"
-	"github.com/ls-2018/pkg/pbutil"
-	"github.com/ls-2018/raft/raftpb"
 	"github.com/ls-2018/etcd/datadir"
 	"github.com/ls-2018/etcd/etcdserver/api/membership"
 	"github.com/ls-2018/etcd/etcdserver/api/snap"
@@ -34,6 +31,9 @@ import (
 	"github.com/ls-2018/etcd/verify"
 	"github.com/ls-2018/etcd/wal"
 	"github.com/ls-2018/etcd/wal/walpb"
+	"github.com/ls-2018/pkg/idutil"
+	"github.com/ls-2018/pkg/pbutil"
+	"github.com/ls-2018/raft/raftpb"
 	"github.com/spf13/cobra"
 	"go.etcd.io/etcd/api/v3/etcdserverpb"
 

@@ -23,10 +23,10 @@ import (
 	"time"
 
 	"github.com/ls-2018/client/pkg/types"
-	"github.com/ls-2018/pkg/pbutil"
-	"github.com/ls-2018/raft/raftpb"
 	"github.com/ls-2018/etcd/etcdserver/api/membership"
 	"github.com/ls-2018/etcd/mock/mockstorage"
+	"github.com/ls-2018/pkg/pbutil"
+	"github.com/ls-2018/raft/raftpb"
 	"go.uber.org/zap"
 )
 

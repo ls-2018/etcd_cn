@@ -27,12 +27,12 @@ import (
 
 	"github.com/ls-2018/client/pkg/fileutil"
 	"github.com/ls-2018/client/pkg/types"
-	"github.com/ls-2018/raft/raftpb"
 	"github.com/ls-2018/etcd/etcdserver/api/rafthttp"
 	"github.com/ls-2018/etcd/etcdserver/api/snap"
 	stats "github.com/ls-2018/etcd/etcdserver/api/v2stats"
 	"github.com/ls-2018/etcd/wal"
 	"github.com/ls-2018/etcd/wal/walpb"
+	"github.com/ls-2018/raft/raftpb"
 
 	"go.uber.org/zap"
 )

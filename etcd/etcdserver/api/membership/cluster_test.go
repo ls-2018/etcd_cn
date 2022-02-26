@@ -30,9 +30,9 @@ import (
 
 	"github.com/ls-2018/client/pkg/testutil"
 	"github.com/ls-2018/client/pkg/types"
-	"github.com/ls-2018/raft/raftpb"
 	"github.com/ls-2018/etcd/etcdserver/api/v2store"
 	"github.com/ls-2018/etcd/mock/mockstore"
+	"github.com/ls-2018/raft/raftpb"
 )
 
 func TestClusterMember(t *testing.T) {

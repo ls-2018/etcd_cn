@@ -15,10 +15,10 @@
 package integration
 
 import (
-	clientv3 "github.com/ls-2018/client/v3"
 	"context"
 	"crypto/tls"
 	"fmt"
+	clientv3 "github.com/ls-2018/client/v3"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -37,7 +37,6 @@ import (
 	"github.com/ls-2018/client/pkg/tlsutil"
 	"github.com/ls-2018/client/pkg/transport"
 	"github.com/ls-2018/client/pkg/types"
-	"github.com/ls-2018/pkg/grpc_testing"
 	"github.com/ls-2018/etcd/config"
 	"github.com/ls-2018/etcd/embed"
 	"github.com/ls-2018/etcd/etcdserver"
@@ -51,6 +50,7 @@ import (
 	lockpb "github.com/ls-2018/etcd/etcdserver/api/v3lock/v3lockpb"
 	"github.com/ls-2018/etcd/etcdserver/api/v3rpc"
 	"github.com/ls-2018/etcd/verify"
+	"github.com/ls-2018/pkg/grpc_testing"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 	"go.uber.org/zap/zapcore"
 	"go.uber.org/zap/zaptest"

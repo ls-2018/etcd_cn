@@ -15,7 +15,6 @@
 package integration
 
 import (
-	clientv3 "github.com/ls-2018/client/v3"
 	"log"
 	"net/http"
 	"sync"

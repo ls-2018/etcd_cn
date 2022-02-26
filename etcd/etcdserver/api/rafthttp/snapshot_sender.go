@@ -25,9 +25,9 @@ import (
 	"time"
 
 	"github.com/ls-2018/client/pkg/types"
+	"github.com/ls-2018/etcd/etcdserver/api/snap"
 	"github.com/ls-2018/pkg/httputil"
 	pioutil "github.com/ls-2018/pkg/ioutil"
-	"github.com/ls-2018/etcd/etcdserver/api/snap"
 
 	"go.uber.org/zap"
 )

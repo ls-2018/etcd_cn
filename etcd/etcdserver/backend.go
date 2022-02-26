@@ -19,11 +19,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/ls-2018/raft/raftpb"
 	"github.com/ls-2018/etcd/config"
 	"github.com/ls-2018/etcd/etcdserver/api/snap"
 	"github.com/ls-2018/etcd/etcdserver/cindex"
 	"github.com/ls-2018/etcd/mvcc/backend"
+	"github.com/ls-2018/raft/raftpb"
 
 	"go.uber.org/zap"
 )

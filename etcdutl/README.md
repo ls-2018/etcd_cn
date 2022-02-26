@@ -1,14 +1,14 @@
 etcdutl
 ========
 
-`etcdutl` 是一个命令行管理工具，用于 [etcd][etcd].
+`etcdutl` 是一个命令行管理工具,用于 [etcd][etcd].
 
-它被设计为直接对etcd数据文件进行操作。对于网络上的操作，请使用`etcdctl`。
+它被设计为直接对etcd数据文件进行操作。对于网络上的操作,请使用`etcdctl`。
 
 ### DEFRAG [options]
 
-defrag 在etcd不运行时直接对etcd数据目录进行碎片整理。当一个etcd成员从被删除和压缩的键中回收存储空间时 ，该空间被保留在空闲列表中，数据库文件的大小保持不变。 通过
-碎片整理数据库，etcd成员将这些空闲空间释放到文件系统中。
+defrag 在etcd不运行时直接对etcd数据目录进行碎片整理。当一个etcd成员从被删除和压缩的键中回收存储空间时 ,该空间被保留在空闲列表中,数据库文件的大小保持不变。 通过
+碎片整理数据库,etcd成员将这些空闲空间释放到文件系统中。
 
 In order to defrag a live etcd instances over the network, please use `etcdctl defrag` instead.
 

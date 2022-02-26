@@ -25,9 +25,9 @@ import (
 	"time"
 
 	"github.com/ls-2018/client/pkg/types"
+	"github.com/ls-2018/etcd/etcdserver/api/snap"
 	pioutil "github.com/ls-2018/pkg/ioutil"
 	"github.com/ls-2018/raft/raftpb"
-	"github.com/ls-2018/etcd/etcdserver/api/snap"
 	"go.etcd.io/etcd/api/v3/version"
 
 	humanize "github.com/dustin/go-humanize"

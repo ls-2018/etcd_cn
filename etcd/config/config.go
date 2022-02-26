@@ -24,8 +24,8 @@ import (
 
 	"github.com/ls-2018/client/pkg/transport"
 	"github.com/ls-2018/client/pkg/types"
-	"github.com/ls-2018/pkg/netutil"
 	"github.com/ls-2018/etcd/datadir"
+	"github.com/ls-2018/pkg/netutil"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 
 	bolt "go.etcd.io/bbolt"

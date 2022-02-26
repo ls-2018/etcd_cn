@@ -15,7 +15,6 @@
 package concurrency_test
 
 import (
-	clientv3 "github.com/ls-2018/client/v3"
 	"testing"
 
 	"github.com/ls-2018/client/pkg/testutil"

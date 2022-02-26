@@ -26,8 +26,8 @@ import (
 	"time"
 
 	"github.com/ls-2018/client/pkg/types"
-	"github.com/ls-2018/raft/raftpb"
 	"github.com/ls-2018/etcd/etcdserver/api/snap"
+	"github.com/ls-2018/raft/raftpb"
 
 	"go.uber.org/zap"
 )

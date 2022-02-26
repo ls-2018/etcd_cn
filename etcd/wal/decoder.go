@@ -21,10 +21,10 @@ import (
 	"io"
 	"sync"
 
+	"github.com/ls-2018/etcd/wal/walpb"
 	"github.com/ls-2018/pkg/crc"
 	"github.com/ls-2018/pkg/pbutil"
 	"github.com/ls-2018/raft/raftpb"
-	"github.com/ls-2018/etcd/wal/walpb"
 )
 
 const minSectorSize = 512

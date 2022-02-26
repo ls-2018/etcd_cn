@@ -17,8 +17,8 @@ package mvcc
 import (
 	"context"
 
-	"github.com/ls-2018/pkg/traceutil"
 	"github.com/ls-2018/etcd/lease"
+	"github.com/ls-2018/pkg/traceutil"
 )
 
 type readView struct{ kv KV }

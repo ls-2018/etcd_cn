@@ -15,7 +15,6 @@
 package cmd
 
 import (
-
 	"context"
 	"crypto/rand"
 	"fmt"

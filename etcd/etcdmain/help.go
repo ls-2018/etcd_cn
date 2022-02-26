@@ -67,7 +67,7 @@ Member:
   --max-snapshots '` + strconv.Itoa(embed.DefaultMaxSnapshots) + `'
     Maximum number of snapshot files to retain (0 is unlimited).
   --max-wals '` + strconv.Itoa(embed.DefaultMaxWALs) + `'
-    Maximum number of wal files to retain (0 is unlimited).
+    wal文件的最大保留数量(0不受限制)。
   --quota-backend-bytes '0'
     Raise alarms when backend size exceeds the given quota (0 defaults to low space quota).
   --backend-bbolt-freelist-type 'map'
@@ -93,7 +93,7 @@ Member:
 
 Clustering:
   --initial-advertise-peer-urls 'http://localhost:2380'
-	本节点的通信地址，且会通告群集的其余成员节点。
+	本节点的通信地址,且会通告群集的其余成员节点。
   --initial-cluster 'default=http://localhost:2380'
     Initial cluster configuration for bootstrapping.
   --initial-cluster-state 'new'

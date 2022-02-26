@@ -23,9 +23,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ls-2018/pkg/httputil"
 	"github.com/ls-2018/etcd/lease"
 	"github.com/ls-2018/etcd/lease/leasepb"
+	"github.com/ls-2018/pkg/httputil"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 )
 

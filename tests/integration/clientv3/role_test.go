@@ -15,7 +15,6 @@
 package clientv3test
 
 import (
-
 	"context"
 	"testing"
 

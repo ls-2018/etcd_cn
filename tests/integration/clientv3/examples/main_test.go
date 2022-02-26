@@ -15,7 +15,6 @@
 package clientv3_test
 
 import (
-	clientv3 "github.com/ls-2018/client/v3"
 	"os"
 	"testing"
 	"time"

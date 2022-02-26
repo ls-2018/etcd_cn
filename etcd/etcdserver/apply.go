@@ -24,12 +24,12 @@ import (
 
 	"github.com/coreos/go-semver/semver"
 	"github.com/ls-2018/client/pkg/types"
-	"github.com/ls-2018/pkg/traceutil"
 	"github.com/ls-2018/etcd/auth"
 	"github.com/ls-2018/etcd/etcdserver/api"
 	"github.com/ls-2018/etcd/etcdserver/api/membership"
 	"github.com/ls-2018/etcd/lease"
 	"github.com/ls-2018/etcd/mvcc"
+	"github.com/ls-2018/pkg/traceutil"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 	"go.etcd.io/etcd/api/v3/membershippb"
 	"go.etcd.io/etcd/api/v3/mvccpb"

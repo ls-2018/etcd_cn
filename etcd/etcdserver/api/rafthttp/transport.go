@@ -23,9 +23,9 @@ import (
 
 	"github.com/ls-2018/client/pkg/transport"
 	"github.com/ls-2018/client/pkg/types"
-	"github.com/ls-2018/raft/raftpb"
 	"github.com/ls-2018/etcd/etcdserver/api/snap"
 	stats "github.com/ls-2018/etcd/etcdserver/api/v2stats"
+	"github.com/ls-2018/raft/raftpb"
 
 	"github.com/xiang90/probing"
 	"go.uber.org/zap"

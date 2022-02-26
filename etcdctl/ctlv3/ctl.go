@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package ctlv3 contains the main entry point for the etcdctl for v3 API.
+//  ctlv3 包含用于v3 API的etcdctl的主入口点。
 package ctlv3
 
 import (
@@ -27,7 +27,7 @@ import (
 
 const (
 	cliName        = "etcdctl"
-	cliDescription = "A simple command line client for etcd3."
+	cliDescription = "etcd3的一个简单的命令行客户机。"
 
 	defaultDialTimeout      = 2 * time.Second
 	defaultCommandTimeOut   = 5 * time.Second
@@ -48,11 +48,11 @@ var (
 )
 
 func init() {
-	rootCmd.PersistentFlags().StringSliceVar(&globalFlags.Endpoints, "endpoints", []string{"127.0.0.1:2379"}, "gRPC endpoints")
-	rootCmd.PersistentFlags().BoolVar(&globalFlags.Debug, "debug", false, "enable client-side debug logging")
+	rootCmd.PersistentFlags().StringSliceVar(&globalFlags.Endpoints, "endpoints", []string{"127.0.0.1:2379"}, "gRPC端点")
+	rootCmd.PersistentFlags().BoolVar(&globalFlags.Debug, "debug", false, "启用客户端调试日志记录")
 
-	rootCmd.PersistentFlags().StringVarP(&globalFlags.OutputFormat, "write-out", "w", "simple", "set the output format (fields, json, protobuf, simple, table)")
-	rootCmd.PersistentFlags().BoolVar(&globalFlags.IsHex, "hex", false, "print byte strings as hex encoded strings")
+	rootCmd.PersistentFlags().StringVarP(&globalFlags.OutputFormat, "write-out", "w", "simple", "设置输出格式 (fields, json, protobuf, simple, table)")
+	rootCmd.PersistentFlags().BoolVar(&globalFlags.IsHex, "hex", false, "以十六进制编码的字符串输出字节串")
 
 	rootCmd.PersistentFlags().DurationVar(&globalFlags.DialTimeout, "dial-timeout", defaultDialTimeout, "dial timeout for client connections")
 	rootCmd.PersistentFlags().DurationVar(&globalFlags.CommandTimeOut, "command-timeout", defaultCommandTimeOut, "timeout for short running command (excluding dial timeout)")
