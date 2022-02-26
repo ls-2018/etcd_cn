@@ -17,8 +17,8 @@ package raft
 import (
 	"fmt"
 
-	pb "github.com/ls-2018/raft/raftpb"
-	"github.com/ls-2018/raft/tracker"
+	pb "github.com/ls-2018/etcd_cn/raft/raftpb"
+	"github.com/ls-2018/etcd_cn/raft/tracker"
 )
 
 // Status contains information about this Raft peer and its view of the system.

@@ -19,8 +19,8 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/ls-2018/client/pkg/fileutil"
-	"github.com/ls-2018/pkg/expect"
+	"github.com/ls-2018/etcd_cn/client/pkg/fileutil"
+	"github.com/ls-2018/etcd_cn/pkg/expect"
 	"go.uber.org/zap"
 )
 

@@ -17,7 +17,7 @@ package recipe
 import (
 	"context"
 
-	clientv3 "github.com/ls-2018/client/v3"
+	clientv3 "github.com/ls-2018/etcd_cn/client/v3"
 	"go.etcd.io/etcd/api/v3/mvccpb"
 )
 

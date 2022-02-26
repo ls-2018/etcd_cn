@@ -20,9 +20,9 @@ package v2store_test
 import (
 	"testing"
 
-	"github.com/ls-2018/client/pkg/testutil"
-	"github.com/ls-2018/etcd/etcdserver/api/v2store"
-	"github.com/ls-2018/tests/integration"
+	"github.com/ls-2018/etcd_cn/client/pkg/testutil"
+	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v2store"
+	"github.com/ls-2018/etcd_cn/tests/integration"
 )
 
 type v2TestStore struct {

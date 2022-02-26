@@ -33,8 +33,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/ls-2018/client/v3"
-	"github.com/ls-2018/client/v3/concurrency"
+	"github.com/ls-2018/etcd_cn/client/v3"
+	"github.com/ls-2018/etcd_cn/client/v3/concurrency"
 )
 
 type node struct {

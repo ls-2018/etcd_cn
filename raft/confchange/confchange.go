@@ -19,9 +19,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ls-2018/raft/quorum"
-	pb "github.com/ls-2018/raft/raftpb"
-	"github.com/ls-2018/raft/tracker"
+	"github.com/ls-2018/etcd_cn/raft/quorum"
+	pb "github.com/ls-2018/etcd_cn/raft/raftpb"
+	"github.com/ls-2018/etcd_cn/raft/tracker"
 )
 
 // Changer facilitates configuration changes. It exposes methods to handle

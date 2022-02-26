@@ -18,12 +18,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	clientv3 "github.com/ls-2018/client/v3"
+	clientv3 "github.com/ls-2018/etcd_cn/client/v3"
 	"log"
 	"sync"
 	"time"
 
-	"github.com/ls-2018/pkg/stringutil"
+	"github.com/ls-2018/etcd_cn/pkg/stringutil"
 
 	"github.com/spf13/cobra"
 	"golang.org/x/time/rate"

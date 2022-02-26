@@ -17,11 +17,11 @@ package tester
 import (
 	"context"
 	"fmt"
-	clientv3 "github.com/ls-2018/client/v3"
+	clientv3 "github.com/ls-2018/etcd_cn/client/v3"
 	"strings"
 	"time"
 
-	"github.com/ls-2018/tests/functional/rpcpb"
+	"github.com/ls-2018/etcd_cn/tests/functional/rpcpb"
 
 	"go.uber.org/zap"
 )

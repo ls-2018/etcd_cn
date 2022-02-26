@@ -22,8 +22,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ls-2018/client/pkg/transport"
-	"github.com/ls-2018/etcd/etcdserver"
+	"github.com/ls-2018/etcd_cn/client/pkg/transport"
+	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 )
 

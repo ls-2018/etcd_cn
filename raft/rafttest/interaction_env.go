@@ -17,10 +17,11 @@ package rafttest
 import (
 	"bufio"
 	"fmt"
+	"github.com/ls-2018/etcd_cn/raft"
 	"math"
 	"strings"
 
-	pb "github.com/ls-2018/raft/raftpb"
+	pb "github.com/ls-2018/etcd_cn/raft/raftpb"
 )
 
 // InteractionOpts groups the options for an InteractionEnv.

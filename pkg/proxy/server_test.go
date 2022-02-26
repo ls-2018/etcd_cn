@@ -30,7 +30,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ls-2018/client/pkg/transport"
+	"github.com/ls-2018/etcd_cn/client/pkg/transport"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap/zaptest"
 

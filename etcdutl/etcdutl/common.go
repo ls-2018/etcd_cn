@@ -15,7 +15,7 @@
 package etcdutl
 
 import (
-	"github.com/ls-2018/pkg/cobrautl"
+	"github.com/ls-2018/etcd_cn/pkg/cobrautl"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )

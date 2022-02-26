@@ -18,8 +18,8 @@ package ctlv3
 import (
 	"time"
 
-	"github.com/ls-2018/etcdctl/ctlv3/command"
-	"github.com/ls-2018/pkg/cobrautl"
+	"github.com/ls-2018/etcd_cn/etcdctl/ctlv3/command"
+	"github.com/ls-2018/etcd_cn/pkg/cobrautl"
 	"go.etcd.io/etcd/api/v3/version"
 
 	"github.com/spf13/cobra"

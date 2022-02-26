@@ -20,7 +20,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ls-2018/client/pkg/testutil"
+	"github.com/ls-2018/etcd_cn/client/pkg/testutil"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 	"go.etcd.io/etcd/api/v3/mvccpb"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"

@@ -19,11 +19,11 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/ls-2018/etcd/mvcc/buckets"
+	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc/buckets"
 	"go.etcd.io/etcd/api/v3/authpb"
 
-	"github.com/ls-2018/etcd/lease/leasepb"
-	"github.com/ls-2018/etcd/mvcc/backend"
+	"github.com/ls-2018/etcd_cn/etcd_backend/lease/leasepb"
+	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc/backend"
 	"go.etcd.io/etcd/api/v3/mvccpb"
 
 	bolt "go.etcd.io/bbolt"

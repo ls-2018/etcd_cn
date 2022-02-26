@@ -14,7 +14,7 @@ For example,
 import (
 "fmt"
 
-"github.com/ls-2018/pkg/adt"
+"github.com/ls-2018/etcd_cn/pkg/adt"
 )
 
 func main() {

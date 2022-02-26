@@ -14,7 +14,7 @@
 
 package tester
 
-import "github.com/ls-2018/tests/functional/rpcpb"
+import "github.com/ls-2018/etcd_cn/tests/functional/rpcpb"
 
 func inject_BLACKHOLE_PEER_PORT_TX_RX(clus *Cluster, idx int) error {
 	return clus.sendOp(idx, rpcpb.Operation_BLACKHOLE_PEER_PORT_TX_RX)

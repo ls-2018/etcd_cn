@@ -17,15 +17,15 @@ package tester
 import (
 	"context"
 	"fmt"
-	clientv3 "github.com/ls-2018/client/v3"
+	clientv3 "github.com/ls-2018/etcd_cn/client/v3"
 	"math/rand"
 	"reflect"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	"github.com/ls-2018/etcd/etcdserver"
-	"github.com/ls-2018/tests/functional/rpcpb"
+	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver"
+	"github.com/ls-2018/etcd_cn/tests/functional/rpcpb"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
 
 	"go.uber.org/zap"

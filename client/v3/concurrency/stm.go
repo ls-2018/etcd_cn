@@ -18,7 +18,7 @@ import (
 	"context"
 	"math"
 
-	v3 "github.com/ls-2018/client/v3"
+	v3 "github.com/ls-2018/etcd_cn/client/v3"
 )
 
 // STM is an interface for software transactional memory.

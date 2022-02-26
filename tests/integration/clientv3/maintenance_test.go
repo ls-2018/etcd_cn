@@ -18,7 +18,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	clientv3 "github.com/ls-2018/client/v3"
+	clientv3 "github.com/ls-2018/etcd_cn/client/v3"
 	"io"
 	"io/ioutil"
 	"math"
@@ -29,10 +29,10 @@ import (
 	"go.uber.org/zap/zaptest"
 	"google.golang.org/grpc"
 
-	"github.com/ls-2018/etcd/lease"
-	"github.com/ls-2018/etcd/mvcc"
-	"github.com/ls-2018/etcd/mvcc/backend"
-	"github.com/ls-2018/tests/integration"
+	"github.com/ls-2018/etcd_cn/etcd_backend/lease"
+	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc"
+	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc/backend"
+	"github.com/ls-2018/etcd_cn/tests/integration"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
 )
 

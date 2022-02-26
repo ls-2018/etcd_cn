@@ -20,8 +20,8 @@ import (
 	"sync/atomic"
 	"testing"
 
-	recipe "github.com/ls-2018/client/v3/experimental/recipes"
-	"github.com/ls-2018/tests/integration"
+	recipe "github.com/ls-2018/etcd_cn/client/v3/experimental/recipes"
+	"github.com/ls-2018/etcd_cn/tests/integration"
 )
 
 const (

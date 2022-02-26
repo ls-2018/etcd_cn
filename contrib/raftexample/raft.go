@@ -17,7 +17,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/ls-2018/raft"
+	"github.com/ls-2018/etcd_cn/raft"
 	"log"
 	"net/http"
 	"net/url"
@@ -25,14 +25,14 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/ls-2018/client/pkg/fileutil"
-	"github.com/ls-2018/client/pkg/types"
-	"github.com/ls-2018/etcd/etcdserver/api/rafthttp"
-	"github.com/ls-2018/etcd/etcdserver/api/snap"
-	stats "github.com/ls-2018/etcd/etcdserver/api/v2stats"
-	"github.com/ls-2018/etcd/wal"
-	"github.com/ls-2018/etcd/wal/walpb"
-	"github.com/ls-2018/raft/raftpb"
+	"github.com/ls-2018/etcd_cn/client/pkg/fileutil"
+	"github.com/ls-2018/etcd_cn/client/pkg/types"
+	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/rafthttp"
+	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/snap"
+	stats "github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v2stats"
+	"github.com/ls-2018/etcd_cn/etcd_backend/wal"
+	"github.com/ls-2018/etcd_cn/etcd_backend/wal/walpb"
+	"github.com/ls-2018/etcd_cn/raft/raftpb"
 
 	"go.uber.org/zap"
 )

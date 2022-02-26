@@ -18,7 +18,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/ls-2018/client/pkg/fileutil"
+	"github.com/ls-2018/etcd_cn/client/pkg/fileutil"
 )
 
 // WriteAndSyncFile behaves just like ioutil.WriteFile in the standard library,

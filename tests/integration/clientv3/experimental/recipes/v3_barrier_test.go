@@ -15,12 +15,12 @@
 package recipes_test
 
 import (
-	clientv3 "github.com/ls-2018/client/v3"
+	clientv3 "github.com/ls-2018/etcd_cn/client/v3"
 	"testing"
 	"time"
 
-	recipe "github.com/ls-2018/client/v3/experimental/recipes"
-	"github.com/ls-2018/tests/integration"
+	recipe "github.com/ls-2018/etcd_cn/client/v3/experimental/recipes"
+	"github.com/ls-2018/etcd_cn/tests/integration"
 )
 
 func TestBarrierSingleNode(t *testing.T) {

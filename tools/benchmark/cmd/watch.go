@@ -23,8 +23,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/ls-2018/client/v3"
-	"github.com/ls-2018/pkg/report"
+	"github.com/ls-2018/etcd_cn/client/v3"
+	"github.com/ls-2018/etcd_cn/pkg/report"
 
 	"github.com/spf13/cobra"
 	"golang.org/x/time/rate"

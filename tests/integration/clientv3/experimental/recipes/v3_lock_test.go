@@ -16,14 +16,14 @@ package recipes_test
 
 import (
 	"context"
-	clientv3 "github.com/ls-2018/client/v3"
+	clientv3 "github.com/ls-2018/etcd_cn/client/v3"
 	"math/rand"
 	"testing"
 	"time"
 
-	"github.com/ls-2018/client/v3/concurrency"
-	recipe "github.com/ls-2018/client/v3/experimental/recipes"
-	"github.com/ls-2018/tests/integration"
+	"github.com/ls-2018/etcd_cn/client/v3/concurrency"
+	recipe "github.com/ls-2018/etcd_cn/client/v3/experimental/recipes"
+	"github.com/ls-2018/etcd_cn/tests/integration"
 	"go.etcd.io/etcd/api/v3/mvccpb"
 )
 

@@ -17,7 +17,7 @@ package clientv3_test
 import (
 	"context"
 	"fmt"
-	clientv3 "github.com/ls-2018/client/v3"
+	clientv3 "github.com/ls-2018/etcd_cn/client/v3"
 	"log"
 
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"

@@ -20,8 +20,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ls-2018/client/pkg/testutil"
-	"github.com/ls-2018/client/pkg/transport"
+	"github.com/ls-2018/etcd_cn/client/pkg/testutil"
+	"github.com/ls-2018/etcd_cn/client/pkg/transport"
 )
 
 // Infrastructure to provision a single shared cluster for tests - only

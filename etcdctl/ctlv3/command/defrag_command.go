@@ -18,8 +18,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ls-2018/etcdutl/etcdutl"
-	"github.com/ls-2018/pkg/cobrautl"
+	"github.com/ls-2018/etcd_cn/etcdutl/etcdutl"
+	"github.com/ls-2018/etcd_cn/pkg/cobrautl"
 	"github.com/spf13/cobra"
 )
 

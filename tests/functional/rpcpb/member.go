@@ -19,14 +19,14 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/dustin/go-humanize"
-	clientv3 "github.com/ls-2018/client/v3"
+	clientv3 "github.com/ls-2018/etcd_cn/client/v3"
 	"net/url"
 	"os"
 	"time"
 
-	"github.com/ls-2018/client/pkg/logutil"
-	"github.com/ls-2018/client/pkg/transport"
-	"github.com/ls-2018/etcdutl/snapshot"
+	"github.com/ls-2018/etcd_cn/client/pkg/logutil"
+	"github.com/ls-2018/etcd_cn/client/pkg/transport"
+	"github.com/ls-2018/etcd_cn/etcdutl/snapshot"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 
 	"go.uber.org/zap"

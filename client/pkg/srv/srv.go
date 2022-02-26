@@ -21,7 +21,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/ls-2018/client/pkg/types"
+	"github.com/ls-2018/etcd_cn/client/pkg/types"
 )
 
 var (

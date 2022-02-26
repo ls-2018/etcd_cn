@@ -18,13 +18,13 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	clientv3 "github.com/ls-2018/client/v3"
+	clientv3 "github.com/ls-2018/etcd_cn/client/v3"
 	"os"
 	"testing"
 	"time"
 
-	"github.com/ls-2018/client/pkg/transport"
-	"github.com/ls-2018/client/pkg/types"
+	"github.com/ls-2018/etcd_cn/client/pkg/transport"
+	"github.com/ls-2018/etcd_cn/client/pkg/types"
 )
 
 func TestCtlV3MoveLeaderSecure(t *testing.T) {

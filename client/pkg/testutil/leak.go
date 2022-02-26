@@ -23,7 +23,7 @@ CheckLeakedGoroutine verifies tests do not leave any leaky
 goroutines. It returns true when there are goroutines still
 running(leaking) after all tests.
 
-	import "github.com/ls-2018/client/pkg/testutil"
+	import "github.com/ls-2018/etcd_cn/client/pkg/testutil"
 
 	func TestMain(m *testing.M) {
 		testutil.MustTestMainWithLeakDetection(m)
@@ -140,8 +140,8 @@ func interestingGoroutines() (gs []string) {
 			strings.Contains(stack, "created by testing.(*T).Run") ||
 			strings.Contains(stack, "testing.Main(") ||
 			strings.Contains(stack, "runtime.goexit") ||
-			strings.Contains(stack, "github.com/ls-2018/client/pkg/testutil.interestingGoroutines") ||
-			strings.Contains(stack, "github.com/ls-2018/client/pkg/logutil.(*MergeLogger).outputLoop") ||
+			strings.Contains(stack, "github.com/ls-2018/etcd_cn/client/pkg/testutil.interestingGoroutines") ||
+			strings.Contains(stack, "github.com/ls-2018/etcd_cn/client/pkg/logutil.(*MergeLogger).outputLoop") ||
 			strings.Contains(stack, "github.com/golang/glog.(*loggingT).flushDaemon") ||
 			strings.Contains(stack, "created by runtime.gc") ||
 			strings.Contains(stack, "created by text/template/parse.lex") ||

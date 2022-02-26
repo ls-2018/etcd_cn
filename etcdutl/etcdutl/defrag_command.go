@@ -19,9 +19,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/ls-2018/etcd/datadir"
-	"github.com/ls-2018/etcd/mvcc/backend"
-	"github.com/ls-2018/pkg/cobrautl"
+	"github.com/ls-2018/etcd_cn/etcd_backend/datadir"
+	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc/backend"
+	"github.com/ls-2018/etcd_cn/pkg/cobrautl"
 	"github.com/spf13/cobra"
 )
 

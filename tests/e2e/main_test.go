@@ -10,8 +10,8 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/ls-2018/client/pkg/testutil"
-	"github.com/ls-2018/tests/integration"
+	"github.com/ls-2018/etcd_cn/client/pkg/testutil"
+	"github.com/ls-2018/etcd_cn/tests/integration"
 )
 
 var (

@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ls-2018/etcdutl/snapshot"
+	"github.com/ls-2018/etcd_cn/etcdutl/snapshot"
 )
 
 type simplePrinter struct {

@@ -18,7 +18,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/ls-2018/tests/integration"
+	"github.com/ls-2018/etcd_cn/tests/integration"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
 )
 

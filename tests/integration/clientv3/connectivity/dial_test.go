@@ -16,15 +16,15 @@ package connectivity_test
 
 import (
 	"context"
-	clientv3 "github.com/ls-2018/client/v3"
+	clientv3 "github.com/ls-2018/etcd_cn/client/v3"
 	"math/rand"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/ls-2018/client/pkg/transport"
-	"github.com/ls-2018/tests/integration"
-	clientv3test "github.com/ls-2018/tests/integration/clientv3"
+	"github.com/ls-2018/etcd_cn/client/pkg/transport"
+	"github.com/ls-2018/etcd_cn/tests/integration"
+	clientv3test "github.com/ls-2018/etcd_cn/tests/integration/clientv3"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 	"google.golang.org/grpc"
 )

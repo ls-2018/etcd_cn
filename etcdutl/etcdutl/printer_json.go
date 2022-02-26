@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ls-2018/etcdutl/snapshot"
+	"github.com/ls-2018/etcd_cn/etcdutl/snapshot"
 )
 
 type jsonPrinter struct {

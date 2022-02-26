@@ -16,7 +16,7 @@
 package clientv3util
 
 import (
-	"github.com/ls-2018/client/v3"
+	"github.com/ls-2018/etcd_cn/client/v3"
 )
 
 // KeyExists returns a comparison operation that evaluates to true iff the given

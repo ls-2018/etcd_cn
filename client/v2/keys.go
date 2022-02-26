@@ -25,7 +25,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ls-2018/client/pkg/pathutil"
+	"github.com/ls-2018/etcd_cn/client/pkg/pathutil"
 )
 
 const (

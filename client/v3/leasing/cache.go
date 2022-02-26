@@ -20,7 +20,7 @@ import (
 	"sync"
 	"time"
 
-	v3 "github.com/ls-2018/client/v3"
+	v3 "github.com/ls-2018/etcd_cn/client/v3"
 	v3pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 	"go.etcd.io/etcd/api/v3/mvccpb"
 )

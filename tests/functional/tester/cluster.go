@@ -29,9 +29,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ls-2018/client/pkg/fileutil"
-	"github.com/ls-2018/pkg/debugutil"
-	"github.com/ls-2018/tests/functional/rpcpb"
+	"github.com/ls-2018/etcd_cn/client/pkg/fileutil"
+	"github.com/ls-2018/etcd_cn/pkg/debugutil"
+	"github.com/ls-2018/etcd_cn/tests/functional/rpcpb"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"

@@ -22,7 +22,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ls-2018/client/pkg/transport"
+	"github.com/ls-2018/etcd_cn/client/pkg/transport"
 
 	"go.uber.org/zap"
 )

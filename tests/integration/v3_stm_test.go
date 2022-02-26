@@ -21,9 +21,9 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/ls-2018/client/pkg/testutil"
-	v3 "github.com/ls-2018/client/v3"
-	"github.com/ls-2018/client/v3/concurrency"
+	"github.com/ls-2018/etcd_cn/client/pkg/testutil"
+	v3 "github.com/ls-2018/etcd_cn/client/v3"
+	"github.com/ls-2018/etcd_cn/client/v3/concurrency"
 )
 
 // TestSTMConflict tests that conflicts are retried.

@@ -22,7 +22,7 @@ import (
 	"testing"
 	"time"
 
-	clientv3 "github.com/ls-2018/client/v3"
+	clientv3 "github.com/ls-2018/etcd_cn/client/v3"
 	"google.golang.org/grpc"
 )
 

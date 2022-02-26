@@ -19,8 +19,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/ls-2018/client/pkg/fileutil"
-	"github.com/ls-2018/tests/functional/rpcpb"
+	"github.com/ls-2018/etcd_cn/client/pkg/fileutil"
+	"github.com/ls-2018/etcd_cn/tests/functional/rpcpb"
 
 	"go.uber.org/zap"
 )

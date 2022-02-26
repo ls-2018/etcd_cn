@@ -19,12 +19,12 @@ package integration
 
 import (
 	"context"
-	clientv3 "github.com/ls-2018/client/v3"
+	clientv3 "github.com/ls-2018/etcd_cn/client/v3"
 	"sync"
 
-	"github.com/ls-2018/client/v3/namespace"
-	"github.com/ls-2018/etcd/proxy/grpcproxy"
-	"github.com/ls-2018/etcd/proxy/grpcproxy/adapter"
+	"github.com/ls-2018/etcd_cn/client/v3/namespace"
+	"github.com/ls-2018/etcd_cn/etcd_backend/proxy/grpcproxy"
+	"github.com/ls-2018/etcd_cn/etcd_backend/proxy/grpcproxy/adapter"
 	"go.uber.org/zap"
 )
 

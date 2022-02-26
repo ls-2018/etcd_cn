@@ -16,7 +16,7 @@
 // against a fault injected cluster.
 package main
 
-import "github.com/ls-2018/tests/functional/runner"
+import "github.com/ls-2018/etcd_cn/tests/functional/runner"
 
 func main() {
 	runner.Start()

@@ -17,7 +17,7 @@ package command
 import (
 	"fmt"
 
-	"github.com/ls-2018/pkg/cobrautl"
+	"github.com/ls-2018/etcd_cn/pkg/cobrautl"
 	"github.com/spf13/cobra"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
 )

@@ -18,8 +18,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ls-2018/etcdutl/snapshot"
-	"github.com/ls-2018/pkg/cobrautl"
+	"github.com/ls-2018/etcd_cn/etcdutl/snapshot"
+	"github.com/ls-2018/etcd_cn/pkg/cobrautl"
 	"github.com/spf13/cobra"
 
 	"github.com/dustin/go-humanize"

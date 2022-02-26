@@ -17,7 +17,7 @@ package v2store_test
 import (
 	"testing"
 
-	"github.com/ls-2018/client/pkg/testutil"
+	"github.com/ls-2018/etcd_cn/client/pkg/testutil"
 )
 
 //var endpoints []string

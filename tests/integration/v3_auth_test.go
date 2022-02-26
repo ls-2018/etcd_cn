@@ -17,12 +17,12 @@ package integration
 import (
 	"context"
 	"fmt"
-	clientv3 "github.com/ls-2018/client/v3"
+	clientv3 "github.com/ls-2018/etcd_cn/client/v3"
 	"sync"
 	"testing"
 	"time"
 
-	"github.com/ls-2018/client/pkg/testutil"
+	"github.com/ls-2018/etcd_cn/client/pkg/testutil"
 	"go.etcd.io/etcd/api/v3/authpb"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"

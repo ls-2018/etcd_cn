@@ -29,12 +29,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ls-2018/client/pkg/types"
-	"github.com/ls-2018/etcd/etcdserver/api/snap"
-	"github.com/ls-2018/etcd/wal"
-	"github.com/ls-2018/etcd/wal/walpb"
-	"github.com/ls-2018/pkg/pbutil"
-	"github.com/ls-2018/raft/raftpb"
+	"github.com/ls-2018/etcd_cn/client/pkg/types"
+	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/snap"
+	"github.com/ls-2018/etcd_cn/etcd_backend/wal"
+	"github.com/ls-2018/etcd_cn/etcd_backend/wal/walpb"
+	"github.com/ls-2018/etcd_cn/pkg/pbutil"
+	"github.com/ls-2018/etcd_cn/raft/raftpb"
 	"go.etcd.io/etcd/api/v3/etcdserverpb"
 	"go.uber.org/zap"
 )

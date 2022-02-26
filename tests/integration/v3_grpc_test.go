@@ -18,7 +18,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	clientv3 "github.com/ls-2018/client/v3"
+	clientv3 "github.com/ls-2018/etcd_cn/client/v3"
 	"io/ioutil"
 	"math/rand"
 	"os"
@@ -27,7 +27,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ls-2018/client/pkg/transport"
+	"github.com/ls-2018/etcd_cn/client/pkg/transport"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
 	"google.golang.org/grpc"

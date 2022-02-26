@@ -15,7 +15,7 @@
 package client
 
 import (
-	"github.com/ls-2018/client/pkg/srv"
+	"github.com/ls-2018/etcd_cn/client/pkg/srv"
 )
 
 // Discoverer is an interface that wraps the Discover method.

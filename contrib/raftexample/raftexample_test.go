@@ -24,7 +24,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ls-2018/raft/raftpb"
+	"github.com/ls-2018/etcd_cn/raft/raftpb"
 )
 
 func getSnapshotFn() (func() ([]byte, error), <-chan struct{}) {

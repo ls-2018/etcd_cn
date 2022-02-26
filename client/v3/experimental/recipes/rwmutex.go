@@ -17,8 +17,8 @@ package recipe
 import (
 	"context"
 
-	v3 "github.com/ls-2018/client/v3"
-	"github.com/ls-2018/client/v3/concurrency"
+	v3 "github.com/ls-2018/etcd_cn/client/v3"
+	"github.com/ls-2018/etcd_cn/client/v3/concurrency"
 	"go.etcd.io/etcd/api/v3/mvccpb"
 )
 

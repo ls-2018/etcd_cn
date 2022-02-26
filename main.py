@@ -20,8 +20,8 @@ for file in get_files('.'):
         # data = ''
         # with open(file,'r', encoding='utf8')as f:
         #     data = f.read()
-        #     if 'clientv3' in data and 'clientv3 "github.com/ls-2018/client/v3"' not in data:
-        #         data = data.replace('import (', 'import (\n	clientv3 "github.com/ls-2018/client/v3"')
+        #     if 'clientv3' in data and 'clientv3 "github.com/ls-2018/etcd_cn/client/v3"' not in data:
+        #         data = data.replace('import (', 'import (\n	clientv3 "github.com/ls-2018/etcd_cn/client/v3"')
         #         flag = True
         #
         #         # print(file)

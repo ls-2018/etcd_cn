@@ -24,7 +24,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ls-2018/etcd/etcdserver/api/v3rpc"
+	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v3rpc"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 	"go.etcd.io/etcd/api/v3/mvccpb"
 )

@@ -18,7 +18,7 @@ import (
 	"context"
 	"fmt"
 
-	v3 "github.com/ls-2018/client/v3"
+	v3 "github.com/ls-2018/etcd_cn/client/v3"
 	"go.etcd.io/etcd/api/v3/mvccpb"
 )
 

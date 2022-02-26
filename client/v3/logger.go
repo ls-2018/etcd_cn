@@ -18,7 +18,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/ls-2018/client/pkg/logutil"
+	"github.com/ls-2018/etcd_cn/client/pkg/logutil"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"go.uber.org/zap/zapgrpc"

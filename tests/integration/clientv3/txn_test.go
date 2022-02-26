@@ -17,12 +17,12 @@ package clientv3test
 import (
 	"context"
 	"fmt"
-	clientv3 "github.com/ls-2018/client/v3"
+	clientv3 "github.com/ls-2018/etcd_cn/client/v3"
 	"testing"
 	"time"
 
-	"github.com/ls-2018/etcd/embed"
-	"github.com/ls-2018/tests/integration"
+	"github.com/ls-2018/etcd_cn/etcd_backend/embed"
+	"github.com/ls-2018/etcd_cn/tests/integration"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
 )
 

@@ -16,7 +16,7 @@ package concurrency
 
 import (
 	"context"
-	v3 "github.com/ls-2018/client/v3"
+	v3 "github.com/ls-2018/etcd_cn/client/v3"
 	"time"
 )
 

@@ -20,13 +20,13 @@ package clientv3test
 import (
 	"context"
 	"fmt"
-	clientv3 "github.com/ls-2018/client/v3"
+	clientv3 "github.com/ls-2018/etcd_cn/client/v3"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/ls-2018/client/pkg/testutil"
-	"github.com/ls-2018/tests/integration"
+	"github.com/ls-2018/etcd_cn/client/pkg/testutil"
+	"github.com/ls-2018/etcd_cn/tests/integration"
 )
 
 // TestWatchFragmentDisable ensures that large watch

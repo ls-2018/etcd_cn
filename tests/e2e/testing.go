@@ -18,8 +18,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/ls-2018/client/pkg/testutil"
-	"github.com/ls-2018/etcd/verify"
+	"github.com/ls-2018/etcd_cn/client/pkg/testutil"
+	"github.com/ls-2018/etcd_cn/etcd_backend/verify"
 	"github.com/stretchr/testify/assert"
 )
 

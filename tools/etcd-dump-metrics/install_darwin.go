@@ -25,7 +25,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/ls-2018/client/pkg/fileutil"
+	"github.com/ls-2018/etcd_cn/client/pkg/fileutil"
 )
 
 const downloadURL = `https://storage.googleapis.com/etcd/%s/etcd-%s-darwin-amd64.zip`

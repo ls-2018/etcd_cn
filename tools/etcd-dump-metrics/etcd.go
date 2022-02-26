@@ -23,8 +23,8 @@ import (
 	"strings"
 	"time"
 
-	clientv3 "github.com/ls-2018/client/v3"
-	"github.com/ls-2018/etcd/embed"
+	clientv3 "github.com/ls-2018/etcd_cn/client/v3"
+	"github.com/ls-2018/etcd_cn/etcd_backend/embed"
 
 	"go.uber.org/zap"
 )

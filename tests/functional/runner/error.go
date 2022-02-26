@@ -16,7 +16,7 @@ package runner
 
 import (
 	"fmt"
-	clientv2 "github.com/ls-2018/client/v2"
+	clientv2 "github.com/ls-2018/etcd_cn/client/v2"
 	"os"
 )
 

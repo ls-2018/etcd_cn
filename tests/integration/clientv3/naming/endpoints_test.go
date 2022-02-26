@@ -19,10 +19,10 @@ import (
 	"reflect"
 	"testing"
 
-	etcd "github.com/ls-2018/client/v3"
-	"github.com/ls-2018/client/v3/naming/endpoints"
+	etcd "github.com/ls-2018/etcd_cn/client/v3"
+	"github.com/ls-2018/etcd_cn/client/v3/naming/endpoints"
 
-	"github.com/ls-2018/tests/integration"
+	"github.com/ls-2018/etcd_cn/tests/integration"
 )
 
 func TestEndpointManager(t *testing.T) {

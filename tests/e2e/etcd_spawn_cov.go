@@ -24,9 +24,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/ls-2018/client/pkg/fileutil"
-	"github.com/ls-2018/pkg/expect"
-	"github.com/ls-2018/tests/integration"
+	"github.com/ls-2018/etcd_cn/client/pkg/fileutil"
+	"github.com/ls-2018/etcd_cn/pkg/expect"
+	"github.com/ls-2018/etcd_cn/tests/integration"
 	"go.uber.org/zap"
 )
 

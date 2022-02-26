@@ -14,7 +14,7 @@
 
 package tester
 
-import "github.com/ls-2018/tests/functional/rpcpb"
+import "github.com/ls-2018/etcd_cn/tests/functional/rpcpb"
 
 type runnerChecker struct {
 	ctype              rpcpb.Checker

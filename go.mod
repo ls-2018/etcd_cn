@@ -1,4 +1,4 @@
-module github.com/ls-2018
+module github.com/ls-2018/etcd_cn
 
 go 1.16
 
@@ -45,7 +45,6 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20201229170055-e5319fda7802
 	github.com/trustmaster/go-aspell v0.0.0-20200701131845-c2b1f55bec8f // indirect
-	github.com/urfave/cli v1.22.4
 	github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2
 	go.etcd.io/bbolt v1.3.6
 	go.etcd.io/etcd/api/v3 v3.5.2

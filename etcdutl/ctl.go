@@ -16,7 +16,7 @@
 package main
 
 import (
-	"github.com/ls-2018/etcdutl/etcdutl"
+	"github.com/ls-2018/etcd_cn/etcdutl/etcdutl"
 	"github.com/spf13/cobra"
 )
 

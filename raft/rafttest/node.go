@@ -21,7 +21,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ls-2018/raft/raftpb"
+	"github.com/ls-2018/etcd_cn/raft/raftpb"
 )
 
 type node struct {

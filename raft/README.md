@@ -245,4 +245,4 @@ cannot make progress. For this reason it is highly recommended to use three or m
 
 ## Go docs
 
-More detailed development documentation can be found in go docs: https://pkg.go.dev/github.com/ls-2018/raft.
+More detailed development documentation can be found in go docs: https://pkg.go.dev/github.com/ls-2018/etcd_cn/raft.

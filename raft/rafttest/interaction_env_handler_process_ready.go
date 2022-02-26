@@ -16,10 +16,11 @@ package rafttest
 
 import (
 	"fmt"
+	"github.com/ls-2018/etcd_cn/raft"
 	"testing"
 
 	"github.com/cockroachdb/datadriven"
-	"github.com/ls-2018/raft/raftpb"
+	"github.com/ls-2018/etcd_cn/raft/raftpb"
 )
 
 func (env *InteractionEnv) handleProcessReady(t *testing.T, d datadriven.TestData) error {

@@ -4,8 +4,8 @@ import (
 	"context"
 	"sync"
 
-	clientv3 "github.com/ls-2018/client/v3"
-	"github.com/ls-2018/client/v3/naming/endpoints"
+	clientv3 "github.com/ls-2018/etcd_cn/client/v3"
+	"github.com/ls-2018/etcd_cn/client/v3/naming/endpoints"
 
 	"google.golang.org/grpc/codes"
 	gresolver "google.golang.org/grpc/resolver"

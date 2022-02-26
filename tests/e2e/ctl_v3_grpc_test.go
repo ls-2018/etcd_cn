@@ -23,7 +23,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ls-2018/client/pkg/testutil"
+	"github.com/ls-2018/etcd_cn/client/pkg/testutil"
 	"github.com/stretchr/testify/assert"
 )
 

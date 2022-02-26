@@ -23,7 +23,7 @@ package embed_test
 import (
 	"context"
 	"fmt"
-	clientv3 "github.com/ls-2018/client/v3"
+	clientv3 "github.com/ls-2018/etcd_cn/client/v3"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -31,10 +31,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ls-2018/client/pkg/testutil"
-	"github.com/ls-2018/client/pkg/transport"
-	"github.com/ls-2018/etcd/embed"
-	"github.com/ls-2018/tests/integration"
+	"github.com/ls-2018/etcd_cn/client/pkg/testutil"
+	"github.com/ls-2018/etcd_cn/client/pkg/transport"
+	"github.com/ls-2018/etcd_cn/etcd_backend/embed"
+	"github.com/ls-2018/etcd_cn/tests/integration"
 )
 
 var (

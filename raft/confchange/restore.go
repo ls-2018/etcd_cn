@@ -15,8 +15,8 @@
 package confchange
 
 import (
-	pb "github.com/ls-2018/raft/raftpb"
-	"github.com/ls-2018/raft/tracker"
+	pb "github.com/ls-2018/etcd_cn/raft/raftpb"
+	"github.com/ls-2018/etcd_cn/raft/tracker"
 )
 
 // toConfChangeSingle translates a conf state into 1) a slice of operations creating

@@ -20,7 +20,7 @@ import (
 	"testing"
 
 	"github.com/cockroachdb/datadriven"
-	"github.com/ls-2018/raft/raftpb"
+	"github.com/ls-2018/etcd_cn/raft/raftpb"
 )
 
 func (env *InteractionEnv) handleProposeConfChange(t *testing.T, d datadriven.TestData) error {

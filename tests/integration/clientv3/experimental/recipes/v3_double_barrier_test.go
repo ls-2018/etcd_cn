@@ -18,9 +18,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ls-2018/client/v3/concurrency"
-	recipe "github.com/ls-2018/client/v3/experimental/recipes"
-	"github.com/ls-2018/tests/integration"
+	"github.com/ls-2018/etcd_cn/client/v3/concurrency"
+	recipe "github.com/ls-2018/etcd_cn/client/v3/experimental/recipes"
+	"github.com/ls-2018/etcd_cn/tests/integration"
 )
 
 func TestDoubleBarrier(t *testing.T) {

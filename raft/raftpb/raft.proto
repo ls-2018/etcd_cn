@@ -37,7 +37,7 @@ message Snapshot {
 }
 
 // For description of different message types, see:
-// https://pkg.go.dev/github.com/ls-2018/raft#hdr-MessageType
+// https://pkg.go.dev/github.com/ls-2018/etcd_cn/raft#hdr-MessageType
 enum MessageType {
 	MsgHup             = 0;
 	MsgBeat            = 1;

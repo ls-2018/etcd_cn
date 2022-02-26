@@ -16,7 +16,7 @@
 package main
 
 import (
-	"github.com/ls-2018/pkg/cobrautl"
+	"github.com/ls-2018/etcd_cn/pkg/cobrautl"
 )
 
 func main() {

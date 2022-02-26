@@ -32,8 +32,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ls-2018/client/pkg/fileutil"
-	"github.com/ls-2018/client/pkg/tlsutil"
+	"github.com/ls-2018/etcd_cn/client/pkg/fileutil"
+	"github.com/ls-2018/etcd_cn/client/pkg/tlsutil"
 
 	"go.uber.org/zap"
 )

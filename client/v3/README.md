@@ -1,21 +1,21 @@
 # etcd/clientv3
 
 [![Docs](https://img.shields.io/badge/docs-latest-green.svg)](https://etcd.io/docs)
-[![Godoc](https://img.shields.io/badge/go-documentation-blue.svg?style=flat-square)](https://godoc.org/github.com/ls-2018/clientv3)
+[![Godoc](https://img.shields.io/badge/go-documentation-blue.svg?style=flat-square)](https://godoc.org/github.com/ls-2018/etcd_cn/clientv3)
 
 `etcd/clientv3` is the official Go etcd client for v3.
 
 ## Install
 
 ```bash
-go get github.com/ls-2018/client/v3
+go get github.com/ls-2018/etcd_cn/client/v3
 ```
 
 Warning: As etcd 3.5.0 was not yet released, the command above does not work. After first pre-release of
 3.5.0 [#12498](https://github.com/etcd-io/etcd/issues/12498), etcd can be referenced using:
 
 ```
-go get github.com/ls-2018/client/v3@v3.5.0-pre
+go get github.com/ls-2018/etcd_cn/client/v3@v3.5.0-pre
 ```
 
 ## Get started
@@ -83,7 +83,7 @@ the [examples](https://github.com/etcd-io/etcd/blob/main/tests/integration/clien
 
 ## Namespacing
 
-The [namespace](https://godoc.org/github.com/ls-2018/client/v3/namespace) package provides `clientv3` interface wrappers
+The [namespace](https://godoc.org/github.com/ls-2018/etcd_cn/client/v3/namespace) package provides `clientv3` interface wrappers
 to transparently isolate client requests to a user-defined prefix.
 
 ## Request size limit
@@ -95,4 +95,4 @@ to `math.MaxInt32`.
 ## Examples
 
 More code [examples](https://github.com/etcd-io/etcd/tree/main/tests/integration/clientv3/examples) can be found
-at [GoDoc](https://pkg.go.dev/github.com/ls-2018/client/v3).
+at [GoDoc](https://pkg.go.dev/github.com/ls-2018/etcd_cn/client/v3).

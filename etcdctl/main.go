@@ -17,7 +17,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/ls-2018/etcdctl/ctlv3"
+	"github.com/ls-2018/etcd_cn/etcdctl/ctlv3"
 	"os"
 )
 

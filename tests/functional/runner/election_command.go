@@ -19,7 +19,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ls-2018/client/v3/concurrency"
+	"github.com/ls-2018/etcd_cn/client/v3/concurrency"
 
 	"github.com/spf13/cobra"
 )

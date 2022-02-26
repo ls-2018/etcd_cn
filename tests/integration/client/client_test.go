@@ -24,7 +24,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/ls-2018/tests/integration"
+	"github.com/ls-2018/etcd_cn/tests/integration"
 )
 
 // TestV2NoRetryEOF tests destructive api calls won't retry on a disconnection.

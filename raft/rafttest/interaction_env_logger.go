@@ -16,6 +16,7 @@ package rafttest
 
 import (
 	"fmt"
+	"github.com/ls-2018/etcd_cn/raft"
 	"strings"
 )
 

@@ -20,12 +20,12 @@ package connectivity_test
 import (
 	"context"
 	"errors"
-	clientv3 "github.com/ls-2018/client/v3"
+	clientv3 "github.com/ls-2018/etcd_cn/client/v3"
 	"testing"
 	"time"
 
-	"github.com/ls-2018/tests/integration"
-	"github.com/ls-2018/tests/integration/clientv3"
+	"github.com/ls-2018/etcd_cn/tests/integration"
+	"github.com/ls-2018/etcd_cn/tests/integration/clientv3"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
 	"go.uber.org/zap/zaptest"

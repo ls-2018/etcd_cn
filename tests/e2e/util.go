@@ -22,8 +22,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ls-2018/client/pkg/testutil"
-	"github.com/ls-2018/pkg/expect"
+	"github.com/ls-2018/etcd_cn/client/pkg/testutil"
+	"github.com/ls-2018/etcd_cn/pkg/expect"
 )
 
 func waitReadyExpectProc(exproc *expect.ExpectProcess, readyStrs []string) error {

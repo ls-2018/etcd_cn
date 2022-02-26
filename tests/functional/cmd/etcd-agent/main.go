@@ -18,7 +18,7 @@ package main
 import (
 	"flag"
 
-	"github.com/ls-2018/tests/functional/agent"
+	"github.com/ls-2018/etcd_cn/tests/functional/agent"
 
 	"go.uber.org/zap"
 )

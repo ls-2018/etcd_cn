@@ -17,8 +17,8 @@ package command
 import (
 	"fmt"
 
-	v3 "github.com/ls-2018/client/v3"
-	"github.com/ls-2018/pkg/cobrautl"
+	v3 "github.com/ls-2018/etcd_cn/client/v3"
+	"github.com/ls-2018/etcd_cn/pkg/cobrautl"
 	"github.com/spf13/cobra"
 )
 

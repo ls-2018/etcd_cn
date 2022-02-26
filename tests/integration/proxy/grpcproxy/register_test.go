@@ -18,10 +18,10 @@ import (
 	"testing"
 	"time"
 
-	clientv3 "github.com/ls-2018/client/v3"
-	"github.com/ls-2018/client/v3/naming/endpoints"
-	"github.com/ls-2018/etcd/proxy/grpcproxy"
-	"github.com/ls-2018/tests/integration"
+	clientv3 "github.com/ls-2018/etcd_cn/client/v3"
+	"github.com/ls-2018/etcd_cn/client/v3/naming/endpoints"
+	"github.com/ls-2018/etcd_cn/etcd_backend/proxy/grpcproxy"
+	"github.com/ls-2018/etcd_cn/tests/integration"
 	"go.uber.org/zap/zaptest"
 )
 

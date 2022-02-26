@@ -18,7 +18,7 @@ import (
 	"errors"
 	"sync"
 
-	pb "github.com/ls-2018/raft/raftpb"
+	pb "github.com/ls-2018/etcd_cn/raft/raftpb"
 )
 
 // ErrCompacted is returned by Storage.Entries/Compact when a requested
