@@ -774,13 +774,13 @@ func (cfg Config) defaultClientHost() bool {
 
 // etcd 客户端自签
 func (cfg *Config) ClientSelfCert() (err error) {
-	//if !cfg.ClientAutoTLS {
-	//	return nil
-	//}
-	//if !cfg.ClientTLSInfo.Empty() {
-	//	cfg.logger.Warn("忽略客户端自动TLS,因为已经给出了证书")
-	//	return nil
-	//}
+	if !cfg.ClientAutoTLS {
+		return nil
+	}
+	if !cfg.ClientTLSInfo.Empty() {
+		cfg.logger.Warn("忽略客户端自动TLS,因为已经给出了证书")
+		return nil
+	}
 	chosts := make([]string, len(cfg.LCUrls))
 	for i, u := range cfg.LCUrls {
 		chosts[i] = u.Host
@@ -793,18 +793,18 @@ func (cfg *Config) ClientSelfCert() (err error) {
 }
 
 func (cfg *Config) PeerSelfCert() (err error) {
-	//if !cfg.PeerAutoTLS {
-	//	return nil
-	//}
-	//if !cfg.PeerTLSInfo.Empty() {
-	//	cfg.logger.Warn("如果证书给出  则忽略peer自动TLS")
-	//	return nil
-	//}
+	if !cfg.PeerAutoTLS {
+		return nil
+	}
+	if !cfg.PeerTLSInfo.Empty() {
+		cfg.logger.Warn("如果证书给出  则忽略peer自动TLS")
+		return nil
+	}
 	phosts := make([]string, len(cfg.LPUrls))
 	for i, u := range cfg.LPUrls {
 		phosts[i] = u.Host
 	}
-	cfg.PeerTLSInfo, err = transport.SelfCert(cfg.logger, filepath.Join(cfg.Dir, "fixtures", "peer"), phosts, cfg.SelfSignedCertValidity)// ?年
+	cfg.PeerTLSInfo, err = transport.SelfCert(cfg.logger, filepath.Join(cfg.Dir, "fixtures", "peer"), phosts, cfg.SelfSignedCertValidity) // ?年
 	if err != nil {
 		return err
 	}
