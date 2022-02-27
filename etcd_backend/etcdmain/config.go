@@ -94,6 +94,7 @@ type config struct {
 	ignored      []string
 }
 
+// OK
 func newConfig() *config {
 	cfg := &config{
 		ec: *embed.NewConfig(),
@@ -283,6 +284,7 @@ func newConfig() *config {
 	return cfg
 }
 
+// OK
 func (cfg *config) parse(arguments []string) error {
 	perr := cfg.cf.flagSet.Parse(arguments)
 	switch perr {
@@ -324,6 +326,7 @@ func (cfg *config) parse(arguments []string) error {
 	return err
 }
 
+// OK
 func (cfg *config) configFromCmdLine() error {
 	// 用户指定的记录器尚未设置,在标志解析过程中使用此记录器
 	lg, err := zap.NewProduction()
@@ -378,6 +381,7 @@ func (cfg *config) configFromCmdLine() error {
 	return cfg.validate() // √
 }
 
+// OK
 func (cfg *config) configFromFile(path string) error {
 	eCfg, err := embed.ConfigFromFile(path)
 	if err != nil {
@@ -385,7 +389,7 @@ func (cfg *config) configFromFile(path string) error {
 	}
 	cfg.ec = *eCfg
 
-	// load extra config information
+	// 加载额外的配置信息
 	b, rerr := ioutil.ReadFile(path)
 	if rerr != nil {
 		return rerr
