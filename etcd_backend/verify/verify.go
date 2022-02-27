@@ -87,8 +87,7 @@ func Verify(cfg Config) error {
 	return validateConsistentIndex(cfg, hardstate, snapshot, be)
 }
 
-// VerifyIfEnabled performs verification according to ETCD_VERIFY env settings.
-// See Verify for more information.
+// VerifyIfEnabled 根据ETCD_VERIFY环境设置执行校验.
 func VerifyIfEnabled(cfg Config) error {
 	if os.Getenv(ENV_VERIFY) == ENV_VERIFY_ALL_VALUE {
 		return Verify(cfg)
@@ -96,12 +95,10 @@ func VerifyIfEnabled(cfg Config) error {
 	return nil
 }
 
-// MustVerifyIfEnabled performs verification according to ETCD_VERIFY env settings
-// and exits in case of found problems.
-// See Verify for more information.
+// MustVerifyIfEnabled 根据ETCD_VERIFY环境设置执行验证,发现问题就退出.
 func MustVerifyIfEnabled(cfg Config) {
 	if err := VerifyIfEnabled(cfg); err != nil {
-		cfg.Logger.Fatal("Verification failed",
+		cfg.Logger.Fatal("验证失败",
 			zap.String("data-dir", cfg.DataDir),
 			zap.Error(err))
 	}

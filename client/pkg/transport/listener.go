@@ -43,7 +43,7 @@ func NewListener(addr, scheme string, tlsinfo *TLSInfo) (l net.Listener, err err
 	return newListener(addr, scheme, WithTLSInfo(tlsinfo))
 }
 
-// NewListenerWithOpts creates a new listener which accpets listener options.
+// NewListenerWithOpts OK
 func NewListenerWithOpts(addr, scheme string, opts ...ListenerOption) (net.Listener, error) {
 	return newListener(addr, scheme, opts...)
 }
@@ -143,12 +143,10 @@ type TLSInfo struct {
 	// ServerName ensures the cert matches the given host in case of discovery / virtual hosting
 	ServerName string
 
-	// HandshakeFailure  当一个连接无法握手时，会被选择性地调用。之后，连接将被立即关闭。
+	// HandshakeFailure  当一个连接无法握手时,会被选择性地调用.之后,连接将被立即关闭.
 	HandshakeFailure func(*tls.Conn, error)
 
-	// CipherSuites is a list of supported cipher suites.
-	// If empty, Go auto-populates it by default.
-	// Note that cipher suites are prioritized in the given order.
+	// CipherSuites 是一个支持的密码套件的列表.如果是空的,Go 默认会自动填充它.请注意,密码套件是按照给定的顺序进行优先排序的.
 	CipherSuites []uint16
 
 	selfCert bool
@@ -184,20 +182,14 @@ func (info TLSInfo) Empty() bool {
 func SelfCert(lg *zap.Logger, dirpath string, hosts []string, selfSignedCertValidity uint, additionalUsages ...x509.ExtKeyUsage) (info TLSInfo, err error) {
 	info.Logger = lg
 	if selfSignedCertValidity == 0 {
-		err = fmt.Errorf("selfSignedCertValidity is invalid,it should be greater than 0")
-		info.Logger.Warn(
-			"cannot generate cert",
-			zap.Error(err),
-		)
+		err = fmt.Errorf("selfSignedCertValidity 是无效的,它应该大于0 ")
+		info.Logger.Warn("不能生成证书", zap.Error(err))
 		return
 	}
 	err = fileutil.TouchDirAll(dirpath)
 	if err != nil {
 		if info.Logger != nil {
-			info.Logger.Warn(
-				"cannot create cert directory",
-				zap.Error(err),
-			)
+			info.Logger.Warn("无法创建证书目录", zap.Error(err))
 		}
 		return
 	}
@@ -221,14 +213,11 @@ func SelfCert(lg *zap.Logger, dirpath string, hosts []string, selfSignedCertVali
 		return
 	}
 
-	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
-	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
+	// 编号
+	serialNumber, err := rand.Int(rand.Reader, new(big.Int).Lsh(big.NewInt(1), 128))
 	if err != nil {
 		if info.Logger != nil {
-			info.Logger.Warn(
-				"cannot generate random number",
-				zap.Error(err),
-			)
+			info.Logger.Warn("无法生成随机数", zap.Error(err))
 		}
 		return
 	}
@@ -238,17 +227,15 @@ func SelfCert(lg *zap.Logger, dirpath string, hosts []string, selfSignedCertVali
 		Subject:      pkix.Name{Organization: []string{"etcd"}},
 		NotBefore:    time.Now(),
 		NotAfter:     time.Now().Add(time.Duration(selfSignedCertValidity) * 365 * (24 * time.Hour)),
-
-		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+		// 加密、解密
+		KeyUsage: x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+		// 服务端验证
 		ExtKeyUsage:           append([]x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth}, additionalUsages...),
 		BasicConstraintsValid: true,
 	}
 
 	if info.Logger != nil {
-		info.Logger.Warn(
-			"automatically generate certificates",
-			zap.Time("certificate-validity-bound-not-after", tmpl.NotAfter),
-		)
+		info.Logger.Warn("自动生成证书", zap.Time("certificate-validity-bound-not-after", tmpl.NotAfter))
 	}
 
 	for _, host := range hosts {

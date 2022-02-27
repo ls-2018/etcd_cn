@@ -88,15 +88,15 @@ type Etcd struct {
 	closeOnce sync.Once
 }
 
+// 每个server的Listener
 type peerListener struct {
 	net.Listener
 	serve func() error
-	close func(context.Context) error
+	close func(context.Context) error // 替换为net.Listener.Close()
 }
 
-// StartEtcd launches the etcd etcd and HTTP handlers for client/etcd communication.
-// The returned Etcd.Server is not guaranteed to have joined the cluster. Wait
-// on the Etcd.Server.ReadyNotify() channel to know when it completes and is ready for use.
+// StartEtcd 启动 用于客户端/etcd通信的 `etcd和HTTP处理程序` .不保证返回的Etcd.Server已经加入集群.
+//等待Etcd.Server.ReadyNotify()通道,以了解它何时完成并可以使用.
 func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 	if err = inCfg.Validate(); err != nil {
 		return nil, err
@@ -114,29 +114,27 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 				close(sctx.serversC)
 			}
 		}
-		e.Close()
+		e.Close() // 优雅关闭
 		e = nil
 	}()
 
 	if !cfg.SocketOpts.Empty() {
 		cfg.logger.Info(
-			"configuring socket options",
+			"配置socket选项",
 			zap.Bool("reuse-address", cfg.SocketOpts.ReuseAddress),
 			zap.Bool("reuse-port", cfg.SocketOpts.ReusePort),
 		)
 	}
 	e.cfg.logger.Info(
-		"configuring peer listeners",
+		"",
 		zap.Strings("listen-peer-urls", e.cfg.getLPURLs()),
 	)
+	// 设置每个server listener 的超时时间、证书、socket选项
 	if e.Peers, err = configurePeerListeners(cfg); err != nil {
 		return e, err
 	}
 
-	e.cfg.logger.Info(
-		"configuring client listeners",
-		zap.Strings("listen-client-urls", e.cfg.getLCURLs()),
-	)
+	e.cfg.logger.Info("配置peer listener", zap.Strings("listen-client-urls", e.cfg.getLCURLs()))
 	if e.sctxs, err = configureClientListeners(cfg); err != nil {
 		return e, err
 	}
@@ -350,9 +348,8 @@ func (e *Etcd) Config() Config {
 	return e.cfg
 }
 
-// Close gracefully shuts down all servers/listeners.
-// Client requests will be terminated with request timeout.
-// After timeout, enforce remaning requests be closed immediately.
+// Close 优雅关闭server 以及所有链接
+// 客户端请求在超时之后会终止,之后会被关闭
 func (e *Etcd) Close() {
 	fields := []zap.Field{
 		zap.String("name", e.cfg.Name),
@@ -361,22 +358,18 @@ func (e *Etcd) Close() {
 		zap.Strings("advertise-client-urls", e.cfg.getACURLs()),
 	}
 	lg := e.GetLogger()
-	lg.Info("closing etcd etcd", fields...)
+	lg.Info("关闭etcd ing...", fields...)
 	defer func() {
-		lg.Info("closed etcd etcd", fields...)
-		verify.MustVerifyIfEnabled(verify.Config{
-			Logger:     lg,
-			DataDir:    e.cfg.Dir,
-			ExactIndex: false,
-		})
-		lg.Sync()
+		lg.Info("关闭etcd", fields...)
+		verify.MustVerifyIfEnabled(verify.Config{Logger: lg, DataDir: e.cfg.Dir, ExactIndex: false})
+		lg.Sync() // log都刷到磁盘
 	}()
 
 	e.closeOnce.Do(func() {
 		close(e.stopc)
 	})
 
-	// close client requests with request timeout
+	// 使用请求超时关闭客户端请求
 	timeout := 2 * time.Second
 	if e.Server != nil {
 		timeout = e.Server.Cfg.ReqTimeout()
@@ -465,15 +458,16 @@ func (e *Etcd) Err() <-chan error {
 }
 
 func configurePeerListeners(cfg *Config) (peers []*peerListener, err error) {
+	// 更新密码套件
 	if err = updateCipherSuites(&cfg.PeerTLSInfo, cfg.CipherSuites); err != nil {
 		return nil, err
 	}
 	if err = cfg.PeerSelfCert(); err != nil {
-		cfg.logger.Fatal("failed to get peer self-signed certs", zap.Error(err))
+		cfg.logger.Fatal("未能获得同伴的自签名证书", zap.Error(err))
 	}
 	if !cfg.PeerTLSInfo.Empty() {
 		cfg.logger.Info(
-			"starting with peer TLS",
+			"从对等的TLS开始",
 			zap.String("tls-info", fmt.Sprintf("%+v", cfg.PeerTLSInfo)),
 			zap.Strings("cipher-suites", cfg.CipherSuites),
 		)
@@ -487,7 +481,7 @@ func configurePeerListeners(cfg *Config) (peers []*peerListener, err error) {
 		for i := range peers {
 			if peers[i] != nil && peers[i].close != nil {
 				cfg.logger.Warn(
-					"closing peer listener",
+					"关闭节点listener",
 					zap.String("address", cfg.LPUrls[i].String()),
 					zap.Error(err),
 				)
@@ -501,10 +495,10 @@ func configurePeerListeners(cfg *Config) (peers []*peerListener, err error) {
 	for i, u := range cfg.LPUrls {
 		if u.Scheme == "http" {
 			if !cfg.PeerTLSInfo.Empty() {
-				cfg.logger.Warn("scheme is HTTP while key and cert files are present; ignoring key and cert files", zap.String("peer-url", u.String()))
+				cfg.logger.Warn("在钥匙和证书文件存在的情况下,方案为HTTP;忽略钥匙和证书文件", zap.String("peer-url", u.String()))
 			}
 			if cfg.PeerTLSInfo.ClientCertAuth {
-				cfg.logger.Warn("scheme is HTTP while --peer-client-cert-auth is enabled; ignoring client cert auth for this URL", zap.String("peer-url", u.String()))
+				cfg.logger.Warn("方案为HTTP;当启用 --peer-client-cert-auth;忽略钥匙和证书文件", zap.String("peer-url", u.String()))
 			}
 		}
 		peers[i] = &peerListener{close: func(context.Context) error { return nil }}
@@ -516,7 +510,7 @@ func configurePeerListeners(cfg *Config) (peers []*peerListener, err error) {
 		if err != nil {
 			return nil, err
 		}
-		// once serve, overwrite with 'http.Server.Shutdown'
+		//
 		peers[i].close = func(context.Context) error {
 			return peers[i].Listener.Close()
 		}
@@ -584,7 +578,9 @@ func (e *Etcd) servePeers() (err error) {
 	return nil
 }
 
+// 配置与etcdctl客户端的listener选项
 func configureClientListeners(cfg *Config) (sctxs map[string]*serveCtx, err error) {
+	//更新密码套件
 	if err = updateCipherSuites(&cfg.ClientTLSInfo, cfg.CipherSuites); err != nil {
 		return nil, err
 	}

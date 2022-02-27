@@ -297,13 +297,13 @@ func (c *ServerConfig) SnapDir() string { return filepath.Join(c.MemberDir(), "s
 
 func (c *ServerConfig) ShouldDiscover() bool { return c.DiscoveryURL != "" }
 
-// ReqTimeout returns timeout for request to finish.
+// ReqTimeout 返回请求完成的超时时间
 func (c *ServerConfig) ReqTimeout() time.Duration {
-	// 5s for queue waiting, computation and disk IO delay
-	// + 2 * election timeout for possible leader election
+	// 5用于队列等待,计算和磁盘IO延迟+ 2倍选举超时
 	return 5*time.Second + 2*time.Duration(c.ElectionTicks*int(c.TickMs))*time.Millisecond
 }
 
+// 选举超时
 func (c *ServerConfig) ElectionTimeout() time.Duration {
 	return time.Duration(c.ElectionTicks*int(c.TickMs)) * time.Millisecond
 }

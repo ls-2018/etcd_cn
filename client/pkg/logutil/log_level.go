@@ -20,7 +20,7 @@ import (
 
 var DefaultLogLevel = "info"
 
-// ConvertToZapLevel 将日志级别字符串转换为zapcore.Level。
+// ConvertToZapLevel 将日志级别字符串转换为zapcore.Level.
 func ConvertToZapLevel(lvl string) zapcore.Level {
 	var level zapcore.Level
 	if err := level.Set(lvl); err != nil {

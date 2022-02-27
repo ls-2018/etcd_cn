@@ -49,25 +49,35 @@ ETCDCTL_API=3 etcdctl alarm disarm
   ```
 - 2、url
   ```
+  
+  	ErrUnsetAdvertiseClientURLsFlag = fmt.Errorf("--advertise-client-urls is required when --listen-client-urls is set explicitly")
+	ErrLogRotationInvalidLogOutput  = fmt.Errorf("--log-outputs requires a single file path when --log-rotate-config-json is defined")
+
+  --data-dir 指定节点的数据存储目录,这些数据包括节点ID,集群ID,集群初始化配置,Snapshot文件,若未指定—wal-dir,还会存储WAL文件;
+  --wal-dir 指定节点的was文件的存储目录,若指定了该参数,wal文件会和其他数据文件分开存储.
   # member  
-    对外提供服务的地址
-    --listen-client-urls        DefaultListenClientURLs = "http://localhost:2379"
+    这个参数是etcd服务器自己监听时用的,也就是说,监听本机上的哪个网卡,哪个端口
+    --listen-client-urls        DefaultListenClientURLs = "http://192.168.1.100:2379"
     和成员之间通信的地址.用于监听其他etcd member的url
-    --listen-peer-urls          DefaultListenPeerURLs   = "http://localhost:2380"
+    --listen-peer-urls          DefaultListenPeerURLs   = "http://192.168.1.100:2380"
 
   # cluster
-    --advertise-client-urls http://127.0.0.1:2379 
+    就是客户端(etcdctl/curl等)跟etcd服务进行交互时请求的url
+    --advertise-client-urls             http://127.0.0.1:2379,http://192.168.1.100:2379,http://10.10.10.10:2379      
     集群成员的 URL地址.且会通告群集的其余成员节点.  
-    --initial-advertise-peer-urls http://127.0.0.1:12380                  
-    --initial-cluster-token etcd-cluster-1 
+    --initial-advertise-peer-urls       http://127.0.0.1:12380       告知集群其他节点url.           
     # 集群中所有节点的信息
     --initial-cluster 'infra1=http://127.0.0.1:12380,infra2=http://127.0.0.1:22380,infra3=http://127.0.0.1:32380' 
-    --initial-cluster-state new --enable-pprof --logger=zap --log-outputs=stderr
 
+  
+    请求流程:
+    etcdctl endpoints=http://192.168.1.100：2379 --debug ls
+    首先与endpoints建立链接, 获取配置在advertise-client-urls的参数
+    然后依次与每一个地址建立链接,直到操作成功
   ```
 - 3 JournalLogOutput 日志
   ```
   systemd-journal是syslog 的补充,收集来自内核、启动过程早期阶段、标准输出、系统日志、守护进程启动和运行期间错误的信息,
-  它会默认把日志记录到/run/log/journal中，仅保留一个月的日志，且系统重启后也会消失。
-  但是当新建 /var/log/journal 目录后，它又会把日志记录到这个目录中，永久保存。
+  它会默认把日志记录到/run/log/journal中,仅保留一个月的日志,且系统重启后也会消失.
+  但是当新建 /var/log/journal 目录后,它又会把日志记录到这个目录中,永久保存.
   ```

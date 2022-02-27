@@ -26,7 +26,7 @@ type SelectiveStringValue struct {
 	valids map[string]struct{}
 }
 
-// Set 检验参数是否为允许值中的有效成员 的有效成员，然后再设置基本的标志值。
+// Set 检验参数是否为允许值中的有效成员 的有效成员,然后再设置基本的标志值.
 func (ss *SelectiveStringValue) Set(s string) error {
 	if _, ok := ss.valids[s]; ok {
 		ss.v = s

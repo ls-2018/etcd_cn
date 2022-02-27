@@ -42,11 +42,9 @@ func IsDirWriteable(dir string) error {
 	return os.Remove(f)
 }
 
-// TouchDirAll is similar to os.MkdirAll. It creates directories with 0700 permission if any directory
-// does not exists. TouchDirAll also ensures the given directory is writable.
+// TouchDirAll 与os.MkdirAll类似.如果任何目录不存在,它就用0700权限创建目录.TouchDirAll也确保给定的目录是可写的.
 func TouchDirAll(dir string) error {
-	// If path is already a directory, MkdirAll does nothing and returns nil, so,
-	// first check if dir exist with an expected permission mode.
+	// 如果路径已经是一个目录,MkdirAll不做任何事情,并返回nil,所以,首先检查dir是否存在,并有预期的权限模式.
 	if Exist(dir) {
 		err := CheckDirPermission(dir, PrivateDirMode)
 		if err != nil {

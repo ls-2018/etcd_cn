@@ -87,9 +87,9 @@ Member:
   --grpc-keepalive-timeout '20s'
     关闭非响应连接之前的额外持续等待时间（0表示禁用）.20s
   --socket-reuse-port 'false'
-    启用在监听器上设置套接字选项SO_REUSEPORT.允许重新绑定一个已经在使用的端口.false
+    启用在listener上设置套接字选项SO_REUSEPORT.允许重新绑定一个已经在使用的端口.false
   --socket-reuse-address 'false'
-    启用在监听器上设置套接字选项SO_REUSEADDR 允许重新绑定一个已经在使用的端口 在TIME_WAIT 状态.
+    启用在listener上设置套接字选项SO_REUSEADDR 允许重新绑定一个已经在使用的端口 在TIME_WAIT 状态.
 
 Clustering:
   --initial-advertise-peer-urls 'http://localhost:2380'

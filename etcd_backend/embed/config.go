@@ -115,8 +115,8 @@ var (
 	CompactorModePeriodic = v3compactor.ModePeriodic
 
 	// CompactorModeRevision  "AutoCompactionRetention" is "1000",
-	// 当前版本为6000时，它将日志压缩到5000版本。
-	// 如果有足够多的日志，这将每5分钟运行一次。
+	// 当前版本为6000时,它将日志压缩到5000版本.
+	// 如果有足够多的日志,这将每5分钟运行一次.
 	CompactorModeRevision = v3compactor.ModeRevision
 )
 
@@ -267,7 +267,7 @@ type Config struct {
 	// ExperimentalEnableLeaseCheckpoint enables leader to send regular checkpoints to other members to prevent reset of remaining TTL on leader change.
 	ExperimentalEnableLeaseCheckpoint bool `json:"experimental-enable-lease-checkpoint"`
 	// ExperimentalEnableLeaseCheckpointPersist
-	// 启用持续的剩余TTL，以防止长期租赁的无限期自动续约。在v3.6中始终启用。应该用于确保从启用该功能的v3.5集群顺利升级。
+	// 启用持续的剩余TTL,以防止长期租赁的无限期自动续约.在v3.6中始终启用.应该用于确保从启用该功能的v3.5集群顺利升级.
 	// 需要启用 experimental-enable-lease-checkpoint
 	// Deprecated in v3.6.
 	// TODO: Delete in v3.7
@@ -354,7 +354,7 @@ type configYAML struct {
 	configJSON
 }
 
-// configJSON 有文件选项，被翻译成配置选项
+// configJSON 有文件选项,被翻译成配置选项
 type configJSON struct {
 	LPUrlsJSON string `json:"listen-peer-urls"`
 	LCUrlsJSON string `json:"listen-client-urls"`
@@ -446,11 +446,7 @@ func NewConfig() *Config {
 	return cfg
 }
 
-<<<<<<< HEAD
 // ConfigFromFile OK
-=======
-// OK
->>>>>>> d8bedd4943fba8d6784b390f717d0d21f25aa0c8
 func ConfigFromFile(path string) (*Config, error) {
 	cfg := &configYAML{Config: *NewConfig()}
 	if err := cfg.configFromFile(path); err != nil { // ✅
@@ -528,7 +524,7 @@ func (cfg *configYAML) configFromFile(path string) error {
 		cfg.HostWhitelist = uv.Values
 	}
 
-	// 如果设置了discovery flag ，则清除由InitialClusterFromName设置的默认初始集群
+	// 如果设置了discovery flag ,则清除由InitialClusterFromName设置的默认初始集群
 	if (cfg.Durl != "" || cfg.DNSCluster != "") && cfg.InitialCluster == defaultInitialCluster {
 		cfg.InitialCluster = ""
 	}
@@ -554,9 +550,10 @@ func (cfg *configYAML) configFromFile(path string) error {
 	return cfg.Validate() // ✅
 }
 
+// 更新密码套件
 func updateCipherSuites(tls *transport.TLSInfo, ss []string) error {
 	if len(tls.CipherSuites) > 0 && len(ss) > 0 {
-		return fmt.Errorf("TLSInfo.CipherSuites is already specified (given %v)", ss)
+		return fmt.Errorf("TLSInfo.CipherSuites已经指定(given %v)", ss)
 	}
 	if len(ss) > 0 {
 		cs := make([]uint16, len(ss))
@@ -572,7 +569,7 @@ func updateCipherSuites(tls *transport.TLSInfo, ss []string) error {
 	return nil
 }
 
-// Validate 确保 '*embed.Config' 字段是正确配置的。
+// Validate 确保 '*embed.Config' 字段是正确配置的.
 func (cfg *Config) Validate() error {
 	if err := cfg.setupLogging(); err != nil { // ✅
 		return err
@@ -594,7 +591,7 @@ func (cfg *Config) Validate() error {
 		addrs := cfg.getACURLs()
 		return fmt.Errorf(`--advertise-client-urls %q 必须是 "host:port" (%v)`, strings.Join(addrs, ","), err)
 	}
-	// 检查是否有冲突的标志通过。
+	// 检查是否有冲突的标志通过.
 	nSet := 0
 	for _, v := range []bool{cfg.Durl != "", cfg.InitialCluster != "", cfg.DNSCluster != ""} {
 		if v {
@@ -620,10 +617,10 @@ func (cfg *Config) Validate() error {
 		return fmt.Errorf("--election-timeout[%vms] 必须是5倍 --heartbeat-interval[%vms]", cfg.ElectionMs, cfg.TickMs)
 	}
 	if cfg.ElectionMs > maxElectionMs {
-		return fmt.Errorf("--election-timeout[%vms] 时间太长，应该小于 %vms", cfg.ElectionMs, maxElectionMs)
+		return fmt.Errorf("--election-timeout[%vms] 时间太长,应该小于 %vms", cfg.ElectionMs, maxElectionMs)
 	}
 
-	// 最后检查一下，因为在etcdmain中代理可能会使这个问题得到解决。
+	// 最后检查一下,因为在etcdmain中代理可能会使这个问题得到解决.
 	if cfg.LCUrls != nil && cfg.ACUrls == nil {
 		return ErrUnsetAdvertiseClientURLsFlag
 	}
@@ -636,7 +633,7 @@ func (cfg *Config) Validate() error {
 	}
 	// false,false 不会走
 	if !cfg.ExperimentalEnableLeaseCheckpointPersist && cfg.ExperimentalEnableLeaseCheckpoint {
-		cfg.logger.Warn("检测到启用了Checkpoint而没有持久性。考虑启用experimental-enable-le-checkpoint-persist")
+		cfg.logger.Warn("检测到启用了Checkpoint而没有持久性.考虑启用experimental-enable-le-checkpoint-persist")
 	}
 	if !cfg.ExperimentalEnableLeaseCheckpoint && !cfg.ExperimentalEnableLeaseCheckpointPersist {
 		// false ,false  默认走这里
@@ -775,14 +772,15 @@ func (cfg Config) defaultClientHost() bool {
 	return len(cfg.ACUrls) == 1 && cfg.ACUrls[0].String() == DefaultAdvertiseClientURLs
 }
 
+// etcd 客户端自签
 func (cfg *Config) ClientSelfCert() (err error) {
-	if !cfg.ClientAutoTLS {
-		return nil
-	}
-	if !cfg.ClientTLSInfo.Empty() {
-		cfg.logger.Warn("ignoring client auto TLS since certs given")
-		return nil
-	}
+	//if !cfg.ClientAutoTLS {
+	//	return nil
+	//}
+	//if !cfg.ClientTLSInfo.Empty() {
+	//	cfg.logger.Warn("忽略客户端自动TLS,因为已经给出了证书")
+	//	return nil
+	//}
 	chosts := make([]string, len(cfg.LCUrls))
 	for i, u := range cfg.LCUrls {
 		chosts[i] = u.Host
@@ -795,18 +793,18 @@ func (cfg *Config) ClientSelfCert() (err error) {
 }
 
 func (cfg *Config) PeerSelfCert() (err error) {
-	if !cfg.PeerAutoTLS {
-		return nil
-	}
-	if !cfg.PeerTLSInfo.Empty() {
-		cfg.logger.Warn("如果证书给出  则忽略peer自动TLS")
-		return nil
-	}
+	//if !cfg.PeerAutoTLS {
+	//	return nil
+	//}
+	//if !cfg.PeerTLSInfo.Empty() {
+	//	cfg.logger.Warn("如果证书给出  则忽略peer自动TLS")
+	//	return nil
+	//}
 	phosts := make([]string, len(cfg.LPUrls))
 	for i, u := range cfg.LPUrls {
 		phosts[i] = u.Host
 	}
-	cfg.PeerTLSInfo, err = transport.SelfCert(cfg.logger, filepath.Join(cfg.Dir, "fixtures", "peer"), phosts, cfg.SelfSignedCertValidity)
+	cfg.PeerTLSInfo, err = transport.SelfCert(cfg.logger, filepath.Join(cfg.Dir, "fixtures", "peer"), phosts, cfg.SelfSignedCertValidity)// ?年
 	if err != nil {
 		return err
 	}
@@ -817,7 +815,7 @@ func (cfg *Config) PeerSelfCert() (err error) {
 func (cfg *Config) UpdateDefaultClusterFromName(defaultInitialCluster string) (string, error) {
 	// default=http://localhost:2380
 	if defaultHostname == "" || defaultHostStatus != nil {
-		// update 'initial-cluster' when only the name is specified (e.g. 'etcd --name=abc')
+		// 当 指定名称时,更新'initial-cluster'（例如,'etcd --name=abc'）.
 		if cfg.Name != DefaultName && cfg.InitialCluster == defaultInitialCluster {
 			cfg.InitialCluster = cfg.InitialClusterFromName(cfg.Name)
 		}
@@ -847,7 +845,7 @@ func (cfg *Config) UpdateDefaultClusterFromName(defaultInitialCluster string) (s
 	return dhost, defaultHostStatus
 }
 
-// checkBindURLs 如果任何URL使用域名，则返回错误。
+// checkBindURLs 如果任何URL使用域名,则返回错误.
 func checkBindURLs(urls []url.URL) error {
 	for _, url := range urls {
 		if url.Scheme == "unix" || url.Scheme == "unixs" {

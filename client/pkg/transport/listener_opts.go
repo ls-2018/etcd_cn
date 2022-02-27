@@ -9,10 +9,10 @@ type ListenerOptions struct {
 	Listener     net.Listener
 	ListenConfig net.ListenConfig
 
-	socketOpts       *SocketOpts
-	tlsInfo          *TLSInfo
+	socketOpts       *SocketOpts // 套接字选项
+	tlsInfo          *TLSInfo    // 证书信息
 	skipTLSInfoCheck bool
-	writeTimeout     time.Duration
+	writeTimeout     time.Duration // 设置读写超时
 	readTimeout      time.Duration
 }
 
@@ -47,10 +47,10 @@ func (lo *ListenerOptions) IsTLS() bool {
 	return !lo.tlsInfo.Empty()
 }
 
-// ListenerOption are options which can be applied to the listener.
+// ListenerOption 是可以应用于listener的选项.
 type ListenerOption func(*ListenerOptions)
 
-// WithTimeout allows for a read or write timeout to be applied to the listener.
+// WithTimeout 允许对listener应用一个读或写的超时.
 func WithTimeout(read, write time.Duration) ListenerOption {
 	return func(lo *ListenerOptions) {
 		lo.writeTimeout = write
@@ -58,12 +58,12 @@ func WithTimeout(read, write time.Duration) ListenerOption {
 	}
 }
 
-// WithSocketOpts defines socket options that will be applied to the listener.
+// WithSocketOpts 定义了将应用于listener的套接字选项.
 func WithSocketOpts(s *SocketOpts) ListenerOption {
 	return func(lo *ListenerOptions) { lo.socketOpts = s }
 }
 
-// WithTLSInfo adds TLS credentials to the listener.
+// WithTLSInfo 向listener添加TLS证书.
 func WithTLSInfo(t *TLSInfo) ListenerOption {
 	return func(lo *ListenerOptions) { lo.tlsInfo = t }
 }

@@ -41,8 +41,11 @@ import (
 	"google.golang.org/grpc"
 )
 
+// 数据目录下的几种子目录
 type dirType string
 
+// member、proxy只能存在一种
+// 都没有就返回empty[节点运行之初]
 var (
 	dirMember = dirType("member")
 	dirProxy  = dirType("proxy")
@@ -84,22 +87,22 @@ func startEtcdOrProxy(args []string) {
 			logger.Sync()
 		}
 	}()
-
+	// TODO 没明白这个函数是干啥的,  防止Name发生变化,InitialCluster没有生效
 	defaultHost, dhErr := (&cfg.ec).UpdateDefaultClusterFromName(defaultInitialCluster)
 	if defaultHost != "" {
 		lg.Info(
-			"detected default host for advertise",
+			"检测到默认的广播主机",
 			zap.String("host", defaultHost),
 		)
 	}
 	if dhErr != nil {
-		lg.Info("failed to detect default host", zap.Error(dhErr))
+		lg.Info("未能检测到默认主机", zap.Error(dhErr))
 	}
 
 	if cfg.ec.Dir == "" {
 		cfg.ec.Dir = fmt.Sprintf("%v.etcd", cfg.ec.Name)
 		lg.Warn(
-			"'data-dir' was empty; using default",
+			"'data-dir'是空的,使用默认的default",
 			zap.String("data-dir", cfg.ec.Dir),
 		)
 	}
@@ -109,25 +112,18 @@ func startEtcdOrProxy(args []string) {
 
 	which := identifyDataDirOrDie(cfg.ec.GetLogger(), cfg.ec.Dir)
 	if which != dirEmpty {
-		lg.Info(
-			"etcd has been already initialized",
-			zap.String("data-dir", cfg.ec.Dir),
-			zap.String("dir-type", string(which)),
-		)
+		lg.Info("etcd数据已经被初始化了", zap.String("data-dir", cfg.ec.Dir), zap.String("dir-type", string(which)))
 		switch which {
 		case dirMember:
 			stopped, errc, err = startEtcd(&cfg.ec)
 		case dirProxy:
 			err = startProxy(cfg)
 		default:
-			lg.Panic(
-				"unknown directory type",
-				zap.String("dir-type", string(which)),
-			)
+			lg.Panic("未知目录类型", zap.String("dir-type", string(which)))
 		}
 	} else {
-		shouldProxy := cfg.isProxy()
-		if !shouldProxy {
+		shouldProxy := cfg.isProxy() // 是否开启代理模式
+		if !shouldProxy {            // 一般不会开启
 			stopped, errc, err = startEtcd(&cfg.ec)
 			if derr, ok := err.(*etcdserver.DiscoveryError); ok && derr.Err == v2discovery.ErrFullCluster {
 				if cfg.shouldFallbackToProxy() {
@@ -219,13 +215,13 @@ func startEtcdOrProxy(args []string) {
 	osutil.Exit(0)
 }
 
-// startEtcd runs StartEtcd in addition to hooks needed for standalone etcd.
+// startEtcd
 func startEtcd(cfg *embed.Config) (<-chan struct{}, <-chan error, error) {
-	e, err := embed.StartEtcd(cfg)
+	e, err := embed.StartEtcd(cfg) // 异步启动etcd| http
 	if err != nil {
 		return nil, nil, err
 	}
-	osutil.RegisterInterruptHandler(e.Close)
+	osutil.RegisterInterruptHandler(e.Close) // 注册中断处理程序,但不会执行
 	select {
 	case <-e.Server.ReadyNotify(): // wait for e.Server to join the cluster
 	case <-e.Server.StopNotify(): // publish aborted from 'ErrStopped'
@@ -420,15 +416,14 @@ func startProxy(cfg *config) error {
 	return nil
 }
 
-// identifyDataDirOrDie returns the type of the data dir.
-// Dies if the datadir is invalid.
+// identifyDataDirOrDie 识别数据目录,  返回data dir的类型. 如果datadir无效,则视为无效.
 func identifyDataDirOrDie(lg *zap.Logger, dir string) dirType {
 	names, err := fileutil.ReadDir(dir)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return dirEmpty
 		}
-		lg.Fatal("failed to list data directory", zap.String("dir", dir), zap.Error(err))
+		lg.Fatal("未能列出数据目录", zap.String("dir", dir), zap.Error(err))
 	}
 
 	var m, p bool
@@ -439,16 +434,12 @@ func identifyDataDirOrDie(lg *zap.Logger, dir string) dirType {
 		case dirProxy:
 			p = true
 		default:
-			lg.Warn(
-				"found invalid file under data directory",
-				zap.String("filename", name),
-				zap.String("data-dir", dir),
-			)
+			lg.Warn("在数据目录下发现无效的文件", zap.String("filename", name), zap.String("data-dir", dir))
 		}
 	}
 
 	if m && p {
-		lg.Fatal("invalid datadir; both member and proxy directories exist")
+		lg.Fatal("无效的数据目录,成员目录和代理目录都存在")
 	}
 	if m {
 		return dirMember

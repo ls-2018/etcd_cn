@@ -41,7 +41,7 @@ func (cfg Config) GetLogger() *zap.Logger {
 	return l
 }
 
-// setupLogging 初始化etcd日志。必须在标志解析或完成配置embed.Config后调用。
+// setupLogging 初始化etcd日志.必须在标志解析或完成配置embed.Config后调用.
 func (cfg *Config) setupLogging() error {
 	switch cfg.Logger {
 	case "zap":
@@ -103,7 +103,7 @@ func (cfg *Config) setupLogging() error {
 			copied.OutputPaths = outputPaths
 			copied.ErrorOutputPaths = errOutputPaths
 			copied = logutil.MergeOutputPaths(copied)                                    // /dev/null 判断
-			copied.Level = zap.NewAtomicLevelAt(logutil.ConvertToZapLevel(cfg.LogLevel)) // 是一个方便的函数，它创建一个AtomicLevel，然后用给定的级别调用SetLevel。
+			copied.Level = zap.NewAtomicLevelAt(logutil.ConvertToZapLevel(cfg.LogLevel)) // 是一个方便的函数,它创建一个AtomicLevel,然后用给定的级别调用SetLevel.
 			if cfg.ZapLoggerBuilder == nil {
 				lg, err := copied.Build() // 从配置和选项中构建一个logger
 				if err != nil {
@@ -115,7 +115,7 @@ func (cfg *Config) setupLogging() error {
 			if len(cfg.LogOutputs) > 1 {
 				for _, v := range cfg.LogOutputs {
 					if v != DefaultLogOutput {
-						return fmt.Errorf("运行systemd/journal，但其他 '--log-outputs' values (%q) 被配置为 'default'; 用其他的值重写 'default'", cfg.LogOutputs)
+						return fmt.Errorf("运行systemd/journal,但其他 '--log-outputs' values (%q) 被配置为 'default'; 用其他的值重写 'default'", cfg.LogOutputs)
 					}
 				}
 			}
@@ -181,7 +181,7 @@ func (cfg *Config) setupLogging() error {
 	return nil
 }
 
-// NewZapLoggerBuilder 生成一个zap logger builder，为embedded  etcd设置给定的loger。
+// NewZapLoggerBuilder 生成一个zap logger builder,为embedded  etcd设置给定的loger.
 func NewZapLoggerBuilder(lg *zap.Logger) func(*Config) error {
 	return func(cfg *Config) error {
 		cfg.loggerMu.Lock()
@@ -192,7 +192,7 @@ func NewZapLoggerBuilder(lg *zap.Logger) func(*Config) error {
 }
 
 // SetupGlobalLoggers 配置全loggers (grpc, zapGlobal)基于cfg
-// 该方法默认不被embed etcd执行（从3.5开始），以实现grpc/zap.Global日志独立配置或跨越独立生命周期的设置（如测试）。
+// 该方法默认不被embed etcd执行（从3.5开始）,以实现grpc/zap.Global日志独立配置或跨越独立生命周期的设置（如测试）.
 func (cfg *Config) SetupGlobalLoggers() {
 	lg := cfg.GetLogger()
 	if lg != nil {
@@ -213,7 +213,7 @@ type logRotationConfig struct {
 // Sync implements zap.Sink
 func (logRotationConfig) Sync() error { return nil }
 
-// setupLogRotation 初始化单个文件路径目标的日志旋转。
+// setupLogRotation 初始化单个文件路径目标的日志旋转.
 func setupLogRotation(logOutputs []string, logRotateConfigJSON string) error {
 	var logRotationConfig logRotationConfig
 	outputFilePaths := 0

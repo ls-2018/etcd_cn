@@ -37,8 +37,7 @@ var (
 	interruptHandlers = []InterruptHandler{}
 )
 
-// RegisterInterruptHandler registers a new InterruptHandler. Handlers registered
-// after interrupt handing was initiated will not be executed.
+// RegisterInterruptHandler 注册中断处理程序,但不会执行
 func RegisterInterruptHandler(h InterruptHandler) {
 	interruptRegisterMu.Lock()
 	defer interruptRegisterMu.Unlock()

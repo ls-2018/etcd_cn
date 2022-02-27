@@ -21,7 +21,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-// DefaultZapLoggerConfig 定义了默认的zap logger  配置。
+// DefaultZapLoggerConfig 定义了默认的zap logger  配置.
 var DefaultZapLoggerConfig = zap.Config{
 	Level: zap.NewAtomicLevelAt(ConvertToZapLevel(DefaultLogLevel)),
 
@@ -33,7 +33,7 @@ var DefaultZapLoggerConfig = zap.Config{
 
 	Encoding: "json",
 
-	// 复制自 "zap.NewProductionEncoderConfig"，并进行了一些更新。
+	// 复制自 "zap.NewProductionEncoderConfig",并进行了一些更新.
 	EncoderConfig: zapcore.EncoderConfig{
 		TimeKey:        "ts",
 		LevelKey:       "level",
@@ -53,7 +53,7 @@ var DefaultZapLoggerConfig = zap.Config{
 	ErrorOutputPaths: []string{"stderr"},
 }
 
-// MergeOutputPaths 合并日志输出路径，解决冲突。,如果有/dev/null , 就丢弃其他所有
+// MergeOutputPaths 合并日志输出路径,解决冲突.,如果有/dev/null , 就丢弃其他所有
 func MergeOutputPaths(cfg zap.Config) zap.Config {
 	_ = zap.NewProductionEncoderConfig
 	outputs := make(map[string]struct{})

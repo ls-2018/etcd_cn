@@ -159,8 +159,8 @@ func newConfig() *config {
 	fs.DurationVar(&cfg.ec.GRPCKeepAliveMinTime, "grpc-keepalive-min-time", cfg.ec.GRPCKeepAliveMinTime, "客户端在ping服务器之前应等待的最短持续时间间隔.")
 	fs.DurationVar(&cfg.ec.GRPCKeepAliveInterval, "grpc-keepalive-interval", cfg.ec.GRPCKeepAliveInterval, "服务器到客户端ping的频率持续时间.以检查连接是否处于活动状态（0表示禁用）.")
 	fs.DurationVar(&cfg.ec.GRPCKeepAliveTimeout, "grpc-keepalive-timeout", cfg.ec.GRPCKeepAliveTimeout, "关闭非响应连接之前的额外持续等待时间（0表示禁用）.20s")
-	fs.BoolVar(&cfg.ec.SocketOpts.ReusePort, "socket-reuse-port", cfg.ec.SocketOpts.ReusePort, "启用在监听器上设置套接字选项SO_REUSEPORT.允许重新绑定一个已经在使用的端口.false")
-	fs.BoolVar(&cfg.ec.SocketOpts.ReuseAddress, "socket-reuse-address", cfg.ec.SocketOpts.ReuseAddress, "启用在监听器上设置套接字选项SO_REUSEADDR 允许重新绑定一个已经在使用的端口 在`TIME_WAIT` 状态.")
+	fs.BoolVar(&cfg.ec.SocketOpts.ReusePort, "socket-reuse-port", cfg.ec.SocketOpts.ReusePort, "启用在listener上设置套接字选项SO_REUSEPORT.允许重新绑定一个已经在使用的端口.false")
+	fs.BoolVar(&cfg.ec.SocketOpts.ReuseAddress, "socket-reuse-address", cfg.ec.SocketOpts.ReuseAddress, "启用在listener上设置套接字选项SO_REUSEADDR 允许重新绑定一个已经在使用的端口 在`TIME_WAIT` 状态.")
 
 	// raft 连接超时
 	fs.DurationVar(&rafthttp.ConnReadTimeout, "raft-read-timeout", rafthttp.DefaultConnReadTimeout, "在每个rafthttp连接上设置的读取超时 5s")
@@ -389,11 +389,7 @@ func (cfg *config) configFromFile(path string) error {
 	}
 	cfg.ec = *eCfg
 
-<<<<<<< HEAD
-
-=======
 	// 加载额外的配置信息
->>>>>>> d8bedd4943fba8d6784b390f717d0d21f25aa0c8
 	b, rerr := ioutil.ReadFile(path)
 	if rerr != nil {
 		return rerr
@@ -425,13 +421,14 @@ func (cfg *config) mayBeProxy() bool {
 
 func (cfg *config) validate() error {
 	err := cfg.ec.Validate()
-	// TODO(yichengq): 通过 discovery service case加入，请检查这一点。
+	// TODO(yichengq): 通过 discovery service case加入,请检查这一点.
 	if err == embed.ErrUnsetAdvertiseClientURLsFlag && cfg.mayBeProxy() {
 		return nil
 	}
 	return err
 }
 
+//是否开启代理模式
 func (cfg config) isProxy() bool               { return cfg.cf.proxy.String() != proxyFlagOff }
 func (cfg config) isReadonlyProxy() bool       { return cfg.cf.proxy.String() == proxyFlagReadonly }
 func (cfg config) shouldFallbackToProxy() bool { return cfg.cf.fallback.String() == fallbackFlagProxy }
