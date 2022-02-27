@@ -69,10 +69,11 @@ type servers struct {
 	http   *http.Server
 }
 
+// OK
 func newServeCtx(lg *zap.Logger) *serveCtx {
 	ctx, cancel := context.WithCancel(context.Background())
 	if lg == nil {
-		lg = zap.NewNop()
+		lg = zap.NewNop() // 不会输出的logger
 	}
 	return &serveCtx{
 		lg:           lg,

@@ -135,6 +135,7 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 	}
 
 	e.cfg.logger.Info("配置peer listener", zap.Strings("listen-client-urls", e.cfg.getLCURLs()))
+	// 设置每个client listener 的超时时间、证书、socket选项
 	if e.sctxs, err = configureClientListeners(cfg); err != nil {
 		return e, err
 	}
@@ -586,11 +587,12 @@ func configureClientListeners(cfg *Config) (sctxs map[string]*serveCtx, err erro
 	if err = updateCipherSuites(&cfg.ClientTLSInfo, cfg.CipherSuites); err != nil {
 		return nil, err
 	}
+	// LCURLS 自签证书
 	if err = cfg.ClientSelfCert(); err != nil {
-		cfg.logger.Fatal("failed to get client self-signed certs", zap.Error(err))
+		cfg.logger.Fatal("未能获得客户自签名的证书", zap.Error(err))
 	}
 	if cfg.EnablePprof {
-		cfg.logger.Info("pprof is enabled", zap.String("path", debugutil.HTTPPrefixPProf))
+		cfg.logger.Info("允许性能分析", zap.String("path", debugutil.HTTPPrefixPProf))
 	}
 
 	sctxs = make(map[string]*serveCtx)
@@ -598,14 +600,14 @@ func configureClientListeners(cfg *Config) (sctxs map[string]*serveCtx, err erro
 		sctx := newServeCtx(cfg.logger)
 		if u.Scheme == "http" || u.Scheme == "unix" {
 			if !cfg.ClientTLSInfo.Empty() {
-				cfg.logger.Warn("scheme is HTTP while key and cert files are present; ignoring key and cert files", zap.String("client-url", u.String()))
+				cfg.logger.Warn("在钥匙和证书文件存在的情况下，方案为HTTP；忽略钥匙和证书文件", zap.String("client-url", u.String()))
 			}
 			if cfg.ClientTLSInfo.ClientCertAuth {
-				cfg.logger.Warn("scheme is HTTP while --client-cert-auth is enabled; ignoring client cert auth for this URL", zap.String("client-url", u.String()))
+				cfg.logger.Warn("方案是HTTP，同时启用了-客户证书认证；该URL忽略了客户证书认证。", zap.String("client-url", u.String()))
 			}
 		}
 		if (u.Scheme == "https" || u.Scheme == "unixs") && cfg.ClientTLSInfo.Empty() {
-			return nil, fmt.Errorf("TLS key/cert (--cert-file, --key-file)必须是provided for client url %s with HTTPS scheme", u.String())
+			return nil, fmt.Errorf("TLS key/cert (--cert-file, --key-file)必须提供,当协议是%q", u.String())
 		}
 
 		network := "tcp"
