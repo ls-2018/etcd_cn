@@ -207,7 +207,7 @@ type Config struct {
 	DNSClusterServiceName string `json:"discovery-srv-name"`    // 使用DNS引导时查询的DNS srv名称的后缀.
 	Dproxy                string `json:"discovery-proxy"`       // 用于流量到发现服务的HTTP代理
 	Durl                  string `json:"discovery"`             // 用于引导群集的发现URL.
-	InitialCluster        string `json:"initial-cluster"`       // 集群中所有节点的信息.
+	InitialCluster        string `json:"initial-cluster"`       // 集群中所有节点的信息.  default=http://localhost:2380
 	InitialClusterToken   string `json:"initial-cluster-token"` // 此配置可使重新创建集群.即使配置和之前一样.也会再次生成新的集群和节点 uuid;否则会导致多个集群之间的冲突.造成未知的错误.
 	StrictReconfigCheck   bool   `json:"strict-reconfig-check"` // 拒绝可能导致仲裁丢失的重新配置请求
 
@@ -446,7 +446,11 @@ func NewConfig() *Config {
 	return cfg
 }
 
+<<<<<<< HEAD
 // ConfigFromFile OK
+=======
+// OK
+>>>>>>> d8bedd4943fba8d6784b390f717d0d21f25aa0c8
 func ConfigFromFile(path string) (*Config, error) {
 	cfg := &configYAML{Config: *NewConfig()}
 	if err := cfg.configFromFile(path); err != nil { // ✅
