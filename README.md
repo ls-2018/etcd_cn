@@ -53,8 +53,8 @@ ETCDCTL_API=3 etcdctl alarm disarm
   	ErrUnsetAdvertiseClientURLsFlag = fmt.Errorf("--advertise-client-urls is required when --listen-client-urls is set explicitly")
 	ErrLogRotationInvalidLogOutput  = fmt.Errorf("--log-outputs requires a single file path when --log-rotate-config-json is defined")
 
-  --data-dir 指定节点的数据存储目录,这些数据包括节点ID,集群ID,集群初始化配置,Snapshot文件,若未指定—wal-dir,还会存储WAL文件;
-  --wal-dir 指定节点的was文件的存储目录,若指定了该参数,wal文件会和其他数据文件分开存储.
+    --data-dir 指定节点的数据存储目录,这些数据包括节点ID,集群ID,集群初始化配置,Snapshot文件,若未指定—wal-dir,还会存储WAL文件;
+    --wal-dir 指定节点的was文件的存储目录,若指定了该参数,wal文件会和其他数据文件分开存储.
   # member  
     这个参数是etcd服务器自己监听时用的,也就是说,监听本机上的哪个网卡,哪个端口
     --listen-client-urls        DefaultListenClientURLs = "http://192.168.1.100:2379"
@@ -74,6 +74,29 @@ ETCDCTL_API=3 etcdctl alarm disarm
     etcdctl endpoints=http://192.168.1.100：2379 --debug ls
     首先与endpoints建立链接, 获取配置在advertise-client-urls的参数
     然后依次与每一个地址建立链接,直到操作成功
+  
+  
+      --advertise-client-urls=https://192.168.1.100:2379
+      --cert-file=/etc/kubernetes/pki/etcd/server.crt
+      --client-cert-auth=true
+  
+      --initial-advertise-peer-urls=https://192.168.1.100:2380
+      --initial-cluster=k8s-master01=https://192.168.1.100:2380
+  
+      --key-file=/etc/kubernetes/pki/etcd/server.key
+      --listen-client-urls=https://127.0.0.1:2379,https://192.168.1.100:2379
+      --listen-metrics-urls=http://127.0.0.1:2381
+      --listen-peer-urls=https://192.168.1.100:2380
+  
+      --name=k8s-master01
+  
+      --peer-cert-file=/etc/kubernetes/pki/etcd/peer.crt
+      --peer-client-cert-auth=true
+      --peer-key-file=/etc/kubernetes/pki/etcd/peer.key
+  
+      --peer-trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt
+      --trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt
+  
   ```
 - 3 JournalLogOutput 日志
   ```

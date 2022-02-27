@@ -124,14 +124,14 @@ func newListenConfig(sopts *SocketOpts) (net.ListenConfig, error) {
 }
 
 type TLSInfo struct {
-	// CertFile is the _server_ cert, it will also be used as a _client_ certificate if ClientCertFile is empty
+	// CertFile 服务端证书,如果ClientCertFile为空，它也将被用作_客户证书.
 	CertFile string
-	// KeyFile is the key for the CertFile
+	// KeyFile 是CertFile的密钥.
 	KeyFile string
-	// ClientCertFile is a _client_ cert for initiating connections when ClientCertAuth is defined. If ClientCertAuth
-	// is true but this value is empty, the CertFile will be used instead.
+
+	// ClientCertFile client 证书,且启用认证;则使用CertFile
 	ClientCertFile string
-	// ClientKeyFile is the key for the ClientCertFile
+	// ClientKeyFile 是ClientCertFile的密钥
 	ClientKeyFile string
 
 	TrustedCAFile       string // ca证书
@@ -158,12 +158,9 @@ type TLSInfo struct {
 	// AllowedCN  客户端必须提供的common Name;在证书里
 	AllowedCN string
 
-	// AllowedHostname is an IP address or hostname that must match the TLS
-	// certificate provided by a client.
+	// AllowedHostname 是一个IP地址或主机名，必须与客户提供的TLS证书相匹配.
 	AllowedHostname string
 
-	// Logger logs TLS errors.
-	// If nil, all logs are discarded.
 	Logger *zap.Logger
 
 	// EmptyCN indicates that the cert must have empty CN.
@@ -232,6 +229,8 @@ func SelfCert(lg *zap.Logger, dirpath string, hosts []string, selfSignedCertVali
 		// 服务端验证
 		ExtKeyUsage:           append([]x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth}, additionalUsages...),
 		BasicConstraintsValid: true,
+		IPAddresses:           []net.IP{},
+		DNSNames:              []string{},
 	}
 
 	if info.Logger != nil {
@@ -250,10 +249,7 @@ func SelfCert(lg *zap.Logger, dirpath string, hosts []string, selfSignedCertVali
 	priv, err := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
 	if err != nil {
 		if info.Logger != nil {
-			info.Logger.Warn(
-				"cannot generate ECDSA key",
-				zap.Error(err),
-			)
+			info.Logger.Warn("不能生成ECDSA密钥", zap.Error(err))
 		}
 		return
 	}
@@ -261,27 +257,21 @@ func SelfCert(lg *zap.Logger, dirpath string, hosts []string, selfSignedCertVali
 	derBytes, err := x509.CreateCertificate(rand.Reader, &tmpl, &tmpl, &priv.PublicKey, priv)
 	if err != nil {
 		if info.Logger != nil {
-			info.Logger.Warn(
-				"cannot generate x509 certificate",
-				zap.Error(err),
-			)
+			info.Logger.Warn("无法生成x509证书", zap.Error(err))
 		}
 		return
 	}
 
 	certOut, err := os.Create(certPath)
 	if err != nil {
-		info.Logger.Warn(
-			"cannot cert file",
-			zap.String("path", certPath),
-			zap.Error(err),
-		)
+		info.Logger.Warn("无法创建证书文件", zap.String("path", certPath), zap.Error(err))
 		return
 	}
+	// 证书文件
 	pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes})
 	certOut.Close()
 	if info.Logger != nil {
-		info.Logger.Info("created cert file", zap.String("path", certPath))
+		info.Logger.Info("创建的Cert文件", zap.String("path", certPath))
 	}
 
 	b, err := x509.MarshalECPrivateKey(priv)
@@ -291,18 +281,15 @@ func SelfCert(lg *zap.Logger, dirpath string, hosts []string, selfSignedCertVali
 	keyOut, err := os.OpenFile(keyPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		if info.Logger != nil {
-			info.Logger.Warn(
-				"cannot key file",
-				zap.String("path", keyPath),
-				zap.Error(err),
-			)
+			info.Logger.Warn("无法创建私钥文件", zap.String("path", keyPath), zap.Error(err))
 		}
 		return
 	}
+	// 秘钥
 	pem.Encode(keyOut, &pem.Block{Type: "EC PRIVATE KEY", Bytes: b})
 	keyOut.Close()
 	if info.Logger != nil {
-		info.Logger.Info("created key file", zap.String("path", keyPath))
+		info.Logger.Info("创建的私钥文件", zap.String("path", keyPath))
 	}
 	return SelfCert(lg, dirpath, hosts, selfSignedCertValidity)
 }

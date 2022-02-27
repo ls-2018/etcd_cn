@@ -457,17 +457,19 @@ func (e *Etcd) Err() <-chan error {
 	return e.errc
 }
 
+// 配置 peer listeners
 func configurePeerListeners(cfg *Config) (peers []*peerListener, err error) {
 	// 更新密码套件
 	if err = updateCipherSuites(&cfg.PeerTLSInfo, cfg.CipherSuites); err != nil {
 		return nil, err
 	}
+
 	if err = cfg.PeerSelfCert(); err != nil {
-		cfg.logger.Fatal("未能获得同伴的自签名证书", zap.Error(err))
+		cfg.logger.Fatal("未能获得peer的自签名证书", zap.Error(err))
 	}
 	if !cfg.PeerTLSInfo.Empty() {
 		cfg.logger.Info(
-			"从对等的TLS开始",
+			"从peer的TLS开始",
 			zap.String("tls-info", fmt.Sprintf("%+v", cfg.PeerTLSInfo)),
 			zap.Strings("cipher-suites", cfg.CipherSuites),
 		)

@@ -168,14 +168,15 @@ func newConfig() *config {
 
 	// 集群
 	fs.Var(flags.NewUniqueURLsWithExceptions(embed.DefaultInitialAdvertisePeerURLs, ""), "initial-advertise-peer-urls", "集群成员的 URL地址.且会通告群集的其余成员节点.")
-	fs.Var(flags.NewUniqueURLsWithExceptions(embed.DefaultAdvertiseClientURLs, ""), "advertise-client-urls", "List of this member's client URLs to advertise to the public.")
+	fs.Var(flags.NewUniqueURLsWithExceptions(embed.DefaultAdvertiseClientURLs, ""), "advertise-client-urls", "就是客户端(etcdctl/curl等)跟etcd服务进行交互时请求的url")
+	// 注意，不能写http://localhost:237，这样就是通知其他节点，可以用localhost访问，将导致ectd的客户端用localhost访问本地,导致访问不通.还有一个更可怕情况，ectd布置了代理层，代理层将一直通过locahost访问自己的代理接口，导致无限循环
 	fs.StringVar(&cfg.ec.Durl, "discovery", cfg.ec.Durl, "用于引导群集的发现URL.")
 	fs.Var(cfg.cf.fallback, "discovery-fallback", fmt.Sprintf("发现服务失败时的预期行为（“退出”或“代理”）.“proxy”仅支持v2 API. %q", cfg.cf.fallback.Valids()))
 
 	fs.StringVar(&cfg.ec.Dproxy, "discovery-proxy", cfg.ec.Dproxy, "用于流量到发现服务的HTTP代理.")
 	fs.StringVar(&cfg.ec.DNSCluster, "discovery-srv", cfg.ec.DNSCluster, "DNS srv域用于引导群集.")
 	fs.StringVar(&cfg.ec.DNSClusterServiceName, "discovery-srv-name", cfg.ec.DNSClusterServiceName, "使用DNS引导时查询的DNS srv名称的后缀.")
-	fs.StringVar(&cfg.ec.InitialCluster, "initial-cluster", cfg.ec.InitialCluster, "集群中所有节点的信息.")
+	fs.StringVar(&cfg.ec.InitialCluster, "initial-cluster", cfg.ec.InitialCluster, "用于引导初始集群配置，集群中所有节点的信息..")
 	fs.StringVar(&cfg.ec.InitialClusterToken, "initial-cluster-token", cfg.ec.InitialClusterToken, "创建集群的 token.这个值每个集群保持唯一.")
 	fs.Var(cfg.cf.clusterState, "initial-cluster-state", "初始集群状态 ('new' or 'existing').")
 

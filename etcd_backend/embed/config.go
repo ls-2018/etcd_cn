@@ -188,12 +188,16 @@ type Config struct {
 	MaxTxnOps           uint   `json:"max-txn-ops"`                 //事务中允许的最大操作数.
 	MaxRequestBytes     uint   `json:"max-request-bytes"`           //服务器将接受的最大客户端请求大小（字节）.
 
-	LPUrls, LCUrls []url.URL
-	APUrls, ACUrls []url.URL
-	ClientTLSInfo  transport.TLSInfo
-	ClientAutoTLS  bool
-	PeerTLSInfo    transport.TLSInfo
-	PeerAutoTLS    bool //节点之间使用生成的证书通信;默认false
+	LPUrls []url.URL // 和etcd  server 成员之间通信的地址.用于监听其他etcd member的url
+	LCUrls []url.URL // 这个参数是etcd服务器自己监听时用的,也就是说,监听本机上的哪个网卡,哪个端口
+
+	APUrls []url.URL // 就是客户端(etcd server 等)跟etcd服务进行交互时请求的url
+	ACUrls []url.URL // 就是客户端(etcdctl/curl等)跟etcd服务进行交互时请求的url
+
+	ClientTLSInfo transport.TLSInfo
+	ClientAutoTLS bool
+	PeerTLSInfo   transport.TLSInfo
+	PeerAutoTLS   bool //节点之间使用生成的证书通信;默认false
 	// SelfSignedCertValidity 客户端证书和同级证书的有效期,单位为年 ;etcd自动生成的 如果指定了ClientAutoTLS and PeerAutoTLS,
 	SelfSignedCertValidity uint `json:"self-signed-cert-validity"`
 
@@ -772,7 +776,7 @@ func (cfg Config) defaultClientHost() bool {
 	return len(cfg.ACUrls) == 1 && cfg.ACUrls[0].String() == DefaultAdvertiseClientURLs
 }
 
-// etcd 客户端自签
+// etcd LCUrls客户端自签
 func (cfg *Config) ClientSelfCert() (err error) {
 	if !cfg.ClientAutoTLS {
 		return nil
@@ -792,6 +796,7 @@ func (cfg *Config) ClientSelfCert() (err error) {
 	return updateCipherSuites(&cfg.ClientTLSInfo, cfg.CipherSuites)
 }
 
+// etcd LPUrls客户端自签
 func (cfg *Config) PeerSelfCert() (err error) {
 	if !cfg.PeerAutoTLS {
 		return nil
