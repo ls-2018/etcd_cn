@@ -32,7 +32,8 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
-// GetLogger returns the logger.
+// GetLogger
+// err := cfg.ZapLoggerBuilder(cfg)
 func (cfg Config) GetLogger() *zap.Logger {
 	cfg.loggerMu.RLock()
 	l := cfg.logger
@@ -190,17 +191,8 @@ func NewZapLoggerBuilder(lg *zap.Logger) func(*Config) error {
 	}
 }
 
-// NewZapCoreLoggerBuilder - is a deprecated setter for the logger.
-// Deprecated: Use simpler NewZapLoggerBuilder. To be removed in etcd-3.6.
-func NewZapCoreLoggerBuilder(lg *zap.Logger, _ zapcore.Core, _ zapcore.WriteSyncer) func(*Config) error {
-	return NewZapLoggerBuilder(lg)
-}
-
-// SetupGlobalLoggers configures 'global' loggers (grpc, zapGlobal) based on the cfg.
-//
-// The method is not executed by embed etcd by default (since 3.5) to
-// enable setups where grpc/zap.Global logging is configured independently
-// or spans separate lifecycle (like in tests).
+// SetupGlobalLoggers 配置全loggers (grpc, zapGlobal)基于cfg
+// 该方法默认不被embed etcd执行（从3.5开始），以实现grpc/zap.Global日志独立配置或跨越独立生命周期的设置（如测试）。
 func (cfg *Config) SetupGlobalLoggers() {
 	lg := cfg.GetLogger()
 	if lg != nil {

@@ -378,6 +378,7 @@ func (cfg *config) configFromCmdLine() error {
 	return cfg.validate() // √
 }
 
+// OK
 func (cfg *config) configFromFile(path string) error {
 	eCfg, err := embed.ConfigFromFile(path)
 	if err != nil {
@@ -385,7 +386,7 @@ func (cfg *config) configFromFile(path string) error {
 	}
 	cfg.ec = *eCfg
 
-	// load extra config information
+
 	b, rerr := ioutil.ReadFile(path)
 	if rerr != nil {
 		return rerr

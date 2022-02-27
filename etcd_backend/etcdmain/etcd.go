@@ -75,7 +75,7 @@ func startEtcdOrProxy(args []string) {
 		}
 		os.Exit(1)
 	}
-
+	// err := cfg.ZapLoggerBuilder(cfg)
 	cfg.ec.SetupGlobalLoggers()
 
 	defer func() {

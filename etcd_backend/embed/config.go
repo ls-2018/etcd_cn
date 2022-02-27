@@ -101,6 +101,7 @@ var (
 	DefaultInitialAdvertisePeerURLs = "http://localhost:2380"
 	DefaultAdvertiseClientURLs      = "http://localhost:2379"
 
+	// netutil.GetDefaultHost()
 	defaultHostname   string
 	defaultHostStatus error
 
@@ -121,6 +122,8 @@ var (
 
 func init() {
 	defaultHostname, defaultHostStatus = netutil.GetDefaultHost()
+	fmt.Println("defaultHostname", defaultHostname)
+	fmt.Println("defaultHostStatus", defaultHostStatus)
 }
 
 // Config 保存配置etcd的参数etcd.
@@ -351,7 +354,7 @@ type configYAML struct {
 	configJSON
 }
 
-// configJSON has file options that are translated into Config options
+// configJSON 有文件选项，被翻译成配置选项
 type configJSON struct {
 	LPUrlsJSON string `json:"listen-peer-urls"`
 	LCUrlsJSON string `json:"listen-client-urls"`
@@ -443,14 +446,16 @@ func NewConfig() *Config {
 	return cfg
 }
 
+// ConfigFromFile OK
 func ConfigFromFile(path string) (*Config, error) {
 	cfg := &configYAML{Config: *NewConfig()}
-	if err := cfg.configFromFile(path); err != nil {
+	if err := cfg.configFromFile(path); err != nil { // ✅
 		return nil, err
 	}
 	return &cfg.Config, nil
 }
 
+// OK
 func (cfg *configYAML) configFromFile(path string) error {
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -519,7 +524,7 @@ func (cfg *configYAML) configFromFile(path string) error {
 		cfg.HostWhitelist = uv.Values
 	}
 
-	// If a discovery flag is set, clear default initial cluster set by InitialClusterFromName
+	// 如果设置了discovery flag ，则清除由InitialClusterFromName设置的默认初始集群
 	if (cfg.Durl != "" || cfg.DNSCluster != "") && cfg.InitialCluster == defaultInitialCluster {
 		cfg.InitialCluster = ""
 	}
@@ -542,7 +547,7 @@ func (cfg *configYAML) configFromFile(path string) error {
 	if cfg.SelfSignedCertValidity == 0 {
 		cfg.SelfSignedCertValidity = 1
 	}
-	return cfg.Validate()
+	return cfg.Validate() // ✅
 }
 
 func updateCipherSuites(tls *transport.TLSInfo, ss []string) error {
@@ -565,7 +570,7 @@ func updateCipherSuites(tls *transport.TLSInfo, ss []string) error {
 
 // Validate 确保 '*embed.Config' 字段是正确配置的。
 func (cfg *Config) Validate() error {
-	if err := cfg.setupLogging(); err != nil {
+	if err := cfg.setupLogging(); err != nil { // ✅
 		return err
 	}
 	if err := checkBindURLs(cfg.LPUrls); err != nil {
@@ -804,15 +809,9 @@ func (cfg *Config) PeerSelfCert() (err error) {
 	return updateCipherSuites(&cfg.PeerTLSInfo, cfg.CipherSuites)
 }
 
-// UpdateDefaultClusterFromName updates cluster advertise URLs with, if available, default host,
-// if advertise URLs are default values(localhost:2379,2380) AND if listen URL is 0.0.0.0.
-// e.g. advertise peer URL localhost:2380 or listen peer URL 0.0.0.0:2380
-// then the advertise peer host would be updated with machine's default host,
-// while keeping the listen URL's port.
-// User can work around this by explicitly setting URL with 127.0.0.1.
-// It returns the default hostname, if used, and the error, if any, from getting the machine's default host.
-// TODO: check whether fields are set instead of whether fields have default value
+// UpdateDefaultClusterFromName 更新集群通信地址
 func (cfg *Config) UpdateDefaultClusterFromName(defaultInitialCluster string) (string, error) {
+	// default=http://localhost:2380
 	if defaultHostname == "" || defaultHostStatus != nil {
 		// update 'initial-cluster' when only the name is specified (e.g. 'etcd --name=abc')
 		if cfg.Name != DefaultName && cfg.InitialCluster == defaultInitialCluster {
