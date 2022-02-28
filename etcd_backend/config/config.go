@@ -156,15 +156,14 @@ type ServerConfig struct {
 
 	EnableGRPCGateway bool
 
-	// ExperimentalEnableDistributedTracing enables distributed tracing using OpenTelemetry protocol.
+	// ExperimentalEnableDistributedTracing 使用OpenTelemetry协议实现分布式跟踪。
 	ExperimentalEnableDistributedTracing bool
 	// ExperimentalTracerOptions are options for OpenTelemetry gRPC interceptor.
 	ExperimentalTracerOptions []otelgrpc.Option
 
 	WatchProgressNotifyInterval time.Duration
 
-	// UnsafeNoFsync disables all uses of fsync.
-	// Setting this is unsafe and will cause data loss.
+	// UnsafeNoFsync 禁用所有fsync的使用。设置这个是不安全的，会导致数据丢失。
 	UnsafeNoFsync bool `json:"unsafe-no-fsync"`
 
 	DowngradeCheckTime time.Duration

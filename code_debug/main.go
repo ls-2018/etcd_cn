@@ -1,7 +1,14 @@
 package main
 
-import "github.com/ls-2018/etcd_cn/etcdctl/ctlv3"
+import (
+	"fmt"
+	"net"
+	"strconv"
+)
 
 func main() {
-	ctlv3.Start()
+	fmt.Println(net.ParseIP("http://127.0.0.1:8080"))
+	fmt.Println(net.ParseIP("127.0.0.1:8080"))
+	fmt.Println(net.ParseIP("www.baidu.com"))
+	fmt.Println(strconv.Atoi("12h"))
 }

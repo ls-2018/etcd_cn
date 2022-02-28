@@ -33,10 +33,15 @@ ETCDCTL_API=3 etcdctl defrag
 清理alarm
 ETCDCTL_API=3 etcdctl alarm disarm
 ```
+```
+//--auto-compaction-mode=revision --auto-compaction-retention=1000 每5分钟自动压缩"latest revision" - 1000；
+//--auto-compaction-mode=periodic --auto-compaction-retention=12h 每1小时自动压缩并保留12小时窗口。
+👁etcd_backend/embed/config_test.go:TestAutoCompactionModeParse
 
 - 只保存一个小时的历史版本```etcd --auto-compaction-retention=1```
 - 只保留最近的3个版本```etcdctl compact 3```
 - 碎片整理```etcdctl defrag```
+```
 
 ### issue
 

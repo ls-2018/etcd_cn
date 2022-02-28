@@ -25,6 +25,7 @@ import (
 
 type URLs []url.URL
 
+// NewURLs OK
 func NewURLs(strs []string) (URLs, error) {
 	all := make([]url.URL, len(strs))
 	if len(all) == 0 {

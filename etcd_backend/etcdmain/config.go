@@ -235,7 +235,8 @@ func newConfig() *config {
 
 	// 版本
 	fs.BoolVar(&cfg.printVersion, "version", false, "打印版本并退出.")
-
+	//--auto-compaction-mode=revision --auto-compaction-retention=1000 每5分钟自动压缩"latest revision" - 1000；
+	//--auto-compaction-mode=periodic --auto-compaction-retention=12h 每1小时自动压缩并保留12小时窗口。
 	fs.StringVar(&cfg.ec.AutoCompactionRetention, "auto-compaction-retention", "0", "在一个小时内为mvcc键值存储的自动压缩.0表示禁用自动压缩.")
 	fs.StringVar(&cfg.ec.AutoCompactionMode, "auto-compaction-mode", "periodic", "基于时间保留的三种模式：periodic, revision")
 

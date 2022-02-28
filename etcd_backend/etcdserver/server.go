@@ -1498,7 +1498,7 @@ func (s *EtcdServer) stopWithDelay(d time.Duration, err error) {
 	}
 }
 
-// StopNotify returns a channel that receives a empty struct
+// StopNotify 当etcd停止时、会往此channel发送 empty struct
 // when the etcd is stopped.
 func (s *EtcdServer) StopNotify() <-chan struct{} { return s.done }
 

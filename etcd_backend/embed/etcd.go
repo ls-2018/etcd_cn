@@ -69,11 +69,11 @@ const (
 	reservedInternalFDNum = 150
 )
 
-// Etcd contains a running etcd etcd and its listeners.
+// Etcd 包含一个正在运行的etcd etcd和它的监听器。
 type Etcd struct {
 	Peers   []*peerListener
 	Clients []net.Listener
-	// a map of contexts for the servers that serves client requests.
+	// 一个为客户端请求提供服务的服务器的上下文映射。
 	sctxs            map[string]*serveCtx
 	metricsListeners []net.Listener
 
@@ -109,7 +109,7 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 			return
 		}
 		if !serving {
-			// errored before starting gRPC etcd for serveCtx.serversC
+			// 在为serveCtx.servicesC启动gRPC etcd之前出现错误。
 			for _, sctx := range e.sctxs {
 				close(sctx.serversC)
 			}
@@ -119,16 +119,9 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 	}()
 
 	if !cfg.SocketOpts.Empty() {
-		cfg.logger.Info(
-			"配置socket选项",
-			zap.Bool("reuse-address", cfg.SocketOpts.ReuseAddress),
-			zap.Bool("reuse-port", cfg.SocketOpts.ReusePort),
-		)
+		cfg.logger.Info("配置socket选项", zap.Bool("reuse-address", cfg.SocketOpts.ReuseAddress), zap.Bool("reuse-port", cfg.SocketOpts.ReusePort))
 	}
-	e.cfg.logger.Info(
-		"",
-		zap.Strings("listen-peer-urls", e.cfg.getLPURLs()),
-	)
+	e.cfg.logger.Info("", zap.Strings("listen-peer-urls", e.cfg.getLPURLs()))
 	// 设置每个server listener 的超时时间、证书、socket选项
 	if e.Peers, err = configurePeerListeners(cfg); err != nil {
 		return e, err
@@ -148,24 +141,25 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 		urlsmap types.URLsMap
 		token   string
 	)
+	// 成员初始化
 	memberInitialized := true
-	if !isMemberInitialized(cfg) {
+	if !isMemberInitialized(cfg) { // 判断wal目录存不存在
 		memberInitialized = false
-		urlsmap, token, err = cfg.PeerURLsMapAndToken("etcd")
+		urlsmap, token, err = cfg.PeerURLsMapAndToken("etcd") // token  {name:urls[]}
 		if err != nil {
-			return e, fmt.Errorf("error setting up initial cluster: %v", err)
+			return e, fmt.Errorf("设置初始化集群出错: %v", err)
 		}
 	}
-
-	// AutoCompactionRetention defaults to "0" if not set.
-	if len(cfg.AutoCompactionRetention) == 0 {
+	// 自动压缩配置
+	if len(cfg.AutoCompactionRetention) == 0 { // 没有设置
 		cfg.AutoCompactionRetention = "0"
 	}
+	// 根据压缩类型、压缩配置    返回时间、或条数
 	autoCompactionRetention, err := parseCompactionRetention(cfg.AutoCompactionMode, cfg.AutoCompactionRetention)
 	if err != nil {
 		return e, err
 	}
-
+	// 返回boltdb存储的数据类型，array \ map
 	backendFreelistType := parseBackendFreelistType(cfg.BackendFreelistType)
 
 	srvcfg := config.ServerConfig{
@@ -209,7 +203,7 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 		Logger:                                   cfg.logger,
 		ForceNewCluster:                          cfg.ForceNewCluster,
 		EnableGRPCGateway:                        cfg.EnableGRPCGateway,
-		ExperimentalEnableDistributedTracing:     cfg.ExperimentalEnableDistributedTracing,
+		ExperimentalEnableDistributedTracing:     cfg.ExperimentalEnableDistributedTracing, // 默认false
 		UnsafeNoFsync:                            cfg.UnsafeNoFsync,
 		EnableLeaseCheckpoint:                    cfg.ExperimentalEnableLeaseCheckpoint,
 		LeaseCheckpointPersist:                   cfg.ExperimentalEnableLeaseCheckpointPersist,
@@ -222,7 +216,7 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 		ExperimentalBootstrapDefragThresholdMegabytes: cfg.ExperimentalBootstrapDefragThresholdMegabytes,
 	}
 
-	if srvcfg.ExperimentalEnableDistributedTracing {
+	if srvcfg.ExperimentalEnableDistributedTracing { // 使用OpenTelemetry协议实现分布式跟踪。默认false
 		tctx := context.Background()
 		tracingExporter, opts, err := e.setupTracing(tctx)
 		if err != nil {
@@ -270,7 +264,7 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 	}
 
 	e.cfg.logger.Info(
-		"now serving peer/client/metrics",
+		"启动服务 peer/client/metrics",
 		zap.String("local-member-id", e.Server.ID().String()),
 		zap.Strings("initial-advertise-peer-urls", e.cfg.getAPURLs()),
 		zap.Strings("listen-peer-urls", e.cfg.getLPURLs()),
@@ -774,6 +768,7 @@ func (e *Etcd) GetLogger() *zap.Logger {
 	return l
 }
 
+// 解析 ,返回条数、时间
 func parseCompactionRetention(mode, retention string) (ret time.Duration, err error) {
 	h, err := strconv.Atoi(retention)
 	if err == nil && h >= 0 {
@@ -784,10 +779,10 @@ func parseCompactionRetention(mode, retention string) (ret time.Duration, err er
 			ret = time.Duration(int64(h)) * time.Hour
 		}
 	} else {
-		// periodic compaction
+		// 周期性压缩
 		ret, err = time.ParseDuration(retention)
 		if err != nil {
-			return 0, fmt.Errorf("error parsing CompactionRetention: %v", err)
+			return 0, fmt.Errorf("解析失败CompactionRetention: %v", err)
 		}
 	}
 	return ret, nil

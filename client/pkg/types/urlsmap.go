@@ -20,12 +20,12 @@ import (
 	"strings"
 )
 
-// URLsMap is a map from a name to its URLs.
+// URLsMap 节点名字与通信地址的对应
 type URLsMap map[string]URLs
 
-// NewURLsMap returns a URLsMap instantiated from the given string,
-// which consists of discovery-formatted names-to-URLs, like:
+// NewURLsMap 返回URLsMap 【节点名字与通信地址的对应】
 // mach0=http://1.1.1.1:2380,mach0=http://2.2.2.2::2380,mach1=http://3.3.3.3:2380,mach2=http://4.4.4.4:2380
+// 类型转换
 func NewURLsMap(s string) (URLsMap, error) {
 	m := parse(s)
 
@@ -54,7 +54,7 @@ func NewURLsMapFromStringMap(m map[string]string, sep string) (URLsMap, error) {
 	return um, nil
 }
 
-// String turns URLsMap into discovery-formatted name-to-URLs sorted by name.
+// String 返回mach0=http://1.1.1.1:2380,mach0=http://2.2.2.2::2380,mach1=http://3.3.3.3:2380,mach2=http://4.4.4.4:2380
 func (c URLsMap) String() string {
 	var pairs []string
 	for name, urls := range c {
@@ -66,8 +66,7 @@ func (c URLsMap) String() string {
 	return strings.Join(pairs, ",")
 }
 
-// URLs returns a list of all URLs.
-// The returned list is sorted in ascending lexicographical order.
+// URLs 返回所有的URLS
 func (c URLsMap) URLs() []string {
 	var urls []string
 	for _, us := range c {
@@ -79,12 +78,11 @@ func (c URLsMap) URLs() []string {
 	return urls
 }
 
-// Len returns the size of URLsMap.
 func (c URLsMap) Len() int {
 	return len(c)
 }
 
-// parse parses the given string and returns a map listing the values specified for each key.
+// parse 解析给定的字符串，并返回一个列出每个键的指定值的map。
 func parse(s string) map[string][]string {
 	m := make(map[string][]string)
 	for s != "" {

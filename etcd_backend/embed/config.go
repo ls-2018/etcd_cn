@@ -217,10 +217,10 @@ type Config struct {
 
 	// AutoCompactionMode 基于时间保留模式  时间、修订版本
 	AutoCompactionMode string `json:"auto-compaction-mode"`
-	// AutoCompactionRetention is either duration string with time unit
-	// (e.g. '5m' for 5-minute), or revision unit (e.g. '5000').
-	// If no time unit is provided and compaction mode is 'periodic',
-	// the unit defaults to hour. For example, '5' translates into 5-hour.
+
+	//--auto-compaction-mode=revision --auto-compaction-retention=1000 每5分钟自动压缩"latest revision" - 1000；
+	//--auto-compaction-mode=periodic --auto-compaction-retention=12h 每1小时自动压缩并保留12小时窗口。
+
 	AutoCompactionRetention string `json:"auto-compaction-retention"`
 
 	// GRPCKeepAliveMinTime  客户端在ping服务器之前应等待的最短持续时间间隔.
@@ -292,7 +292,7 @@ type Config struct {
 	ListenMetricsUrls     []url.URL
 	ListenMetricsUrlsJSON string `json:"listen-metrics-urls"`
 
-	// ExperimentalEnableDistributedTracing indicates if experimental tracing using OpenTelemetry is enabled.
+	// ExperimentalEnableDistributedTracing 表示是否启用了使用OpenTelemetry的实验性追踪。
 	ExperimentalEnableDistributedTracing bool `json:"experimental-enable-distributed-tracing"`
 	// ExperimentalDistributedTracingAddress is the address of the OpenTelemetry Collector.
 	// Can only be set if ExperimentalEnableDistributedTracing is true.
@@ -333,9 +333,8 @@ type Config struct {
 	// The gateway translates a RESTful HTTP API into gRPC.
 	EnableGRPCGateway bool `json:"enable-grpc-gateway"`
 
-	// UnsafeNoFsync disables all uses of fsync.
-	// Setting this is unsafe and will cause data loss.
-	UnsafeNoFsync bool `json:"unsafe-no-fsync"`
+	// UnsafeNoFsync 禁用所有fsync的使用。设置这个是不安全的，会导致数据丢失。
+	UnsafeNoFsync bool `json:"unsafe-no-fsync"` // 默认false
 	// 两次降级状态检查之间的时间间隔.
 	ExperimentalDowngradeCheckTime time.Duration `json:"experimental-downgrade-check-time"`
 
@@ -648,52 +647,51 @@ func (cfg *Config) Validate() error {
 	return fmt.Errorf("  experimental-enable-lease-checkpoint-persist   experimental-enable-lease-checkpoint 需要同时开启")
 }
 
-// PeerURLsMapAndToken sets up an initial peer URLsMap and cluster token for bootstrap or discovery.
+// PeerURLsMapAndToken 设置一个初始的peer URLsMap 和token，用于启动或发现。
 func (cfg *Config) PeerURLsMapAndToken(which string) (urlsmap types.URLsMap, token string, err error) {
 	token = cfg.InitialClusterToken
 	switch {
-	case cfg.Durl != "":
-		urlsmap = types.URLsMap{}
-		// If using discovery, generate a temporary cluster based on
-		// self's advertised peer URLs
-		urlsmap[cfg.Name] = cfg.APUrls
-		token = cfg.Durl
-
-	case cfg.DNSCluster != "":
-		clusterStrs, cerr := cfg.GetDNSClusterNames()
-		lg := cfg.logger
-		if cerr != nil {
-			lg.Warn("failed to resolve during SRV discovery", zap.Error(cerr))
-		}
-		if len(clusterStrs) == 0 {
-			return nil, "", cerr
-		}
-		for _, s := range clusterStrs {
-			lg.Info("got bootstrap from DNS for etcd-etcd", zap.String("node", s))
-		}
-		clusterStr := strings.Join(clusterStrs, ",")
-		if strings.Contains(clusterStr, "https://") && cfg.PeerTLSInfo.TrustedCAFile == "" {
-			cfg.PeerTLSInfo.ServerName = cfg.DNSCluster
-		}
-		urlsmap, err = types.NewURLsMap(clusterStr)
-		// only etcd member must belong to the discovered cluster.
-		// proxy does not need to belong to the discovered cluster.
-		if which == "etcd" {
-			if _, ok := urlsmap[cfg.Name]; !ok {
-				return nil, "", fmt.Errorf("cannot find local etcd member %q in SRV records", cfg.Name)
-			}
-		}
+	// todo 以下手动注释掉,一般不会使用以下的
+	//case cfg.Durl != "": // 用于引导群集的发现URL
+	//	urlsmap = types.URLsMap{}
+	//	// 如果使用discovery，根据advertised peer URLs 生成一个临时的集群
+	//	urlsmap[cfg.Name] = cfg.APUrls
+	//	token = cfg.Durl
+	//
+	//case cfg.DNSCluster != "": // DNS srv域用于引导群集.
+	//	clusterStrs, cerr := cfg.GetDNSClusterNames()
+	//	lg := cfg.logger
+	//	if cerr != nil {
+	//		lg.Warn("如法解析 SRV discovery", zap.Error(cerr))
+	//	}
+	//	if len(clusterStrs) == 0 {
+	//		return nil, "", cerr
+	//	}
+	//	for _, s := range clusterStrs {
+	//		lg.Info("got bootstrap from DNS for etcd-etcd", zap.String("node", s))
+	//	}
+	//	clusterStr := strings.Join(clusterStrs, ",")
+	//	if strings.Contains(clusterStr, "https://") && cfg.PeerTLSInfo.TrustedCAFile == "" {
+	//		cfg.PeerTLSInfo.ServerName = cfg.DNSCluster
+	//	}
+	//	urlsmap, err = types.NewURLsMap(clusterStr)
+	//	// only etcd member must belong to the discovered cluster.
+	//	// proxy does not need to belong to the discovered cluster.
+	//	if which == "etcd" {
+	//		if _, ok := urlsmap[cfg.Name]; !ok {
+	//			return nil, "", fmt.Errorf("cannot find local etcd member %q in SRV records", cfg.Name)
+	//		}
+	//	}
 
 	default:
-		// We're statically configured, and cluster has appropriately been set.
-		urlsmap, err = types.NewURLsMap(cfg.InitialCluster)
+		// 我们是静态配置的，
+		// infra1=http://127.0.0.1:12380,infra2=http://127.0.0.1:22380,infra3=http://127.0.0.1:32380
+		urlsmap, err = types.NewURLsMap(cfg.InitialCluster) // 仅仅是类型转换
 	}
 	return urlsmap, token, err
 }
 
-// GetDNSClusterNames uses DNS SRV records to get a list of initial nodes for cluster bootstrapping.
-// This function will return a list of one or more nodes, as well as any errors encountered while
-// performing service discovery.
+// GetDNSClusterNames 使用DNS SRV记录来获取集群启动的初始节点列表。这个函数将返回一个或多个节点的列表，以及在执行服务发现时遇到的任何错误。
 // Note: Because this checks multiple sets of SRV records, discovery should only be considered to have
 // failed if the returned node list is empty.
 func (cfg *Config) GetDNSClusterNames() ([]string, error) {
@@ -924,7 +922,7 @@ func (cfg *Config) getMetricsURLs() (ss []string) {
 	}
 	return ss
 }
-
+// 返回boltdb存储的数据类型
 func parseBackendFreelistType(freelistType string) bolt.FreelistType {
 	if freelistType == freelistArrayType {
 		return bolt.FreelistArrayType

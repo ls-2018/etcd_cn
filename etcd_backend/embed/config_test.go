@@ -177,17 +177,17 @@ func TestAutoCompactionModeInvalid(t *testing.T) {
 
 func TestAutoCompactionModeParse(t *testing.T) {
 	tests := []struct {
-		mode      string
-		retention string
-		werr      bool
+		mode      string // 模式
+		retention string // 保留配置
+		werr      bool   // 有没有错误
 		wdur      time.Duration
 	}{
-		// revision
+		// revision 修订版本【可以是条数、也可以是时间】
 		{"revision", "1", false, 1},
 		{"revision", "1h", false, time.Hour},
 		{"revision", "a", true, 0},
 		{"revision", "-1", true, 0},
-		// periodic
+		// periodic  周期【 是时间】
 		{"periodic", "1", false, time.Hour},
 		{"periodic", "a", true, 0},
 		{"revision", "-1", true, 0},

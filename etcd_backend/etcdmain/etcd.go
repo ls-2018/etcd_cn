@@ -91,7 +91,7 @@ func startEtcdOrProxy(args []string) {
 	defaultHost, dhErr := (&cfg.ec).UpdateDefaultClusterFromName(defaultInitialCluster)
 	if defaultHost != "" {
 		lg.Info(
-			"检测到默认的广播主机",
+			"检测到默认的advertise主机",
 			zap.String("host", defaultHost),
 		)
 	}
@@ -109,7 +109,7 @@ func startEtcdOrProxy(args []string) {
 
 	var stopped <-chan struct{}
 	var errc <-chan error
-
+	// 识别数据目录,  返回data dir的类型.
 	which := identifyDataDirOrDie(cfg.ec.GetLogger(), cfg.ec.Dir)
 	if which != dirEmpty {
 		lg.Info("etcd数据已经被初始化了", zap.String("data-dir", cfg.ec.Dir), zap.String("dir-type", string(which)))
@@ -223,8 +223,8 @@ func startEtcd(cfg *embed.Config) (<-chan struct{}, <-chan error, error) {
 	}
 	osutil.RegisterInterruptHandler(e.Close) // 注册中断处理程序,但不会执行
 	select {
-	case <-e.Server.ReadyNotify(): // wait for e.Server to join the cluster
-	case <-e.Server.StopNotify(): // publish aborted from 'ErrStopped'
+	case <-e.Server.ReadyNotify(): // 等待本节点加入集群
+	case <-e.Server.StopNotify(): // 收到了异常
 	}
 	return e.Server.StopNotify(), e.Err(), nil
 }
