@@ -109,3 +109,6 @@ ETCDCTL_API=3 etcdctl alarm disarm
   它会默认把日志记录到/run/log/journal中,仅保留一个月的日志,且系统重启后也会消失.
   但是当新建 /var/log/journal 目录后,它又会把日志记录到这个目录中,永久保存.
   ```
+
+
+https://blog.csdn.net/cuichongxin/article/details/118678009

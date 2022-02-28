@@ -133,7 +133,7 @@ type Config struct {
 	//独立设置wal目录.etcd会将WAL文件写入  --wal-dir而不是--data-dir. 独立的wal路径.有助于避免日志记录和其他IO操作之间的竞争.
 	WalDir string `json:"wal-dir"` // 专用wal目录的路径.
 
-	SnapshotCount uint64 `json:"snapshot-count"` // 触发快照到磁盘的已提交事务数.
+	SnapshotCount uint64 `json:"snapshot-count"` // 要将快照触发到磁盘的已提交事务数
 
 	// SnapshotCatchUpEntries 是在压缩raft存储条目后,慢的follower要追赶的条目数.我们预计follower与leader之间有毫秒级的延迟.
 	//最大吞吐量大约为10K.保持一个5K的条目就足够帮助follower赶上了.
@@ -176,7 +176,7 @@ type Config struct {
 	//
 	// See https://github.com/etcd-io/etcd/issues/9333 for more detail.
 	// todo 是否在开机时快进初始选举点.以加快选举速度.
-	InitialElectionTickAdvance bool `json:"initial-election-tick-advance"`
+	InitialElectionTickAdvance bool `json:"initial-election-tick-advance"`// 是否提前初始化选举时钟启动，以便更快的选举
 
 	// BackendBatchInterval BackendBatchInterval是提交后端事务前的最长时间.
 	BackendBatchInterval time.Duration `json:"backend-batch-interval"`
@@ -196,6 +196,7 @@ type Config struct {
 
 	ClientTLSInfo transport.TLSInfo
 	ClientAutoTLS bool
+
 	PeerTLSInfo   transport.TLSInfo
 	PeerAutoTLS   bool //节点之间使用生成的证书通信;默认false
 	// SelfSignedCertValidity 客户端证书和同级证书的有效期,单位为年 ;etcd自动生成的 如果指定了ClientAutoTLS and PeerAutoTLS,

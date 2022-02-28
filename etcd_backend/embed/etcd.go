@@ -169,24 +169,24 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 		DataDir:                                  cfg.Dir,
 		DedicatedWALDir:                          cfg.WalDir,
 		SnapshotCount:                            cfg.SnapshotCount,
-		SnapshotCatchUpEntries:                   cfg.SnapshotCatchUpEntries,
+		SnapshotCatchUpEntries:                   cfg.SnapshotCatchUpEntries, //  快照追赶数据量
 		MaxSnapFiles:                             cfg.MaxSnapFiles,
 		MaxWALFiles:                              cfg.MaxWalFiles, // 要保留的最大wal文件数（0表示不受限制）. 5
-		InitialPeerURLsMap:                       urlsmap,
+		InitialPeerURLsMap:                       urlsmap,         //  节点--> url
 		InitialClusterToken:                      token,
 		DiscoveryURL:                             cfg.Durl,
 		DiscoveryProxy:                           cfg.Dproxy,
-		NewCluster:                               cfg.IsNewCluster(),
-		PeerTLSInfo:                              cfg.PeerTLSInfo,
-		TickMs:                                   cfg.TickMs,
-		ElectionTicks:                            cfg.ElectionTicks(),
-		InitialElectionTickAdvance:               cfg.InitialElectionTickAdvance,
-		AutoCompactionRetention:                  autoCompactionRetention,
-		AutoCompactionMode:                       cfg.AutoCompactionMode,
-		QuotaBackendBytes:                        cfg.QuotaBackendBytes,
-		BackendBatchLimit:                        cfg.BackendBatchLimit, // BackendBatchLimit是提交后端事务前的最大操作数
-		BackendFreelistType:                      backendFreelistType,
-		BackendBatchInterval:                     cfg.BackendBatchInterval, // BackendBatchInterval是提交后端事务前的最长时间.
+		NewCluster:                               cfg.IsNewCluster(),             // new existing
+		PeerTLSInfo:                              cfg.PeerTLSInfo,                // server 证书信息
+		TickMs:                                   cfg.TickMs,                     // 心跳间隔
+		ElectionTicks:                            cfg.ElectionTicks(),            // 选举超时 对应多少次心跳
+		InitialElectionTickAdvance:               cfg.InitialElectionTickAdvance, // 是否提前初始化选举时钟启动，以便更快的选举
+		AutoCompactionRetention:                  autoCompactionRetention,        // 自动压缩值
+		AutoCompactionMode:                       cfg.AutoCompactionMode,         // 自动压缩模式
+		QuotaBackendBytes:                        cfg.QuotaBackendBytes,          // 资源存储阈值
+		BackendBatchLimit:                        cfg.BackendBatchLimit,          // BackendBatchLimit是提交后端事务前的最大操作数
+		BackendFreelistType:                      backendFreelistType,            // 返回boltdb存储的数据类型
+		BackendBatchInterval:                     cfg.BackendBatchInterval,       // BackendBatchInterval是提交后端事务前的最长时间.
 		MaxTxnOps:                                cfg.MaxTxnOps,
 		MaxRequestBytes:                          cfg.MaxRequestBytes, // 服务器将接受的最大客户端请求大小（字节）.
 		SocketOpts:                               cfg.SocketOpts,
@@ -312,8 +312,8 @@ func print(lg *zap.Logger, ec Config, sc config.ServerConfig, memberInitialized 
 		zap.Bool("force-new-cluster", sc.ForceNewCluster),
 		zap.String("heartbeat-interval", fmt.Sprintf("%v", time.Duration(sc.TickMs)*time.Millisecond)),
 		zap.String("election-timeout", fmt.Sprintf("%v", time.Duration(sc.ElectionTicks*int(sc.TickMs))*time.Millisecond)),
-		zap.Bool("initial-election-tick-advance", sc.InitialElectionTickAdvance),
-		zap.Uint64("snapshot-count", sc.SnapshotCount),
+		zap.Bool("initial-election-tick-advance", sc.InitialElectionTickAdvance), // 是否提前初始化选举时钟启动，以便更快的选举
+		zap.Uint64("snapshot-count", sc.SnapshotCount),                           // 要将快照触发到磁盘的已提交事务数
 		zap.Uint64("snapshot-catchup-entries", sc.SnapshotCatchUpEntries),
 		zap.Strings("initial-advertise-peer-urls", ec.getAPURLs()),
 		zap.Strings("listen-peer-urls", ec.getLPURLs()),

@@ -55,7 +55,7 @@ func TestConfigFileMemberFields(t *testing.T) {
 		MaxSnapFiles  uint   `json:"max-snapshots"`
 		MaxWalFiles   uint   `json:"max-wals"`
 		Name          string `json:"name"`
-		SnapshotCount uint64 `json:"snapshot-count"`
+		SnapshotCount uint64 `json:"snapshot-count"`// 要将快照触发到磁盘的已提交事务数
 		LPUrls        string `json:"listen-peer-urls"`
 		LCUrls        string `json:"listen-client-urls"`
 		AcurlsCfgFile string `json:"advertise-client-urls"`

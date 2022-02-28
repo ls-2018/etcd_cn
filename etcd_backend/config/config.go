@@ -32,7 +32,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// ServerConfig holds the configuration of etcd as taken from the command line or discovery.
+// ServerConfig 持有从命令行或发现中获取的etcd的配置。
 type ServerConfig struct {
 	Name           string
 	DiscoveryURL   string
@@ -40,8 +40,7 @@ type ServerConfig struct {
 	ClientURLs     types.URLs
 	PeerURLs       types.URLs
 	DataDir        string
-	// DedicatedWALDir config will make the etcd to write the WAL to the WALDir
-	// rather than the dataDir/member/wal.
+	// DedicatedWALDir 配置将使etcd把WAL写到WALDir 而不是dataDir/member/wal。
 	DedicatedWALDir string
 
 	SnapshotCount uint64
@@ -51,18 +50,19 @@ type ServerConfig struct {
 	// We expect the follower has a millisecond level latency with the leader.
 	// The max throughput is around 10K. Keep a 5K entries is enough for helping
 	// follower to catch up.
+	// 是slow follower在raft存储条目落后追赶的条目数量。我们希望跟随者与领导者有一毫秒级的延迟。最大的吞吐量是10K左右。保持5K的条目就足以帮助跟随者赶上。
 	// WARNING: only change this for tests. Always use "DefaultSnapshotCatchUpEntries"
 	SnapshotCatchUpEntries uint64
 
 	MaxSnapFiles uint
 	MaxWALFiles  uint
 
-	// BackendBatchInterval is the maximum time before commit the backend transaction.
+	// BackendBatchInterval 提交后端事务前的最长时间。
 	BackendBatchInterval time.Duration
-	// BackendBatchLimit is the maximum operations before commit the backend transaction.
+	// BackendBatchLimit  提交后端事务前的最大操作量。
 	BackendBatchLimit int
 
-	// BackendFreelistType is the type of the backend boltdb freelist.
+	// BackendFreelistType boltdb存储的类型
 	BackendFreelistType bolt.FreelistType
 
 	InitialPeerURLsMap  types.URLsMap
@@ -72,59 +72,32 @@ type ServerConfig struct {
 
 	CORS map[string]struct{}
 
-	// HostWhitelist lists acceptable hostnames from client requests.
-	// If etcd is insecure (no TLS), etcd only accepts requests
-	// whose Host header value exists in this white list.
+	// HostWhitelist 列出了客户端请求中可接受的主机名。如果etcd是不安全的（没有TLS），etcd只接受其Host头值存在于此白名单的请求。
 	HostWhitelist map[string]struct{}
 
-	TickMs        uint
-	ElectionTicks int
+	TickMs        uint // 心跳超时
+	ElectionTicks int  // 选举超时 对应多少次心跳
 
-	// InitialElectionTickAdvance is true, then local member fast-forwards
-	// election ticks to speed up "initial" leader election trigger. This
-	// benefits the case of larger election ticks. For instance, cross
-	// datacenter deployment may require longer election timeout of 10-second.
-	// If true, local node does not need wait up to 10-second. Instead,
-	// forwards its election ticks to 8-second, and have only 2-second left
-	// before leader election.
-	//
-	// Major assumptions are that:
-	//  - cluster has no active leader thus advancing ticks enables faster
-	//    leader election, or
-	//  - cluster already has an established leader, and rejoining follower
-	//    is likely to receive heartbeats from the leader after tick advance
-	//    and before election timeout.
-	//
-	// However, when network from leader to rejoining follower is congested,
-	// and the follower does not receive leader heartbeat within left election
-	// ticks, disruptive election has to happen thus affecting cluster
-	// availabilities.
-	//
-	// Disabling this would slow down initial bootstrap process for cross
-	// datacenter deployments. Make your own tradeoffs by configuring
-	// --initial-election-tick-advance at the cost of slow initial bootstrap.
-	//
-	// If single-node, it advances ticks regardless.
-	//
-	// See https://github.com/etcd-io/etcd/issues/9333 for more detail.
+	// InitialElectionTickAdvance 是否提前初始化选举时钟启动，以便更快的选举
 	InitialElectionTickAdvance bool
 
 	BootstrapTimeout time.Duration
 
 	AutoCompactionRetention time.Duration
 	AutoCompactionMode      string
-	CompactionBatchLimit    int
-	QuotaBackendBytes       int64
-	MaxTxnOps               uint
 
-	// MaxRequestBytes is the maximum request size to send over raft.
+	CompactionBatchLimit int
+	QuotaBackendBytes    int64
+	MaxTxnOps            uint // 事务中允许的最大操作数
+
+	// MaxRequestBytes raft发送的最大数据量
 	MaxRequestBytes uint
 
 	WarningApplyDuration time.Duration
 
 	StrictReconfigCheck bool
 
-	// ClientCertAuthEnabled is true when cert has been signed by the client CA.
+	// ClientCertAuthEnabled 客户端证书被client CA签名过就是true
 	ClientCertAuthEnabled bool
 
 	AuthToken  string

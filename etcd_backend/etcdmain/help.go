@@ -59,7 +59,7 @@ Member:
   --election-timeout '1000'
     选举超时
   --initial-election-tick-advance 'true'
-    是否在开机时快进初始选举点.以加快选举速度.
+    是否提前初始化选举时钟启动，以便更快的选举
   --listen-peer-urls 'http://localhost:2380'
     和成员之间通信的地址.用于监听其他etcd member的url
   --listen-client-urls 'http://localhost:2379'
