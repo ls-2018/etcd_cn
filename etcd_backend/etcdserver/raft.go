@@ -39,12 +39,8 @@ import (
 )
 
 const (
-	// The max throughput of etcd will not exceed 100MB/s (100K * 1KB value).
-	// Assuming the RTT is around 10ms, 1MB max size is large enough.
-	maxSizePerMsg = 1 * 1024 * 1024
-	// Never overflow the rafthttp buffer, which is 4096.
-	// TODO: a better const?
-	maxInflightMsgs = 4096 / 8
+	maxSizePerMsg   = 1 * 1024 * 1024 // 1M
+	maxInflightMsgs = 4096 / 8        // 512
 )
 
 var (
@@ -457,8 +453,8 @@ func startNode(cfg config.ServerConfig, cl *membership.RaftCluster, ids []types.
 		ElectionTick:    cfg.ElectionTicks,
 		HeartbeatTick:   1,
 		Storage:         s,
-		MaxSizePerMsg:   maxSizePerMsg,
-		MaxInflightMsgs: maxInflightMsgs,
+		MaxSizePerMsg:   maxSizePerMsg,// 1m
+		MaxInflightMsgs: maxInflightMsgs, // 512
 		CheckQuorum:     true,
 		PreVote:         cfg.PreVote,
 		Logger:          NewRaftLoggerZap(cfg.Logger.Named("raft")),

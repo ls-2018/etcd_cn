@@ -117,7 +117,7 @@ type Config struct {
 	// ID 是本地raft的身份。ID不能为0。
 	ID uint64
 
-	// ElectionTick 从follower 变成 candidate 经过的时间  ; ElectionTick=10*HeartbeatTick，以避免不必要的领导者更换。
+	// ElectionTick 选举超时
 	ElectionTick int
 	// 心跳间隔
 	HeartbeatTick int
@@ -127,14 +127,9 @@ type Config struct {
 	// Applied 提交到用户状态机的索引
 	Applied uint64
 
-	// MaxSizePerMsg limits the max byte size of each append message. Smaller
-	// value lowers the raft recovery cost(initial probing and message lost
-	// during normal operation). On the other side, it might affect the
-	// throughput during normal replication. Note: math.MaxUint64 for unlimited,
-	// 0 for at most one entry per message.
-	MaxSizePerMsg uint64
-	// MaxCommittedSizePerReady limits the size of the committed entries which
-	// can be applied.
+	// 每条消息的最大大小 ：math.MaxUint64表示无限制，0表示每条消息最多一个条目。
+	MaxSizePerMsg uint64 // 1m
+	// MaxCommittedSizePerReady limits the size of the committed entries which can be applied.
 	MaxCommittedSizePerReady uint64
 	// MaxUncommittedEntriesSize limits the aggregate byte size of the
 	// uncommitted entries that may be appended to a leader's log. Once this
