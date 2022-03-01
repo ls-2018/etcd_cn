@@ -97,7 +97,7 @@ const (
 	// maxPendingRevokes is the maximum number of outstanding expired lease revocations.
 	maxPendingRevokes = 16
 
-	recommendedMaxRequestBytes = 10 * 1024 * 1024
+	recommendedMaxRequestBytes = 10 * 1024 * 1024 // 10M
 
 	readyPercent = 0.9
 
@@ -325,10 +325,9 @@ func (bh *backendHooks) SetConfState(confState *raftpb.ConfState) {
 	bh.confStateDirty = true
 }
 
-// NewServer creates a new EtcdServer from the supplied configuration. The
-// configuration is considered static for the lifetime of the EtcdServer.
+// NewServer 根据提供的配置创建一个新的EtcdServer。在EtcdServer的生命周期内，该配置被认为是静态的。
 func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
-	st := v2store.New(StoreClusterPrefix, StoreKeysPrefix)
+	st := v2store.New(StoreClusterPrefix, StoreKeysPrefix) // 创建了一个store结构体
 
 	var (
 		w  *wal.WAL
@@ -338,51 +337,52 @@ func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 		cl *membership.RaftCluster
 	)
 
-	if cfg.MaxRequestBytes > recommendedMaxRequestBytes {
+	if cfg.MaxRequestBytes > recommendedMaxRequestBytes { // 10M
 		cfg.Logger.Warn(
-			"exceeded recommended request limit",
+			"超过了建议的请求限度",
 			zap.Uint("max-request-bytes", cfg.MaxRequestBytes),
 			zap.String("max-request-size", humanize.Bytes(uint64(cfg.MaxRequestBytes))),
 			zap.Int("recommended-request-bytes", recommendedMaxRequestBytes),
 			zap.String("recommended-request-size", recommendedMaxRequestBytesString),
 		)
 	}
-
+	// 存在也可以
 	if terr := fileutil.TouchDirAll(cfg.DataDir); terr != nil {
-		return nil, fmt.Errorf("cannot access data directory: %v", terr)
+		return nil, fmt.Errorf("无法访问数据目录: %v", terr)
 	}
 
-	haveWAL := wal.Exist(cfg.WALDir())
-
+	haveWAL := wal.Exist(cfg.WALDir()) // default.etcd/member/wal
+	// default.etcd/member/snap
 	if err = fileutil.TouchDirAll(cfg.SnapDir()); err != nil {
 		cfg.Logger.Fatal(
-			"failed to create snapshot directory",
+			"创建快照目录失败",
 			zap.String("path", cfg.SnapDir()),
 			zap.Error(err),
 		)
 	}
-
+	// 移除格式匹配的文件
 	if err = fileutil.RemoveMatchFile(cfg.Logger, cfg.SnapDir(), func(fileName string) bool {
 		return strings.HasPrefix(fileName, "tmp")
 	}); err != nil {
 		cfg.Logger.Error(
-			"failed to remove temp file(s) in snapshot directory",
+			"删除快照目录下的临时文件",
 			zap.String("path", cfg.SnapDir()),
 			zap.Error(err),
 		)
 	}
-
+	// 创建快照struct
 	ss := snap.New(cfg.Logger, cfg.SnapDir())
 
-	bepath := cfg.BackendPath()
+	bepath := cfg.BackendPath() // default.etcd/member/snap/db
 	beExist := fileutil.Exist(bepath)
 
-	ci := cindex.NewConsistentIndex(nil)
+	ci := cindex.NewConsistentIndex(nil) // pointer
 	beHooks := &backendHooks{lg: cfg.Logger, indexer: ci}
 	be := openBackend(cfg, beHooks)
 	ci.SetBackend(be)
 	cindex.CreateMetaBucket(be.BatchTx())
 
+	// 启动时，判断要不要进行碎片整理
 	if cfg.ExperimentalBootstrapDefragThresholdMegabytes != 0 {
 		err := maybeDefragBackend(cfg, be)
 		if err != nil {
@@ -395,7 +395,7 @@ func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 			be.Close()
 		}
 	}()
-
+	// 服务端的
 	prt, err := rafthttp.NewRoundTripper(cfg.PeerTLSInfo, cfg.PeerDialTimeout())
 	if err != nil {
 		return nil, err
@@ -2668,7 +2668,7 @@ func (s *EtcdServer) Alarms() []*pb.AlarmMember {
 	return s.alarmStore.Get(pb.AlarmType_NONE)
 }
 
-// IsLearner returns if the local member is raft learner
+// IsLearner 当前节点是不是 raft learner
 func (s *EtcdServer) IsLearner() bool {
 	return s.cluster.IsLocalMemberLearner()
 }
@@ -2678,18 +2678,19 @@ func (s *EtcdServer) IsMemberExist(id types.ID) bool {
 	return s.cluster.IsMemberExist(id)
 }
 
-// raftStatus returns the raft status of this etcd node.
+// raftStatus 返回当前节点的raft状态
 func (s *EtcdServer) raftStatus() raft.Status {
 	return s.r.Node.Status()
 }
 
+// 碎片整理
 func maybeDefragBackend(cfg config.ServerConfig, be backend.Backend) error {
 	size := be.Size()
 	sizeInUse := be.SizeInUse()
-	freeableMemory := uint(size - sizeInUse)
+	freeableMemory := uint(size - sizeInUse) // 剩余
 	thresholdBytes := cfg.ExperimentalBootstrapDefragThresholdMegabytes * 1024 * 1024
 	if freeableMemory < thresholdBytes {
-		cfg.Logger.Info("Skipping defragmentation",
+		cfg.Logger.Info("跳过碎片整理",
 			zap.Int64("current-db-size-bytes", size),
 			zap.String("current-db-size", humanize.Bytes(uint64(size))),
 			zap.Int64("current-db-size-in-use-bytes", sizeInUse),

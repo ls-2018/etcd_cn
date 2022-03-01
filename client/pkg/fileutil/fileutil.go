@@ -137,14 +137,13 @@ func CheckDirPermission(dir string, perm os.FileMode) error {
 	return nil
 }
 
-// RemoveMatchFile deletes file if matchFunc is true on an existing dir
-// Returns error if the dir does not exist or remove file fail
+// RemoveMatchFile 移除格式匹配的文件
 func RemoveMatchFile(lg *zap.Logger, dir string, matchFunc func(fileName string) bool) error {
 	if lg == nil {
 		lg = zap.NewNop()
 	}
 	if !Exist(dir) {
-		return fmt.Errorf("directory %s does not exist", dir)
+		return fmt.Errorf("目录不存在 %s", dir)
 	}
 	fileNames, err := ReadDir(dir)
 	if err != nil {
@@ -156,7 +155,7 @@ func RemoveMatchFile(lg *zap.Logger, dir string, matchFunc func(fileName string)
 			file := filepath.Join(dir, fileName)
 			if err = os.Remove(file); err != nil {
 				removeFailedFiles = append(removeFailedFiles, fileName)
-				lg.Error("remove file failed",
+				lg.Error("删除文件失败",
 					zap.String("file", file),
 					zap.Error(err))
 				continue
@@ -164,7 +163,7 @@ func RemoveMatchFile(lg *zap.Logger, dir string, matchFunc func(fileName string)
 		}
 	}
 	if len(removeFailedFiles) != 0 {
-		return fmt.Errorf("remove file(s) %v error", removeFailedFiles)
+		return fmt.Errorf("删除文件(s) %v error", removeFailedFiles)
 	}
 	return nil
 }

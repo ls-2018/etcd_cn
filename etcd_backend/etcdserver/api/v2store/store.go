@@ -23,10 +23,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/jonboulle/clockwork"
 	"github.com/ls-2018/etcd_cn/client/pkg/types"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v2error"
-
-	"github.com/jonboulle/clockwork"
 )
 
 // The default version to set when the store is first initialized.
@@ -77,23 +76,24 @@ type store struct {
 	CurrentIndex   uint64
 	Stats          *Stats
 	CurrentVersion int
-	ttlKeyHeap     *ttlKeyHeap  // need to recovery manually
+	ttlKeyHeap     *ttlKeyHeap  // 需要手动恢复     过期时间的最小堆
 	worldLock      sync.RWMutex // stop the world lock
 	clock          clockwork.Clock
-	readonlySet    types.Set
+	readonlySet    types.Set // 只读路径
 }
 
-// New creates a store where the given namespaces will be created as initial directories.
+// New 创建一个存储空间，给定的命名空间将被创建为初始目录。
 func New(namespaces ...string) Store {
 	s := newStore(namespaces...)
 	s.clock = clockwork.NewRealClock()
 	return s
 }
 
+// OK /0 /1
 func newStore(namespaces ...string) *store {
 	s := new(store)
-	s.CurrentVersion = defaultVersion
-	s.Root = newDir(s, "/", s.CurrentIndex, nil, Permanent)
+	s.CurrentVersion = defaultVersion                       // 2
+	s.Root = newDir(s, "/", s.CurrentIndex, nil, Permanent) // 0
 	for _, namespace := range namespaces {
 		s.Root.Add(newDir(s, namespace, s.CurrentIndex, s.Root, Permanent))
 	}
@@ -104,12 +104,12 @@ func newStore(namespaces ...string) *store {
 	return s
 }
 
-// Version retrieves current version of the store.
+// Version 检索存储的当前版本。 <= CurrentIndex
 func (s *store) Version() int {
 	return s.CurrentVersion
 }
 
-// Index retrieves the current index of the store.
+// Index 检索存储的当前索引。
 func (s *store) Index() uint64 {
 	s.worldLock.RLock()
 	defer s.worldLock.RUnlock()

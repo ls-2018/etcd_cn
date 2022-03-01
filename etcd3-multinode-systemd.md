@@ -33,7 +33,7 @@ TimeoutStartSec=0
 
 ExecStart=etcd --name my-etcd-1 \
     --data-dir /var/lib/etcd \
-    --listen-client-urls http://${IP_1}:2379 \
+    --listen-client-urls http://${IP_1}:2379,http://127.0.0.1:2379 \
     --advertise-client-urls http://${IP_1}:2379 \
     --listen-peer-urls http://${IP_1}:2380 \
     --initial-advertise-peer-urls http://${IP_1}:2380 \
@@ -64,7 +64,7 @@ TimeoutStartSec=0
 
 ExecStart=etcd --name my-etcd-2 \
     --data-dir /var/lib/etcd \
-    --listen-client-urls http://${IP_2}:2379 \
+    --listen-client-urls http://${IP_2}:2379,http://127.0.0.1:2379 \
     --advertise-client-urls http://${IP_2}:2379 \
     --listen-peer-urls http://${IP_2}:2380 \
     --initial-advertise-peer-urls http://${IP_2}:2380 \
@@ -95,7 +95,7 @@ TimeoutStartSec=0
 
 ExecStart=etcd --name my-etcd-3 \
     --data-dir /var/lib/etcd \
-    --listen-client-urls http://${IP_3}:2379 \
+    --listen-client-urls http://${IP_3}:2379,http://127.0.0.1:2379 \
     --advertise-client-urls http://${IP_3}:2379 \
     --listen-peer-urls http://${IP_3}:2380 \
     --initial-advertise-peer-urls http://${IP_3}:2380 \

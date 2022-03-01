@@ -23,6 +23,7 @@ import (
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v2error"
 )
 
+// EventHistory 历史事件
 type EventHistory struct {
 	Queue      eventQueue
 	StartIndex uint64

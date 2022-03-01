@@ -12,5 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package cindex provides an interface and implementation for getting/saving consistentIndex.
+// Package cindex  提供了一个获取/保存一致索引的接口和实现。
 package cindex

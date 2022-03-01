@@ -55,6 +55,7 @@ type Snapshotter struct {
 	dir string
 }
 
+// New OK
 func New(lg *zap.Logger, dir string) *Snapshotter {
 	if lg == nil {
 		lg = zap.NewNop()

@@ -70,10 +70,13 @@ var (
 // A newly created WAL is in append mode, and ready for appending records.
 // A just opened WAL is in read mode, and ready for reading records.
 // The WAL will be ready for appending after reading out all the previous records.
+// WAL是稳定存储的一个逻辑表示。WAL要么处于读取模式，要么处于追加模式，但不能同时进行。
+// 一个新创建的WAL处于追加模式，并准备好追加记录。一个刚打开的WAL处于读模式，并准备好读取记录。
+// 在读出所有以前的记录后，WAL将准备好进行追加。
 type WAL struct {
 	lg *zap.Logger
 
-	dir string // the living directory of the underlay files
+	dir string // 底层文件的目录
 
 	// dirFile is a fd for the wal directory for syncing on Rename
 	dirFile *os.File

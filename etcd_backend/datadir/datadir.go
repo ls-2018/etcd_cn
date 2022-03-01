@@ -24,17 +24,17 @@ const (
 )
 
 func ToBackendFileName(dataDir string) string {
-	return filepath.Join(ToSnapDir(dataDir), backendFileSegment)
+	return filepath.Join(ToSnapDir(dataDir), backendFileSegment) // default.etcd/member/snap/db
 }
 
 func ToSnapDir(dataDir string) string {
-	return filepath.Join(ToMemberDir(dataDir), snapDirSegment)
+	return filepath.Join(ToMemberDir(dataDir), snapDirSegment) // default.etcd/member/snap
 }
 
 func ToWalDir(dataDir string) string {
-	return filepath.Join(ToMemberDir(dataDir), walDirSegment)
+	return filepath.Join(ToMemberDir(dataDir), walDirSegment) // default.etcd/member/wal
 }
 
 func ToMemberDir(dataDir string) string {
-	return filepath.Join(dataDir, memberDirSegment)
+	return filepath.Join(dataDir, memberDirSegment) //   default.etcd/member
 }

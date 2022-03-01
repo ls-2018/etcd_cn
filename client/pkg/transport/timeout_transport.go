@@ -20,10 +20,9 @@ import (
 	"time"
 )
 
-// NewTimeoutTransport returns a transport created using the given TLS info.
-// If read/write on the created connection blocks longer than its time limit,
-// it will return timeout error.
-// If read/write timeout is set, transport will not be able to reuse connection.
+// NewTimeoutTransport 返回一个使用给定的TLS信息创建的传输。
+// 如果创建的连接上的读/写块超过了它的时间限制。  它将返回超时错误。
+// 如果读/写超时被设置，传输将不能重新使用连接。
 func NewTimeoutTransport(info TLSInfo, dialtimeoutd, rdtimeoutd, wtimeoutd time.Duration) (*http.Transport, error) {
 	tr, err := NewTransport(info, dialtimeoutd)
 	if err != nil {
@@ -31,11 +30,10 @@ func NewTimeoutTransport(info TLSInfo, dialtimeoutd, rdtimeoutd, wtimeoutd time.
 	}
 
 	if rdtimeoutd != 0 || wtimeoutd != 0 {
-		// the timed out connection will timeout soon after it is idle.
-		// it should not be put back to http transport as an idle connection for future usage.
+		// 超时的连接在闲置后很快就会超时，它不应该被放回http传输系统作为闲置连接供将来使用。
 		tr.MaxIdleConnsPerHost = -1
 	} else {
-		// allow more idle connections between peers to avoid unnecessary port allocation.
+		// 允许peer之间有更多的空闲连接，以避免不必要的端口分配。
 		tr.MaxIdleConnsPerHost = 1024
 	}
 

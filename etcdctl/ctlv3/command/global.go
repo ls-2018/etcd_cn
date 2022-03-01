@@ -189,7 +189,6 @@ func (cc *clientConfig) mustClient() *clientv3.Client {
 }
 
 func newClientCfg(endpoints []string, dialTimeout, keepAliveTime, keepAliveTimeout time.Duration, scfg *secureCfg, acfg *authCfg) (*clientv3.Config, error) {
-	// set tls if any one tls option set
 	var cfgtls *transport.TLSInfo
 	tlsinfo := transport.TLSInfo{}
 	tlsinfo.Logger, _ = zap.NewProduction()

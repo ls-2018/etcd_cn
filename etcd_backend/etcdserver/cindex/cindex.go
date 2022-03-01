@@ -27,20 +27,19 @@ type Backend interface {
 	BatchTx() backend.BatchTx
 }
 
-// ConsistentIndexer is an interface that wraps the Get/Set/Save method for consistentIndex.
+// ConsistentIndexer 是一个接口，它封装了一致性索引的Get/Set/Save方法。
 type ConsistentIndexer interface {
 
-	// ConsistentIndex returns the consistent index of current executing entry.
+	// ConsistentIndex 返回当前执行条目的一致索引。
 	ConsistentIndex() uint64
 
-	// SetConsistentIndex set the consistent index of current executing entry.
+	// SetConsistentIndex 设置当前执行条目的一致索引。
 	SetConsistentIndex(v uint64, term uint64)
 
-	// UnsafeSave必须是called holding the lock on the tx.
-	// It saves consistentIndex to the underlying stable storage.
+	// UnsafeSave 必须在持有tx上的锁的情况下被调用。 它将一致索引保存到底层稳定存储中。
 	UnsafeSave(tx backend.BatchTx)
 
-	// SetBackend set the available backend.BatchTx for ConsistentIndexer.
+	// SetBackend 为ConsistentIndexer设置可用的backend.BatchTx。
 	SetBackend(be Backend)
 }
 
@@ -61,8 +60,8 @@ type consistentIndex struct {
 	mutex sync.Mutex
 }
 
-// NewConsistentIndex creates a new consistent index.
-// If `be` is nil, it必须是set (SetBackend) before first access using `ConsistentIndex()`.
+// NewConsistentIndex 返回一个一致性索引
+// 如果be is nil,必须在首次调用前执行ConsistentIndex方法
 func NewConsistentIndex(be Backend) ConsistentIndexer {
 	return &consistentIndex{be: be}
 }
@@ -122,7 +121,7 @@ func UnsafeCreateMetaBucket(tx backend.BatchTx) {
 	tx.UnsafeCreateBucket(buckets.Meta)
 }
 
-// CreateMetaBucket creates the `meta` bucket (if it does not exists yet).
+// CreateMetaBucket 创建meta bucket，如果不存在
 func CreateMetaBucket(tx backend.BatchTx) {
 	tx.Lock()
 	defer tx.Unlock()

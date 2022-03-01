@@ -26,7 +26,7 @@ import (
 
 var errBadWALName = errors.New("bad wal name")
 
-// Exist returns true if there are any files in a given directory.
+// Exist 如果在给定的目录中存在任何文件，则返回true。
 func Exist(dir string) bool {
 	names, err := fileutil.ReadDir(dir, fileutil.WithExt(".wal"))
 	if err != nil {

@@ -38,37 +38,37 @@ const (
 )
 
 type Stats struct {
-	// Number of get requests
+	// 获取请求的数量
 
 	GetSuccess uint64 `json:"getsSuccess"`
 	GetFail    uint64 `json:"getsFail"`
 
-	// Number of sets requests
+	// set 请求数
 
 	SetSuccess uint64 `json:"setsSuccess"`
 	SetFail    uint64 `json:"setsFail"`
 
-	// Number of delete requests
+	// delete 请求数
 
 	DeleteSuccess uint64 `json:"deleteSuccess"`
 	DeleteFail    uint64 `json:"deleteFail"`
 
-	// Number of update requests
+	// update请求数
 
 	UpdateSuccess uint64 `json:"updateSuccess"`
 	UpdateFail    uint64 `json:"updateFail"`
 
-	// Number of create requests
+	// create请求数
 
 	CreateSuccess uint64 `json:"createSuccess"`
 	CreateFail    uint64 `json:"createFail"`
 
-	// Number of testAndSet requests
+	// testAndSet 请求数
 
 	CompareAndSwapSuccess uint64 `json:"compareAndSwapSuccess"`
 	CompareAndSwapFail    uint64 `json:"compareAndSwapFail"`
 
-	// Number of compareAndDelete requests
+	// compareAndDelete请求数
 
 	CompareAndDeleteSuccess uint64 `json:"compareAndDeleteSuccess"`
 	CompareAndDeleteFail    uint64 `json:"compareAndDeleteFail"`

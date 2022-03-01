@@ -35,7 +35,7 @@ func newBackend(cfg config.ServerConfig, hooks backend.Hooks) backend.Backend {
 	if cfg.BackendBatchLimit != 0 {
 		bcfg.BatchLimit = cfg.BackendBatchLimit
 		if cfg.Logger != nil {
-			cfg.Logger.Info("setting backend batch limit", zap.Int("batch limit", cfg.BackendBatchLimit))
+			cfg.Logger.Info("设置后端batch限制", zap.Int("batch limit", cfg.BackendBatchLimit))
 		}
 	}
 	if cfg.BackendBatchInterval != 0 {
@@ -67,9 +67,9 @@ func openSnapshotBackend(cfg config.ServerConfig, ss *snap.Snapshotter, snapshot
 	return openBackend(cfg, hooks), nil
 }
 
-// openBackend returns a backend using the current etcd db.
+// openBackend 返回一个使用当前etcd数据库的后端。
 func openBackend(cfg config.ServerConfig, hooks backend.Hooks) backend.Backend {
-	fn := cfg.BackendPath()
+	fn := cfg.BackendPath() // default.etcd/member/snap/db
 
 	now, beOpened := time.Now(), make(chan backend.Backend)
 	go func() {
@@ -78,12 +78,12 @@ func openBackend(cfg config.ServerConfig, hooks backend.Hooks) backend.Backend {
 
 	select {
 	case be := <-beOpened:
-		cfg.Logger.Info("opened backend db", zap.String("path", fn), zap.Duration("took", time.Since(now)))
+		cfg.Logger.Info("打开后台数据库", zap.String("path", fn), zap.Duration("took", time.Since(now)))
 		return be
 
 	case <-time.After(10 * time.Second):
 		cfg.Logger.Info(
-			"db file is flocked by another process, or taking too long",
+			"db文件被另一个进程占用，或占用时间过长",
 			zap.String("path", fn),
 			zap.Duration("took", time.Since(now)),
 		)

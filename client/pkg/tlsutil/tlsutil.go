@@ -21,7 +21,7 @@ import (
 	"io/ioutil"
 )
 
-// NewCertPool creates x509 certPool with provided CA files.
+// NewCertPool 使用提供的CA文件创建X509证书池
 func NewCertPool(CAFiles []string) (*x509.CertPool, error) {
 	certPool := x509.NewCertPool()
 
@@ -49,7 +49,7 @@ func NewCertPool(CAFiles []string) (*x509.CertPool, error) {
 	return certPool, nil
 }
 
-// NewCert generates TLS cert by using the given cert,key and parse function.
+// NewCert 通过使用给定的cert、key和解析函数生成TLS证书。
 func NewCert(certfile, keyfile string, parseFunc func([]byte, []byte) (tls.Certificate, error)) (*tls.Certificate, error) {
 	cert, err := ioutil.ReadFile(certfile)
 	if err != nil {

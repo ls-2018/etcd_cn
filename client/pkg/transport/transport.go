@@ -24,6 +24,7 @@ import (
 
 type unixTransport struct{ *http.Transport }
 
+// NewTransport 创建transport
 func NewTransport(info TLSInfo, dialtimeoutd time.Duration) (*http.Transport, error) {
 	cfg, err := info.ClientConfig()
 	if err != nil {
@@ -33,11 +34,9 @@ func NewTransport(info TLSInfo, dialtimeoutd time.Duration) (*http.Transport, er
 	t := &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{
-			Timeout: dialtimeoutd,
-			// value taken from http.DefaultTransport
+			Timeout:   dialtimeoutd,
 			KeepAlive: 30 * time.Second,
 		}).DialContext,
-		// value taken from http.DefaultTransport
 		TLSHandshakeTimeout: 10 * time.Second,
 		TLSClientConfig:     cfg,
 	}

@@ -54,14 +54,9 @@ type Backend interface {
 
 	Snapshot() Snapshot
 	Hash(ignores func(bucketName, keyName []byte) bool) (uint32, error)
-	// Size returns the current size of the backend physically allocated.
-	// The backend can hold DB space that is not utilized at the moment,
-	// since it can conduct pre-allocation or spare unused space for recycling.
-	// Use SizeInUse() instead for the actual DB size.
+	// Size 返回当前物理分配的后端大小。后台可以持有目前未被利用的DB空间，因为它可以进行预分配或将未使用的空间进行回收。使用SizeInUse()来代替实际的DB大小。
 	Size() int64
-	// SizeInUse returns the current size of the backend logically in use.
-	// Since the backend can manage free space in a non-byte unit such as
-	// number of pages, the returned value can be not exactly accurate in bytes.
+	// SizeInUse 返回逻辑上正在使用的后台的当前大小。由于后端可以用非字节单位（如页数）来管理自由空间，因此返回的值可能不是精确的字节数。
 	SizeInUse() int64
 	// OpenReadTxN returns the number of currently open read transactions in the backend.
 	OpenReadTxN() int64
@@ -125,11 +120,11 @@ type backend struct {
 type BackendConfig struct {
 	// Path is the file path to the backend file.
 	Path string
-	// BatchInterval is the maximum time before flushing the BatchTx.
+	// BatchInterval 是冲刷BatchTx之前的最长时间。
 	BatchInterval time.Duration
-	// BatchLimit is the maximum puts before flushing the BatchTx.
+	// BatchLimit 是冲刷BatchTx之前的最大puts数。
 	BatchLimit int
-	// BackendFreelistType is the backend boltdb's freelist type.
+	// BackendFreelistType 是后端boltdb的freelist类型。
 	BackendFreelistType bolt.FreelistType
 	// MmapSize is the number of bytes to mmap for the backend.
 	MmapSize uint64
@@ -426,10 +421,11 @@ func (b *backend) Commits() int64 {
 	return atomic.LoadInt64(&b.commits)
 }
 
+// Defrag 碎片整理
 func (b *backend) Defrag() error {
 	return b.defrag()
 }
-
+// 碎片整理
 func (b *backend) defrag() error {
 	now := time.Now()
 	isDefragActive.Set(1)

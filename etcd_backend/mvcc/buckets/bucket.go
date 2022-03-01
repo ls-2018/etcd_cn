@@ -21,38 +21,20 @@ import (
 )
 
 var (
-	keyBucketName   = []byte("key")
-	metaBucketName  = []byte("meta")
-	leaseBucketName = []byte("lease")
-	alarmBucketName = []byte("alarm")
+	Key     = backend.Bucket(bucket{id: 1, name: []byte("key"), safeRangeBucket: true})
+	Meta    = backend.Bucket(bucket{id: 2, name: []byte("meta"), safeRangeBucket: false})
+	Lease   = backend.Bucket(bucket{id: 3, name: []byte("lease"), safeRangeBucket: false})
+	Alarm   = backend.Bucket(bucket{id: 4, name: []byte("alarm"), safeRangeBucket: false})
+	Cluster = backend.Bucket(bucket{id: 5, name: []byte("cluster"), safeRangeBucket: false})
 
-	clusterBucketName = []byte("cluster")
+	Members        = backend.Bucket(bucket{id: 10, name: []byte("members"), safeRangeBucket: false})
+	MembersRemoved = backend.Bucket(bucket{id: 11, name: []byte("members_removed"), safeRangeBucket: false})
 
-	membersBucketName        = []byte("members")
-	membersRemovedBucketName = []byte("members_removed")
+	Auth      = backend.Bucket(bucket{id: 20, name: []byte("auth"), safeRangeBucket: false})
+	AuthUsers = backend.Bucket(bucket{id: 21, name: []byte("authUsers"), safeRangeBucket: false})
+	AuthRoles = backend.Bucket(bucket{id: 22, name: []byte("authRoles"), safeRangeBucket: false})
 
-	authBucketName      = []byte("auth")
-	authUsersBucketName = []byte("authUsers")
-	authRolesBucketName = []byte("authRoles")
-
-	testBucketName = []byte("test")
-)
-
-var (
-	Key     = backend.Bucket(bucket{id: 1, name: keyBucketName, safeRangeBucket: true})
-	Meta    = backend.Bucket(bucket{id: 2, name: metaBucketName, safeRangeBucket: false})
-	Lease   = backend.Bucket(bucket{id: 3, name: leaseBucketName, safeRangeBucket: false})
-	Alarm   = backend.Bucket(bucket{id: 4, name: alarmBucketName, safeRangeBucket: false})
-	Cluster = backend.Bucket(bucket{id: 5, name: clusterBucketName, safeRangeBucket: false})
-
-	Members        = backend.Bucket(bucket{id: 10, name: membersBucketName, safeRangeBucket: false})
-	MembersRemoved = backend.Bucket(bucket{id: 11, name: membersRemovedBucketName, safeRangeBucket: false})
-
-	Auth      = backend.Bucket(bucket{id: 20, name: authBucketName, safeRangeBucket: false})
-	AuthUsers = backend.Bucket(bucket{id: 21, name: authUsersBucketName, safeRangeBucket: false})
-	AuthRoles = backend.Bucket(bucket{id: 22, name: authRolesBucketName, safeRangeBucket: false})
-
-	Test = backend.Bucket(bucket{id: 100, name: testBucketName, safeRangeBucket: false})
+	Test = backend.Bucket(bucket{id: 100, name: []byte("test"), safeRangeBucket: false})
 )
 
 type bucket struct {
@@ -71,7 +53,7 @@ var (
 	MetaTermKeyName            = []byte("term")
 )
 
-// DefaultIgnores defines buckets & keys to ignore in hash checking.
+// DefaultIgnores 定义在哈希检查中要忽略的桶和键。
 func DefaultIgnores(bucket, key []byte) bool {
 	// consistent index & term might be changed due to v2 internal sync, which
 	// is not controllable by the user.

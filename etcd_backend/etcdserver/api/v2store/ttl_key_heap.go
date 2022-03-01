@@ -16,7 +16,7 @@ package v2store
 
 import "container/heap"
 
-// An TTLKeyHeap is a min-heap of TTLKeys order by expiration time
+// TTLKeyHeap 过期时间的最小堆
 type ttlKeyHeap struct {
 	array  []*node
 	keyMap map[*node]int

@@ -17,7 +17,6 @@ package config
 import (
 	"context"
 	"fmt"
-	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -153,8 +152,7 @@ type ServerConfig struct {
 	// a shared buffer in its readonly check operations.
 	ExperimentalTxnModeWriteWithSharedBuffer bool `json:"experimental-txn-mode-write-with-shared-buffer"`
 
-	// ExperimentalBootstrapDefragThresholdMegabytes is the minimum number of megabytes needed to be freed for etcd etcd to
-	// consider running defrag during bootstrap. Needs to be set to non-zero value to take effect.
+	// ExperimentalBootstrapDefragThresholdMegabytes 是指在启动过程中 etcd考虑运行碎片整理所需释放的最小兆字节数。需要设置为非零值才能生效。
 	ExperimentalBootstrapDefragThresholdMegabytes uint `json:"experimental-bootstrap-defrag-threshold-megabytes"`
 
 	// V2Deprecation defines a phase of v2store deprecation process.
@@ -256,16 +254,24 @@ func (c *ServerConfig) advertiseMatchesCluster() error {
 	return fmt.Errorf("failed to resolve %s to match --initial-cluster=%s (%v)", apStr, umap.String(), err)
 }
 
-func (c *ServerConfig) MemberDir() string { return datadir.ToMemberDir(c.DataDir) }
+// MemberDir default.etcd/member
+func (c *ServerConfig) MemberDir() string {
+	return datadir.ToMemberDir(c.DataDir)
+}
 
+// WALDir default.etcd/member/wal
 func (c *ServerConfig) WALDir() string {
-	if c.DedicatedWALDir != "" {
+	if c.DedicatedWALDir != "" { // ""
 		return c.DedicatedWALDir
 	}
 	return datadir.ToWalDir(c.DataDir)
 }
 
-func (c *ServerConfig) SnapDir() string { return filepath.Join(c.MemberDir(), "snap") }
+// SnapDir default.etcd/member/snap
+func (c *ServerConfig) SnapDir() string {
+	return datadir.ToSnapDir(c.DataDir)
+
+}
 
 func (c *ServerConfig) ShouldDiscover() bool { return c.DiscoveryURL != "" }
 
@@ -275,7 +281,7 @@ func (c *ServerConfig) ReqTimeout() time.Duration {
 	return 5*time.Second + 2*time.Duration(c.ElectionTicks*int(c.TickMs))*time.Millisecond
 }
 
-// 选举超时
+// ElectionTimeout 选举超时
 func (c *ServerConfig) ElectionTimeout() time.Duration {
 	return time.Duration(c.ElectionTicks*int(c.TickMs)) * time.Millisecond
 }
@@ -306,4 +312,5 @@ func (c *ServerConfig) BootstrapTimeoutEffective() time.Duration {
 	return time.Second
 }
 
+// BackendPath default.etcd/member/snap/db
 func (c *ServerConfig) BackendPath() string { return datadir.ToBackendFileName(c.DataDir) }

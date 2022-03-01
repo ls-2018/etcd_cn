@@ -16,10 +16,9 @@ package backend
 
 type HookFunc func(tx BatchTx)
 
-// Hooks allow to add additional logic executed during transaction lifetime.
+// Hooks 允许事务有效期内执行的额外逻辑。
 type Hooks interface {
-	// OnPreCommitUnsafe is executed before Commit of transactions.
-	// The given transaction is already locked.
+	// OnPreCommitUnsafe 事务提交前执行的钩子
 	OnPreCommitUnsafe(tx BatchTx)
 }
 

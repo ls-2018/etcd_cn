@@ -140,7 +140,7 @@ type TLSInfo struct {
 	InsecureSkipVerify  bool
 	SkipClientSANVerify bool
 
-	// ServerName ensures the cert matches the given host in case of discovery / virtual hosting
+	// ServerName 在发现/虚拟主机的情况下，确保证书与给定的主机相匹配
 	ServerName string
 
 	// HandshakeFailure  当一个连接无法握手时,会被选择性地调用.之后,连接将被立即关闭.
@@ -149,10 +149,9 @@ type TLSInfo struct {
 	// CipherSuites 是一个支持的密码套件的列表.如果是空的,Go 默认会自动填充它.请注意,密码套件是按照给定的顺序进行优先排序的.
 	CipherSuites []uint16
 
-	selfCert bool
+	selfCert bool // 自签
 
-	// parseFunc exists to simplify testing. Typically, parseFunc
-	// should be left nil. In that case, tls.X509KeyPair will be used.
+	// parseFunc 的存在是为了简化测试。通常情况下，parseFunc应该留为零。在这种情况下，将使用tls.X509KeyPair。
 	parseFunc func([]byte, []byte) (tls.Certificate, error)
 
 	// AllowedCN  客户端必须提供的common Name;在证书里
@@ -294,42 +293,23 @@ func SelfCert(lg *zap.Logger, dirpath string, hosts []string, selfSignedCertVali
 	return SelfCert(lg, dirpath, hosts, selfSignedCertValidity)
 }
 
-// baseConfig is called on initial TLS handshake start.
-//
-// Previously,
-// 1. Server has non-empty (*tls.Config).Certificates on client hello
-// 2. Server calls (*tls.Config).GetCertificate iff:
-//    - Server's (*tls.Config).Certificates is not empty, or
-//    - Client supplies SNI; non-empty (*tls.ClientHelloInfo).ServerName
-//
-// When (*tls.Config).Certificates is always populated on initial handshake,
-// client is expected to provide a valid matching SNI to pass the TLS
-// verification, thus trigger etcd (*tls.Config).GetCertificate to reload
-// TLS assets. However, a cert whose SAN field does not include domain names
-// but only IP addresses, has empty (*tls.ClientHelloInfo).ServerName, thus
-// it was never able to trigger TLS reload on initial handshake; first
-// ceritifcate object was being used, never being updated.
-//
-// Now, (*tls.Config).Certificates is created empty on initial TLS client
-// handshake, in order to trigger (*tls.Config).GetCertificate and populate
-// rest of the certificates on every new TLS connection, even when client
-// SNI is empty (e.g. cert only includes IPs).
+//OK
 func (info TLSInfo) baseConfig() (*tls.Config, error) {
 	if info.KeyFile == "" || info.CertFile == "" {
-		return nil, fmt.Errorf("KeyFile and CertFile must both be present[key: %v, cert: %v]", info.KeyFile, info.CertFile)
+		return nil, fmt.Errorf("KeyFile和CertFile必须同时存在[key: %v, cert: %v]", info.KeyFile, info.CertFile)
 	}
 	if info.Logger == nil {
 		info.Logger = zap.NewNop()
 	}
 
-	_, err := tlsutil.NewCert(info.CertFile, info.KeyFile, info.parseFunc)
+	_, err := tlsutil.NewCert(info.CertFile, info.KeyFile, info.parseFunc) // parseFunc 在主程序里是nil
 	if err != nil {
 		return nil, err
 	}
 
-	// Perform prevalidation of client cert and key if either are provided. This makes sure we crash before accepting any connections.
+	// 如果提供了客户证书和密钥，则对其进行预验证。这可以确保我们在接受任何连接之前崩溃。
 	if (info.ClientKeyFile == "") != (info.ClientCertFile == "") {
-		return nil, fmt.Errorf("ClientKeyFile and ClientCertFile must both be present or both absent: key: %v, cert: %v]", info.ClientKeyFile, info.ClientCertFile)
+		return nil, fmt.Errorf("ClientKeyFile和ClientCertFile必须同时存在或同时不存在。: key: %v, cert: %v]", info.ClientKeyFile, info.ClientCertFile)
 	}
 	if info.ClientCertFile != "" {
 		_, err := tlsutil.NewCert(info.ClientCertFile, info.ClientKeyFile, info.parseFunc)
@@ -371,18 +351,17 @@ func (info TLSInfo) baseConfig() (*tls.Config, error) {
 					}
 				}
 			}
-			return errors.New("client certificate authentication failed")
+			return errors.New("客户端证书认证失败")
 		}
 	}
-
-	// this only reloads certs when there's a client request
-	// TODO: support etcd-side refresh (e.g. inotify, SIGHUP), caching
+	// 是有同一个CA签发的
+	// 服务端获取证书
 	cfg.GetCertificate = func(clientHello *tls.ClientHelloInfo) (cert *tls.Certificate, err error) {
 		cert, err = tlsutil.NewCert(info.CertFile, info.KeyFile, info.parseFunc)
 		if os.IsNotExist(err) {
 			if info.Logger != nil {
 				info.Logger.Warn(
-					"failed to find peer cert files",
+					"未能找到peer的证书文件",
 					zap.String("cert-file", info.CertFile),
 					zap.String("key-file", info.KeyFile),
 					zap.Error(err),
@@ -391,7 +370,7 @@ func (info TLSInfo) baseConfig() (*tls.Config, error) {
 		} else if err != nil {
 			if info.Logger != nil {
 				info.Logger.Warn(
-					"failed to create peer certificate",
+					"未能创建peer证书",
 					zap.String("cert-file", info.CertFile),
 					zap.String("key-file", info.KeyFile),
 					zap.Error(err),
@@ -400,6 +379,7 @@ func (info TLSInfo) baseConfig() (*tls.Config, error) {
 		}
 		return cert, err
 	}
+	// 客户端获取证书
 	cfg.GetClientCertificate = func(unused *tls.CertificateRequestInfo) (cert *tls.Certificate, err error) {
 		certfile, keyfile := info.CertFile, info.KeyFile
 		if info.ClientCertFile != "" {
@@ -409,7 +389,7 @@ func (info TLSInfo) baseConfig() (*tls.Config, error) {
 		if os.IsNotExist(err) {
 			if info.Logger != nil {
 				info.Logger.Warn(
-					"failed to find client cert files",
+					"未能找到peer的证书文件",
 					zap.String("cert-file", certfile),
 					zap.String("key-file", keyfile),
 					zap.Error(err),
@@ -418,7 +398,7 @@ func (info TLSInfo) baseConfig() (*tls.Config, error) {
 		} else if err != nil {
 			if info.Logger != nil {
 				info.Logger.Warn(
-					"failed to create client certificate",
+					"未能创建peer证书",
 					zap.String("cert-file", certfile),
 					zap.String("key-file", keyfile),
 					zap.Error(err),
@@ -430,7 +410,7 @@ func (info TLSInfo) baseConfig() (*tls.Config, error) {
 	return cfg, nil
 }
 
-// cafiles returns a list of CA file paths.
+// OK
 func (info TLSInfo) cafiles() []string {
 	cs := make([]string, 0)
 	if info.TrustedCAFile != "" {
@@ -477,20 +457,20 @@ func (info TLSInfo) ServerConfig() (*tls.Config, error) {
 	return cfg, nil
 }
 
-// ClientConfig generates a tls.Config object for use by an HTTP client.
+// ClientConfig 生成一个tls.Config对象，供HTTP客户端使用。
 func (info TLSInfo) ClientConfig() (*tls.Config, error) {
 	var cfg *tls.Config
 	var err error
 
 	if !info.Empty() {
-		cfg, err = info.baseConfig()
+		cfg, err = info.baseConfig() // // 初始化TLS配置
 		if err != nil {
 			return nil, err
 		}
 	} else {
 		cfg = &tls.Config{ServerName: info.ServerName}
 	}
-	cfg.InsecureSkipVerify = info.InsecureSkipVerify
+	cfg.InsecureSkipVerify = info.InsecureSkipVerify // 客户端是否验证服务端证书链和主机名
 
 	cs := info.cafiles()
 	if len(cs) > 0 {
@@ -524,13 +504,10 @@ func (info TLSInfo) ClientConfig() (*tls.Config, error) {
 			return nil, err
 		}
 		if hasNonEmptyCN {
-			return nil, fmt.Errorf("cert has non empty Common Name (%s): %s", cn, info.CertFile)
+			return nil, fmt.Errorf("证书没有CN(%s): %s", cn, info.CertFile)
 		}
 	}
 
-	// go1.13 enables TLS 1.3 by default
-	// and in TLS 1.3, cipher suites are not configurable
-	// setting Max TLS version to TLS 1.2 for go 1.13
 	cfg.MaxVersion = tls.VersionTLS12
 
 	return cfg, nil

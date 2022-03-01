@@ -24,14 +24,15 @@ import (
 	"github.com/jonboulle/clockwork"
 )
 
-// explanations of Compare function result
+// 对比函数结果的说明
 const (
-	CompareMatch = iota
-	CompareIndexNotMatch
-	CompareValueNotMatch
-	CompareNotMatch
+	CompareMatch         = iota // 匹配
+	CompareIndexNotMatch        // 索引不匹配
+	CompareValueNotMatch        // 值不匹配
+	CompareNotMatch             // 不匹配
 )
 
+// Permanent 永久性
 var Permanent time.Time
 
 // node is the basic element in the store system.
@@ -66,7 +67,7 @@ func newKV(store *store, nodePath string, value string, createdIndex uint64, par
 	}
 }
 
-// newDir creates a directory
+// newDir 创建一个目录
 func newDir(store *store, nodePath string, createdIndex uint64, parent *node, expireTime time.Time) *node {
 	return &node{
 		Path:          nodePath,
