@@ -33,15 +33,16 @@ import (
 	"go.uber.org/zap"
 )
 
-// isMemberBootstrapped tries to check if the given member has been bootstrapped
-// in the given cluster.
+// isMemberBootstrapped 试图检查给定的成员是否已经在给定的集群中被引导了。
 func isMemberBootstrapped(lg *zap.Logger, cl *membership.RaftCluster, member string, rt http.RoundTripper, timeout time.Duration) bool {
-	rcl, err := getClusterFromRemotePeers(lg, getRemotePeerURLs(cl, member), timeout, false, rt)
+	// 获取非本机的peer urls
+	rcl, err := getClusterFromRemotePeers(lg, getRemotePeerURLs(cl, member), timeout, false, rt) // 从远端节点获取到的集群节点信息
 	if err != nil {
+		// 初始化时,会有err ,此时member 是节点名字，而cl.member里的是hash之后的值
 		return false
 	}
 	id := cl.MemberByName(member).ID
-	m := rcl.Member(id)
+	m := rcl.Member(id) // 远端的
 	if m == nil {
 		return false
 	}
@@ -62,7 +63,7 @@ func GetClusterFromRemotePeers(lg *zap.Logger, urls []string, rt http.RoundTripp
 	return getClusterFromRemotePeers(lg, urls, 10*time.Second, true, rt)
 }
 
-// If logerr is true, it prints out more error messages.
+// 从远端节点获取到的集群节点信息
 func getClusterFromRemotePeers(lg *zap.Logger, urls []string, timeout time.Duration, logerr bool, rt http.RoundTripper) (*membership.RaftCluster, error) {
 	if lg == nil {
 		lg = zap.NewNop()
@@ -76,7 +77,7 @@ func getClusterFromRemotePeers(lg *zap.Logger, urls []string, timeout time.Durat
 		resp, err := cc.Get(addr)
 		if err != nil {
 			if logerr {
-				lg.Warn("failed to get cluster response", zap.String("address", addr), zap.Error(err))
+				lg.Warn("获取集群响应失败", zap.String("address", addr), zap.Error(err))
 			}
 			continue
 		}
@@ -84,14 +85,14 @@ func getClusterFromRemotePeers(lg *zap.Logger, urls []string, timeout time.Durat
 		resp.Body.Close()
 		if err != nil {
 			if logerr {
-				lg.Warn("failed to read body of cluster response", zap.String("address", addr), zap.Error(err))
+				lg.Warn("读取集群响应失败", zap.String("address", addr), zap.Error(err))
 			}
 			continue
 		}
 		var membs []*membership.Member
 		if err = json.Unmarshal(b, &membs); err != nil {
 			if logerr {
-				lg.Warn("failed to unmarshal cluster response", zap.String("address", addr), zap.Error(err))
+				lg.Warn("反序列化集群响应失败", zap.String("address", addr), zap.Error(err))
 			}
 			continue
 		}
@@ -99,7 +100,7 @@ func getClusterFromRemotePeers(lg *zap.Logger, urls []string, timeout time.Durat
 		if err != nil {
 			if logerr {
 				lg.Warn(
-					"failed to parse cluster ID",
+					"无法解析集群ID",
 					zap.String("address", addr),
 					zap.String("header", resp.Header.Get("X-Etcd-Cluster-ID")),
 					zap.Error(err),
@@ -108,20 +109,15 @@ func getClusterFromRemotePeers(lg *zap.Logger, urls []string, timeout time.Durat
 			continue
 		}
 
-		// check the length of membership members
-		// if the membership members are present then prepare and return raft cluster
-		// if membership members are not present then the raft cluster formed will be
-		// an invalid empty cluster hence return failed to get raft cluster member(s) from the given urls error
 		if len(membs) > 0 {
-			return membership.NewClusterFromMembers(lg, id, membs), nil
+			return membership.NewClusterFromMembers(lg, id, membs), nil // Construct struct
 		}
-		return nil, fmt.Errorf("failed to get raft cluster member(s) from the given URLs")
+		return nil, fmt.Errorf("无法获取raft集群节点信息从远端节点")
 	}
-	return nil, fmt.Errorf("could not retrieve cluster information from the given URLs")
+	return nil, fmt.Errorf("无法从给定的URL中检索到集群信息")
 }
 
-// getRemotePeerURLs returns peer urls of remote members in the cluster. The
-// returned list is sorted in ascending lexicographical order.
+// getRemotePeerURLs 获取非本机的peer urls
 func getRemotePeerURLs(cl *membership.RaftCluster, local string) []string {
 	us := make([]string, 0)
 	for _, m := range cl.Members() {

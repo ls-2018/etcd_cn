@@ -25,17 +25,18 @@ type Unmarshaler interface {
 	Unmarshal(data []byte) error
 }
 
+// MustMarshal OK
 func MustMarshal(m Marshaler) []byte {
 	d, err := m.Marshal()
 	if err != nil {
-		panic(fmt.Sprintf("marshal should never fail (%v)", err))
+		panic(fmt.Sprintf("序列化不应该失败 (%v)", err))
 	}
 	return d
 }
 
 func MustUnmarshal(um Unmarshaler, data []byte) {
 	if err := um.Unmarshal(data); err != nil {
-		panic(fmt.Sprintf("unmarshal should never fail (%v)", err))
+		panic(fmt.Sprintf("反序列化不应该失败(%v)", err))
 	}
 }
 

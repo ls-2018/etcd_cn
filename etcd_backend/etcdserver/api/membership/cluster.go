@@ -49,10 +49,10 @@ const maxLearners = 1
 type RaftCluster struct {
 	lg *zap.Logger
 
-	localID types.ID
-	cid     types.ID
+	localID types.ID // 本机节点ID
+	cid     types.ID // 集群ID，根据所有初始 memberID hash 得到的
 
-	v2store v2store.Store
+	v2store v2store.Store // 存储
 	be      backend.Backend
 
 	sync.Mutex // guards the fields below
@@ -90,14 +90,15 @@ func NewClusterFromURLsMap(lg *zap.Logger, token string, urlsmap types.URLsMap) 
 			return nil, fmt.Errorf(" %v", m)
 		}
 		if uint64(m.ID) == raft.None {
-			return nil, fmt.Errorf("cannot use %x as member id", raft.None)
+			return nil, fmt.Errorf("不能使用 %x作为成员ID", raft.None)
 		}
 		c.members[m.ID] = m
 	}
-	c.genID()
+	c.genID() // 生成集群ID
 	return c, nil
 }
 
+// NewClusterFromMembers 从远端节点获取到的集群节点信息
 func NewClusterFromMembers(lg *zap.Logger, id types.ID, membs []*Member) *RaftCluster {
 	c := NewCluster(lg)
 	c.cid = id
@@ -132,6 +133,7 @@ func (c *RaftCluster) Members() []*Member {
 	return []*Member(ms)
 }
 
+// Member ok
 func (c *RaftCluster) Member(id types.ID) *Member {
 	c.Lock()
 	defer c.Unlock()
@@ -151,8 +153,7 @@ func (c *RaftCluster) VotingMembers() []*Member {
 	return []*Member(ms)
 }
 
-// MemberByName returns a Member with the given name if exists.
-// If more than one member has the given name, it will panic.
+// MemberByName 返回一个具有给定名称的成员
 func (c *RaftCluster) MemberByName(name string) *Member {
 	c.Lock()
 	defer c.Unlock()
@@ -160,7 +161,7 @@ func (c *RaftCluster) MemberByName(name string) *Member {
 	for _, m := range c.members {
 		if m.Name == name {
 			if memb != nil {
-				c.lg.Panic("two member with same name found", zap.String("name", name))
+				c.lg.Panic("发现了两个相同名称的成员", zap.String("name", name))
 			}
 			memb = m
 		}
@@ -168,6 +169,7 @@ func (c *RaftCluster) MemberByName(name string) *Member {
 	return memb.Clone()
 }
 
+// MemberIDs 返回所有成员iD
 func (c *RaftCluster) MemberIDs() []types.ID {
 	c.Lock()
 	defer c.Unlock()
@@ -229,9 +231,11 @@ func (c *RaftCluster) String() string {
 	return b.String()
 }
 
+// 生成集群ID
 func (c *RaftCluster) genID() {
-	mIDs := c.MemberIDs()
+	mIDs := c.MemberIDs() // 返回所有成员iD
 	b := make([]byte, 8*len(mIDs))
+	//[id,id,id,id,id,id,id]
 	for i, id := range mIDs {
 		binary.BigEndian.PutUint64(b[8*i:], uint64(id))
 	}
@@ -239,11 +243,13 @@ func (c *RaftCluster) genID() {
 	c.cid = types.ID(binary.BigEndian.Uint64(hash[:8]))
 }
 
+// SetID 设置ID
 func (c *RaftCluster) SetID(localID, cid types.ID) {
 	c.localID = localID
 	c.cid = cid
 }
 
+// SetStore OK
 func (c *RaftCluster) SetStore(st v2store.Store) { c.v2store = st }
 
 func (c *RaftCluster) SetBackend(be backend.Backend) {

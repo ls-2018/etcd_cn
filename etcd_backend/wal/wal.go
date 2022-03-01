@@ -98,9 +98,7 @@ type WAL struct {
 	fp    *filePipeline
 }
 
-// Create creates a WAL ready for appending records. The given metadata is
-// recorded at the head of each WAL file, and can be retrieved with ReadAll
-// after the file is Open.
+// Create 创建一个准备用于添加记录的WAL。给定的元数据被记录在每个WAL文件的头部，并且可以在文件打开后用ReadAll检索。
 func Create(lg *zap.Logger, dirpath string, metadata []byte) (*WAL, error) {
 	if Exist(dirpath) {
 		return nil, os.ErrExist
@@ -110,7 +108,7 @@ func Create(lg *zap.Logger, dirpath string, metadata []byte) (*WAL, error) {
 		lg = zap.NewNop()
 	}
 
-	// keep temporary wal directory so WAL initialization appears atomic
+	// 保持临时的WAL目录，这样WAL的初始化就会显得很原子化。
 	tmpdirpath := filepath.Clean(dirpath) + ".tmp"
 	if fileutil.Exist(tmpdirpath) {
 		if err := os.RemoveAll(tmpdirpath); err != nil {
@@ -121,7 +119,7 @@ func Create(lg *zap.Logger, dirpath string, metadata []byte) (*WAL, error) {
 
 	if err := fileutil.CreateDirAll(tmpdirpath); err != nil {
 		lg.Warn(
-			"failed to create a temporary WAL directory",
+			"无法创建wal临时目录",
 			zap.String("tmp-dir-path", tmpdirpath),
 			zap.String("dir-path", dirpath),
 			zap.Error(err),
@@ -130,18 +128,19 @@ func Create(lg *zap.Logger, dirpath string, metadata []byte) (*WAL, error) {
 	}
 
 	p := filepath.Join(tmpdirpath, walName(0, 0))
-	f, err := fileutil.LockFile(p, os.O_WRONLY|os.O_CREATE, fileutil.PrivateFileMode)
+	f, err := fileutil.LockFile(p, os.O_WRONLY|os.O_CREATE, fileutil.PrivateFileMode) // 阻塞
 	if err != nil {
 		lg.Warn(
-			"failed to flock an initial WAL file",
+			"未能存入一个初始WAL文件",
 			zap.String("path", p),
 			zap.Error(err),
 		)
 		return nil, err
 	}
+	// 跳到末尾
 	if _, err = f.Seek(0, io.SeekEnd); err != nil {
 		lg.Warn(
-			"failed to seek an initial WAL file",
+			"未能寻找到一个初始的WAL文件",
 			zap.String("path", p),
 			zap.Error(err),
 		)
@@ -149,7 +148,7 @@ func Create(lg *zap.Logger, dirpath string, metadata []byte) (*WAL, error) {
 	}
 	if err = fileutil.Preallocate(f.File, SegmentSizeBytes, true); err != nil {
 		lg.Warn(
-			"failed to preallocate an initial WAL file",
+			"未能预先分配一个初始的WAL文件",
 			zap.String("path", p),
 			zap.Int64("segment-bytes", SegmentSizeBytes),
 			zap.Error(err),

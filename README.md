@@ -43,6 +43,14 @@ ETCDCTL_API=3 etcdctl alarm disarm
 - 碎片整理```etcdctl defrag```
 ```
 
+### URL
+```
+http://127.0.0.1:2379/members
+
+
+```
+
+
 ### issue
 
 - 1、CertFile与ClientCertFile KeyFile与ClientKeyFile的区别

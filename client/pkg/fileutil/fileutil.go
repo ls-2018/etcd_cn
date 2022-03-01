@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	// PrivateFileMode grants owner to read/write a file.
+	// PrivateFileMode 授予所有者读/写文件的权限。
 	PrivateFileMode = 0600
 )
 

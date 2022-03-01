@@ -40,7 +40,7 @@ var (
 	}
 
 	linuxTryLockFile = flockTryLockFile
-	linuxLockFile    = flockLockFile
+	linuxLockFile    = flockLockFile // 文件锁
 )
 
 func init() {
@@ -73,6 +73,7 @@ func ofdTryLockFile(path string, flag int, perm os.FileMode) (*LockedFile, error
 	return &LockedFile{f}, nil
 }
 
+// LockFile OK
 func LockFile(path string, flag int, perm os.FileMode) (*LockedFile, error) {
 	return linuxLockFile(path, flag, perm)
 }

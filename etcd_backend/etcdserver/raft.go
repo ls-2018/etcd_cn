@@ -419,7 +419,7 @@ func (r *raftNode) advanceTicks(ticks int) {
 		r.tick()
 	}
 }
-
+// 启动节点
 func startNode(cfg config.ServerConfig, cl *membership.RaftCluster, ids []types.ID) (id types.ID, n raft.Node, s *raft.MemoryStorage, w *wal.WAL) {
 	var err error
 	member := cl.MemberByName(cfg.Name)

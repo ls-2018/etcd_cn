@@ -34,8 +34,8 @@ import (
 // ServerConfig 持有从命令行或发现中获取的etcd的配置。
 type ServerConfig struct {
 	Name           string
-	DiscoveryURL   string
-	DiscoveryProxy string
+	DiscoveryURL   string // 节点发现
+	DiscoveryProxy string // discovery代理
 	ClientURLs     types.URLs
 	PeerURLs       types.URLs
 	DataDir        string
@@ -80,7 +80,7 @@ type ServerConfig struct {
 	// InitialElectionTickAdvance 是否提前初始化选举时钟启动，以便更快的选举
 	InitialElectionTickAdvance bool
 
-	BootstrapTimeout time.Duration
+	BootstrapTimeout time.Duration // 引导超时
 
 	AutoCompactionRetention time.Duration
 	AutoCompactionMode      string
@@ -307,6 +307,7 @@ func CheckDuplicateURL(urlsmap types.URLsMap) bool {
 	return false
 }
 
+// BootstrapTimeoutEffective 有效的Bootstrap超时
 func (c *ServerConfig) BootstrapTimeoutEffective() time.Duration {
 	if c.BootstrapTimeout != 0 {
 		return c.BootstrapTimeout

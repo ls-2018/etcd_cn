@@ -22,6 +22,8 @@ import (
 	"syscall"
 )
 
+// 同时尝试在某个文件上放置一个独占锁  设置LOCK_NB  ,如果已被锁定会返回EWOULDBLOCK
+
 func flockTryLockFile(path string, flag int, perm os.FileMode) (*LockedFile, error) {
 	f, err := os.OpenFile(path, flag, perm)
 	if err != nil {
@@ -37,6 +39,7 @@ func flockTryLockFile(path string, flag int, perm os.FileMode) (*LockedFile, err
 	return &LockedFile{f}, nil
 }
 
+// 获取文件锁，阻塞等待
 func flockLockFile(path string, flag int, perm os.FileMode) (*LockedFile, error) {
 	f, err := os.OpenFile(path, flag, perm)
 	if err != nil {

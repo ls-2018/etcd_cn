@@ -31,7 +31,7 @@ import (
 	"github.com/ls-2018/etcd_cn/raft/tracker"
 )
 
-// None is a placeholder node ID used when there is no leader.
+// None 是一个占位的节点ID，在没有领导者时使用。
 const None uint64 = 0
 const noLimit = math.MaxUint64
 

@@ -436,14 +436,16 @@ func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 		if err = cfg.VerifyBootstrap(); err != nil { // 验证peer 通信地址、--initial-advertise-peer-urls" and "--initial-cluster
 			return nil, err
 		}
+		// 创建RaftCluster
 		cl, err = membership.NewClusterFromURLsMap(cfg.Logger, cfg.InitialClusterToken, cfg.InitialPeerURLsMap)
 		if err != nil {
 			return nil, err
 		}
-		m := cl.MemberByName(cfg.Name)
+		m := cl.MemberByName(cfg.Name) // 返回本节点的信息
 		if isMemberBootstrapped(cfg.Logger, cl, cfg.Name, prt, cfg.BootstrapTimeoutEffective()) {
-			return nil, fmt.Errorf("member %s has already been bootstrapped", m.ID)
+			return nil, fmt.Errorf("成员 %s 已经引导过", m.ID)
 		}
+		// TODO 是否使用discovery 发现其他节点
 		if cfg.ShouldDiscover() {
 			var str string
 			str, err = v2discovery.JoinCluster(cfg.Logger, cfg.DiscoveryURL, cfg.DiscoveryProxy, m.ID, cfg.InitialPeerURLsMap.String())
@@ -462,8 +464,9 @@ func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 				return nil, err
 			}
 		}
-		cl.SetStore(st)
+		cl.SetStore(st) // 结构体
 		cl.SetBackend(be)
+		// 启动节点
 		id, n, s, w = startNode(cfg, cl, cl.MemberIDs())
 		cl.SetID(id, cl.ID())
 
