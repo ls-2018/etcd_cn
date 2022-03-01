@@ -406,7 +406,7 @@ func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 	)
 
 	switch {
-	case !haveWAL && !cfg.NewCluster:
+	case !haveWAL && !cfg.NewCluster: // false true   重新加入的成员
 		if err = cfg.VerifyJoinExisting(); err != nil {
 			return nil, err
 		}
@@ -432,8 +432,8 @@ func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 		id, n, s, w = startNode(cfg, cl, nil)
 		cl.SetID(id, existingCluster.ID())
 
-	case !haveWAL && cfg.NewCluster:
-		if err = cfg.VerifyBootstrap(); err != nil {
+	case !haveWAL && cfg.NewCluster: // false true   初始新成员
+		if err = cfg.VerifyBootstrap(); err != nil { // 验证peer 通信地址、--initial-advertise-peer-urls" and "--initial-cluster
 			return nil, err
 		}
 		cl, err = membership.NewClusterFromURLsMap(cfg.Logger, cfg.InitialClusterToken, cfg.InitialPeerURLsMap)
@@ -544,7 +544,7 @@ func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 		}
 
 	default:
-		return nil, fmt.Errorf("unsupported bootstrap config")
+		return nil, fmt.Errorf("不支持的引导配置")
 	}
 
 	if terr := fileutil.TouchDirAll(cfg.MemberDir()); terr != nil {

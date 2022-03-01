@@ -45,7 +45,7 @@ import (
 
 const maxLearners = 1
 
-// RaftCluster is a list of Members that belong to the same raft cluster
+// RaftCluster raft集群成员
 type RaftCluster struct {
 	lg *zap.Logger
 
@@ -62,7 +62,7 @@ type RaftCluster struct {
 	// removed id cannot be reused.
 	removed map[types.ID]bool
 
-	downgradeInfo *DowngradeInfo
+	downgradeInfo *DowngradeInfo // 降级信息
 }
 
 // ConfigChangeContext represents a context for confChange.
@@ -81,14 +81,13 @@ const (
 	ApplyV2storeOnly = ShouldApplyV3(false)
 )
 
-// NewClusterFromURLsMap creates a new raft cluster using provided urls map. Currently, it does not support creating
-// cluster with raft learner member.
+// NewClusterFromURLsMap 使用提供的url映射创建一个新的raft集群。目前，该算法不支持使用raft learner成员创建集群。
 func NewClusterFromURLsMap(lg *zap.Logger, token string, urlsmap types.URLsMap) (*RaftCluster, error) {
-	c := NewCluster(lg)
+	c := NewCluster(lg) //  RaftCluster struct
 	for name, urls := range urlsmap {
 		m := NewMember(name, urls, token, nil)
 		if _, ok := c.members[m.ID]; ok {
-			return nil, fmt.Errorf("member exists with identical ID %v", m)
+			return nil, fmt.Errorf(" %v", m)
 		}
 		if uint64(m.ID) == raft.None {
 			return nil, fmt.Errorf("cannot use %x as member id", raft.None)

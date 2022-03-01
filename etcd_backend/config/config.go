@@ -64,7 +64,7 @@ type ServerConfig struct {
 	// BackendFreelistType boltdb存储的类型
 	BackendFreelistType bolt.FreelistType
 
-	InitialPeerURLsMap  types.URLsMap
+	InitialPeerURLsMap  types.URLsMap // 节点 --- 【 通信地址】可能绑定了多块网卡
 	InitialClusterToken string
 	NewCluster          bool
 	PeerTLSInfo         transport.TLSInfo
@@ -159,20 +159,21 @@ type ServerConfig struct {
 	V2Deprecation V2DeprecationEnum `json:"v2-deprecation"`
 }
 
-// VerifyBootstrap sanity-checks the initial config for bootstrap case
-// and returns an error for things that should never happen.
+// VerifyBootstrap 检查初始配置的引导情况，并对不应该发生的事情返回一个错误。
 func (c *ServerConfig) VerifyBootstrap() error {
-	if err := c.hasLocalMember(); err != nil {
+	if err := c.hasLocalMember(); err != nil { // initial-cluster 集群至少包含本机节点
 		return err
 	}
+	// 主要就是验证  这两个参数  --initial-advertise-peer-urls" and "--initial-cluster
 	if err := c.advertiseMatchesCluster(); err != nil {
 		return err
 	}
+	// 检查所有ip:port 有没有重复的，有就返回 true
 	if CheckDuplicateURL(c.InitialPeerURLsMap) {
-		return fmt.Errorf("initial cluster %s has duplicate url", c.InitialPeerURLsMap)
+		return fmt.Errorf("初始集群有重复的网址%s", c.InitialPeerURLsMap)
 	}
 	if c.InitialPeerURLsMap.String() == "" && c.DiscoveryURL == "" {
-		return fmt.Errorf("initial cluster unset and no discovery URL found")
+		return fmt.Errorf("初始集群未设置，没有发现discovery的URL")
 	}
 	return nil
 }
@@ -194,15 +195,15 @@ func (c *ServerConfig) VerifyJoinExisting() error {
 	return nil
 }
 
-// hasLocalMember checks that the cluster at least contains the local etcd.
+// hasLocalMember 集群至少包含本机节点
 func (c *ServerConfig) hasLocalMember() error {
 	if urls := c.InitialPeerURLsMap[c.Name]; urls == nil {
-		return fmt.Errorf("couldn't find local name %q in the initial cluster configuration", c.Name)
+		return fmt.Errorf("不能再集群配置中发现本机 %q", c.Name)
 	}
 	return nil
 }
 
-// advertiseMatchesCluster confirms peer URLs match those in the cluster peer list.
+// advertiseMatchesCluster 确认peer URL与集群cluster peer中的URL一致。
 func (c *ServerConfig) advertiseMatchesCluster() error {
 	urls, apurls := c.InitialPeerURLsMap[c.Name], c.PeerURLs.StringSlice()
 	urls.Sort()
@@ -222,7 +223,7 @@ func (c *ServerConfig) advertiseMatchesCluster() error {
 		initMap[url.String()] = struct{}{}
 	}
 
-	missing := []string{}
+	var missing []string
 	for url := range initMap {
 		if _, ok := apMap[url]; !ok {
 			missing = append(missing, url)
@@ -234,7 +235,7 @@ func (c *ServerConfig) advertiseMatchesCluster() error {
 		}
 		mstr := strings.Join(missing, ",")
 		apStr := strings.Join(apurls, ",")
-		return fmt.Errorf("--initial-cluster has %s but missing from --initial-advertise-peer-urls=%s (%v)", mstr, apStr, err)
+		return fmt.Errorf("--initial-cluster 有 %s但丢失了--initial-advertise-peer-urls=%s (%v)", mstr, apStr, err)
 	}
 
 	for url := range apMap {
@@ -245,13 +246,13 @@ func (c *ServerConfig) advertiseMatchesCluster() error {
 	if len(missing) > 0 {
 		mstr := strings.Join(missing, ",")
 		umap := types.URLsMap(map[string]types.URLs{c.Name: c.PeerURLs})
-		return fmt.Errorf("--initial-advertise-peer-urls has %s but missing from --initial-cluster=%s", mstr, umap.String())
+		return fmt.Errorf("--initial-advertise-peer-urls 有 %s但丢失了--initial-cluster=%s", mstr, umap.String())
 	}
 
 	// resolved URLs from "--initial-advertise-peer-urls" and "--initial-cluster" did not match or failed
 	apStr := strings.Join(apurls, ",")
 	umap := types.URLsMap(map[string]types.URLs{c.Name: c.PeerURLs})
-	return fmt.Errorf("failed to resolve %s to match --initial-cluster=%s (%v)", apStr, umap.String(), err)
+	return fmt.Errorf("无法解决 %s 匹配--initial-cluster=%s 的问题(%v)", apStr, umap.String(), err)
 }
 
 // MemberDir default.etcd/member
@@ -291,6 +292,7 @@ func (c *ServerConfig) PeerDialTimeout() time.Duration {
 	return time.Second + time.Duration(c.ElectionTicks*int(c.TickMs))*time.Millisecond
 }
 
+// CheckDuplicateURL 检查所有ip:port 有没有重复的，有就返回 true
 func CheckDuplicateURL(urlsmap types.URLsMap) bool {
 	um := make(map[string]bool)
 	for _, urls := range urlsmap {

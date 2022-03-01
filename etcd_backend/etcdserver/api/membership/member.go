@@ -26,41 +26,39 @@ import (
 	"github.com/ls-2018/etcd_cn/client/pkg/types"
 )
 
-// RaftAttributes represents the raft related attributes of an etcd member.
+// RaftAttributes  与raft相关的etcd成员属性
 type RaftAttributes struct {
-	// PeerURLs is the list of peers in the raft cluster.
-	// TODO(philips): ensure these are URLs
+	// PeerURLs是raft集群中的对等体列表。
 	PeerURLs []string `json:"peerURLs"`
-	// IsLearner indicates if the member is raft learner.
+	// IsLearner表示该成员是否是raft Learner。
 	IsLearner bool `json:"isLearner,omitempty"`
 }
 
-// Attributes represents all the non-raft related attributes of an etcd member.
+// Attributes 代表一个etcd成员的所有非raft的相关属性。
 type Attributes struct {
-	Name       string   `json:"name,omitempty"`
-	ClientURLs []string `json:"clientURLs,omitempty"`
+	Name       string   `json:"name,omitempty"`       // 节点创建时设置的name   默认default
+	ClientURLs []string `json:"clientURLs,omitempty"` // 创建时，没有
 }
 
 type Member struct {
-	ID types.ID `json:"id"`
+	ID types.ID `json:"id"` // hash得到的
 	RaftAttributes
 	Attributes
 }
 
-// NewMember creates a Member without an ID and generates one based on the
-// cluster name, peer URLs, and time. This is used for bootstrapping/adding new member.
+// NewMember 创建一个没有ID的成员，并根据集群名称、peer的URLS 和时间生成一个ID。这是用来引导/添加新成员的。
 func NewMember(name string, peerURLs types.URLs, clusterName string, now *time.Time) *Member {
 	memberId := computeMemberId(peerURLs, clusterName, now)
 	return newMember(name, peerURLs, memberId, false)
 }
 
-// NewMemberAsLearner creates a learner Member without an ID and generates one based on the
-// cluster name, peer URLs, and time. This is used for adding new learner member.
+// NewMemberAsLearner 创建一个没有ID的成员，并根据集群名称、peer的URLS 和时间生成一个ID。这是用来引导新learner成员的。
 func NewMemberAsLearner(name string, peerURLs types.URLs, clusterName string, now *time.Time) *Member {
 	memberId := computeMemberId(peerURLs, clusterName, now)
 	return newMember(name, peerURLs, memberId, true)
 }
 
+// 计算成员ID
 func computeMemberId(peerURLs types.URLs, clusterName string, now *time.Time) types.ID {
 	peerURLstrs := peerURLs.StringSlice()
 	sort.Strings(peerURLstrs)
