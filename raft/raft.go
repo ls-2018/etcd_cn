@@ -112,32 +112,19 @@ func (st StateType) String() string {
 	return stmap[uint64(st)]
 }
 
-// Config contains the parameters to start a raft.
+// Config 启动raft的配置参数
 type Config struct {
-	// ID is the identity of the local raft. ID cannot be 0.
+	// ID 是本地raft的身份。ID不能为0。
 	ID uint64
 
-	// ElectionTick is the number of Node.Tick invocations that must pass between
-	// elections. That is, if a follower does not receive any message from the
-	// leader of current term before ElectionTick has elapsed, it will become
-	// candidate and start an election. ElectionTick必须是greater than
-	// HeartbeatTick. We suggest ElectionTick = 10 * HeartbeatTick to avoid
-	// unnecessary leader switching.
+	// ElectionTick 从follower 变成 candidate 经过的时间  ; ElectionTick=10*HeartbeatTick，以避免不必要的领导者更换。
 	ElectionTick int
-	// HeartbeatTick is the number of Node.Tick invocations that must pass between
-	// heartbeats. That is, a leader sends heartbeat messages to maintain its
-	// leadership every HeartbeatTick ticks.
+	// 心跳间隔
 	HeartbeatTick int
 
-	// Storage is the storage for raft. raft generates entries and states to be
-	// stored in storage. raft reads the persisted entries and states out of
-	// Storage when it needs. raft reads out the previous state and configuration
-	// out of storage when restarting.
+	// Storage 存储 日志项、状态
 	Storage Storage
-	// Applied is the last applied index. It should only be set when restarting
-	// raft. raft will not return entries to the application smaller or equal to
-	// Applied. If Applied is unset when restarting, raft might return previous
-	// applied entries. This is a very application dependent configuration.
+	// Applied 提交到用户状态机的索引
 	Applied uint64
 
 	// MaxSizePerMsg limits the max byte size of each append message. Smaller

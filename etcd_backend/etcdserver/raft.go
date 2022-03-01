@@ -419,6 +419,7 @@ func (r *raftNode) advanceTicks(ticks int) {
 		r.tick()
 	}
 }
+
 // 启动节点
 func startNode(cfg config.ServerConfig, cl *membership.RaftCluster, ids []types.ID) (id types.ID, n raft.Node, s *raft.MemoryStorage, w *wal.WAL) {
 	var err error
@@ -430,27 +431,27 @@ func startNode(cfg config.ServerConfig, cl *membership.RaftCluster, ids []types.
 		},
 	)
 	if w, err = wal.Create(cfg.Logger, cfg.WALDir(), metadata); err != nil {
-		cfg.Logger.Panic("failed to create WAL", zap.Error(err))
+		cfg.Logger.Panic("创建WAL失败", zap.Error(err))
 	}
-	if cfg.UnsafeNoFsync {
+	if cfg.UnsafeNoFsync { // 非安全存储 默认是 false    ,
 		w.SetUnsafeNoFsync()
 	}
 	peers := make([]raft.Peer, len(ids))
 	for i, id := range ids {
 		var ctx []byte
-		ctx, err = json.Marshal((*cl).Member(id))
+		ctx, err = json.Marshal((*cl).Member(id)) // 本机
 		if err != nil {
-			cfg.Logger.Panic("failed to marshal member", zap.Error(err))
+			cfg.Logger.Panic("序列化member失败", zap.Error(err))
 		}
 		peers[i] = raft.Peer{ID: uint64(id), Context: ctx}
 	}
-	id = member.ID
+	id = member.ID // 本机ID
 	cfg.Logger.Info(
-		"starting local member",
+		"启动本节点",
 		zap.String("local-member-id", id.String()),
 		zap.String("cluster-id", cl.ID().String()),
 	)
-	s = raft.NewMemoryStorage()
+	s = raft.NewMemoryStorage() // 创建内存存储
 	c := &raft.Config{
 		ID:              uint64(id),
 		ElectionTick:    cfg.ElectionTicks,

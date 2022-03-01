@@ -467,7 +467,7 @@ func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 		cl.SetStore(st) // 结构体
 		cl.SetBackend(be)
 		// 启动节点
-		id, n, s, w = startNode(cfg, cl, cl.MemberIDs())
+		id, n, s, w = startNode(cfg, cl, cl.MemberIDs()) // ✅
 		cl.SetID(id, cl.ID())
 
 	case haveWAL:

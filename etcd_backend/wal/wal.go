@@ -236,6 +236,7 @@ func Create(lg *zap.Logger, dirpath string, metadata []byte) (*WAL, error) {
 	return w, nil
 }
 
+// SetUnsafeNoFsync ok
 func (w *WAL) SetUnsafeNoFsync() {
 	w.unsafeNoSync = true
 }

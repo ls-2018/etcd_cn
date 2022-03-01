@@ -85,10 +85,10 @@ type MemoryStorage struct {
 	ents []pb.Entry
 }
 
-// NewMemoryStorage creates an empty MemoryStorage.
+// NewMemoryStorage 创建内存存储
 func NewMemoryStorage() *MemoryStorage {
 	return &MemoryStorage{
-		// When starting from scratch populate the list with a dummy entry at term zero.
+		// 当从头开始时，用一个假的条目来填充列表中的第零项。
 		ents: make([]pb.Entry, 1),
 	}
 }
