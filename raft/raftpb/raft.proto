@@ -139,6 +139,9 @@ message ConfChange {
 	// Ideally it should really use the Context instead. No counterpart to
 	// this field exists in ConfChangeV2.
 	optional uint64          id      = 1 [(gogoproto.nullable) = false, (gogoproto.customname) = "ID" ];
+	//ID: 表示节点变更的消息id，这个意义不大
+	//Type: ConfChangeAddNode或者ConfChangeRemoveNode
+	//NodeID: 变更节点的id
 }
 
 // ConfChangeSingle is an individual configuration change operation. Multiple

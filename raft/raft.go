@@ -199,7 +199,7 @@ type raft struct {
 	id uint64 // 是本节点raft的身份
 
 	Term uint64 // 任期
-	Vote uint64 // 选票数
+	Vote uint64 // 上一次投票的节点，Leader等于自己的id
 
 	readStates []ReadState
 
@@ -208,7 +208,7 @@ type raft struct {
 	maxMsgSize         uint64 // 每条消息的最大大小
 	maxUncommittedSize uint64 // 每条日志最大消息体
 
-	prs tracker.ProgressTracker
+	prs tracker.ProgressTracker // 跟踪Follower节点的状态，比如日志复制的matchIndex
 
 	state StateType // 当前节点的状态
 
@@ -227,10 +227,8 @@ type raft struct {
 	// be proposed if the leader's applied index is greater than this
 	// value.
 	pendingConfIndex uint64
-	// an estimate of the size of the uncommitted tail of the Raft log. Used to
-	// prevent unbounded log growth. Only maintained by the leader. Reset on
-	// term changes.
-	uncommittedSize uint64
+
+	uncommittedSize uint64 // 还未提交的日志条数，非准确值
 
 	readOnly *readOnly
 
@@ -248,9 +246,7 @@ type raft struct {
 	heartbeatTimeout int // 心跳间隔    ,上限     heartbeatTimeout是当前距离上次心跳的时间
 	electionTimeout  int // 选举超时	   ,上限		electionElapsed是当前距离上次选举的时间
 
-	// randomizedElectionTimeout is a random number between
-	// [electiontimeout, 2 * electiontimeout - 1]. It gets reset
-	// when raft changes its state to follower or candidate.
+	// 随机选举超时
 	randomizedElectionTimeout int
 	disableProposalForwarding bool // 禁止将请求转发到leader,默认FALSE
 	// 由 r.ticker = time.NewTicker(r.heartbeat) ;触发该函数的执行  r.start
@@ -326,8 +322,10 @@ func newRaft(c *Config) *raft {
 
 func (r *raft) hasLeader() bool { return r.lead != None }
 
+// OK
 func (r *raft) softState() *SoftState { return &SoftState{Lead: r.lead, RaftState: r.state} }
 
+// OK
 func (r *raft) hardState() pb.HardState {
 	return pb.HardState{
 		Term:   r.Term,
@@ -638,7 +636,7 @@ func (r *raft) becomeFollower(term uint64, lead uint64) {
 	r.tick = r.tickElection
 	r.lead = lead
 	r.state = StateFollower
-	r.logger.Infof("%x 成为候选者 在任期: %d", r.id, r.Term)
+	r.logger.Infof("%x 成为Follower 在任期: %d", r.id, r.Term)
 }
 
 func (r *raft) becomeCandidate() {
@@ -651,7 +649,7 @@ func (r *raft) becomeCandidate() {
 	r.tick = r.tickElection
 	r.Vote = r.id
 	r.state = StateCandidate
-	r.logger.Infof("%x 成为候选者 在任期: %d", r.id, r.Term)
+	r.logger.Infof("%x 成为Candidate 在任期: %d", r.id, r.Term)
 }
 
 func (r *raft) becomePreCandidate() {
@@ -1567,22 +1565,23 @@ func (r *raft) promotable() bool {
 	return pr != nil && !pr.IsLearner && !r.raftLog.hasPendingSnapshot()
 }
 
+// todo 看不懂
 func (r *raft) applyConfChange(cc pb.ConfChangeV2) pb.ConfState {
 	cfg, prs, err := func() (tracker.Config, tracker.ProgressMap, error) {
 		changer := confchange.Changer{
 			Tracker:   r.prs,
 			LastIndex: r.raftLog.lastIndex(),
 		}
-		if cc.LeaveJoint() {
+		// todo
+		if cc.LeaveJoint() { // 节点离开
 			return changer.LeaveJoint()
-		} else if autoLeave, ok := cc.EnterJoint(); ok {
+		} else if autoLeave, ok := cc.EnterJoint(); ok { //
 			return changer.EnterJoint(autoLeave, cc.Changes...)
 		}
 		return changer.Simple(cc.Changes...)
 	}()
 
 	if err != nil {
-		// TODO(tbg): return the error to the caller.
 		panic(err)
 	}
 

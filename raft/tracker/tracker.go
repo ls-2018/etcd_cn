@@ -142,7 +142,7 @@ func MakeProgressTracker(maxInflight int) ProgressTracker {
 	return p
 }
 
-// ConfState returns a ConfState representing the active configuration.
+// ConfState 返回一个代表active配置的ConfState。
 func (p *ProgressTracker) ConfState() pb.ConfState {
 	return pb.ConfState{
 		Voters:         p.Voters[0].Slice(),

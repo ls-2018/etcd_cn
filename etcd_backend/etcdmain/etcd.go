@@ -69,7 +69,7 @@ func startEtcdOrProxy(args []string) {
 			os.Exit(1)
 		}
 	}
-	lg.Info("运行中: ", zap.Strings("args", args))
+	lg.Info("运行中:", zap.Strings("args", args))
 	if err != nil {
 		lg.Warn("未能验证标志", zap.Error(err))
 		switch err {

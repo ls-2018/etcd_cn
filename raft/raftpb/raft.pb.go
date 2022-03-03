@@ -433,6 +433,7 @@ func (m *Message) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Message proto.InternalMessageInfo
 
+// 封装了raft协议中规定的需要实时持久化的状态属性：当前选举周期、投票和已提交的Index
 type HardState struct {
 	Term   uint64 `protobuf:"varint,1,opt,name=term" json:"term"`
 	Vote   uint64 `protobuf:"varint,2,opt,name=vote" json:"vote"`
@@ -530,6 +531,9 @@ type ConfChange struct {
 	// Ideally it should really use the Context instead. No counterpart to
 	// this field exists in ConfChangeV2.
 	ID uint64 `protobuf:"varint,1,opt,name=id" json:"id"`
+	//ID: 表示节点变更的消息id，这个意义不大
+	//Type: ConfChangeAddNode或者ConfChangeRemoveNode
+	//NodeID: 变更节点的id
 }
 
 func (m *ConfChange) Reset()         { *m = ConfChange{} }

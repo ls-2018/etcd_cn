@@ -35,38 +35,25 @@ var ErrUnavailable = errors.New("requested entry at index is unavailable")
 // snapshot is temporarily unavailable.
 var ErrSnapshotTemporarilyUnavailable = errors.New("snapshot is temporarily unavailable")
 
-// Storage is an interface that may be implemented by the application
-// to retrieve log entries from storage.
-//
-// If any Storage method returns an error, the raft instance will
-// become inoperable and refuse to participate in elections; the
-// application is responsible for cleanup and recovery in this case.
+// Storage raft状态机
 type Storage interface {
-	// InitialState 返回当前的初始状态，其中包括硬状态（HardState）以及配置（里面存储了集群中有哪些节点）
+	// InitialState 已经持久化的HardState和ConfState信息（里面存储了集群中有哪些节点）
 	InitialState() (pb.HardState, pb.ConfState, error)
 	// Entries 传入起始和结束索引值，以及最大的尺寸，返回索引范围在这个传入范围以内并且不超过大小的日志条目数组。
 	Entries(lo, hi, maxSize uint64) ([]pb.Entry, error)
 	// Term 传入日志索引i，返回这条日志对应的任期号。找不到的情况下error返回值不为空，其中当返回ErrCompacted表示传入的索引数据已经找不到，
 	// 说明已经被压缩成快照数据了；返回ErrUnavailable：表示传入的索引值大于当前的最大索引。
 	Term(i uint64) (uint64, error)
-	LastIndex() (uint64, error)  // 返回最后一条数据的索引
-	FirstIndex() (uint64, error) // 返回第一条数据的索引
-	// Snapshot 反回最近的快照数据
-	Snapshot() (pb.Snapshot, error)
+	LastIndex() (uint64, error)     // 返回最后一条数据的索引
+	FirstIndex() (uint64, error)    // 返回第一条数据的索引
+	Snapshot() (pb.Snapshot, error) // 反回最近的快照数据
 }
 
 type MemoryStorage struct {
-	// Protects access to all fields. Most methods of MemoryStorage are
-	// run on the raft goroutine, but Append() is run on an application
-	// goroutine.
 	sync.Mutex
-	//状态信息（当前任期，当前节点投票给了谁，已提交的entry记录的位置）
-	hardState pb.HardState
-	//当前内存里的快照信息
-	snapshot pb.Snapshot
-	//快照数据之后的所有entry记录  ents[i] = i+snapshot.Metadata.Index
-	// 第一条记录是快照的元信息
-	ents []pb.Entry
+	hardState pb.HardState //状态信息（当前任期，当前节点投票给了谁，已提交的entry记录的位置）
+	snapshot  pb.Snapshot  //当前内存里的快照信息
+	ents      []pb.Entry   //snapshot之后的日志条目，第一条日志条目的index为snapshot.Metadata.Index
 }
 
 // NewMemoryStorage 创建内存存储

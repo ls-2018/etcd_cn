@@ -46,20 +46,23 @@ var (
 )
 
 type Backend interface {
-	// ReadTx returns a read transaction. It is replaced by ConcurrentReadTx in the main data path, see #10523.
-	ReadTx() ReadTx
-	BatchTx() BatchTx
-	// ConcurrentReadTx returns a non-blocking read transaction.
-	ConcurrentReadTx() ReadTx
 
+	// ReadTx 开启读事务.
+	ReadTx() ReadTx
+	// BatchTx 开启写事务
+	BatchTx() BatchTx
+	// ConcurrentReadTx 开启并发读事务，互相之间不阻塞
+	ConcurrentReadTx() ReadTx
+	// Snapshot 对db做快照
 	Snapshot() Snapshot
 	Hash(ignores func(bucketName, keyName []byte) bool) (uint32, error)
-	// Size 返回当前物理分配的后端大小。后台可以持有目前未被利用的DB空间，因为它可以进行预分配或将未使用的空间进行回收。使用SizeInUse()来代替实际的DB大小。
+	// Size DB占用的物理磁盘大小，空间可以预分配，所以不是实际数据大小
 	Size() int64
-	// SizeInUse 返回逻辑上正在使用的后台的当前大小。由于后端可以用非字节单位（如页数）来管理自由空间，因此返回的值可能不是精确的字节数。
+	// SizeInUse 实际使用的磁盘空间
 	SizeInUse() int64
-	// OpenReadTxN returns the number of currently open read transactions in the backend.
+	// OpenReadTxN 返回当前读事务个数
 	OpenReadTxN() int64
+	// Defrag 数据文件整理，会回收已删除key和已更新的key旧版本占用的磁盘
 	Defrag() error
 	ForceCommit()
 	Close() error
@@ -81,28 +84,29 @@ type txReadBufferCache struct {
 }
 
 type backend struct {
-	// size and commits are used with atomic operations so they must be
-	// 64-bit aligned, otherwise 32-bit tests will crash
-
-	// size is the number of bytes allocated in the backend
+	// 已经占用的磁盘大小
 	size int64
-	// sizeInUse is the number of bytes actually used in the backend
+	// 实际使用的大小
 	sizeInUse int64
-	// commits counts number of commits since start
+	// 已提交事务数
 	commits int64
-	// openReadTxN is the number of currently open read transactions in the backend
+	// 当前开启的读事务数
 	openReadTxN int64
 	// mlock prevents backend database file to be swapped
 	mlock bool
-
+	// 读写锁
 	mu sync.RWMutex
+	//底层存储为boltDB
 	db *bolt.DB
-
+	// 批量写提交间隔
 	batchInterval time.Duration
-	batchLimit    int
-	batchTx       *batchTxBuffered
-
+	// 批量写最大事务数
+	batchLimit int
+	// 写事务缓冲队列
+	batchTx *batchTxBuffered
+	// 写事务
 	readTx *readTx
+
 	// txReadBufferCache mirrors "txReadBuffer" within "readTx" -- readTx.baseReadTx.buf.
 	// When creating "concurrentReadTx":
 	// - if the cache is up-to-date, "readTx.baseReadTx.buf" copy can be skipped

@@ -76,16 +76,16 @@ var (
 type WAL struct {
 	lg *zap.Logger
 
-	dir string // 底层文件的目录
+	dir string // wal文件的存储目录
 
 	// dirFile is a fd for the wal directory for syncing on Rename
 	dirFile *os.File
 
-	metadata []byte           // metadata recorded at the head of each WAL
-	state    raftpb.HardState // hardstate recorded at the head of WAL
+	metadata []byte           // wal文件构建后会写的第一个metadata记录
+	state    raftpb.HardState // wal文件构建后会写的第一个state记录
 
-	start     walpb.Snapshot // snapshot to start reading
-	decoder   *decoder       // decoder to decode records
+	start     walpb.Snapshot // wal开始的snapshot，代表读取wal时从这个snapshot的记录之后开始
+	decoder   *decoder       // wal记录的反序列化器
 	readClose func() error   // closer for decode reader
 
 	unsafeNoSync bool // if set, do not fsync
@@ -94,7 +94,7 @@ type WAL struct {
 	enti    uint64   // index of the last entry saved to the wal
 	encoder *encoder // encoder to encode records
 
-	locks []*fileutil.LockedFile // the locked files the WAL holds (the name is increasing)
+	locks []*fileutil.LockedFile // 底层数据文件列表
 	fp    *filePipeline
 }
 

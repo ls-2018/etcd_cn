@@ -158,6 +158,11 @@ MsgPreVoteResp
   当follower节点准备发起选举时候，先连接其他节点，并询问它们是否愿意参与选举（其他人是否能正常收到leader节点的信息），当有半数以上节点响应并参与则可以发起新一轮选举。
   解决分区之后节点重新恢复但term过大导致的leader选举问题
   ```
+- WAL
+  ```
+  WAL全称是Write Ahead Log，是数据库中常用的持久化数据的方法。比如我们更新数据库的一条数据，如果直接找到这条数据并更新，
+  可能会耗费比较长的时间。更快更安全的方式是先写一条Log数据到文件中，然后由后台线程来完成最终数据的更新，这条log中通常包含的是一条指令。
+  ```
 
 ![](./images/MsgReadIndex.png)
 ### Ref
@@ -176,6 +181,9 @@ MsgPreVoteResp
 - https://www.freesion.com/article/93891147362/
 - https://www.cnblogs.com/huaweiyuncce/p/10130522.html
 - https://www.cnblogs.com/myd620/p/13189604.html
+- https://blog.csdn.net/weixin_42663840/article/details/101039942
+- https://www.jianshu.com/p/ff6aaa66ea0f
+- https://www.jianshu.com/p/518f75c5bf55
 
 
 

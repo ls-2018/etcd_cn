@@ -41,12 +41,12 @@ type RawNode struct {
 // 参见Bootstrap()来引导一个初始状态；它取代了这个方法以前的'peers'参数（具有相同的行为）。
 // 然而，建议应用程序不要调用Bootstrap，而是通过设置一个第一索引大于1的存储空间，并将所需的ConfState作为其InitialState来手动引导其状态。
 func NewRawNode(config *Config) (*RawNode, error) {
-	r := newRaft(config)
+	r := newRaft(config) // ✅
 	rn := &RawNode{
 		raft: r,
 	}
-	rn.prevSoftSt = r.softState()
-	rn.prevHardSt = r.hardState()
+	rn.prevSoftSt = r.softState() // 节点状态
+	rn.prevHardSt = r.hardState() // 持久化存储状态
 	return rn, nil
 }
 

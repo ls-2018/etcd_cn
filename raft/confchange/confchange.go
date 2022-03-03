@@ -133,7 +133,7 @@ func (c Changer) Simple(ccs ...pb.ConfChangeSingle) (tracker.Config, tracker.Pro
 		return c.err(err)
 	}
 	if joint(cfg) {
-		err := errors.New("can't apply simple config change in joint config")
+		err := errors.New("不能在联合配置中应用简单的配置更改")
 		return c.err(err)
 	}
 	if err := c.apply(&cfg, prs, ccs...); err != nil {
@@ -341,7 +341,7 @@ func (c Changer) checkAndCopy() (tracker.Config, tracker.ProgressMap, error) {
 	prs := tracker.ProgressMap{}
 
 	for id, pr := range c.Tracker.Progress {
-		// A shallow copy is enough because we only mutate the Learner field.
+		// 一个浅层拷贝就足够了，因为我们只对Learner字段进行变异。
 		ppr := *pr
 		prs[id] = &ppr
 	}

@@ -35,11 +35,10 @@ var (
 	ErrStopped = errors.New("raft: stopped")
 )
 
-// SoftState provides state that is useful for logging and debugging.
-// The state is volatile and does not need to be persisted to the WAL.
+// SoftState 提供对日志和调试有用的状态。该状态是不稳定的，不需要持久化到WAL中。
 type SoftState struct {
-	Lead      uint64 // must use atomic operations to access; keep 64-bit aligned.
-	RaftState StateType
+	Lead      uint64    // 当前leader
+	RaftState StateType // 节点状态
 }
 
 func (a *SoftState) equal(b *SoftState) bool {
@@ -124,29 +123,33 @@ func (rd Ready) appliedCursor() uint64 {
 
 // Node represents a node in a raft cluster.
 type Node interface {
-	Tick()                                                          //时钟的实现，选举超时和心跳超时基于此实现
-	Campaign(ctx context.Context) error                             //参与leader竞争
-	Propose(ctx context.Context, data []byte) error                 //在日志中追加数据，需要实现方保证数据追加的成功
-	ProposeConfChange(ctx context.Context, cc pb.ConfChangeI) error // 集群配置变更
-	Step(ctx context.Context, msg pb.Message) error                 //根据消息变更状态机的状态
-	// Ready 标志某一状态的完成，收到状态变化的节点必须提交变更
+	// Tick 触发一次心跳，raft会在触发后检查leader选举超时或发送心跳
+	Tick()
+	// Campaign 触发节点将自己变成候选人，开始选举
+	Campaign(ctx context.Context) error
+	// Propose 提交日志条目
+	Propose(ctx context.Context, data []byte) error
+	// ProposeConfChange 集群配置变更
+	ProposeConfChange(ctx context.Context, cc pb.ConfChangeI) error
+	// Step 发送一条消息给状态机，触发状态变化
+	Step(ctx context.Context, msg pb.Message) error
+	// Ready 如果raft状态机有变化，会通过channel返回一个Ready的数据结构，里面包含变化信息，比如日志变化、心跳发送等。
+	// 调用方在处理完后需要调用Advance()方法告诉状态机上一个Ready处理完了
 	Ready() <-chan Ready
-	// Advance 进行状态的提交，收到完成标志后，必须提交过后节点才会实际进行状态机的更新。在包含快照的场景，为了避免快照落地带来的长时间阻塞，
-	// 允许继续接受和提交其他状态，即使之前的快照状态变更并没有完成。
 	Advance()
-	// ApplyConfChange 进行集群配置变更
+	// ApplyConfChange 应用集群变化到状态机
 	ApplyConfChange(cc pb.ConfChangeI) *pb.ConfState
-	// TransferLeadership 变更leader
+	// TransferLeadership 将Leader转给transferee.
 	TransferLeadership(ctx context.Context, lead, transferee uint64)
-	// ReadIndex 保证线性一致性读，
+	// ReadIndex 请求一次线性读
 	ReadIndex(ctx context.Context, rctx []byte) error
-	// Status 状态机当前的配置
+	// Status raft state machine当前状态.
 	Status() Status
-	// ReportUnreachable 上报节点的不可达
+	// ReportUnreachable 告诉状态机指定id节点不可达.
 	ReportUnreachable(id uint64)
-	// ReportSnapshot 上报快照状态
+	// ReportSnapshot 告诉状态机给id节点发送snapshot的最终处理状态.
 	ReportSnapshot(id uint64, status SnapshotStatus)
-	// Stop 停止节点
+	// Stop 关闭节点.
 	Stop()
 }
 
@@ -160,7 +163,7 @@ func StartNode(c *Config, peers []Peer) Node {
 	if len(peers) == 0 {
 		panic("没有给定peers；使用RestartNode代替。")
 	}
-	rn, err := NewRawNode(c)
+	rn, err := NewRawNode(c) // ✅
 	if err != nil {
 		panic(err)
 	}
@@ -213,15 +216,12 @@ func newNode(rn *RawNode) node {
 		propc:      make(chan msgWithResult), //接收网络层MsgProp类型消息
 		recvc:      make(chan pb.Message),    //接收网络层除MsgProp类型以外的消息
 		confstatec: make(chan pb.ConfState),
-		readyc:     make(chan Ready),    //向上层返回 ready
-		advancec:   make(chan struct{}), //上层处理往ready后返回给raft的消息
-		// make tickc a buffered chan, so raft node can buffer some ticks when the node
-		// is busy processing raft messages. Raft node will resume process buffered
-		// ticks when it becomes idle.
-		tickc:  make(chan struct{}, 128), //管理超时的管道
-		done:   make(chan struct{}),
-		stop:   make(chan struct{}),
-		status: make(chan chan Status),
+		readyc:     make(chan Ready),         //向上层返回 ready
+		advancec:   make(chan struct{}),      //上层处理往ready后返回给raft的消息
+		tickc:      make(chan struct{}, 128), //管理超时的管道,繁忙时可以处理之前的事件
+		done:       make(chan struct{}),
+		stop:       make(chan struct{}),
+		status:     make(chan chan Status),
 	}
 }
 
@@ -282,7 +282,8 @@ func (n *node) run() {
 		// TODO: maybe buffer the config propose if there exists one (the way
 		// described in raft dissertation)
 		// Currently it is dropped in Step silently.
-		case pm := <-propc:
+
+		case pm := <-propc: //接收到写消息
 			m := pm.m
 			m.From = r.id
 			err := r.Step(m)
@@ -290,12 +291,12 @@ func (n *node) run() {
 				pm.result <- err
 				close(pm.result)
 			}
-		case m := <-n.recvc:
+		case m := <-n.recvc: //接收到readindex 请求
 			// filter out response message from unknown From.
 			if pr := r.prs.Progress[m.From]; pr != nil || !IsResponseMsg(m.Type) {
 				r.Step(m)
 			}
-		case cc := <-n.confc:
+		case cc := <-n.confc: //配置变更
 			_, okBefore := r.prs.Progress[r.id]
 			cs := r.applyConfChange(cc)
 			// If the node was removed, block incoming proposals. Note that we
@@ -326,18 +327,19 @@ func (n *node) run() {
 			case n.confstatec <- cs:
 			case <-n.done:
 			}
-		case <-n.tickc:
+		case <-n.tickc: //超时时间到，包括心跳超时和选举超时等
+			//https://www.cnblogs.com/myd620/p/13189604.html
 			n.rn.Tick()
-		case readyc <- rd:
+		case readyc <- rd: //数据ready
 			n.rn.acceptReady(rd)
 			advancec = n.advancec
-		case <-advancec:
+		case <-advancec: //可以进行状态变更和日志提交
 			n.rn.Advance(rd)
 			rd = Ready{}
 			advancec = nil
-		case c := <-n.status:
+		case c := <-n.status: //节点状态信号
 			c <- getStatus(r)
-		case <-n.stop:
+		case <-n.stop: //收到停止信号
 			close(n.done)
 			return
 		}

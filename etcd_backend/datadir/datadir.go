@@ -20,13 +20,14 @@ const (
 	memberDirSegment   = "member"
 	snapDirSegment     = "snap"
 	walDirSegment      = "wal"
-	backendFileSegment = "db"
+	backendFileSegment = "blot.db"
 )
 
 func ToBackendFileName(dataDir string) string {
 	return filepath.Join(ToSnapDir(dataDir), backendFileSegment) // default.etcd/member/snap/db
 }
 
+// ToSnapDir 快照地址
 func ToSnapDir(dataDir string) string {
 	return filepath.Join(ToMemberDir(dataDir), snapDirSegment) // default.etcd/member/snap
 }

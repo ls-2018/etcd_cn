@@ -20,33 +20,22 @@ import (
 	pb "github.com/ls-2018/etcd_cn/raft/raftpb"
 )
 
-// Bootstrap initializes the RawNode for first use by appending configuration
-// changes for the supplied peers. This method returns an error if the Storage
-// is nonempty.
-//
-// It is recommended that instead of calling this method, applications bootstrap
-// their state manually by setting up a Storage that has a first index > 1 and
-// which stores the desired ConfState as its InitialState.
+// Bootstrap 引导集群
 func (rn *RawNode) Bootstrap(peers []Peer) error {
+	//  [{"id":10276657743932975437,"peerURLs":["http://localhost:2380"],"name":"default"}]
 	if len(peers) == 0 {
-		return errors.New("must provide at least one peer to Bootstrap")
+		return errors.New("必须提供至少一个peer")
 	}
-	lastIndex, err := rn.raft.raftLog.storage.LastIndex()
+	lastIndex, err := rn.raft.raftLog.storage.LastIndex() // 内存中最新索引  0
 	if err != nil {
 		return err
 	}
 
 	if lastIndex != 0 {
-		return errors.New("can't bootstrap a nonempty Storage")
+		return errors.New("不能引导一个非空的存储空间")
 	}
-
-	// We've faked out initial entries above, but nothing has been
-	// persisted. Start with an empty HardState (thus the first Ready will
-	// emit a HardState update for the app to persist).
 	rn.prevHardSt = emptyState
 
-	// TODO(tbg): remove StartNode and give the application the right tools to
-	// bootstrap the initial membership in a cleaner way.
 	rn.raft.becomeFollower(1, None)
 	ents := make([]pb.Entry, len(peers))
 	for i, peer := range peers {
@@ -58,20 +47,7 @@ func (rn *RawNode) Bootstrap(peers []Peer) error {
 
 		ents[i] = pb.Entry{Type: pb.EntryConfChange, Term: 1, Index: uint64(i + 1), Data: data}
 	}
-	rn.raft.raftLog.append(ents...)
-
-	// Now apply them, mainly so that the application can call Campaign
-	// immediately after StartNode in tests. Note that these nodes will
-	// be added to raft twice: here and when the application's Ready
-	// loop calls ApplyConfChange. The calls to addNode must come after
-	// all calls to raftLog.append so progress.next is set after these
-	// bootstrapping entries (it is an error if we try to append these
-	// entries since they have already been committed).
-	// We do not set raftLog.applied so the application will be able
-	// to observe all conf changes via Ready.CommittedEntries.
-	//
-	// TODO(bdarnell): These entries are still unstable; do we need to preserve
-	// the invariant that committed < unstable?
+	rn.raft.raftLog.append(ents...) // 有多少个节点就记录多少个日志项
 	rn.raft.raftLog.committed = uint64(len(ents))
 	for _, peer := range peers {
 		rn.raft.applyConfChange(pb.ConfChange{NodeID: peer.ID, Type: pb.ConfChangeAddNode}.AsV2())
