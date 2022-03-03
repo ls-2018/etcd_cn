@@ -108,7 +108,7 @@ type ServerConfig struct {
 	InitialCorruptCheck bool
 	CorruptCheckTime    time.Duration
 
-	// PreVote is true to enable Raft Pre-Vote.
+	// PreVote 是否启用PreVote
 	PreVote bool
 
 	// SocketOpts are socket options passed to listener config.

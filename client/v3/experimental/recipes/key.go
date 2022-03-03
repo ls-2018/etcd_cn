@@ -59,6 +59,7 @@ func newUniqueKV(kv v3.KV, prefix string, val string) (*RemoteKV, error) {
 
 // putNewKV attempts to create the given key, only succeeding if the key did
 // not yet exist.
+// 只有在没有创建的时候才能创建成功
 func putNewKV(kv v3.KV, key, val string, leaseID v3.LeaseID) (int64, error) {
 	cmp := v3.Compare(v3.Version(key), "=", 0)
 	req := v3.OpPut(key, val, v3.WithLease(leaseID))

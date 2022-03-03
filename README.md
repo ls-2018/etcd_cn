@@ -51,6 +51,32 @@ http://127.0.0.1:2379/members
 ```
 
 
+
+### msg
+```
+MsgHup             
+MsgBeat            
+MsgProp            
+MsgApp             
+MsgAppResp         
+MsgVote            
+MsgVoteResp        
+MsgSnap            
+MsgHeartbeat       
+MsgHeartbeatResp   
+MsgUnreachable     
+MsgSnapStatus      
+MsgCheckQuorum               检查自己还是不是leader,electionTimeout定时触发  
+MsgTransferLeader  
+MsgTimeoutNow      
+MsgReadIndex       
+MsgReadIndexResp   
+MsgPreVote         
+MsgPreVoteResp     
+```
+
+
+
 ### issue
 
 - 1、CertFile与ClientCertFile KeyFile与ClientKeyFile的区别
@@ -118,8 +144,54 @@ http://127.0.0.1:2379/members
   它会默认把日志记录到/run/log/journal中,仅保留一个月的日志,且系统重启后也会消失.
   但是当新建 /var/log/journal 目录后,它又会把日志记录到这个目录中,永久保存.
   ```
-  
+
+
+- checkquorum机制：
+  ```
+  每隔一段时间，leader节点会尝试连接集群中的节点（发送心跳），如果发现自己可以连接到的节点个数没有超过半数，则主动切换成follower状态。
+  这样在网络分区的情况下，旧的leader节点可以很快的知道自己已经过期了。
+  ```
+
+
+- PreVote优化
+  ```
+  当follower节点准备发起选举时候，先连接其他节点，并询问它们是否愿意参与选举（其他人是否能正常收到leader节点的信息），当有半数以上节点响应并参与则可以发起新一轮选举。
+  解决分区之后节点重新恢复但term过大导致的leader选举问题
+  ```
+
+![](./images/MsgReadIndex.png)
+### Ref
+
+- https://blog.csdn.net/cuichongxin/article/details/118678009
+- https://blog.csdn.net/crazyj4/category_10585293.html
+- https://zhuanlan.zhihu.com/p/113149149
+- https://blog.csdn.net/lkree/article/details/99085339
+- https://blog.csdn.net/xxb249/category_8693355.html
+- https://blog.csdn.net/luo222/article/details/98849114
+- https://www.cnblogs.com/ricklz/category/2004842.html
+- https://blog.csdn.net/skh2015java/category_9284671.html
+- https://mp.weixin.qq.com/s/o_g5z77VZbImgTqjNBSktA
+- https://www.jianshu.com/p/089a4c464c95
+- https://www.coder55.com/article/10608
+- https://www.freesion.com/article/93891147362/
+- https://www.cnblogs.com/huaweiyuncce/p/10130522.html
+- https://www.cnblogs.com/myd620/p/13189604.html
 
 
 
-https://blog.csdn.net/cuichongxin/article/details/118678009
+```
+tickHeartbeart 会同时推进两个计数器  heartbeatElapsed 和 electionElapsed 。
+
+(1) heartbeatElapsed
+
+当 heartbeatElapsed 超时，发送 MsgBeat 消息给当前节点，当前节点收到消息之后会广播心跳消息(bcastHeartbeat)给其他节点 MsgHeartbeat 消息。
+
+当 Follower 或者 Candidate 收到 MsgHeartbeat 消息会重置 electionElapsed 为 0，同时会响应 MsgHeartbeatResp 消息。
+
+当 Leader 收到 MsgHeartbeatResp 消息，会更新对应节点的状态(存活、日志复制状态等)
+
+(2) electionElapsed
+
+当 electionElapsed 超时，发送 MsgCheckQuorum 给当前节点，当前节点收到消息之后，进行自我检查，判断是否能继续维持 Leader 状态，如果不能切换为Follower。同时如果节点正在进行 Leader 切换(切换其他节点为Leader)，当 electionElapsed 超时，说明 Leader 节点转移超时，会终止切换。
+
+```

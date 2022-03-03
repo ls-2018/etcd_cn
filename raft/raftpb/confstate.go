@@ -20,8 +20,7 @@ import (
 	"sort"
 )
 
-// Equivalent returns a nil error if the inputs describe the same configuration.
-// On mismatch, returns a descriptive error showing the differences.
+// Equivalent 判断相不相等
 func (cs ConfState) Equivalent(cs2 ConfState) error {
 	cs1 := cs
 	orig1, orig2 := cs1, cs2
@@ -38,7 +37,7 @@ func (cs ConfState) Equivalent(cs2 ConfState) error {
 	}
 
 	if !reflect.DeepEqual(cs1, cs2) {
-		return fmt.Errorf("ConfStates not equivalent after sorting:\n%+#v\n%+#v\nInputs were:\n%+#v\n%+#v", cs1, cs2, orig1, orig2)
+		return fmt.Errorf("ConfStates 不相同sorting:\n%+#v\n%+#v\nInputs were:\n%+#v\n%+#v", cs1, cs2, orig1, orig2)
 	}
 	return nil
 }

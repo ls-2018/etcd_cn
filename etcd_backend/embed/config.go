@@ -176,7 +176,7 @@ type Config struct {
 	//
 	// See https://github.com/etcd-io/etcd/issues/9333 for more detail.
 	// todo 是否在开机时快进初始选举点.以加快选举速度.
-	InitialElectionTickAdvance bool `json:"initial-election-tick-advance"`// 是否提前初始化选举时钟启动，以便更快的选举
+	InitialElectionTickAdvance bool `json:"initial-election-tick-advance"` // 是否提前初始化选举时钟启动，以便更快的选举
 
 	// BackendBatchInterval BackendBatchInterval是提交后端事务前的最长时间.
 	BackendBatchInterval time.Duration `json:"backend-batch-interval"`
@@ -197,8 +197,8 @@ type Config struct {
 	ClientTLSInfo transport.TLSInfo
 	ClientAutoTLS bool
 
-	PeerTLSInfo   transport.TLSInfo
-	PeerAutoTLS   bool //节点之间使用生成的证书通信;默认false
+	PeerTLSInfo transport.TLSInfo
+	PeerAutoTLS bool //节点之间使用生成的证书通信;默认false
 	// SelfSignedCertValidity 客户端证书和同级证书的有效期,单位为年 ;etcd自动生成的 如果指定了ClientAutoTLS and PeerAutoTLS,
 	SelfSignedCertValidity uint `json:"self-signed-cert-validity"`
 
@@ -235,7 +235,7 @@ type Config struct {
 	SocketOpts transport.SocketOpts
 
 	// PreVote  为真.以启用Raft预投票.如果启用.Raft会运行一个额外的选举阶段.以检查它是否会获得足够的票数来赢得选举.从而最大限度地减少干扰.
-	PreVote bool `json:"pre-vote"`
+	PreVote bool `json:"pre-vote"` // 默认false
 
 	CORS map[string]struct{}
 
@@ -923,6 +923,7 @@ func (cfg *Config) getMetricsURLs() (ss []string) {
 	}
 	return ss
 }
+
 // 返回boltdb存储的数据类型
 func parseBackendFreelistType(freelistType string) bolt.FreelistType {
 	if freelistType == freelistArrayType {

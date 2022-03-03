@@ -25,9 +25,7 @@ import (
 // index is unavailable because it predates the last snapshot.
 var ErrCompacted = errors.New("requested index is unavailable due to compaction")
 
-// ErrSnapOutOfDate is returned by Storage.CreateSnapshot when a requested
-// index is older than the existing snapshot.
-var ErrSnapOutOfDate = errors.New("requested index is older than the existing snapshot")
+var ErrSnapOutOfDate = errors.New("请求的索引比现有快照的老")
 
 // ErrUnavailable is returned by Storage interface when the requested log entries
 // are unavailable.
@@ -44,44 +42,30 @@ var ErrSnapshotTemporarilyUnavailable = errors.New("snapshot is temporarily unav
 // become inoperable and refuse to participate in elections; the
 // application is responsible for cleanup and recovery in this case.
 type Storage interface {
-	// TODO(tbg): split this into two interfaces, LogStorage and StateStorage.
-
-	// InitialState returns the saved HardState and ConfState information.
+	// InitialState 返回当前的初始状态，其中包括硬状态（HardState）以及配置（里面存储了集群中有哪些节点）
 	InitialState() (pb.HardState, pb.ConfState, error)
-	// Entries returns a slice of log entries in the range [lo,hi).
-	// MaxSize limits the total size of the log entries returned, but
-	// Entries returns at least one entry if any.
+	// Entries 传入起始和结束索引值，以及最大的尺寸，返回索引范围在这个传入范围以内并且不超过大小的日志条目数组。
 	Entries(lo, hi, maxSize uint64) ([]pb.Entry, error)
-	// Term returns the term of entry i, which必须是in the range
-	// [FirstIndex()-1, LastIndex()]. The term of the entry before
-	// FirstIndex is retained for matching purposes even though the
-	// rest of that entry may not be available.
+	// Term 传入日志索引i，返回这条日志对应的任期号。找不到的情况下error返回值不为空，其中当返回ErrCompacted表示传入的索引数据已经找不到，
+	// 说明已经被压缩成快照数据了；返回ErrUnavailable：表示传入的索引值大于当前的最大索引。
 	Term(i uint64) (uint64, error)
-	// LastIndex returns the index of the last entry in the log.
-	LastIndex() (uint64, error)
-	// FirstIndex returns the index of the first log entry that is
-	// possibly available via Entries (older entries have been incorporated
-	// into the latest Snapshot; if storage only contains the dummy entry the
-	// first log entry is not available).
-	FirstIndex() (uint64, error)
-	// Snapshot returns the most recent snapshot.
-	// If snapshot is temporarily unavailable, it should return ErrSnapshotTemporarilyUnavailable,
-	// so raft state machine could know that Storage needs some time to prepare
-	// snapshot and call Snapshot later.
+	LastIndex() (uint64, error)  // 返回最后一条数据的索引
+	FirstIndex() (uint64, error) // 返回第一条数据的索引
+	// Snapshot 反回最近的快照数据
 	Snapshot() (pb.Snapshot, error)
 }
 
-// MemoryStorage implements the Storage interface backed by an
-// in-memory array.
 type MemoryStorage struct {
 	// Protects access to all fields. Most methods of MemoryStorage are
 	// run on the raft goroutine, but Append() is run on an application
 	// goroutine.
 	sync.Mutex
-
+	//状态信息（当前任期，当前节点投票给了谁，已提交的entry记录的位置）
 	hardState pb.HardState
-	snapshot  pb.Snapshot
-	// ents[i] has raft log position i+snapshot.Metadata.Index
+	//当前内存里的快照信息
+	snapshot pb.Snapshot
+	//快照数据之后的所有entry记录  ents[i] = i+snapshot.Metadata.Index
+	// 第一条记录是快照的元信息
 	ents []pb.Entry
 }
 
@@ -91,19 +75,6 @@ func NewMemoryStorage() *MemoryStorage {
 		// 当从头开始时，用一个假的条目来填充列表中的第零项。
 		ents: make([]pb.Entry, 1),
 	}
-}
-
-// InitialState implements the Storage interface.
-func (ms *MemoryStorage) InitialState() (pb.HardState, pb.ConfState, error) {
-	return ms.hardState, ms.snapshot.Metadata.ConfState, nil
-}
-
-// SetHardState saves the current HardState.
-func (ms *MemoryStorage) SetHardState(st pb.HardState) error {
-	ms.Lock()
-	defer ms.Unlock()
-	ms.hardState = st
-	return nil
 }
 
 // Entries implements the Storage interface.
@@ -140,44 +111,13 @@ func (ms *MemoryStorage) Term(i uint64) (uint64, error) {
 	return ms.ents[i-offset].Term, nil
 }
 
-// LastIndex implements the Storage interface.
-func (ms *MemoryStorage) LastIndex() (uint64, error) {
-	ms.Lock()
-	defer ms.Unlock()
-	return ms.lastIndex(), nil
-}
-
-func (ms *MemoryStorage) lastIndex() uint64 {
-	return ms.ents[0].Index + uint64(len(ms.ents)) - 1
-}
-
-// FirstIndex implements the Storage interface.
-func (ms *MemoryStorage) FirstIndex() (uint64, error) {
-	ms.Lock()
-	defer ms.Unlock()
-	return ms.firstIndex(), nil
-}
-
-func (ms *MemoryStorage) firstIndex() uint64 {
-	return ms.ents[0].Index + 1
-}
-
-// Snapshot implements the Storage interface.
-func (ms *MemoryStorage) Snapshot() (pb.Snapshot, error) {
-	ms.Lock()
-	defer ms.Unlock()
-	return ms.snapshot, nil
-}
-
-// ApplySnapshot overwrites the contents of this Storage object with
-// those of the given snapshot.
+// ApplySnapshot 更新快照数据，将snapshot实例保存到memorystorage中
 func (ms *MemoryStorage) ApplySnapshot(snap pb.Snapshot) error {
 	ms.Lock()
 	defer ms.Unlock()
 
-	//handle check for old snapshot being applied
-	msIndex := ms.snapshot.Metadata.Index
-	snapIndex := snap.Metadata.Index
+	msIndex := ms.snapshot.Metadata.Index // 内存的
+	snapIndex := snap.Metadata.Index      // 文件系统的
 	if msIndex >= snapIndex {
 		return ErrSnapOutOfDate
 	}
@@ -235,9 +175,8 @@ func (ms *MemoryStorage) Compact(compactIndex uint64) error {
 	return nil
 }
 
-// Append the new entries to storage.
-// TODO (xiangli): ensure the entries are continuous and
-// entries[0].Index > ms.entries[0].Index
+// Append 向快照添加数据
+// 确保日志项是 连续的且entries[0].Index > ms.entries[0].Index
 func (ms *MemoryStorage) Append(entries []pb.Entry) error {
 	if len(entries) == 0 {
 		return nil
@@ -246,14 +185,14 @@ func (ms *MemoryStorage) Append(entries []pb.Entry) error {
 	ms.Lock()
 	defer ms.Unlock()
 
-	first := ms.firstIndex()
-	last := entries[0].Index + uint64(len(entries)) - 1
+	first := ms.firstIndex()                            // 当前第一个
+	last := entries[0].Index + uint64(len(entries)) - 1 // 最后一个
 
-	// shortcut if there is no new entry.
 	if last < first {
 		return nil
 	}
-	// truncate compacted entries
+	// 截断已经记入snapshot中的
+	// entries[0]    first   entries[-1]
 	if first > entries[0].Index {
 		entries = entries[first-entries[0].Index:]
 	}
@@ -270,4 +209,49 @@ func (ms *MemoryStorage) Append(entries []pb.Entry) error {
 			ms.lastIndex(), entries[0].Index)
 	}
 	return nil
+}
+
+// -------------------------------------------------OVER-------------------------------------------------
+
+// InitialState OK
+func (ms *MemoryStorage) InitialState() (pb.HardState, pb.ConfState, error) {
+	return ms.hardState, ms.snapshot.Metadata.ConfState, nil
+}
+
+// SetHardState OK
+func (ms *MemoryStorage) SetHardState(st pb.HardState) error {
+	ms.Lock()
+	defer ms.Unlock()
+	ms.hardState = st
+	return nil
+}
+
+// Snapshot OK
+func (ms *MemoryStorage) Snapshot() (pb.Snapshot, error) {
+	ms.Lock()
+	defer ms.Unlock()
+	return ms.snapshot, nil
+}
+
+// LastIndex todo 返回ents最新entry的索引
+func (ms *MemoryStorage) LastIndex() (uint64, error) {
+	ms.Lock()
+	defer ms.Unlock()
+	return ms.lastIndex(), nil
+}
+
+// todo 返回ents最新entry的索引
+func (ms *MemoryStorage) lastIndex() uint64 {
+	return ms.ents[0].Index + uint64(len(ms.ents)) - 1
+}
+
+// todo
+func (ms *MemoryStorage) FirstIndex() (uint64, error) {
+	ms.Lock()
+	defer ms.Unlock()
+	return ms.firstIndex(), nil
+}
+
+func (ms *MemoryStorage) firstIndex() uint64 {
+	return ms.ents[0].Index + 1
 }

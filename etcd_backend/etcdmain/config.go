@@ -182,7 +182,7 @@ func newConfig() *config {
 
 	fs.BoolVar(&cfg.ec.StrictReconfigCheck, "strict-reconfig-check", cfg.ec.StrictReconfigCheck, "拒绝可能导致仲裁丢失的重新配置请求.true")
 
-	fs.BoolVar(&cfg.ec.PreVote, "pre-vote", cfg.ec.PreVote, "Enable to run an additional Raft election phase.")
+	fs.BoolVar(&cfg.ec.PreVote, "pre-vote", cfg.ec.PreVote, "是否启用PreVote扩展,解决分区恢复选举bug")
 
 	fs.StringVar(&cfg.ec.ExperimentalEnableV2V3, "experimental-enable-v2v3", cfg.ec.ExperimentalEnableV2V3, "v3 prefix for serving emulated v2 state. Deprecated in 3.5. Will be decomissioned in 3.6.")
 	fs.Var(cfg.cf.v2deprecation, "v2-deprecation", fmt.Sprintf("v2store deprecation stage: %q. ", cfg.cf.proxy.Valids())) // off readonly on

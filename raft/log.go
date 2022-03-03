@@ -22,25 +22,23 @@ import (
 )
 
 type raftLog struct {
-	// storage contains all stable entries since the last snapshot.
+	//这里还是一个内存存储，保存了从上一个snapshot起，已经持久化了的日志条目。
 	storage Storage
 
-	// unstable contains all unstable entries and snapshot.
-	// they will be saved into storage.
+	// 保存了尚未持久化的日志条目或快照。
 	unstable unstable
 
-	// committed is the highest log position that is known to be in
-	// stable storage on a quorum of nodes.
+	//指示当前已经确认的被半数以上节点同步过的最新日志index
 	committed uint64
-	// applied is the highest log position that the application has
-	// been instructed to apply to its state machine.
 	// Invariant: applied <= committed
+	//指示已经作用到状态机中的最新日志条目的index
 	applied uint64
 
 	logger Logger
 
 	// maxNextEntsSize is the maximum number aggregate byte size of the messages
 	// returned from calls to nextEnts.
+	// 参数是用来防止一次提交的 raft 日志过大导致OOM
 	maxNextEntsSize uint64
 }
 
@@ -51,49 +49,53 @@ func newLog(storage Storage, logger Logger) *raftLog {
 	return newLogWithSize(storage, logger, noLimit)
 }
 
-// newLogWithSize returns a log using the given storage and max
-// message size.
+// 构建新的日志条目
 func newLogWithSize(storage Storage, logger Logger, maxNextEntsSize uint64) *raftLog {
 	if storage == nil {
-		log.Panic("storage must not be nil")
+		log.Panic("存储不能为空")
 	}
-	log := &raftLog{
-		storage:         storage,
+	log := &raftLog{ // struct
+		storage:         storage, // memory
 		logger:          logger,
-		maxNextEntsSize: maxNextEntsSize,
+		maxNextEntsSize: maxNextEntsSize, // 消息最大大小
 	}
-	firstIndex, err := storage.FirstIndex()
+	firstIndex, err := storage.FirstIndex() // 返回第一条数据的索引
 	if err != nil {
-		panic(err) // TODO(bdarnell)
+		panic(err)
 	}
-	lastIndex, err := storage.LastIndex()
+	lastIndex, err := storage.LastIndex() // 返回最后一条数据的索引
 	if err != nil {
-		panic(err) // TODO(bdarnell)
+		panic(err)
 	}
-	log.unstable.offset = lastIndex + 1
+	log.unstable.offset = lastIndex + 1 // 保存了尚未持久化的日志条目或快照
 	log.unstable.logger = logger
-	// Initialize our committed and applied pointers to the time of the last compaction.
+	// 将我们的承诺和应用的指针初始化为最后一次压实的时间。
+
+	//   -------------------------------------
+	//    commit|apply      storage
 	log.committed = firstIndex - 1
 	log.applied = firstIndex - 1
 
 	return log
 }
 
+//OK
 func (l *raftLog) String() string {
-	return fmt.Sprintf("committed=%d, applied=%d, unstable.offset=%d, len(unstable.Entries)=%d", l.committed, l.applied, l.unstable.offset, len(l.unstable.entries))
+	return fmt.Sprintf("----> 【committed=%d, applied=%d, unstable.offset=%d, len(unstable.Entries)=%d】", l.committed, l.applied, l.unstable.offset, len(l.unstable.entries))
 }
 
 // maybeAppend returns (0, false) if the entries cannot be appended. Otherwise,
 // it returns (last index of new entries, true).
 func (l *raftLog) maybeAppend(index, logTerm, committed uint64, ents ...pb.Entry) (lastnewi uint64, ok bool) {
-	if l.matchTerm(index, logTerm) {
+	if l.matchTerm(index, logTerm) { //查看 index 的 term 与 logTerm 是否匹配·
+
 		lastnewi = index + uint64(len(ents))
-		ci := l.findConflict(ents)
+		ci := l.findConflict(ents) //查找 ents 中，index  与 term 冲突的位置。
 		switch {
-		case ci == 0:
-		case ci <= l.committed:
+		case ci == 0: //没有，全部追加完成
+		case ci <= l.committed: //如果冲突的位置在已提交的位置之前，有问题
 			l.logger.Panicf("entry %d conflict with committed entry [committed(%d)]", ci, l.committed)
-		default:
+		default: //在提交位置之后，将未冲突的追加
 			offset := index + 1
 			l.append(ents[ci-offset:]...)
 		}
@@ -231,7 +233,7 @@ func (l *raftLog) lastIndex() uint64 {
 }
 
 func (l *raftLog) commitTo(tocommit uint64) {
-	// never decrease commit
+	// 永不减少承诺
 	if l.committed < tocommit {
 		if l.lastIndex() < tocommit {
 			l.logger.Panicf("tocommit(%d) is out of range [lastIndex(%d)]. Was the raft log corrupted, truncated, or lost?", tocommit, l.lastIndex())
@@ -240,12 +242,13 @@ func (l *raftLog) commitTo(tocommit uint64) {
 	}
 }
 
+// OK
 func (l *raftLog) appliedTo(i uint64) {
 	if i == 0 {
 		return
 	}
 	if l.committed < i || i < l.applied {
-		l.logger.Panicf("applied(%d) is out of range [prevApplied(%d), committed(%d)]", i, l.applied, l.committed)
+		l.logger.Panicf("applied(%d) 不再范围内[prevApplied(%d), committed(%d)]", i, l.applied, l.committed)
 	}
 	l.applied = i
 }

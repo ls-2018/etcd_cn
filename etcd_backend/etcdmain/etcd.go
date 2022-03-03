@@ -125,6 +125,7 @@ func startEtcdOrProxy(args []string) {
 		shouldProxy := cfg.isProxy() // 是否开启代理模式
 		if !shouldProxy {            // 一般不会开启
 			stopped, errc, err = startEtcd(&cfg.ec)
+			// todo 还没看
 			if derr, ok := err.(*etcdserver.DiscoveryError); ok && derr.Err == v2discovery.ErrFullCluster {
 				if cfg.shouldFallbackToProxy() {
 					lg.Warn(

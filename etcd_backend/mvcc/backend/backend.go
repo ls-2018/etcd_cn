@@ -425,6 +425,7 @@ func (b *backend) Commits() int64 {
 func (b *backend) Defrag() error {
 	return b.defrag()
 }
+
 // 碎片整理
 func (b *backend) defrag() error {
 	now := time.Now()

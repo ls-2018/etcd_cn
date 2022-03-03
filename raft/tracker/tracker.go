@@ -127,7 +127,7 @@ type ProgressTracker struct {
 // MakeProgressTracker initializes a ProgressTracker.
 func MakeProgressTracker(maxInflight int) ProgressTracker {
 	p := ProgressTracker{
-		MaxInflight: maxInflight,
+		MaxInflight: maxInflight, // 最大的处理中的消息数量
 		Config: Config{
 			Voters: quorum.JointConfig{
 				quorum.MajorityConfig{},
@@ -224,7 +224,7 @@ func (p *ProgressTracker) QuorumActive() bool {
 	return p.Voters.VoteResult(votes) == quorum.VoteWon
 }
 
-// VoterNodes returns a sorted slice of voters.
+// VoterNodes 返回一个经过排序的选民
 func (p *ProgressTracker) VoterNodes() []uint64 {
 	m := p.Voters.IDs()
 	nodes := make([]uint64, 0, len(m))

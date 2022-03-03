@@ -29,7 +29,7 @@ import (
 // 它被用来帮助watcher获得一个连续的事件历史。观察者可能会错过在第一个观察命令结束和第二个命令开始之间发生的事件。
 type watcherHub struct {
 	// count必须是64位对齐
-	count int64 // current number of watchers.
+	count        int64 // current number of watchers.
 	mutex        sync.Mutex
 	watchers     map[string]*list.List
 	EventHistory *EventHistory // 历史事件

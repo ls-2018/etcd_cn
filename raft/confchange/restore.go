@@ -108,14 +108,11 @@ func chain(chg Changer, ops ...func(Changer) (tracker.Config, tracker.ProgressMa
 	return chg.Tracker.Config, chg.Tracker.Progress, nil
 }
 
-// Restore takes a Changer (which must represent an empty configuration), and
-// runs a sequence of changes enacting the configuration described in the
-// ConfState.
+// Restore 接受一个Changer（它必须代表一个空的配置），并运行一连串的变化，颁布在 ConfState中描述的配置。
 //
-// TODO(tbg) it's silly that this takes a Changer. Unravel this by making sure
-// the Changer only needs a ProgressMap (not a whole Tracker) at which point
-// this can just take LastIndex and MaxInflight directly instead and cook up
-// the results from that alone.
+// TODO(tbg)
+//这是愚蠢的，这需要一个Changer。通过确保Changer只需要一个ProgressMap（而不是整个追踪器）来解开这个问题，
+//在这一点上，它可以直接获取LastIndex和MaxInflight，并仅从这一点上得出结果。
 func Restore(chg Changer, cs pb.ConfState) (tracker.Config, tracker.ProgressMap, error) {
 	outgoing, incoming := toConfChangeSingle(cs)
 

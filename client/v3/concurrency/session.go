@@ -34,6 +34,7 @@ type Session struct {
 }
 
 // NewSession gets the leased session for a client.
+// 抽象出了一个session对象来持续保持租约不过期
 func NewSession(client *v3.Client, opts ...SessionOption) (*Session, error) {
 	ops := &sessionOptions{ttl: defaultSessionTTL, ctx: client.Ctx()}
 	for _, opt := range opts {
@@ -50,6 +51,7 @@ func NewSession(client *v3.Client, opts ...SessionOption) (*Session, error) {
 	}
 
 	ctx, cancel := context.WithCancel(ops.ctx)
+	// 保证锁，在线程的活动期间，实现锁的的续租
 	keepAlive, err := client.KeepAlive(ctx, id)
 	if err != nil || keepAlive == nil {
 		cancel()

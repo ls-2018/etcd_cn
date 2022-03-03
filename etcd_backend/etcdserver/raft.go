@@ -449,18 +449,22 @@ func startNode(cfg config.ServerConfig, cl *membership.RaftCluster, ids []types.
 	)
 	s = raft.NewMemoryStorage() // 创建内存存储
 	c := &raft.Config{
-		ID:              uint64(id),
-		ElectionTick:    cfg.ElectionTicks,
-		HeartbeatTick:   1,
-		Storage:         s,
-		MaxSizePerMsg:   maxSizePerMsg,// 1m
-		MaxInflightMsgs: maxInflightMsgs, // 512
-		CheckQuorum:     true,
-		PreVote:         cfg.PreVote,
-		Logger:          NewRaftLoggerZap(cfg.Logger.Named("raft")),
+		ID:              uint64(id),        // 本机ID
+		ElectionTick:    cfg.ElectionTicks, // 选举超时
+		HeartbeatTick:   1,                 // 心跳间隔
+		Storage:         s,                 // 存储 memory ✅
+		MaxSizePerMsg:   maxSizePerMsg,     // 每次发消息的最大size
+		MaxInflightMsgs: maxInflightMsgs,   // 512
+		CheckQuorum:     true,              // 检查是否是leader
+		// etcd_backend/embed/config.go:NewConfig 432
+		PreVote: cfg.PreVote, // true      // 是否启用PreVote扩展，建议开启
+		Logger:  NewRaftLoggerZap(cfg.Logger.Named("raft")),
 	}
+
+	_ = membership.NewClusterFromURLsMap
 	if len(peers) == 0 {
-		n = raft.RestartNode(c)
+		// 不会走这里
+		n = raft.RestartNode(c) // 不会引导peers
 	} else {
 		n = raft.StartNode(c, peers)
 	}
@@ -496,7 +500,7 @@ func restartNode(cfg config.ServerConfig, snapshot *raftpb.Snapshot) (types.ID, 
 		ElectionTick:    cfg.ElectionTicks,
 		HeartbeatTick:   1,
 		Storage:         s,
-		MaxSizePerMsg:   maxSizePerMsg,
+		MaxSizePerMsg:   maxSizePerMsg, //每次发消息的最大size
 		MaxInflightMsgs: maxInflightMsgs,
 		CheckQuorum:     true,
 		PreVote:         cfg.PreVote,
@@ -570,7 +574,7 @@ func restartAsStandaloneNode(cfg config.ServerConfig, snapshot *raftpb.Snapshot)
 		ElectionTick:    cfg.ElectionTicks,
 		HeartbeatTick:   1,
 		Storage:         s,
-		MaxSizePerMsg:   maxSizePerMsg,
+		MaxSizePerMsg:   maxSizePerMsg, //每次发消息的最大size
 		MaxInflightMsgs: maxInflightMsgs,
 		CheckQuorum:     true,
 		PreVote:         cfg.PreVote,

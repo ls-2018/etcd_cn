@@ -231,6 +231,7 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 
 	print(e.cfg.logger, *cfg, srvcfg, memberInitialized)
 
+	// TODO 在看
 	if e.Server, err = etcdserver.NewServer(srvcfg); err != nil {
 		return e, err
 	}

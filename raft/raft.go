@@ -35,7 +35,7 @@ import (
 const None uint64 = 0
 const noLimit = math.MaxUint64
 
-// Possible values for StateType.
+// 状态类型
 const (
 	StateFollower StateType = iota
 	StateCandidate
@@ -47,18 +47,18 @@ const (
 type ReadOnlyOption int
 
 const (
-	// ReadOnlySafe guarantees the linearizability of the read only request by
-	// communicating with the quorum. It is the default and suggested option.
 	ReadOnlySafe ReadOnlyOption = iota
-	// ReadOnlyLeaseBased ensures linearizability of the read only request by
-	// relying on the leader lease. It can be affected by clock drift.
-	// If the clock drift is unbounded, leader might keep the lease longer than it
-	// should (clock can move backward/pause without any bound). ReadIndex is not safe
-	// in that case.
 	ReadOnlyLeaseBased
+	//1、 ReadOnlySafe
+	//	该线性读模式，每次 Follower 进行读请求时，需要和 Leader 同步日志提交位点信息，而 Leader ，需要向过半的 Follower 发起证明自己是 Leader 的轻量的 RPC 请求，
+	//	相当于一个 Follower 读，至少需要 1 + （n/2）+ 1 次的 RPC 请求。
+	//2、ReadOnlyLeaseBased
+	//该线性读模式，每次 Follower 进行读请求时， Leader 只需要判断自己的 Leader 租约是否过期了，如果没有过期，直接可以回复 Follower 自己是 Leader ，
+	// 但是该机制对于机器时钟要求很严格，如果有做时钟同步的话，可以考虑使用该线性读模式。
+	//如果说对于配置的发布、修改操作比较频繁，可以将 Raft 快照的时间适当的进行调整，避免新节点加入或者节点重启时，由于 Raft 日志回放操作数太多导致节点可开始对外服务的时间过长。
+
 )
 
-// Possible values for CampaignType
 const (
 	// campaignPreElection represents the first phase of a normal election when
 	// Config.PreVote is true.
@@ -72,7 +72,7 @@ const (
 
 // ErrProposalDropped is returned when the proposal is ignored by some cases,
 // so that the proposer can be notified and fail fast.
-var ErrProposalDropped = errors.New("raft proposal dropped")
+var ErrProposalDropped = errors.New("撤销raft提案")
 
 // lockedRand is a small wrapper around rand.Rand to provide
 // synchronization among multiple raft groups. Only the methods needed
@@ -114,7 +114,7 @@ func (st StateType) String() string {
 
 // Config 启动raft的配置参数
 type Config struct {
-	// ID 是本地raft的身份。ID不能为0。
+	// ID 是本节点raft的身份。ID不能为0。
 	ID uint64
 
 	// ElectionTick 选举超时
@@ -123,45 +123,26 @@ type Config struct {
 	HeartbeatTick int
 
 	// Storage 存储 日志项、状态
-	Storage Storage
+	Storage Storage //
 	// Applied 提交到用户状态机的索引
-	Applied uint64
+	Applied uint64 // 起始为0
 
 	// 每条消息的最大大小 ：math.MaxUint64表示无限制，0表示每条消息最多一个条目。
 	MaxSizePerMsg uint64 // 1m
-	// MaxCommittedSizePerReady limits the size of the committed entries which can be applied.
-	MaxCommittedSizePerReady uint64
-	// MaxUncommittedEntriesSize limits the aggregate byte size of the
-	// uncommitted entries that may be appended to a leader's log. Once this
-	// limit is exceeded, proposals will begin to return ErrProposalDropped
-	// errors. Note: 0 for no limit.
+	// MaxCommittedSizePerReady 限制  commited --> apply 之间的数量
+	MaxCommittedSizePerReady uint64 // MaxSizePerMsg 它们之前是同一个参数
+	// MaxUncommittedEntriesSize 未提交的日志项上限
 	MaxUncommittedEntriesSize uint64
-	// MaxInflightMsgs limits the max number of in-flight append messages during
-	// optimistic replication phase. The application transportation layer usually
-	// has its own sending buffer over TCP/UDP. Setting MaxInflightMsgs to avoid
-	// overflowing that sending buffer. TODO (xiangli): feedback to application to
-	// limit the proposal rate?
+
+	// 最大的处理中的消息数量
 	MaxInflightMsgs int
 
-	// CheckQuorum specifies if the leader should check quorum activity. Leader
-	// steps down when quorum is not active for an electionTimeout.
+	// CheckQuorum 检查需要维持的选票数,一旦小于,就会丢失leader
 	CheckQuorum bool
 
-	// PreVote enables the Pre-Vote algorithm described in raft thesis section
-	// 9.6. This prevents disruption when a node that has been partitioned away
-	// rejoins the cluster.
+	// PreVote 防止分区服务器[term会很大]重新加入集群时出现中断
 	PreVote bool
 
-	// ReadOnlyOption specifies how the read only request is processed.
-	//
-	// ReadOnlySafe guarantees the linearizability of the read only request by
-	// communicating with the quorum. It is the default and suggested option.
-	//
-	// ReadOnlyLeaseBased ensures linearizability of the read only request by
-	// relying on the leader lease. It can be affected by clock drift.
-	// If the clock drift is unbounded, leader might keep the lease longer than it
-	// should (clock can move backward/pause without any bound). ReadIndex is not safe
-	// in that case.
 	// CheckQuorum必须是enabled if ReadOnlyOption is ReadOnlyLeaseBased.
 	ReadOnlyOption ReadOnlyOption
 
@@ -169,86 +150,75 @@ type Config struct {
 	// multiple raft group, each raft group can have its own logger
 	Logger Logger
 
-	// DisableProposalForwarding set to true means that followers will drop
-	// proposals, rather than forwarding them to the leader. One use case for
-	// this feature would be in a situation where the Raft leader is used to
-	// compute the data of a proposal, for example, adding a timestamp from a
-	// hybrid logical clock to data in a monotonically increasing way. Forwarding
-	// should be disabled to prevent a follower with an inaccurate hybrid
-	// logical clock from assigning the timestamp and then forwarding the data
-	// to the leader.
-	DisableProposalForwarding bool
+	DisableProposalForwarding bool // 禁止将请求转发到leader,默认FALSE
 }
 
+// OK
 func (c *Config) validate() error {
 	if c.ID == None {
-		return errors.New("cannot use none as id")
+		return errors.New("补鞥呢使用None作为ID")
 	}
-
+	// 心跳间隔
 	if c.HeartbeatTick <= 0 {
-		return errors.New("heartbeat tick必须是greater than 0")
+		return errors.New("心跳间隔必须是>0")
 	}
 
 	if c.ElectionTick <= c.HeartbeatTick {
-		return errors.New("election tick必须是greater than heartbeat tick")
+		return errors.New("选举超时必须是大于心跳间隔")
 	}
 
 	if c.Storage == nil {
-		return errors.New("storage cannot be nil")
+		return errors.New("不能没有存储")
 	}
 
 	if c.MaxUncommittedEntriesSize == 0 {
 		c.MaxUncommittedEntriesSize = noLimit
 	}
 
-	// default MaxCommittedSizePerReady to MaxSizePerMsg because they were
-	// previously the same parameter.
+	//  它们之前是同一个参数。
 	if c.MaxCommittedSizePerReady == 0 {
 		c.MaxCommittedSizePerReady = c.MaxSizePerMsg
 	}
 
 	if c.MaxInflightMsgs <= 0 {
-		return errors.New("max inflight messages必须是greater than 0")
+		return errors.New("max inflight messages必须是>0")
 	}
 
 	if c.Logger == nil {
 		c.Logger = getLogger()
 	}
-
+	// 作为leader时的检查
 	if c.ReadOnlyOption == ReadOnlyLeaseBased && !c.CheckQuorum {
-		return errors.New("CheckQuorum必须是enabled when ReadOnlyOption is ReadOnlyLeaseBased")
+		return errors.New("如果ReadOnlyOption 是 ReadOnlyLeaseBased 的时候必须开启CheckQuorum。")
 	}
 
 	return nil
 }
 
 type raft struct {
-	id uint64
+	id uint64 // 是本节点raft的身份
 
-	Term uint64
-	Vote uint64
+	Term uint64 // 任期
+	Vote uint64 // 选票数
 
 	readStates []ReadState
 
-	// the log
-	raftLog *raftLog
+	raftLog *raftLog // 当前节点的log状态信息
 
-	maxMsgSize         uint64
-	maxUncommittedSize uint64
-	// TODO(tbg): rename to trk.
+	maxMsgSize         uint64 // 每条消息的最大大小
+	maxUncommittedSize uint64 // 每条日志最大消息体
+
 	prs tracker.ProgressTracker
 
-	state StateType
+	state StateType // 当前节点的状态
 
-	// isLearner is true if the local raft node is a learner.
+	// isLearner 本节点是不是learner角色
 	isLearner bool
 
 	msgs []pb.Message
 
-	// the leader id
-	lead uint64
-	// leadTransferee is id of the leader transfer target when its value is not zero.
-	// Follow the procedure defined in raft thesis 3.10.
+	lead uint64 // 当前leaderID
+	// leader转移到的节点ID
 	leadTransferee uint64
 	// Only one conf change may be pending (in the log, but not yet
 	// applied) at a time. This is enforced via pendingConfIndex, which
@@ -264,29 +234,29 @@ type raft struct {
 
 	readOnly *readOnly
 
-	// number of ticks since it reached last electionTimeout when it is leader
-	// or candidate.
-	// number of ticks since it reached last electionTimeout or received a
-	// valid message from current leader when it is a follower.
-	electionElapsed int
-
-	// number of ticks since it reached last heartbeatTimeout.
-	// only leader keeps heartbeatElapsed.
-	heartbeatElapsed int
-
-	checkQuorum bool
+	checkQuorum bool // 检查需要维持的选票数,一旦小于,就会丢失leader
 	preVote     bool
 
-	heartbeatTimeout int
-	electionTimeout  int
+	// 选举过期计数(electionElapsed)：主要用于follower来判断leader是不是正常工作，
+	// 如果这个值递增到大于随机化选举超时计数(randomizedElectionTimeout)，follower就认为leader已挂，它自己会开始竞选leader。
+	electionElapsed int
+
+	// 心跳过期计数(heartbeatElapsed)：用于leader判断是不是要开始发送心跳了。
+	// 只要这个值超过或等于心跳超时计数(heartbeatTimeout)，就会触发leader广播heartbeat信息。
+	heartbeatElapsed int
+
+	heartbeatTimeout int // 心跳间隔    ,上限     heartbeatTimeout是当前距离上次心跳的时间
+	electionTimeout  int // 选举超时	   ,上限		electionElapsed是当前距离上次选举的时间
+
 	// randomizedElectionTimeout is a random number between
 	// [electiontimeout, 2 * electiontimeout - 1]. It gets reset
 	// when raft changes its state to follower or candidate.
 	randomizedElectionTimeout int
-	disableProposalForwarding bool
+	disableProposalForwarding bool // 禁止将请求转发到leader,默认FALSE
+	// 由 r.ticker = time.NewTicker(r.heartbeat) ;触发该函数的执行  r.start
+	tick func() // 定时器到期执行的函数
 
-	tick func()
-	step stepFunc
+	step stepFunc // 阶段函数、在那个角色就执行那个角色的函数、处理接收到的消息
 
 	logger Logger
 
@@ -297,33 +267,36 @@ type raft struct {
 	pendingReadIndexMessages []pb.Message
 }
 
+// ok
 func newRaft(c *Config) *raft {
 	if err := c.validate(); err != nil {
 		panic(err.Error())
 	}
-	raftlog := newLogWithSize(c.Storage, c.Logger, c.MaxCommittedSizePerReady)
+	raftlog := newLogWithSize(c.Storage, c.Logger, c.MaxCommittedSizePerReady) // ✅
+	// 搜 s = raft.NewMemoryStorage()
 	hs, cs, err := c.Storage.InitialState()
 	if err != nil {
-		panic(err) // TODO(bdarnell)
+		panic(err)
 	}
 
 	r := &raft{
-		id:                        c.ID,
-		lead:                      None,
-		isLearner:                 false,
-		raftLog:                   raftlog,
-		maxMsgSize:                c.MaxSizePerMsg,
-		maxUncommittedSize:        c.MaxUncommittedEntriesSize,
+		id:                        c.ID,                        // 是本节点raft的身份
+		lead:                      None,                        // 当前leaderID
+		isLearner:                 false,                       // 本节点是不是learner角色
+		raftLog:                   raftlog,                     // 当前节点的log状态信息
+		maxMsgSize:                c.MaxSizePerMsg,             // 每条消息的最大大小
+		maxUncommittedSize:        c.MaxUncommittedEntriesSize, // 每条日志最大消息体
 		prs:                       tracker.MakeProgressTracker(c.MaxInflightMsgs),
-		electionTimeout:           c.ElectionTick,
-		heartbeatTimeout:          c.HeartbeatTick,
+		electionTimeout:           c.ElectionTick,  // 选举超时
+		heartbeatTimeout:          c.HeartbeatTick, // 心跳间隔
 		logger:                    c.Logger,
-		checkQuorum:               c.CheckQuorum,
+		checkQuorum:               c.CheckQuorum, // 检查需要维持的选票数,一旦小于,就会丢失leader
 		preVote:                   c.PreVote,
-		readOnly:                  newReadOnly(c.ReadOnlyOption),
-		disableProposalForwarding: c.DisableProposalForwarding,
+		readOnly:                  newReadOnly(c.ReadOnlyOption), // etcd_backend/etcdserver/raft.go:469    默认值0 ReadOnlySafe
+		disableProposalForwarding: c.DisableProposalForwarding,   // 禁止将请求转发到leader,默认FALSE
 	}
-
+	// todo 没看懂
+	// -----------------------
 	cfg, prs, err := confchange.Restore(confchange.Changer{
 		Tracker:   r.prs,
 		LastIndex: raftlog.lastIndex(),
@@ -331,22 +304,22 @@ func newRaft(c *Config) *raft {
 	if err != nil {
 		panic(err)
 	}
-	assertConfStatesEquivalent(r.logger, cs, r.switchToConfig(cfg, prs))
-
-	if !IsEmptyHardState(hs) {
-		r.loadState(hs)
+	assertConfStatesEquivalent(r.logger, cs, r.switchToConfig(cfg, prs)) // 判断相不相等
+	// -----------------------
+	if !IsEmptyHardState(hs) { // 判断初始状态是不是空的
+		r.loadState(hs) // 更新状态索引信息
 	}
 	if c.Applied > 0 {
-		raftlog.appliedTo(c.Applied)
+		raftlog.appliedTo(c.Applied) // ✅
 	}
-	r.becomeFollower(r.Term, None)
+	r.becomeFollower(r.Term, None) // ✅ start
 
 	var nodesStrs []string
-	for _, n := range r.prs.VoterNodes() {
+	for _, n := range r.prs.VoterNodes() { // 一开始没有
 		nodesStrs = append(nodesStrs, fmt.Sprintf("%x", n))
 	}
 
-	r.logger.Infof("newRaft %x [peers: [%s], term: %d, commit: %d, applied: %d, lastindex: %d, lastterm: %d]",
+	r.logger.Infof("【newRaft %x [peers: [%s], term: %d, commit: %d, applied: %d, lastindex: %d, lastterm: %d]】",
 		r.id, strings.Join(nodesStrs, ","), r.Term, r.raftLog.committed, r.raftLog.applied, r.raftLog.lastIndex(), r.raftLog.lastTerm())
 	return r
 }
@@ -572,7 +545,7 @@ func (r *raft) maybeCommit() bool {
 func (r *raft) reset(term uint64) {
 	if r.Term != term {
 		r.Term = term
-		r.Vote = None
+		r.Vote = None // 选票
 	}
 	r.lead = None
 
@@ -633,17 +606,16 @@ func (r *raft) tickElection() {
 	}
 }
 
-// tickHeartbeat is run by leaders to send a MsgBeat after r.heartbeatTimeout.
+// tickHeartbeat leader执行，在r.heartbeatTimeout之后发送一个MsgBeat。
 func (r *raft) tickHeartbeat() {
 	r.heartbeatElapsed++
 	r.electionElapsed++
-
-	if r.electionElapsed >= r.electionTimeout {
-		r.electionElapsed = 0
-		if r.checkQuorum {
+	if r.electionElapsed >= r.electionTimeout { // 如果选举计时超时
+		r.electionElapsed = 0 // 重置计时器
+		if r.checkQuorum {    // 给自己发送一条 MsgCheckQuorum 消息，检测是否出现网络隔离
 			r.Step(pb.Message{From: r.id, Type: pb.MsgCheckQuorum})
 		}
-		// If current leader cannot transfer leadership in electionTimeout, it becomes leader again.
+		// 判断leader是否转移; leadTransferee 为Node ,不转移
 		if r.state == StateLeader && r.leadTransferee != None {
 			r.abortLeaderTransfer()
 		}
@@ -659,6 +631,7 @@ func (r *raft) tickHeartbeat() {
 	}
 }
 
+// 变成Follower       当前任期，当前leader
 func (r *raft) becomeFollower(term uint64, lead uint64) {
 	r.step = stepFollower
 	r.reset(term)
@@ -689,6 +662,7 @@ func (r *raft) becomePreCandidate() {
 	// Becoming a pre-candidate changes our step functions and state,
 	// but doesn't change anything else. In particular it does not increase
 	// r.Term or change r.Vote.
+	// 注意：预投票不更新任期
 	r.step = stepCandidate
 	r.prs.ResetVotes()
 	r.tick = r.tickElection
@@ -970,17 +944,14 @@ func stepLeader(r *raft, m pb.Message) error {
 	case pb.MsgBeat:
 		r.bcastHeartbeat()
 		return nil
+		//--------------------其他消息处理----------------------
 	case pb.MsgCheckQuorum:
-		// The leader should always see itself as active. As a precaution, handle
-		// the case in which the leader isn't in the configuration any more (for
-		// example if it just removed itself).
-		//
-		// TODO(tbg): I added a TODO in removeNode, it doesn't seem that the
-		// leader steps down when removing itself. I might be missing something.
+		// 将 leader 自己的 RecentActive 状态设置为 true
 		if pr := r.prs.Progress[r.id]; pr != nil {
 			pr.RecentActive = true
 		}
 		if !r.prs.QuorumActive() {
+			// 如果当前 leader 发现其不满足 quorum 的条件，则说明该 leader 有可能处于隔离状态，step down
 			r.logger.Warningf("%x stepped down to follower since quorum is not active", r.id)
 			r.becomeFollower(r.Term, None)
 		}
@@ -1373,20 +1344,20 @@ func stepCandidate(r *raft, m pb.Message) error {
 		r.becomeFollower(m.Term, m.From) // always m.Term == r.Term
 		r.handleSnapshot(m)
 	case myVoteRespType:
-		gr, rj, res := r.poll(m.From, m.Type, !m.Reject)
+		gr, rj, res := r.poll(m.From, m.Type, !m.Reject) // 计算当前收到多少投票
 		r.logger.Infof("%x has received %d %s votes and %d vote rejections", r.id, gr, m.Type, rj)
 		switch res {
-		case quorum.VoteWon:
+		case quorum.VoteWon: // 如果quorum 都选择了投票
 			if r.state == StatePreCandidate {
-				r.campaign(campaignElection)
+				r.campaign(campaignElection) // 预投票发起正式投票
 			} else {
-				r.becomeLeader()
-				r.bcastAppend()
+				r.becomeLeader() // 变成 leader
+				r.bcastAppend()  // 发送 AppendEntries RPC
 			}
-		case quorum.VoteLost:
+		case quorum.VoteLost: // 集票失败，转为 follower
 			// pb.MsgPreVoteResp contains future term of pre-candidate
 			// m.Term > r.Term; reuse r.Term
-			r.becomeFollower(r.Term, None)
+			r.becomeFollower(r.Term, None) // 注意，此时任期没有改变
 		}
 	case pb.MsgTimeoutNow:
 		r.logger.Debugf("%x [term %d state %v] ignored MsgTimeoutNow from %x", r.id, r.Term, r.state, m.From)
@@ -1618,17 +1589,13 @@ func (r *raft) applyConfChange(cc pb.ConfChangeV2) pb.ConfState {
 	return r.switchToConfig(cfg, prs)
 }
 
-// switchToConfig reconfigures this node to use the provided configuration. It
-// updates the in-memory state and, when necessary, carries out additional
-// actions such as reacting to the removal of nodes or changed quorum
-// requirements.
-//
-// The inputs usually result from restoring a ConfState or applying a ConfChange.
+// switchToConfig 重新配置这个节点以使用所提供的配置。它更新内存中的状态，并在必要时进行额外的操作，
+// 如对删除节点或改变的法定人数作出反应。要求。输入通常来自于恢复一个ConfState或应用一个ConfChange。
 func (r *raft) switchToConfig(cfg tracker.Config, prs tracker.ProgressMap) pb.ConfState {
 	r.prs.Config = cfg
 	r.prs.Progress = prs
 
-	r.logger.Infof("%x switched to configuration %s", r.id, r.prs.Config)
+	r.logger.Infof("%x 切换配置 %s", r.id, r.prs.Config)
 	cs := r.prs.ConfState()
 	pr, ok := r.prs.Progress[r.id]
 
@@ -1675,9 +1642,10 @@ func (r *raft) switchToConfig(cfg tracker.Config, prs tracker.ProgressMap) pb.Co
 	return cs
 }
 
+//   所提交的state 必须在 [r.raftLog.committed,r.raftLog.lastIndex()]之间
 func (r *raft) loadState(state pb.HardState) {
 	if state.Commit < r.raftLog.committed || state.Commit > r.raftLog.lastIndex() {
-		r.logger.Panicf("%x state.commit %d is out of range [%d, %d]", r.id, state.Commit, r.raftLog.committed, r.raftLog.lastIndex())
+		r.logger.Panicf("%x state.commit %d 不再指定范围内 [%d, %d]", r.id, state.Commit, r.raftLog.committed, r.raftLog.lastIndex())
 	}
 	r.raftLog.committed = state.Commit
 	r.Term = state.Term
@@ -1804,13 +1772,17 @@ func sendMsgReadIndexResponse(r *raft, m pb.Message) {
 	// thinking: use an internally defined context instead of the user given context.
 	// We can express this in terms of the term and index instead of a user-supplied value.
 	// This would allow multiple reads to piggyback on the same message.
+	/*
+		Leader节点检测自身在当前任期中是否已提交Entry记录，如果没有，则无法进行读取操作
+	*/
 	switch r.readOnly.option {
 	// If more than the local vote is needed, go through a full broadcast.
 	case ReadOnlySafe:
+		//记录当前节点的raftLog.committed字段值，即已提交位置
 		r.readOnly.addRequest(r.raftLog.committed, m)
 		// The local node automatically acks the request.
 		r.readOnly.recvAck(r.id, m.Entries[0].Data)
-		r.bcastHeartbeatWithCtx(m.Entries[0].Data)
+		r.bcastHeartbeatWithCtx(m.Entries[0].Data) //发送心跳
 	case ReadOnlyLeaseBased:
 		if resp := r.responseToReadIndexReq(m, r.raftLog.committed); resp.To != None {
 			r.send(resp)

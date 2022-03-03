@@ -32,9 +32,9 @@ var ErrSessionExpired = errors.New("mutex: session is expired")
 type Mutex struct {
 	s *Session
 
-	pfx   string
-	myKey string
-	myRev int64
+	pfx   string // 前缀
+	myKey string // key
+	myRev int64  // 自增的Revision
 	hdr   *pb.ResponseHeader
 }
 
@@ -68,6 +68,8 @@ func (m *Mutex) TryLock(ctx context.Context) error {
 
 // Lock locks the mutex with a cancelable context. If the context is canceled
 // while trying to acquire the lock, the mutex tries to clean its stale lock entry.
+// Lock 使用可取消的context锁定互斥锁。如果context被取消
+// 在尝试获取锁时，互斥锁会尝试清除其过时的锁条目。
 func (m *Mutex) Lock(ctx context.Context) error {
 	resp, err := m.tryAcquire(ctx)
 	if err != nil {
@@ -81,6 +83,8 @@ func (m *Mutex) Lock(ctx context.Context) error {
 	}
 	client := m.s.Client()
 	// wait for deletion revisions prior to myKey
+	// waitDeletes 有效地等待，直到所有键匹配前缀且不大于
+	// 创建的version。
 	// TODO: early termination if the session key is deleted before other session keys with smaller revisions.
 	_, werr := waitDeletes(ctx, client, m.pfx, m.myRev-1)
 	// release lock key if wait failed
@@ -107,19 +111,28 @@ func (m *Mutex) Lock(ctx context.Context) error {
 func (m *Mutex) tryAcquire(ctx context.Context) (*v3.TxnResponse, error) {
 	s := m.s
 	client := m.s.Client()
-
+	// s.Lease()租约
 	m.myKey = fmt.Sprintf("%s%x", m.pfx, s.Lease())
+	// 比较Revision, 这里构建了一个比较表达式
+	// 具体的比较逻辑在下面的client.Txn用到
+	// 如果等于0，写入当前的key，并设置租约，
+	// 否则获取这个key,重用租约中的锁(这里主要目的是在于重入)
+	// 通过第二次获取锁,判断锁是否存在来支持重入
+	// 所以只要租约一致,那么是可以重入的.
 	cmp := v3.Compare(v3.CreateRevision(m.myKey), "=", 0)
-	// put self in lock waiters via myKey; oldest waiter holds lock
+	// 通过 myKey 将自己锁在waiters；最早的waiters将获得锁
 	put := v3.OpPut(m.myKey, "", v3.WithLease(s.Lease()))
-	// reuse key in case this session already holds the lock
+	// 获取已经拿到锁的key的信息
 	get := v3.OpGet(m.myKey)
-	// fetch current holder to complete uncontended path with only one RPC
+	// 仅使用一个 RPC 获取当前持有者以完成无竞争路径
 	getOwner := v3.OpGet(m.pfx, v3.WithFirstCreate()...)
+	// 这里是比较的逻辑，如果等于0，写入当前的key，否则则读取这个key
+	// 大佬的代码写的就是奇妙
 	resp, err := client.Txn(ctx).If(cmp).Then(put, getOwner).Else(get, getOwner).Commit()
 	if err != nil {
 		return nil, err
 	}
+	// 根据比较操作的结果写入Revision到m.myRev中
 	m.myRev = resp.Header.Revision
 	if !resp.Succeeded {
 		m.myRev = resp.Responses[0].GetResponseRange().Kvs[0].CreateRevision
