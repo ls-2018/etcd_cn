@@ -18,16 +18,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/ls-2018/etcd_cn/raft"
-	"net/http"
-	"time"
-
 	"github.com/ls-2018/etcd_cn/etcd_backend/auth"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver"
+	"github.com/ls-2018/etcd_cn/raft"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.etcd.io/etcd/api/v3/etcdserverpb"
 	"go.uber.org/zap"
+	"net/http"
 )
 
 const (
@@ -37,25 +35,18 @@ const (
 	PathProxyHealth  = "/proxy/health"
 )
 
-// HandleMetricsHealth registers metrics and health handlers.
-func HandleMetricsHealth(lg *zap.Logger, mux *http.ServeMux, srv etcdserver.ServerV2) {
-	mux.Handle(PathMetrics, promhttp.Handler())
-	mux.Handle(PathHealth, NewHealthHandler(lg, func(excludedAlarms AlarmSet) Health { return checkV2Health(lg, srv, excludedAlarms) }))
-}
-
-// HandleMetricsHealthForV3 registers metrics and health handlers. it checks health by using v3 range request
-// and its corresponding timeout.
+// HandleMetricsHealthForV3 注册指标、健康检查
 func HandleMetricsHealthForV3(lg *zap.Logger, mux *http.ServeMux, srv *etcdserver.EtcdServer) {
 	mux.Handle(PathMetrics, promhttp.Handler())
 	mux.Handle(PathHealth, NewHealthHandler(lg, func(excludedAlarms AlarmSet) Health { return checkV3Health(lg, srv, excludedAlarms) }))
 }
 
-// HandlePrometheus registers prometheus handler on '/metrics'.
+// HandlePrometheus 注册指标
 func HandlePrometheus(mux *http.ServeMux) {
 	mux.Handle(PathMetrics, promhttp.Handler())
 }
 
-// NewHealthHandler handles '/health' requests.
+// NewHealthHandler OK
 func NewHealthHandler(lg *zap.Logger, hfunc func(excludedAlarms AlarmSet) Health) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
@@ -64,7 +55,7 @@ func NewHealthHandler(lg *zap.Logger, hfunc func(excludedAlarms AlarmSet) Health
 			lg.Warn("/health error", zap.Int("status-code", http.StatusMethodNotAllowed))
 			return
 		}
-		excludedAlarms := getExcludedAlarms(r)
+		excludedAlarms := getExcludedAlarms(r) // 排除的警告
 		h := hfunc(excludedAlarms)
 		defer func() {
 			if h.Health == "true" {
@@ -76,12 +67,10 @@ func NewHealthHandler(lg *zap.Logger, hfunc func(excludedAlarms AlarmSet) Health
 		d, _ := json.Marshal(h)
 		if h.Health != "true" {
 			http.Error(w, string(d), http.StatusServiceUnavailable)
-			lg.Warn("/health error", zap.String("output", string(d)), zap.Int("status-code", http.StatusServiceUnavailable))
 			return
 		}
 		w.WriteHeader(http.StatusOK)
 		w.Write(d)
-		lg.Debug("/health OK", zap.Int("status-code", http.StatusOK))
 	}
 }
 
@@ -90,13 +79,13 @@ var (
 		Namespace: "etcd",
 		Subsystem: "etcd",
 		Name:      "health_success",
-		Help:      "The total number of successful health checks",
+		Help:      "调用健康检查成功次数",
 	})
 	healthFailed = prometheus.NewCounter(prometheus.CounterOpts{
 		Namespace: "etcd",
 		Subsystem: "etcd",
 		Name:      "health_failures",
-		Help:      "The total number of failed health checks",
+		Help:      "调用健康检查失败次数",
 	})
 )
 
@@ -105,8 +94,7 @@ func init() {
 	prometheus.MustRegister(healthFailed)
 }
 
-// Health defines etcd etcd health status.
-// TODO: remove manual parsing in etcdctl cluster-health
+// Health 健康检查的状态
 type Health struct {
 	Health string `json:"health"`
 	Reason string `json:"reason"`
@@ -114,12 +102,13 @@ type Health struct {
 
 type AlarmSet map[string]struct{}
 
+// 排除特定警告
 func getExcludedAlarms(r *http.Request) (alarms AlarmSet) {
 	alarms = make(map[string]struct{}, 2)
 	alms, found := r.URL.Query()["exclude"]
 	if found {
 		for _, alm := range alms {
-			if len(alms) == 0 {
+			if len(alm) == 0 {
 				continue
 			}
 			alarms[alm] = struct{}{}
@@ -127,8 +116,6 @@ func getExcludedAlarms(r *http.Request) (alarms AlarmSet) {
 	}
 	return alarms
 }
-
-// TODO: etcdserver.ErrNoLeader in health API
 
 func checkHealth(lg *zap.Logger, srv etcdserver.ServerV2, excludedAlarms AlarmSet) Health {
 	h := Health{}
@@ -138,48 +125,30 @@ func checkHealth(lg *zap.Logger, srv etcdserver.ServerV2, excludedAlarms AlarmSe
 		for _, v := range as {
 			alarmName := v.Alarm.String()
 			if _, found := excludedAlarms[alarmName]; found {
-				lg.Debug("/health excluded alarm", zap.String("alarm", v.String()))
+				lg.Debug("/health 忽略警告", zap.String("alarm", v.String()))
 				continue
 			}
-
 			h.Health = "false"
 			switch v.Alarm {
 			case etcdserverpb.AlarmType_NOSPACE:
-				h.Reason = "ALARM NOSPACE"
+				h.Reason = "警报 NOSPACE"
 			case etcdserverpb.AlarmType_CORRUPT:
-				h.Reason = "ALARM CORRUPT"
+				h.Reason = "警报 CORRUPT"
 			default:
-				h.Reason = "ALARM UNKNOWN"
+				h.Reason = "警报 UNKNOWN"
 			}
-			lg.Warn("serving /health false due to an alarm", zap.String("alarm", v.String()))
+			lg.Warn("/health 不健康;警报", zap.String("alarm", v.String()))
 			return h
 		}
 	}
 
 	if uint64(srv.Leader()) == raft.None {
 		h.Health = "false"
-		h.Reason = "RAFT NO LEADER"
-		lg.Warn("serving /health false; no leader")
+		h.Reason = "RAFT没有leader"
+		lg.Warn("/health不健康;没有leader")
 		return h
 	}
 	return h
-}
-
-func checkV2Health(lg *zap.Logger, srv etcdserver.ServerV2, excludedAlarms AlarmSet) (h Health) {
-	if h = checkHealth(lg, srv, excludedAlarms); h.Health != "true" {
-		return
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	_, err := srv.Do(ctx, etcdserverpb.Request{Method: "QGET"})
-	cancel()
-	if err != nil {
-		h.Health = "false"
-		h.Reason = fmt.Sprintf("QGET ERROR:%s", err)
-		lg.Warn("serving /health false; QGET fails", zap.Error(err))
-		return
-	}
-	lg.Debug("serving /health true")
-	return
 }
 
 func checkV3Health(lg *zap.Logger, srv *etcdserver.EtcdServer, excludedAlarms AlarmSet) (h Health) {
@@ -191,10 +160,8 @@ func checkV3Health(lg *zap.Logger, srv *etcdserver.EtcdServer, excludedAlarms Al
 	cancel()
 	if err != nil && err != auth.ErrUserEmpty && err != auth.ErrPermissionDenied {
 		h.Health = "false"
-		h.Reason = fmt.Sprintf("RANGE ERROR:%s", err)
-		lg.Warn("serving /health false; Range fails", zap.Error(err))
+		h.Reason = fmt.Sprintf("RANGE 失败:%s", err)
 		return
 	}
-	lg.Debug("serving /health true")
 	return
 }

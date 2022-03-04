@@ -73,7 +73,7 @@ const (
 type Etcd struct {
 	Peers   []*peerListener
 	Clients []net.Listener
-	// 一个为客户端请求提供服务的服务器的上下文映射。
+	// 本机节点监听本地网卡的map     例如   localhost:2379   127.0.0.1:2379  0.0.0.0:2379 等等
 	sctxs            map[string]*serveCtx
 	metricsListeners []net.Listener
 
@@ -82,8 +82,8 @@ type Etcd struct {
 	Server *etcdserver.EtcdServer
 
 	cfg   Config
-	stopc chan struct{}
-	errc  chan error
+	stopc chan struct{} // raft 停止，消息通道
+	errc  chan error    // 接收运行过程中产生的err
 
 	closeOnce sync.Once
 }
@@ -168,7 +168,7 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 		PeerURLs:                                 cfg.APUrls,
 		DataDir:                                  cfg.Dir,
 		DedicatedWALDir:                          cfg.WalDir,
-		SnapshotCount:                            cfg.SnapshotCount,
+		SnapshotCount:                            cfg.SnapshotCount,// 触发一次磁盘快照的提交事务的次数
 		SnapshotCatchUpEntries:                   cfg.SnapshotCatchUpEntries, //  快照追赶数据量
 		MaxSnapFiles:                             cfg.MaxSnapFiles,
 		MaxWALFiles:                              cfg.MaxWalFiles, // 要保留的最大wal文件数（0表示不受限制）. 5
@@ -202,7 +202,7 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 		PreVote:                                  cfg.PreVote,
 		Logger:                                   cfg.logger,
 		ForceNewCluster:                          cfg.ForceNewCluster,
-		EnableGRPCGateway:                        cfg.EnableGRPCGateway,
+		EnableGRPCGateway:                        cfg.EnableGRPCGateway,                    // 启用grpc网关,将 http 转换成 grpc / true
 		ExperimentalEnableDistributedTracing:     cfg.ExperimentalEnableDistributedTracing, // 默认false
 		UnsafeNoFsync:                            cfg.UnsafeNoFsync,
 		EnableLeaseCheckpoint:                    cfg.ExperimentalEnableLeaseCheckpoint,
@@ -260,7 +260,7 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 	if err = e.serveClients(); err != nil {
 		return e, err
 	}
-	if err = e.serveMetrics(); err != nil {
+	if err = e.serveMetrics(); err != nil { // ✅
 		return e, err
 	}
 
@@ -268,7 +268,7 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 		"启动服务 peer/client/metrics",
 		zap.String("local-member-id", e.Server.ID().String()),
 		zap.Strings("initial-advertise-peer-urls", e.cfg.getAPURLs()),
-		zap.Strings("listen-peer-urls", e.cfg.getLPURLs()),
+		zap.Strings("listen-peer-urls", e.cfg.getLPURLs()),// 集群节点之间通信监听的URL;如果指定的IP是0.0.0.0,那么etcd 会监昕所有网卡的指定端口
 		zap.Strings("advertise-client-urls", e.cfg.getACURLs()),
 		zap.Strings("listen-client-urls", e.cfg.getLCURLs()),
 		zap.Strings("listen-metrics-urls", e.cfg.getMetricsURLs()),
@@ -313,10 +313,10 @@ func print(lg *zap.Logger, ec Config, sc config.ServerConfig, memberInitialized 
 		zap.String("heartbeat-interval", fmt.Sprintf("%v", time.Duration(sc.TickMs)*time.Millisecond)),
 		zap.String("election-timeout", fmt.Sprintf("%v", time.Duration(sc.ElectionTicks*int(sc.TickMs))*time.Millisecond)),
 		zap.Bool("initial-election-tick-advance", sc.InitialElectionTickAdvance), // 是否提前初始化选举时钟启动，以便更快的选举
-		zap.Uint64("snapshot-count", sc.SnapshotCount),                           // 要将快照触发到磁盘的已提交事务数
+		zap.Uint64("snapshot-count", sc.SnapshotCount),                           // 触发一次磁盘快照的提交事务的次数
 		zap.Uint64("snapshot-catchup-entries", sc.SnapshotCatchUpEntries),
 		zap.Strings("initial-advertise-peer-urls", ec.getAPURLs()),
-		zap.Strings("listen-peer-urls", ec.getLPURLs()),
+		zap.Strings("listen-peer-urls", ec.getLPURLs()),// 集群节点之间通信监听的URL;如果指定的IP是0.0.0.0,那么etcd 会监昕所有网卡的指定端口
 		zap.Strings("advertise-client-urls", ec.getACURLs()),
 		zap.Strings("listen-client-urls", ec.getLCURLs()),
 		zap.Strings("listen-metrics-urls", ec.getMetricsURLs()),
@@ -613,7 +613,7 @@ func configureClientListeners(cfg *Config) (sctxs map[string]*serveCtx, err erro
 		sctx.network = network
 
 		sctx.secure = u.Scheme == "https" || u.Scheme == "unixs"
-		sctx.insecure = !sctx.secure
+		sctx.insecure = !sctx.secure // 在处理etcdctl 请求上,是不是启用证书
 		if oldctx := sctxs[addr]; oldctx != nil {
 			oldctx.secure = oldctx.secure || sctx.secure
 			oldctx.insecure = oldctx.insecure || sctx.insecure
@@ -652,11 +652,7 @@ func configureClientListeners(cfg *Config) (sctxs map[string]*serveCtx, err erro
 				return
 			}
 			sctx.l.Close()
-			cfg.logger.Warn(
-				"closing peer listener",
-				zap.String("address", u.Host),
-				zap.Error(err),
-			)
+			cfg.logger.Warn("关闭peer listener", zap.String("address", u.Host), zap.Error(err))
 		}(u)
 		for k := range cfg.UserHandlers {
 			sctx.userHandlers[k] = cfg.UserHandlers[k]
@@ -673,39 +669,39 @@ func configureClientListeners(cfg *Config) (sctxs map[string]*serveCtx, err erro
 	return sctxs, nil
 }
 
+// OK
 func (e *Etcd) serveClients() (err error) {
 	if !e.cfg.ClientTLSInfo.Empty() {
 		e.cfg.logger.Info(
-			"starting with client TLS",
+			"使用证书启动client",
 			zap.String("tls-info", fmt.Sprintf("%+v", e.cfg.ClientTLSInfo)),
 			zap.Strings("cipher-suites", e.cfg.CipherSuites),
 		)
 	}
 
-	// Start a client etcd goroutine for each listen address
 	var h http.Handler
 
-	mux := http.NewServeMux()
-	etcdhttp.HandleBasic(e.cfg.logger, mux, e.Server)
-	etcdhttp.HandleMetricsHealthForV3(e.cfg.logger, mux, e.Server)
+	mux := http.NewServeMux()                                      // ✅
+	etcdhttp.HandleBasic(e.cfg.logger, mux, e.Server)              // ✅
+	etcdhttp.HandleMetricsHealthForV3(e.cfg.logger, mux, e.Server) // ✅
 	h = mux
 
 	var gopts []grpc.ServerOption
 	if e.cfg.GRPCKeepAliveMinTime > time.Duration(0) {
 		gopts = append(gopts, grpc.KeepaliveEnforcementPolicy(keepalive.EnforcementPolicy{
 			MinTime:             e.cfg.GRPCKeepAliveMinTime,
-			PermitWithoutStream: false,
+			PermitWithoutStream: false, // 默认false
+			// 如果是true，即使没有活动流（RPCs），服务器也允许keepalive pings。如果是假的，客户端在没有活动流的情况下发送ping 流，服务器将发送GOAWAY并关闭连接。
 		}))
 	}
-	if e.cfg.GRPCKeepAliveInterval > time.Duration(0) &&
-		e.cfg.GRPCKeepAliveTimeout > time.Duration(0) {
+	if e.cfg.GRPCKeepAliveInterval > time.Duration(0) && e.cfg.GRPCKeepAliveTimeout > time.Duration(0) {
 		gopts = append(gopts, grpc.KeepaliveParams(keepalive.ServerParameters{
 			Time:    e.cfg.GRPCKeepAliveInterval,
 			Timeout: e.cfg.GRPCKeepAliveTimeout,
 		}))
 	}
 
-	// start client servers in each goroutine
+	// 启动每一个监听网卡的程序
 	for _, sctx := range e.sctxs {
 		go func(s *serveCtx) {
 			e.errHandler(s.serve(e.Server, &e.cfg.ClientTLSInfo, h, e.errHandler, gopts...))
@@ -715,10 +711,10 @@ func (e *Etcd) serveClients() (err error) {
 }
 
 func (e *Etcd) serveMetrics() (err error) {
-	if e.cfg.Metrics == "extensive" {
+	if e.cfg.Metrics == "extensive" { // basic
 		grpc_prometheus.EnableHandlingTimeHistogram()
 	}
-
+	// 长度为0, 监听etcd ctl客户端请求
 	if len(e.cfg.ListenMetricsUrls) > 0 {
 		metricsMux := http.NewServeMux()
 		etcdhttp.HandleMetricsHealthForV3(e.cfg.logger, metricsMux, e.Server)
@@ -748,12 +744,14 @@ func (e *Etcd) serveMetrics() (err error) {
 	return nil
 }
 
+// 处理err
 func (e *Etcd) errHandler(err error) {
 	select {
 	case <-e.stopc:
 		return
 	default:
 	}
+	// 一般都卡在这
 	select {
 	case <-e.stopc:
 	case e.errc <- err:

@@ -71,7 +71,7 @@ func getCommand(exec, name, dir, cURL, pURL, cluster string) (args []string) {
 		"--data-dir", dir,
 		"--listen-client-urls", cURL,
 		"--advertise-client-urls", cURL,
-		"--listen-peer-urls", pURL,
+		"--listen-peer-urls", pURL,// 集群节点之间通信监听的URL;如果指定的IP是0.0.0.0,那么etcd 会监昕所有网卡的指定端口
 		"--initial-advertise-peer-urls", pURL,
 		"--initial-cluster", cluster,
 		"--initial-cluster-token=tkn",

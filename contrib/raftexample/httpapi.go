@@ -36,12 +36,12 @@ func (h *httpKVAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case r.Method == "PUT":
 		v, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			log.Printf("Failed to read on PUT (%v)\n", err)
-			http.Error(w, "Failed on PUT", http.StatusBadRequest)
+			log.Printf("无法读取put的数据 (%v)\n", err)
+			http.Error(w, "失败 on PUT", http.StatusBadRequest)
 			return
 		}
 
-		h.store.Propose(key, string(v))
+		h.store.Propose(key, string(v)) // 👌🏻
 
 		// Optimistic-- no waiting for ack from raft. Value is not yet
 		// committed so a subsequent GET on the key may return old value

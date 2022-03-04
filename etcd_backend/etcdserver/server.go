@@ -139,7 +139,6 @@ type Response struct {
 type ServerV2 interface {
 	Server
 	Leader() types.ID
-
 	// Do takes a V2 request and attempts to fulfill it, returning a Response.
 	Do(ctx context.Context, r pb.Request) (Response, error)
 	stats.Stats
@@ -211,7 +210,7 @@ type EtcdServer struct {
 	consistIndex cindex.ConsistentIndexer // consistIndex is used to get/set/save consistentIndex
 	r            raftNode                 // uses 64-bit atomics; keep 64-bit aligned.
 
-	readych chan struct{}
+	readych chan struct{} // 当etcd 准备好服务请求后，会关闭ready ch
 	Cfg     config.ServerConfig
 
 	lgMu *sync.RWMutex
@@ -811,13 +810,13 @@ func (s *EtcdServer) Start() {
 func (s *EtcdServer) start() {
 	lg := s.Logger()
 
-	if s.Cfg.SnapshotCount == 0 {
+	if s.Cfg.SnapshotCount == 0 { // 触发一次磁盘快照的提交事务的次数
 		lg.Info(
 			"updating snapshot-count to default",
-			zap.Uint64("given-snapshot-count", s.Cfg.SnapshotCount),
+			zap.Uint64("given-snapshot-count", s.Cfg.SnapshotCount), // 触发一次磁盘快照的提交事务的次数
 			zap.Uint64("updated-snapshot-count", DefaultSnapshotCount),
 		)
-		s.Cfg.SnapshotCount = DefaultSnapshotCount
+		s.Cfg.SnapshotCount = DefaultSnapshotCount // 触发一次磁盘快照的提交事务的次数
 	}
 	if s.Cfg.SnapshotCatchUpEntries == 0 {
 		lg.Info(
@@ -1367,7 +1366,7 @@ func (s *EtcdServer) applyEntries(ep *etcdProgress, apply *apply) {
 }
 
 func (s *EtcdServer) triggerSnapshot(ep *etcdProgress) {
-	if ep.appliedi-ep.snapi <= s.Cfg.SnapshotCount {
+	if ep.appliedi-ep.snapi <= s.Cfg.SnapshotCount { // 触发一次磁盘快照的提交事务的次数
 		return
 	}
 
@@ -1486,8 +1485,7 @@ func (s *EtcdServer) Stop() {
 	s.HardStop()
 }
 
-// ReadyNotify returns a channel that will be closed when the etcd
-// is ready to serve client requests
+// ReadyNotify  当etcd 准备好服务请求后，会关闭ready ch
 func (s *EtcdServer) ReadyNotify() <-chan struct{} { return s.readych }
 
 func (s *EtcdServer) stopWithDelay(d time.Duration, err error) {

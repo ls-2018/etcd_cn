@@ -133,7 +133,7 @@ type Config struct {
 	//独立设置wal目录.etcd会将WAL文件写入  --wal-dir而不是--data-dir. 独立的wal路径.有助于避免日志记录和其他IO操作之间的竞争.
 	WalDir string `json:"wal-dir"` // 专用wal目录的路径.
 
-	SnapshotCount uint64 `json:"snapshot-count"` // 要将快照触发到磁盘的已提交事务数
+	SnapshotCount uint64 `json:"snapshot-count"` // 触发一次磁盘快照的提交事务的次数
 
 	// SnapshotCatchUpEntries 是在压缩raft存储条目后,慢的follower要追赶的条目数.我们预计follower与leader之间有毫秒级的延迟.
 	//最大吞吐量大约为10K.保持一个5K的条目就足够帮助follower赶上了.
@@ -194,7 +194,7 @@ type Config struct {
 	APUrls []url.URL // 就是客户端(etcd server 等)跟etcd服务进行交互时请求的url
 	ACUrls []url.URL // 就是客户端(etcdctl/curl等)跟etcd服务进行交互时请求的url
 
-	ClientTLSInfo transport.TLSInfo
+	ClientTLSInfo transport.TLSInfo // 与 etcdctl 交互的客户端证书信息
 	ClientAutoTLS bool
 
 	PeerTLSInfo transport.TLSInfo
@@ -226,6 +226,7 @@ type Config struct {
 
 	// GRPCKeepAliveMinTime  客户端在ping服务器之前应等待的最短持续时间间隔.
 	GRPCKeepAliveMinTime time.Duration `json:"grpc-keepalive-min-time"`
+
 	// GRPCKeepAliveInterval 服务器到客户端ping的频率持续时间.以检查连接是否处于活动状态（0表示禁用）.
 	GRPCKeepAliveInterval time.Duration `json:"grpc-keepalive-interval"`
 	// GRPCKeepAliveTimeout 关闭非响应连接之前的额外持续等待时间（0表示禁用）.20s
@@ -244,10 +245,8 @@ type Config struct {
 	//然后.所有监听 "localhost "的etcd的HTTP端点都变得可以访问.从而容易受到DNS重定向攻击.
 	HostWhitelist map[string]struct{}
 
-	// UserHandlers is for registering users handlers and only used for
-	// embedding etcd into other applications.
-	// The map key is the route path for the handler, and
-	// you must ensure it can't be conflicted with etcd's.
+	// UserHandlers 是用来注册用户处理程序的，只用于将etcd嵌入到其他应用程序中。
+	// map key 是处理程序的路径，你必须确保它不能与etcd的路径冲突。
 	UserHandlers map[string]http.Handler `json:"-"`
 	// ServiceRegister is for registering users' gRPC services. A simple usage example:
 	//	cfg := embed.NewConfig()
@@ -289,7 +288,7 @@ type Config struct {
 	ForceNewCluster bool `json:"force-new-cluster"`
 
 	EnablePprof           bool   `json:"enable-pprof"`
-	Metrics               string `json:"metrics"`
+	Metrics               string `json:"metrics"` // basic  ;extensive
 	ListenMetricsUrls     []url.URL
 	ListenMetricsUrlsJSON string `json:"listen-metrics-urls"`
 
@@ -330,8 +329,7 @@ type Config struct {
 	// Do not set logger directly.
 	loggerMu *sync.RWMutex
 	logger   *zap.Logger
-	// EnableGRPCGateway enables grpc gateway.
-	// The gateway translates a RESTful HTTP API into gRPC.
+	// EnableGRPCGateway 启用grpc网关,将 http 转换成 grpc / true
 	EnableGRPCGateway bool `json:"enable-grpc-gateway"`
 
 	// UnsafeNoFsync 禁用所有fsync的使用。设置这个是不安全的，会导致数据丢失。
@@ -360,7 +358,7 @@ type configYAML struct {
 
 // configJSON 有文件选项,被翻译成配置选项
 type configJSON struct {
-	LPUrlsJSON string `json:"listen-peer-urls"`
+	LPUrlsJSON string `json:"listen-peer-urls"`// 集群节点之间通信监听的URL;如果指定的IP是0.0.0.0,那么etcd 会监昕所有网卡的指定端口
 	LCUrlsJSON string `json:"listen-client-urls"`
 	APUrlsJSON string `json:"initial-advertise-peer-urls"`
 	ACUrlsJSON string `json:"advertise-client-urls"`
@@ -437,8 +435,8 @@ func NewConfig() *Config {
 		LogOutputs:            []string{DefaultLogOutput}, // os.Stderr
 		LogLevel:              logutil.DefaultLogLevel,    // info
 		EnableLogRotation:     false,                      // 默认不允许日志旋转
-		LogRotationConfigJSON: DefaultLogRotationConfig,
-		EnableGRPCGateway:     true, // 是用于日志轮换的默认配置. 默认情况下,日志轮换是禁用的.
+		LogRotationConfigJSON: DefaultLogRotationConfig,   // 是用于日志轮换的默认配置. 默认情况下,日志轮换是禁用的.
+		EnableGRPCGateway:     true,// 将http->grpc
 		//实验性
 		ExperimentalDowngradeCheckTime:           DefaultDowngradeCheckTime, // 两次降级状态检查之间的时间间隔.
 		ExperimentalMemoryMlock:                  false,                     // 内存页锁定

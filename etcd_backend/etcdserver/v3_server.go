@@ -92,6 +92,7 @@ type Authenticator interface {
 	RoleList(ctx context.Context, r *pb.AuthRoleListRequest) (*pb.AuthRoleListResponse, error)
 }
 
+// Range TODO 待看
 func (s *EtcdServer) Range(ctx context.Context, r *pb.RangeRequest) (*pb.RangeResponse, error) {
 	trace := traceutil.New("range",
 		s.Logger(),
@@ -103,14 +104,12 @@ func (s *EtcdServer) Range(ctx context.Context, r *pb.RangeRequest) (*pb.RangeRe
 	var resp *pb.RangeResponse
 	var err error
 	defer func(start time.Time) {
-		warnOfExpensiveReadOnlyRangeRequest(s.Logger(), s.Cfg.WarningApplyDuration, start, r, resp, err)
 		if resp != nil {
 			trace.AddField(
 				traceutil.Field{Key: "response_count", Value: len(resp.Kvs)},
 				traceutil.Field{Key: "response_revision", Value: resp.Header.Revision},
 			)
 		}
-		trace.LogIfLong(traceThreshold)
 	}(time.Now())
 
 	if !r.Serializable {
@@ -169,11 +168,6 @@ func (s *EtcdServer) Txn(ctx context.Context, r *pb.TxnRequest) (*pb.TxnResponse
 			return checkTxnAuth(s.authStore, ai, r)
 		}
 
-		defer func(start time.Time) {
-			warnOfExpensiveReadOnlyTxnRequest(s.Logger(), s.Cfg.WarningApplyDuration, start, r, resp, err)
-			trace.LogIfLong(traceThreshold)
-		}(time.Now())
-
 		get := func() { resp, _, err = s.applyV3Base.Txn(ctx, r) }
 		if serr := s.doSerialize(ctx, chk, get); serr != nil {
 			return nil, serr
@@ -223,9 +217,7 @@ func (s *EtcdServer) Compact(ctx context.Context, r *pb.CompactionRequest) (*pb.
 	trace := traceutil.TODO()
 	if result != nil && result.trace != nil {
 		trace = result.trace
-		defer func() {
-			trace.LogIfLong(traceThreshold)
-		}()
+
 		applyStart := result.trace.GetStartTime()
 		result.trace.SetStartTime(startTime)
 		trace.InsertStep(0, applyStart, "process raft request")
@@ -606,7 +598,6 @@ func (s *EtcdServer) raftRequestOnce(ctx context.Context, r pb.InternalRaftReque
 		// and apply start time
 		result.trace.SetStartTime(startTime)
 		result.trace.InsertStep(0, applyStart, "process raft request")
-		result.trace.LogIfLong(traceThreshold)
 	}
 	return result.resp, nil
 }
@@ -639,6 +630,7 @@ func (s *EtcdServer) doSerialize(ctx context.Context, chk func(*auth.AuthInfo) e
 	}
 	return nil
 }
+
 //当客户端提交一条数据变更请求时
 func (s *EtcdServer) processInternalRaftRequestOnce(ctx context.Context, r pb.InternalRaftRequest) (*applyResult, error) {
 	//判断已提交未apply的记录是否超过限制
@@ -677,13 +669,13 @@ func (s *EtcdServer) processInternalRaftRequestOnce(ctx context.Context, r pb.In
 	if id == 0 {
 		id = r.Header.ID
 	}
-	ch := s.w.Register(id)   //注册一个channel，等待处理完成
+	ch := s.w.Register(id) //注册一个channel，等待处理完成
 
-	cctx, cancel := context.WithTimeout(ctx, s.Cfg.ReqTimeout())    //设置请求超时
+	cctx, cancel := context.WithTimeout(ctx, s.Cfg.ReqTimeout()) //设置请求超时
 	defer cancel()
 
 	start := time.Now()
-	err = s.r.Propose(cctx, data)    // 调用raft模块的Propose处理请求
+	err = s.r.Propose(cctx, data) // 调用raft模块的Propose处理请求
 	if err != nil {
 		proposalsFailed.Inc()
 		s.w.Trigger(id, nil) // GC wait
@@ -757,7 +749,6 @@ func (s *EtcdServer) linearizableReadLoop() {
 		nr.notify(nil)
 		trace.Step("applied index is now lower than readState.Index")
 
-		trace.LogAllStepsIfLong(traceThreshold)
 	}
 }
 

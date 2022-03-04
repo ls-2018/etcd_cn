@@ -171,7 +171,7 @@ func StartNode(c *Config, peers []Peer) Node {
 
 	n := newNode(rn)
 
-	go n.run()
+	go n.run() // ok
 	return &n
 }
 
@@ -192,33 +192,45 @@ type msgWithResult struct {
 	result chan error
 }
 
-// node is the canonical implementation of the Node interface
 type node struct {
-	propc      chan msgWithResult
-	recvc      chan pb.Message
+	rn *RawNode
+	// 用于实现Propose()接口
+	propc chan msgWithResult
+	// 用于实现Step()接口
+	recvc chan pb.Message
+	// 这两个chan用于实现ApplyConfChange()接口
 	confc      chan pb.ConfChangeV2
 	confstatec chan pb.ConfState
-	readyc     chan Ready
-	advancec   chan struct{}
-	tickc      chan struct{}
-	done       chan struct{}
-	stop       chan struct{}
-	status     chan chan Status
-
-	rn *RawNode
+	// 用于实现Ready()接口
+	readyc chan Ready
+	// 用于实现Advance()接口
+	advancec chan struct{}
+	// 用于实现Tick()接口，这个需要注意一下，创建node时tickc是有缓冲的，设计者的解释是当node
+	// 忙的时候可能一个操作会超过tick的周期，这样会使得计时不准，有了缓冲就可以避免这个问题。
+	tickc chan struct{}
+	// 在处理中避免不了各种chan操作，此时如果Stop()被调用了，相应的阻塞就应该被激活，否则可能
+	// 面临死锁以后长时间退出后者永远无法退出。
+	done chan struct{}
+	// 为Stop接口实现的，应该还好理解
+	stop chan struct{}
+	// 一看就是为实现Status()用的，但是chan chan Status这个类型有点意思，后面分析实现函数
+	// 看看如何实现的
+	status chan chan Status
+	// 用来写运行日志的
+	logger Logger
 }
 
+// ok
 func newNode(rn *RawNode) node {
 	return node{
-		confc: make(chan pb.ConfChangeV2), //接收EntryConfChange类型消息比如动态添加节点
-		rn:    rn,
-
-		propc:      make(chan msgWithResult), //接收网络层MsgProp类型消息
-		recvc:      make(chan pb.Message),    //接收网络层除MsgProp类型以外的消息
+		confc:      make(chan pb.ConfChangeV2), // 接收EntryConfChange类型消息比如动态添加节点
+		rn:         rn,
+		propc:      make(chan msgWithResult), // 接收网络层MsgProp类型消息
+		recvc:      make(chan pb.Message),    // 接收网络层除MsgProp类型以外的消息
 		confstatec: make(chan pb.ConfState),
-		readyc:     make(chan Ready),         //向上层返回 ready
-		advancec:   make(chan struct{}),      //上层处理往ready后返回给raft的消息
-		tickc:      make(chan struct{}, 128), //管理超时的管道,繁忙时可以处理之前的事件
+		readyc:     make(chan Ready),         // 向上层返回 ready
+		advancec:   make(chan struct{}),      // 上层处理往ready后返回给raft的消息
+		tickc:      make(chan struct{}, 128), // 管理超时的管道,繁忙时可以处理之前的事件
 		done:       make(chan struct{}),
 		stop:       make(chan struct{}),
 		status:     make(chan chan Status),
@@ -244,21 +256,12 @@ func (n *node) run() {
 	var rd Ready
 
 	r := n.rn.raft
-
+	// 初始状态不知道谁是leader，需要通过Ready获取
 	lead := None
-
 	for {
 		if advancec != nil {
 			readyc = nil
 		} else if n.rn.HasReady() {
-			// Populate a Ready. Note that this Ready is not guaranteed to
-			// actually be handled. We will arm readyc, but there's no guarantee
-			// that we will actually send on it. It's possible that we will
-			// service another channel instead, loop around, and then populate
-			// the Ready again. We could instead force the previous Ready to be
-			// handled first, but it's generally good to emit larger Readys plus
-			// it simplifies testing (by emitting less frequently and more
-			// predictably).
 			rd = n.rn.readyWithoutAccept()
 			readyc = n.readyc
 		}

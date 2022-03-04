@@ -51,64 +51,6 @@ const (
 	statsPrefix    = "/v2/stats"
 )
 
-// NewClientHandler generates a muxed http.Handler with the given parameters to serve etcd client requests.
-func NewClientHandler(lg *zap.Logger, server etcdserver.ServerPeer, timeout time.Duration) http.Handler {
-	if lg == nil {
-		lg = zap.NewNop()
-	}
-	mux := http.NewServeMux()
-	etcdhttp.HandleBasic(lg, mux, server)
-	etcdhttp.HandleMetricsHealth(lg, mux, server)
-	handleV2(lg, mux, server, timeout)
-	return requestLogger(lg, mux)
-}
-
-func handleV2(lg *zap.Logger, mux *http.ServeMux, server etcdserver.ServerV2, timeout time.Duration) {
-	sec := v2auth.NewStore(lg, server, timeout)
-	kh := &keysHandler{
-		lg:                    lg,
-		sec:                   sec,
-		server:                server,
-		cluster:               server.Cluster(),
-		timeout:               timeout,
-		clientCertAuthEnabled: server.ClientCertAuthEnabled(),
-	}
-
-	sh := &statsHandler{
-		lg:    lg,
-		stats: server,
-	}
-
-	mh := &membersHandler{
-		lg:                    lg,
-		sec:                   sec,
-		server:                server,
-		cluster:               server.Cluster(),
-		timeout:               timeout,
-		clock:                 clockwork.NewRealClock(),
-		clientCertAuthEnabled: server.ClientCertAuthEnabled(),
-	}
-
-	mah := &machinesHandler{cluster: server.Cluster()}
-
-	sech := &authHandler{
-		lg:                    lg,
-		sec:                   sec,
-		cluster:               server.Cluster(),
-		clientCertAuthEnabled: server.ClientCertAuthEnabled(),
-	}
-	mux.HandleFunc("/", http.NotFound)
-	mux.Handle(keysPrefix, kh)
-	mux.Handle(keysPrefix+"/", kh)
-	mux.HandleFunc(statsPrefix+"/store", sh.serveStore)
-	mux.HandleFunc(statsPrefix+"/self", sh.serveSelf)
-	mux.HandleFunc(statsPrefix+"/leader", sh.serveLeader)
-	mux.Handle(membersPrefix, mh)
-	mux.Handle(membersPrefix+"/", mh)
-	mux.Handle(machinesPrefix, mah)
-	handleAuth(mux, sech)
-}
-
 type keysHandler struct {
 	lg                    *zap.Logger
 	sec                   v2auth.Store

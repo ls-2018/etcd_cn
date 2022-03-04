@@ -42,7 +42,7 @@ type ServerConfig struct {
 	// DedicatedWALDir 配置将使etcd把WAL写到WALDir 而不是dataDir/member/wal。
 	DedicatedWALDir string
 
-	SnapshotCount uint64
+	SnapshotCount uint64 // 触发一次磁盘快照的提交事务的次数
 
 	// SnapshotCatchUpEntries is the number of entries for a slow follower
 	// to catch-up after compacting the raft storage entries.
@@ -126,10 +126,10 @@ type ServerConfig struct {
 	// LeaseCheckpointPersist enables persisting remainingTTL to prevent indefinite auto-renewal of long lived leases. Always enabled in v3.6. Should be used to ensure smooth upgrade from v3.5 clusters with this feature enabled.
 	LeaseCheckpointPersist bool
 
-	EnableGRPCGateway bool
+	EnableGRPCGateway bool // 启用grpc网关,将 http 转换成 grpc / true
 
 	// ExperimentalEnableDistributedTracing 使用OpenTelemetry协议实现分布式跟踪。
-	ExperimentalEnableDistributedTracing bool
+	ExperimentalEnableDistributedTracing bool // 默认false
 	// ExperimentalTracerOptions are options for OpenTelemetry gRPC interceptor.
 	ExperimentalTracerOptions []otelgrpc.Option
 

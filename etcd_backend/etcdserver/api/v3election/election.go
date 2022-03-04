@@ -31,6 +31,7 @@ type electionServer struct {
 	c *clientv3.Client
 }
 
+// NewElectionServer 选举server
 func NewElectionServer(c *clientv3.Client) epb.ElectionServer {
 	return &electionServer{c}
 }

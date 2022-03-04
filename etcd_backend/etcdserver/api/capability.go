@@ -51,8 +51,8 @@ var (
 
 func init() {
 	enabledMap = map[Capability]bool{
-		AuthCapability:  true,
-		V3rpcCapability: true,
+		AuthCapability:  true, // auth
+		V3rpcCapability: true, // v3rpc
 	}
 }
 

@@ -47,19 +47,20 @@ import (
 	"google.golang.org/grpc"
 )
 
+//监听一个端口，提供服务， http, rpc
 type serveCtx struct {
 	lg       *zap.Logger
-	l        net.Listener
+	l        net.Listener // 单个监听本地网卡2379端口的listener
 	addr     string
-	network  string
-	secure   bool
-	insecure bool
+	network  string // tcp  unix
+	secure   bool   // 安全的
+	insecure bool   // 不安全的   // 在处理etcdctl 请求上,是不是启用证书   由  lcurl 的协议决定, 与secure相反
 
 	ctx    context.Context
 	cancel context.CancelFunc
 
 	userHandlers    map[string]http.Handler
-	serviceRegister func(*grpc.Server)
+	serviceRegister func(*grpc.Server) // 预置的服务注册函数扩展
 	serversC        chan *servers
 }
 
@@ -84,22 +85,16 @@ func newServeCtx(lg *zap.Logger) *serveCtx {
 	}
 }
 
-// serve accepts incoming connections on the listener l,
-// creating a new service goroutine for each. The service goroutines
-// read requests and then call handler to reply to them.
-func (sctx *serveCtx) serve(
-	s *etcdserver.EtcdServer,
-	tlsinfo *transport.TLSInfo,
-	handler http.Handler,
-	errHandler func(error),
+// serve 为接收入站请求创建一个goroutine
+func (sctx *serveCtx) serve(s *etcdserver.EtcdServer, tlsinfo *transport.TLSInfo, handler http.Handler, errHandler func(error),
 	gopts ...grpc.ServerOption) (err error) {
 	logger := defaultLog.New(ioutil.Discard, "etcdhttp", 0)
-	<-s.ReadyNotify()
+	<-s.ReadyNotify() // 准备好了，该channel会被关闭
 
-	sctx.lg.Info("ready to serve client requests")
-
+	sctx.lg.Info("随时准备为客户的要求提供服务")
+	// 实例化 连接多路复用器。可以同时解析不同的协议,都跑在一个listener上
 	m := cmux.New(sctx.l)
-	v3c := v3client.New(s)
+	v3c := v3client.New(s) // server的客户端,可以直接操作server
 	servElection := v3election.NewElectionServer(v3c)
 	servLock := v3lock.NewLockServer(v3c)
 
@@ -109,39 +104,38 @@ func (sctx *serveCtx) serve(
 			gs.Stop()
 		}
 	}()
-
+	// 不安全
 	if sctx.insecure {
-		gs = v3rpc.Server(s, nil, nil, gopts...)
+		gs = v3rpc.Server(s, nil, nil, gopts...) // 注册服务、链接参数
 		v3electionpb.RegisterElectionServer(gs, servElection)
 		v3lockpb.RegisterLockServer(gs, servLock)
 		if sctx.serviceRegister != nil {
 			sctx.serviceRegister(gs)
 		}
 		grpcl := m.Match(cmux.HTTP2())
+
 		go func() { errHandler(gs.Serve(grpcl)) }()
 
 		var gwmux *gw.ServeMux
+		// 启用grpc网关,将 http 转换成 grpc / true
 		if s.Cfg.EnableGRPCGateway {
-			gwmux, err = sctx.registerGateway([]grpc.DialOption{grpc.WithInsecure()})
+			gwmux, err = sctx.registerGateway([]grpc.DialOption{grpc.WithInsecure()}) // ✅
 			if err != nil {
 				return err
 			}
 		}
-
-		httpmux := sctx.createMux(gwmux, handler)
+		// 该handler
+		httpmux := sctx.createMux(gwmux, handler) // http->grpc
 
 		srvhttp := &http.Server{
 			Handler:  createAccessController(sctx.lg, s, httpmux),
-			ErrorLog: logger, // do not log user error
+			ErrorLog: logger,
 		}
 		httpl := m.Match(cmux.HTTP1())
 		go func() { errHandler(srvhttp.Serve(httpl)) }()
 
 		sctx.serversC <- &servers{grpc: gs, http: srvhttp}
-		sctx.lg.Info(
-			"serving client traffic insecurely; this is strongly discouraged!",
-			zap.String("address", sctx.l.Addr().String()),
-		)
+		sctx.lg.Info("以不安全的方式为客户流量提供服务；这是被强烈反对的。", zap.String("address", sctx.l.Addr().String()))
 	}
 
 	if sctx.secure {
@@ -215,19 +209,21 @@ func grpcHandlerFunc(grpcServer *grpc.Server, otherHandler http.Handler) http.Ha
 
 type registerHandlerFunc func(context.Context, *gw.ServeMux, *grpc.ClientConn) error
 
+// 注册网关     http 转换成 grpc / true
 func (sctx *serveCtx) registerGateway(opts []grpc.DialOption) (*gw.ServeMux, error) {
 	ctx := sctx.ctx
 
 	addr := sctx.addr
+	// tcp  unix
 	if network := sctx.network; network == "unix" {
-		// explicitly define unix network for gRPC socket support
+		// 明确定义unix网络以支持gRPC套接字
 		addr = fmt.Sprintf("%s://%s", network, addr)
 	}
 
 	opts = append(opts, grpc.WithDefaultCallOptions([]grpc.CallOption{
 		grpc.MaxCallRecvMsgSize(math.MaxInt32),
 	}...))
-
+	// 与etcd 建立grpc连接
 	conn, err := grpc.DialContext(ctx, addr, opts...)
 	if err != nil {
 		return nil, err
@@ -235,7 +231,7 @@ func (sctx *serveCtx) registerGateway(opts []grpc.DialOption) (*gw.ServeMux, err
 	gwmux := gw.NewServeMux()
 
 	handlers := []registerHandlerFunc{
-		etcdservergw.RegisterKVHandler,
+		etcdservergw.RegisterKVHandler, // 将grpc转换成了http
 		etcdservergw.RegisterWatchHandler,
 		etcdservergw.RegisterLeaseHandler,
 		etcdservergw.RegisterClusterHandler,
@@ -252,19 +248,16 @@ func (sctx *serveCtx) registerGateway(opts []grpc.DialOption) (*gw.ServeMux, err
 	go func() {
 		<-ctx.Done()
 		if cerr := conn.Close(); cerr != nil {
-			sctx.lg.Warn(
-				"failed to close connection",
-				zap.String("address", sctx.l.Addr().String()),
-				zap.Error(cerr),
-			)
+			sctx.lg.Warn("关闭连接", zap.String("address", sctx.l.Addr().String()), zap.Error(cerr))
 		}
 	}()
 
 	return gwmux, nil
 }
 
+// OK 将http转换成grpc
 func (sctx *serveCtx) createMux(gwmux *gw.ServeMux, handler http.Handler) *http.ServeMux {
-	httpmux := http.NewServeMux()
+	httpmux := http.NewServeMux() // mux 数据选择器
 	for path, h := range sctx.userHandlers {
 		httpmux.Handle(path, h)
 	}
@@ -275,7 +268,7 @@ func (sctx *serveCtx) createMux(gwmux *gw.ServeMux, handler http.Handler) *http.
 			wsproxy.WebsocketProxy(
 				gwmux,
 				wsproxy.WithRequestMutator(
-					// Default to the POST method for streams
+					// 默认为流的POST方法
 					func(_ *http.Request, outgoing *http.Request) *http.Request {
 						outgoing.Method = "POST"
 						return outgoing
@@ -408,7 +401,7 @@ func (ch *corsHandler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 func (sctx *serveCtx) registerUserHandler(s string, h http.Handler) {
 	if sctx.userHandlers[s] != nil {
-		sctx.lg.Warn("path is already registered by user handler", zap.String("path", s))
+		sctx.lg.Warn("路径已被用户处理程序注册", zap.String("path", s))
 		return
 	}
 	sctx.userHandlers[s] = h

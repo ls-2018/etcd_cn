@@ -184,7 +184,8 @@ MsgPreVoteResp
 - https://blog.csdn.net/weixin_42663840/article/details/101039942
 - https://www.jianshu.com/p/ff6aaa66ea0f
 - https://www.jianshu.com/p/518f75c5bf55
-
+- https://www.cnblogs.com/ricklz/p/15155095.html
+- https://www.lixueduan.com/categories/
 
 
 ```
@@ -203,3 +204,20 @@ tickHeartbeart 会同时推进两个计数器  heartbeatElapsed 和 electionElap
 当 electionElapsed 超时，发送 MsgCheckQuorum 给当前节点，当前节点收到消息之后，进行自我检查，判断是否能继续维持 Leader 状态，如果不能切换为Follower。同时如果节点正在进行 Leader 切换(切换其他节点为Leader)，当 electionElapsed 超时，说明 Leader 节点转移超时，会终止切换。
 
 ```
+
+```
+grpc  client   --------grpc--------->    gateway ------------> etcd http server 2379
+                            将grpc转换成了http 
+
+
+
+127.0.0.1:2379
+1、HTTP2
+2、HTTP1     
+
+```
+
+### module
+- github.com/soheilhy/cmux 可以在同一个listener上监听不同协议的请求 
+- 
+

@@ -22,23 +22,23 @@ import (
 )
 
 type raftLog struct {
-	//这里还是一个内存存储，保存了从上一个snapshot起，已经持久化了的日志条目。
+	//这里还是一个内存存储，用于保存自从最后一次snapshot之后提交的数据
 	storage Storage
 
-	// 保存了尚未持久化的日志条目或快照。
+	// 用于保存还没有持久化的数据和快照，这些数据最终都会保存到storage中
 	unstable unstable
 
-	//指示当前已经确认的被半数以上节点同步过的最新日志index
+	// 当前提交的日志数据索引
 	committed uint64
-	// Invariant: applied <= committed
-	//指示已经作用到状态机中的最新日志条目的index
+	// committed保存是写入持久化存储中的最高index，而applied保存的是传入状态机中的最高index
+	// 即一条日志首先要提交成功（即committed），才能被applied到状态机中
+	// 因此以下不等式一直成立：applied <= committed
 	applied uint64
 
 	logger Logger
 
-	// maxNextEntsSize is the maximum number aggregate byte size of the messages
-	// returned from calls to nextEnts.
-	// 参数是用来防止一次提交的 raft 日志过大导致OOM
+	// 调用 nextEnts 时，返回的日志项集合的最大的大小
+	// nextEnts 函数返回应用程序已经可以应用到状态机的日志项集合
 	maxNextEntsSize uint64
 }
 

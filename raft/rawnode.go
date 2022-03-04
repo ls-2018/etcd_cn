@@ -45,6 +45,7 @@ func NewRawNode(config *Config) (*RawNode, error) {
 	rn := &RawNode{
 		raft: r,
 	}
+
 	rn.prevSoftSt = r.softState() // 节点状态
 	rn.prevHardSt = r.hardState() // 持久化存储状态
 	return rn, nil
@@ -143,8 +144,7 @@ func (rn *RawNode) acceptReady(rd Ready) {
 	rn.raft.msgs = nil
 }
 
-// HasReady called when RawNode user need to check if any Ready pending.
-// Checking logic in this method should be consistent with Ready.containsUpdates().
+// HasReady 检查是否有ready消息未处理 与 Ready.containsUpdates().保持一致
 func (rn *RawNode) HasReady() bool {
 	r := rn.raft
 	if !r.softState().equal(rn.prevSoftSt) {

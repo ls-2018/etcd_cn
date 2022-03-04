@@ -25,11 +25,8 @@ import (
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
 
-	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
-	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/peer"
 )
 
 const (
@@ -70,141 +67,6 @@ func newUnaryInterceptor(s *etcdserver.EtcdServer) grpc.UnaryServerInterceptor {
 
 		return handler(ctx, req)
 	}
-}
-
-func newLogUnaryInterceptor(s *etcdserver.EtcdServer) grpc.UnaryServerInterceptor {
-	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-		startTime := time.Now()
-		resp, err := handler(ctx, req)
-		lg := s.Logger()
-		if lg != nil { // acquire stats if debug level is enabled or request is expensive
-			defer logUnaryRequestStats(ctx, lg, info, startTime, req, resp)
-		}
-		return resp, err
-	}
-}
-
-func logUnaryRequestStats(ctx context.Context, lg *zap.Logger, info *grpc.UnaryServerInfo, startTime time.Time, req interface{}, resp interface{}) {
-	duration := time.Since(startTime)
-	var enabledDebugLevel, expensiveRequest bool
-	if lg.Core().Enabled(zap.DebugLevel) {
-		enabledDebugLevel = true
-	}
-	if duration > warnUnaryRequestLatency {
-		expensiveRequest = true
-	}
-	if !enabledDebugLevel && !expensiveRequest {
-		return
-	}
-	remote := "No remote client info."
-	peerInfo, ok := peer.FromContext(ctx)
-	if ok {
-		remote = peerInfo.Addr.String()
-	}
-	responseType := info.FullMethod
-	var reqCount, respCount int64
-	var reqSize, respSize int
-	var reqContent string
-	switch _resp := resp.(type) {
-	case *pb.RangeResponse:
-		_req, ok := req.(*pb.RangeRequest)
-		if ok {
-			reqCount = 0
-			reqSize = _req.Size()
-			reqContent = _req.String()
-		}
-		if _resp != nil {
-			respCount = _resp.GetCount()
-			respSize = _resp.Size()
-		}
-	case *pb.PutResponse:
-		_req, ok := req.(*pb.PutRequest)
-		if ok {
-			reqCount = 1
-			reqSize = _req.Size()
-			reqContent = pb.NewLoggablePutRequest(_req).String()
-			// redact value field from request content, see PR #9821
-		}
-		if _resp != nil {
-			respCount = 0
-			respSize = _resp.Size()
-		}
-	case *pb.DeleteRangeResponse:
-		_req, ok := req.(*pb.DeleteRangeRequest)
-		if ok {
-			reqCount = 0
-			reqSize = _req.Size()
-			reqContent = _req.String()
-		}
-		if _resp != nil {
-			respCount = _resp.GetDeleted()
-			respSize = _resp.Size()
-		}
-	case *pb.TxnResponse:
-		_req, ok := req.(*pb.TxnRequest)
-		if ok && _resp != nil {
-			if _resp.GetSucceeded() { // determine the 'actual' count and size of request based on success or failure
-				reqCount = int64(len(_req.GetSuccess()))
-				reqSize = 0
-				for _, r := range _req.GetSuccess() {
-					reqSize += r.Size()
-				}
-			} else {
-				reqCount = int64(len(_req.GetFailure()))
-				reqSize = 0
-				for _, r := range _req.GetFailure() {
-					reqSize += r.Size()
-				}
-			}
-			reqContent = pb.NewLoggableTxnRequest(_req).String()
-			// redact value field from request content, see PR #9821
-		}
-		if _resp != nil {
-			respCount = 0
-			respSize = _resp.Size()
-		}
-	default:
-		reqCount = -1
-		reqSize = -1
-		respCount = -1
-		respSize = -1
-	}
-
-	if enabledDebugLevel {
-		logGenericRequestStats(lg, startTime, duration, remote, responseType, reqCount, reqSize, respCount, respSize, reqContent)
-	} else if expensiveRequest {
-		logExpensiveRequestStats(lg, startTime, duration, remote, responseType, reqCount, reqSize, respCount, respSize, reqContent)
-	}
-}
-
-func logGenericRequestStats(lg *zap.Logger, startTime time.Time, duration time.Duration, remote string, responseType string,
-	reqCount int64, reqSize int, respCount int64, respSize int, reqContent string) {
-	lg.Debug("request stats",
-		zap.Time("start time", startTime),
-		zap.Duration("time spent", duration),
-		zap.String("remote", remote),
-		zap.String("response type", responseType),
-		zap.Int64("request count", reqCount),
-		zap.Int("request size", reqSize),
-		zap.Int64("response count", respCount),
-		zap.Int("response size", respSize),
-		zap.String("request content", reqContent),
-	)
-}
-
-func logExpensiveRequestStats(lg *zap.Logger, startTime time.Time, duration time.Duration, remote string, responseType string,
-	reqCount int64, reqSize int, respCount int64, respSize int, reqContent string) {
-	lg.Warn("request stats",
-		zap.Time("start time", startTime),
-		zap.Duration("time spent", duration),
-		zap.String("remote", remote),
-		zap.String("response type", responseType),
-		zap.Int64("request count", reqCount),
-		zap.Int("request size", reqSize),
-		zap.Int64("response count", respCount),
-		zap.Int("response size", respSize),
-		zap.String("request content", reqContent),
-	)
 }
 
 func newStreamInterceptor(s *etcdserver.EtcdServer) grpc.StreamServerInterceptor {

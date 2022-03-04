@@ -136,7 +136,6 @@ func (a *applierV3backend) Apply(r *pb.InternalRaftRequest, shouldApplyV3 member
 	defer func(start time.Time) {
 		success := ar.err == nil || ar.err == mvcc.ErrCompacted
 		applySec.WithLabelValues(v3Version, op, strconv.FormatBool(success)).Observe(time.Since(start).Seconds())
-		warnOfExpensiveRequest(a.s.Logger(), a.s.Cfg.WarningApplyDuration, start, &pb.InternalRaftStringer{Request: r}, ar.resp, ar.err)
 		if !success {
 			warnOfFailedRequest(a.s.Logger(), start, &pb.InternalRaftStringer{Request: r}, ar.resp, ar.err)
 		}

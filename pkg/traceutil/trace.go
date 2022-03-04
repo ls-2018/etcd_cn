@@ -19,7 +19,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"math/rand"
 	"time"
 
 	"go.uber.org/zap"
@@ -144,80 +143,9 @@ func (t *Trace) IsEmpty() bool {
 	return t.isEmpty
 }
 
-// Log dumps all steps in the Trace
-func (t *Trace) Log() {
-	t.LogWithStepThreshold(0)
-}
 
-// LogIfLong dumps logs if the duration is longer than threshold
-func (t *Trace) LogIfLong(threshold time.Duration) {
-	if time.Since(t.startTime) > threshold {
-		stepThreshold := threshold / time.Duration(len(t.steps)+1)
-		t.LogWithStepThreshold(stepThreshold)
-	}
-}
 
-// LogAllStepsIfLong dumps all logs if the duration is longer than threshold
-func (t *Trace) LogAllStepsIfLong(threshold time.Duration) {
-	if time.Since(t.startTime) > threshold {
-		t.LogWithStepThreshold(0)
-	}
-}
 
-// LogWithStepThreshold only dumps step whose duration is longer than step threshold
-func (t *Trace) LogWithStepThreshold(threshold time.Duration) {
-	msg, fs := t.logInfo(threshold)
-	if t.lg != nil {
-		t.lg.Info(msg, fs...)
-	}
-}
-
-func (t *Trace) logInfo(threshold time.Duration) (string, []zap.Field) {
-	endTime := time.Now()
-	totalDuration := endTime.Sub(t.startTime)
-	traceNum := rand.Int31()
-	msg := fmt.Sprintf("trace[%d] %s", traceNum, t.operation)
-
-	var steps []string
-	lastStepTime := t.startTime
-	for i := 0; i < len(t.steps); i++ {
-		step := t.steps[i]
-		// add subtrace common fields which defined at the beginning to each sub-steps
-		if step.isSubTraceStart {
-			for j := i + 1; j < len(t.steps) && !t.steps[j].isSubTraceEnd; j++ {
-				t.steps[j].fields = append(step.fields, t.steps[j].fields...)
-			}
-			continue
-		}
-		// add subtrace common fields which defined at the end to each sub-steps
-		if step.isSubTraceEnd {
-			for j := i - 1; j >= 0 && !t.steps[j].isSubTraceStart; j-- {
-				t.steps[j].fields = append(step.fields, t.steps[j].fields...)
-			}
-			continue
-		}
-	}
-	for i := 0; i < len(t.steps); i++ {
-		step := t.steps[i]
-		if step.isSubTraceStart || step.isSubTraceEnd {
-			continue
-		}
-		stepDuration := step.time.Sub(lastStepTime)
-		if stepDuration > threshold {
-			steps = append(steps, fmt.Sprintf("trace[%d] '%v' %s (duration: %v)",
-				traceNum, step.msg, writeFields(step.fields), stepDuration))
-		}
-		lastStepTime = step.time
-	}
-
-	fs := []zap.Field{zap.String("detail", writeFields(t.fields)),
-		zap.Duration("duration", totalDuration),
-		zap.Time("start", t.startTime),
-		zap.Time("end", endTime),
-		zap.Strings("steps", steps),
-		zap.Int("step_count", len(steps))}
-	return msg, fs
-}
 
 func (t *Trace) updateFieldIfExist(f Field) bool {
 	for i, v := range t.fields {

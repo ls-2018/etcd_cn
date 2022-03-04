@@ -146,7 +146,7 @@ func newConfig() *config {
 	fs.UintVar(&cfg.ec.MaxWalFiles, "max-wals", cfg.ec.MaxWalFiles, "要保留的最大wal文件数（0表示不受限制）. 5")
 	fs.StringVar(&cfg.ec.Name, "name", cfg.ec.Name, "本节点.人类可读的名字")
 	// 作用：此配置值作为此节点在--initial-cluster标志中列出的条目（例如.default=http://localhost:2380）引用.若使用静态引导.则需要匹配标志中使用的密钥.使用发现时.每个成员必须具有唯一的名称.建议使用Hostname或者machine-id.
-	fs.Uint64Var(&cfg.ec.SnapshotCount, "snapshot-count", cfg.ec.SnapshotCount, "触发快照到磁盘的已提交事务数.")
+	fs.Uint64Var(&cfg.ec.SnapshotCount, "snapshot-count", cfg.ec.SnapshotCount, "// 触发一次磁盘快照的提交事务的次数.")
 	fs.UintVar(&cfg.ec.TickMs, "heartbeat-interval", cfg.ec.TickMs, "心跳间隔 100ms")
 	fs.UintVar(&cfg.ec.ElectionMs, "election-timeout", cfg.ec.ElectionMs, "选举超时")
 	fs.BoolVar(&cfg.ec.InitialElectionTickAdvance, "initial-election-tick-advance", cfg.ec.InitialElectionTickAdvance, "是否提前初始化选举时钟启动，以便更快的选举.")
@@ -348,7 +348,7 @@ func (cfg *config) configFromCmdLine() error {
 		rafthttp.ConnWriteTimeout = rafthttp.DefaultConnWriteTimeout
 		lg.Info(fmt.Sprintf("raft-write-timeout increased to minimum value: %v", rafthttp.DefaultConnWriteTimeout))
 	}
-
+	// 集群节点之间通信监听的URL;如果指定的IP是0.0.0.0,那么etcd 会监昕所有网卡的指定端口
 	cfg.ec.LPUrls = flags.UniqueURLsFromFlag(cfg.cf.flagSet, "listen-peer-urls")
 	cfg.ec.APUrls = flags.UniqueURLsFromFlag(cfg.cf.flagSet, "initial-advertise-peer-urls")
 	cfg.ec.LCUrls = flags.UniqueURLsFromFlag(cfg.cf.flagSet, "listen-client-urls")

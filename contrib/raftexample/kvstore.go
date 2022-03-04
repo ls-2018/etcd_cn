@@ -62,6 +62,7 @@ func (s *kvstore) Lookup(key string) (string, bool) {
 	return v, ok
 }
 
+// Propose 处理客户端提交的的数据    put k,v
 func (s *kvstore) Propose(k string, v string) {
 	var buf bytes.Buffer
 	if err := gob.NewEncoder(&buf).Encode(kv{k, v}); err != nil {
