@@ -17,6 +17,7 @@ package rafttest
 import (
 	"errors"
 	"fmt"
+	"github.com/ls-2018/etcd_cn/raft"
 	"reflect"
 	"testing"
 

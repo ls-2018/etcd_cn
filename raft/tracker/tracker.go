@@ -111,30 +111,26 @@ func (c *Config) Clone() Config {
 	}
 }
 
-// ProgressTracker tracks the currently active configuration and the information
-// known about the nodes and learners in it. In particular, it tracks the match
-// index for each peer which in turn allows reasoning about the committed index.
+// ProgressTracker 追踪配置以及 节点信息。
 type ProgressTracker struct {
 	Config
-
-	Progress ProgressMap
-
-	Votes map[uint64]bool
-
+	// leader需要缓存当前所有Follower的日志同步进度
+	Progress    ProgressMap // nodeID ---> nodeInfoMap
+	Votes       map[uint64]bool
 	MaxInflight int
 }
 
-// MakeProgressTracker initializes a ProgressTracker.
+// MakeProgressTracker 初始化
 func MakeProgressTracker(maxInflight int) ProgressTracker {
 	p := ProgressTracker{
 		MaxInflight: maxInflight, // 最大的处理中的消息数量
 		Config: Config{
 			Voters: quorum.JointConfig{
 				quorum.MajorityConfig{},
-				nil, // only populated when used
+				nil, // 使用时初始化
 			},
-			Learners:     nil, // only populated when used
-			LearnersNext: nil, // only populated when used
+			Learners:     nil, // 使用时初始化
+			LearnersNext: nil, // 使用时初始化
 		},
 		Votes:    map[uint64]bool{},
 		Progress: map[uint64]*Progress{},

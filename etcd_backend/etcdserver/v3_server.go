@@ -639,8 +639,9 @@ func (s *EtcdServer) doSerialize(ctx context.Context, chk func(*auth.AuthInfo) e
 	}
 	return nil
 }
-
+//当客户端提交一条数据变更请求时
 func (s *EtcdServer) processInternalRaftRequestOnce(ctx context.Context, r pb.InternalRaftRequest) (*applyResult, error) {
+	//判断已提交未apply的记录是否超过限制
 	ai := s.getAppliedIndex()
 	ci := s.getCommittedIndex()
 	if ci > ai+maxGapBetweenApplyAndCommitIndex {
@@ -648,7 +649,7 @@ func (s *EtcdServer) processInternalRaftRequestOnce(ctx context.Context, r pb.In
 	}
 
 	r.Header = &pb.RequestHeader{
-		ID: s.reqIDGen.Next(),
+		ID: s.reqIDGen.Next(), //生成一个requestID
 	}
 
 	// check authinfo if it is not InternalAuthenticateRequest
@@ -662,7 +663,7 @@ func (s *EtcdServer) processInternalRaftRequestOnce(ctx context.Context, r pb.In
 			r.Header.AuthRevision = authInfo.Revision
 		}
 	}
-
+	//反序列化请求数据
 	data, err := r.Marshal()
 	if err != nil {
 		return nil, err
@@ -676,13 +677,13 @@ func (s *EtcdServer) processInternalRaftRequestOnce(ctx context.Context, r pb.In
 	if id == 0 {
 		id = r.Header.ID
 	}
-	ch := s.w.Register(id)
+	ch := s.w.Register(id)   //注册一个channel，等待处理完成
 
-	cctx, cancel := context.WithTimeout(ctx, s.Cfg.ReqTimeout())
+	cctx, cancel := context.WithTimeout(ctx, s.Cfg.ReqTimeout())    //设置请求超时
 	defer cancel()
 
 	start := time.Now()
-	err = s.r.Propose(cctx, data)
+	err = s.r.Propose(cctx, data)    // 调用raft模块的Propose处理请求
 	if err != nil {
 		proposalsFailed.Inc()
 		s.w.Trigger(id, nil) // GC wait
@@ -692,6 +693,7 @@ func (s *EtcdServer) processInternalRaftRequestOnce(ctx context.Context, r pb.In
 	defer proposalsPending.Dec()
 
 	select {
+	// 等待收到apply结果返回给客户端
 	case x := <-ch:
 		return x.(*applyResult), nil
 	case <-cctx.Done():

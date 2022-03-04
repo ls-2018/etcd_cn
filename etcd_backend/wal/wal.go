@@ -912,27 +912,29 @@ func (w *WAL) saveState(s *raftpb.HardState) error {
 	return w.encoder.encode(rec)
 }
 
+// Save 日志发送给Follower的同时，Leader会将日志落盘，即写到WAL中，
 func (w *WAL) Save(st raftpb.HardState, ents []raftpb.Entry) error {
+	//获取wal的写锁
 	w.mu.Lock()
 	defer w.mu.Unlock()
-
-	// short cut, do not call sync
+	// HardState变化或者新的日志条目则需要写wal
 	if raft.IsEmptyHardState(st) && len(ents) == 0 {
 		return nil
 	}
 
 	mustSync := raft.MustSync(st, w.state, len(ents))
 
-	// TODO(xiangli): no more reference operator
+	// 写日志条目
 	for i := range ents {
 		if err := w.saveEntry(&ents[i]); err != nil {
 			return err
 		}
 	}
+	// 写state变化
 	if err := w.saveState(&st); err != nil {
 		return err
 	}
-
+	// 判断文件大小是否超过最大值
 	curOff, err := w.tail().Seek(0, io.SeekCurrent)
 	if err != nil {
 		return err
@@ -943,7 +945,7 @@ func (w *WAL) Save(st raftpb.HardState, ents []raftpb.Entry) error {
 		}
 		return nil
 	}
-
+	// 文件切分
 	return w.cut()
 }
 

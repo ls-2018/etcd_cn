@@ -235,7 +235,6 @@ func (pr *Progress) String() string {
 	return buf.String()
 }
 
-// ProgressMap is a map of *Progress.
 type ProgressMap map[uint64]*Progress
 
 // String prints the ProgressMap in sorted key order, one Progress per line.

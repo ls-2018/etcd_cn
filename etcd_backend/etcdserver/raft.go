@@ -171,6 +171,7 @@ func (r *raftNode) start(rh *raftReadyHandler) {
 			case <-r.ticker.C:
 				r.tick()
 			case rd := <-r.Ready():
+				//获取ready结构中的committedEntries，提交给Apply模块应用到后端存储中。
 				if rd.SoftState != nil {
 					newLeader := rd.SoftState.Lead != raft.None && rh.getLead() != rd.SoftState.Lead
 					if newLeader {
@@ -203,32 +204,28 @@ func (r *raftNode) start(rh *raftReadyHandler) {
 						return
 					}
 				}
-
+				// 生成apply请求
 				notifyc := make(chan struct{}, 1)
 				ap := apply{
 					entries:  rd.CommittedEntries,
 					snapshot: rd.Snapshot,
 					notifyc:  notifyc,
 				}
-
+				// 更新etcdServer缓存的commitIndex为最新值
 				updateCommittedIndex(&ap, rh)
 
 				select {
-				case r.applyc <- ap:
+				case r.applyc <- ap:// 将已提交日志应用到状态机
 				case <-r.stopped:
 					return
 				}
 
-				// the leader can write to its disk in parallel with replicating to the followers and them
-				// writing to their disks.
-				// For more details, check raft thesis 10.2.1
+				// 如果有新的日志条目
 				if islead {
-					// gofail: var raftBeforeLeaderSend struct{}
 					r.transport.Send(r.processMessages(rd.Messages))
 				}
 
-				// Must save the snapshot file and WAL snapshot entry before saving any other entries or hardstate to
-				// ensure that recovery after a snapshot restore is possible.
+				//如果有snapshot
 				if !raft.IsEmptySnap(rd.Snapshot) {
 					// gofail: var raftBeforeSaveSnap struct{}
 					if err := r.storage.SaveSnap(rd.Snapshot); err != nil {
@@ -237,7 +234,7 @@ func (r *raftNode) start(rh *raftReadyHandler) {
 					// gofail: var raftAfterSaveSnap struct{}
 				}
 
-				// gofail: var raftBeforeSave struct{}
+				//将hardState和日志条目保存到WAL中
 				if err := r.storage.Save(rd.HardState, rd.Entries); err != nil {
 					r.lg.Fatal("failed to save Raft hard state and entries", zap.Error(err))
 				}
@@ -309,7 +306,8 @@ func (r *raftNode) start(rh *raftReadyHandler) {
 					// leader already processed 'MsgSnap' and signaled
 					notifyc <- struct{}{}
 				}
-
+				//更新raft模块的applied index和将日志从unstable转到stable中
+				//这里需要注意的是，在将已提交日志条目应用到状态机的操作是异步完成的，在Apply完成后，会将结果写到客户端调用进来时注册的channel中。这样一次完整的写操作就完成了。
 				r.Advance()
 			case <-r.stopped:
 				return
