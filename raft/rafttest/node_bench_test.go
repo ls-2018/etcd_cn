@@ -16,6 +16,7 @@ package rafttest
 
 import (
 	"context"
+	"github.com/ls-2018/etcd_cn/raft"
 	"testing"
 	"time"
 )

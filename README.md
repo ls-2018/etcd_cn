@@ -33,6 +33,7 @@ ETCDCTL_API=3 etcdctl defrag
 清理alarm
 ETCDCTL_API=3 etcdctl alarm disarm
 ```
+
 ```
 //--auto-compaction-mode=revision --auto-compaction-retention=1000 每5分钟自动压缩"latest revision" - 1000；
 //--auto-compaction-mode=periodic --auto-compaction-retention=12h 每1小时自动压缩并保留12小时窗口。
@@ -44,15 +45,15 @@ ETCDCTL_API=3 etcdctl alarm disarm
 ```
 
 ### URL
+
 ```
 http://127.0.0.1:2379/members
 
 
 ```
 
-
-
 ### msg
+
 ```
 MsgHup             
 MsgBeat            
@@ -74,8 +75,6 @@ MsgReadIndexResp
 MsgPreVote         
 MsgPreVoteResp     
 ```
-
-
 
 ### issue
 
@@ -165,6 +164,7 @@ MsgPreVoteResp
   ```
 
 ![](./images/MsgReadIndex.png)
+
 ### Ref
 
 - https://blog.csdn.net/cuichongxin/article/details/118678009
@@ -187,7 +187,6 @@ MsgPreVoteResp
 - https://www.cnblogs.com/ricklz/p/15155095.html
 - https://www.lixueduan.com/categories/
 
-
 ```
 tickHeartbeart 会同时推进两个计数器  heartbeatElapsed 和 electionElapsed 。
 
@@ -206,8 +205,8 @@ tickHeartbeart 会同时推进两个计数器  heartbeatElapsed 和 electionElap
 ```
 
 ```
-grpc  client   --------grpc--------->    gateway ------------> etcd http server 2379
-                            将grpc转换成了http 
+curl    --------http--------->    gateway ------------> etcd grpc server 2379
+                            将http转换成了grpc
 
 
 
@@ -218,6 +217,7 @@ grpc  client   --------grpc--------->    gateway ------------> etcd http server 
 ```
 
 ### module
-- github.com/soheilhy/cmux 可以在同一个listener上监听不同协议的请求 
+
+- github.com/soheilhy/cmux 可以在同一个listener上监听不同协议的请求
 - 
 

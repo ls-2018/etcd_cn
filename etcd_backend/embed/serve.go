@@ -128,7 +128,7 @@ func (sctx *serveCtx) serve(s *etcdserver.EtcdServer, tlsinfo *transport.TLSInfo
 		httpmux := sctx.createMux(gwmux, handler) // http->grpc
 
 		srvhttp := &http.Server{
-			Handler:  createAccessController(sctx.lg, s, httpmux),
+			Handler:  createAccessController(sctx.lg, s, httpmux), // ✅
 			ErrorLog: logger,
 		}
 		httpl := m.Match(cmux.HTTP1())
@@ -284,10 +284,10 @@ func (sctx *serveCtx) createMux(gwmux *gw.ServeMux, handler http.Handler) *http.
 	return httpmux
 }
 
-// createAccessController wraps HTTP multiplexer:
-// - mutate gRPC gateway request paths
-// - check hostname whitelist
-// client HTTP requests goes here first
+// createAccessController包装了HTTP多路复用器。
+// - 突变gRPC 网关请求路径
+// - 检查主机名白名单
+// 客户端HTTP请求首先在这里进行
 func createAccessController(lg *zap.Logger, s *etcdserver.EtcdServer, mux *http.ServeMux) http.Handler {
 	if lg == nil {
 		lg = zap.NewNop()
@@ -297,44 +297,43 @@ func createAccessController(lg *zap.Logger, s *etcdserver.EtcdServer, mux *http.
 
 type accessController struct {
 	lg  *zap.Logger
-	s   *etcdserver.EtcdServer
+	s   *etcdserver.EtcdServer //
 	mux *http.ServeMux
 }
 
 func (ac *accessController) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	if req == nil {
-		http.Error(rw, "Request is nil", http.StatusBadRequest)
+		http.Error(rw, "请求是空的", http.StatusBadRequest)
 		return
 	}
-	// redirect for backward compatibilities
+	// 重定向以实现向后兼容
 	if req.URL != nil && strings.HasPrefix(req.URL.Path, "/v3beta/") {
 		req.URL.Path = strings.Replace(req.URL.Path, "/v3beta/", "/v3/", 1)
 	}
 
-	if req.TLS == nil { // check origin if client connection is not secure
-		host := httputil.GetHostname(req)
+	if req.TLS == nil { //如果客户端连接不安全，则检查origin
+		host := httputil.GetHostname(req) // 请求的主机名、域名、IP
 		if !ac.s.AccessController.IsHostWhitelisted(host) {
-			ac.lg.Warn(
-				"rejecting HTTP request to prevent DNS rebinding attacks",
-				zap.String("host", host),
-			)
+			ac.lg.Warn("拒绝HTTP请求，以防止DNS重新绑定攻击", zap.String("host", host))
 			http.Error(rw, errCVE20185702(host), http.StatusMisdirectedRequest)
 			return
 		}
 	} else if ac.s.Cfg.ClientCertAuthEnabled && ac.s.Cfg.EnableGRPCGateway &&
 		ac.s.AuthStore().IsAuthEnabled() && strings.HasPrefix(req.URL.Path, "/v3/") {
+		// TODO 待看
 		for _, chains := range req.TLS.VerifiedChains {
 			if len(chains) < 1 {
 				continue
 			}
 			if len(chains[0].Subject.CommonName) != 0 {
-				http.Error(rw, "CommonName of client sending a request against gateway will be ignored and not used as expected", http.StatusBadRequest)
+				http.Error(rw, "对网关发送请求的客户端的CommonName将被忽略，不按预期使用。", http.StatusBadRequest)
 				return
 			}
 		}
 	}
 
-	// Write CORS header.
+	// 写Origin头
+	// 允不允许跨域
 	if ac.s.AccessController.OriginAllowed("*") {
 		addCORSHeader(rw, "*")
 	} else if origin := req.Header.Get("Origin"); ac.s.OriginAllowed(origin) {
@@ -349,7 +348,7 @@ func (ac *accessController) ServeHTTP(rw http.ResponseWriter, req *http.Request)
 	ac.mux.ServeHTTP(rw, req)
 }
 
-// addCORSHeader adds the correct cors headers given an origin
+// addCORSHeader 在给定Origin的情况下，添加正确的cors头信息。
 func addCORSHeader(w http.ResponseWriter, origin string) {
 	w.Header().Add("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 	w.Header().Add("Access-Control-Allow-Origin", origin)

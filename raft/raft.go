@@ -371,14 +371,8 @@ func (r *raft) send(m pb.Message) {
 	r.msgs = append(r.msgs, m)
 }
 
-// sendHeartbeat sends a heartbeat RPC to the given peer.
+// 向指定的节点发送信息
 func (r *raft) sendHeartbeat(to uint64, ctx []byte) {
-	// Attach the commit as min(to.matched, r.committed).
-	// When the leader sends out heartbeat message,
-	// the receiver(follower) might not be matched with the leader
-	// or it might not have all the committed entries.
-	// The leader MUST NOT forward the follower's commit to
-	// an unmatched index.
 	commit := min(r.prs.Progress[to].Match, r.raftLog.committed)
 	m := pb.Message{
 		To:      to,
@@ -605,10 +599,11 @@ func (r *raft) appendEntry(es ...pb.Entry) (accepted bool) {
 	return true
 }
 
-// tickElection is run by followers and candidates after r.electionTimeout.
+// follower以及candidate的tick函数，在r.electionTimeout之后被调用
 func (r *raft) tickElection() {
 	r.electionElapsed++
-
+	// promotable返回是否可以被提升为leader
+	// pastElectionTimeout检测当前的候选超时间是否过期
 	if r.promotable() && r.pastElectionTimeout() {
 		r.electionElapsed = 0
 		r.Step(pb.Message{From: r.id, Type: pb.MsgHup})
@@ -1051,8 +1046,7 @@ func stepLeader(r *raft, m pb.Message) error {
 
 		return nil
 	}
-
-	// All other message types require a progress for m.From (pr).
+	// 根据from，取出当前的follower的Progress
 	pr := r.prs.Progress[m.From]
 	if pr == nil {
 		r.logger.Debugf("%x no progress available for %x", r.id, m.From)

@@ -16,7 +16,7 @@ package etcdserver
 
 import "sync"
 
-// AccessController controls etcd etcd HTTP request access.
+// AccessController 控制 etcd http请求的访问控制
 type AccessController struct {
 	corsMu          sync.RWMutex
 	CORS            map[string]struct{}
@@ -24,16 +24,7 @@ type AccessController struct {
 	HostWhitelist   map[string]struct{}
 }
 
-// NewAccessController returns a new "AccessController" with default "*" values.
-func NewAccessController() *AccessController {
-	return &AccessController{
-		CORS:          map[string]struct{}{"*": {}},
-		HostWhitelist: map[string]struct{}{"*": {}},
-	}
-}
-
-// OriginAllowed determines whether the etcd will allow a given CORS origin.
-// If CORS is empty, allow all.
+// OriginAllowed 是否允许跨域请求
 func (ac *AccessController) OriginAllowed(origin string) bool {
 	ac.corsMu.RLock()
 	defer ac.corsMu.RUnlock()
@@ -48,8 +39,7 @@ func (ac *AccessController) OriginAllowed(origin string) bool {
 	return ok
 }
 
-// IsHostWhitelisted returns true if the host is whitelisted.
-// If whitelist is empty, allow all.
+// IsHostWhitelisted 返回host在不在白名单里
 func (ac *AccessController) IsHostWhitelisted(host string) bool {
 	ac.hostWhitelistMu.RLock()
 	defer ac.hostWhitelistMu.RUnlock()
