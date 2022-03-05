@@ -170,9 +170,11 @@ func (r *raftNode) start(rh *raftReadyHandler) {
 			select {
 			case <-r.ticker.C:
 				r.tick()
+				//调用Node.Ready()，从返回的channel中获取数据
 			case rd := <-r.Ready():
 				//获取ready结构中的committedEntries,提交给Apply模块应用到后端存储中.
 				if rd.SoftState != nil {
+					// SoftState不为空的处理逻辑
 					newLeader := rd.SoftState.Lead != raft.None && rh.getLead() != rd.SoftState.Lead
 					if newLeader {
 						leaderChanges.Inc()
@@ -194,7 +196,7 @@ func (r *raftNode) start(rh *raftReadyHandler) {
 					rh.updateLeadership(newLeader)
 					r.td.Reset()
 				}
-
+				//ReadStates不为空的处理逻辑
 				if len(rd.ReadStates) != 0 {
 					select {
 					case r.readStateC <- rd.ReadStates[len(rd.ReadStates)-1]:
@@ -220,7 +222,7 @@ func (r *raftNode) start(rh *raftReadyHandler) {
 					return
 				}
 
-				// 如果有新的日志条目
+				// 如果是Leader发送消息给Follower
 				if islead {
 					r.transport.Send(r.processMessages(rd.Messages))
 				}

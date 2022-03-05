@@ -28,11 +28,10 @@ type raftLog struct {
 	// 用于保存还没有持久化的数据和快照,这些数据最终都会保存到storage中
 	unstable unstable
 
-	// 当前提交的日志数据索引
+	// committed保存是写入持久化存储中的最高index
 	committed uint64
-	// committed保存是写入持久化存储中的最高index,而applied保存的是传入状态机中的最高index
-	// 即一条日志首先要提交成功(即committed),才能被applied到状态机中
-	// 因此以下不等式一直成立：applied <= committed
+	// 而applied保存的是传入状态机中的最高index
+	// 即一条日志首先要提交成功(即committed),才能被applied到状态机中;因此以下不等式一直成立：applied <= committed
 	applied uint64
 
 	logger Logger
@@ -198,7 +197,7 @@ func (l *raftLog) hasNextEnts() bool {
 	return l.committed+1 > off
 }
 
-// hasPendingSnapshot returns if there is pending snapshot waiting for applying.
+// hasPendingSnapshot 判断是不是正在处理快照
 func (l *raftLog) hasPendingSnapshot() bool {
 	return l.unstable.snapshot != nil && !IsEmptySnap(*l.unstable.snapshot)
 }
@@ -339,7 +338,7 @@ func (l *raftLog) restore(s pb.Snapshot) {
 	l.unstable.restore(s)
 }
 
-// slice returns a slice of log entries from lo through hi-1, inclusive.
+// slice 获取lo到hi-1的所有日志,但总量限制在maxsize
 func (l *raftLog) slice(lo, hi, maxSize uint64) ([]pb.Entry, error) {
 	err := l.mustCheckOutOfBounds(lo, hi)
 	if err != nil {
@@ -349,23 +348,26 @@ func (l *raftLog) slice(lo, hi, maxSize uint64) ([]pb.Entry, error) {
 		return nil, nil
 	}
 	var ents []pb.Entry
+	// 日志有一部分落在storage中
 	if lo < l.unstable.offset {
 		storedEnts, err := l.storage.Entries(lo, min(hi, l.unstable.offset), maxSize)
-		if err == ErrCompacted {
+		if err == ErrCompacted { // 压缩了
 			return nil, err
 		} else if err == ErrUnavailable {
-			l.logger.Panicf("entries[%d:%d) is unavailable from storage", lo, min(hi, l.unstable.offset))
+			l.logger.Panicf("日志[%d:%d] 索引中的请求条目不可用", lo, min(hi, l.unstable.offset))
 		} else if err != nil {
 			panic(err) // TODO(bdarnell)
 		}
 
-		// check if ents has reached the size limitation
+		// 检查ents是否达到大小限制
+		// 如果从storage获取的日志数量比预期少;说明没那么多日志存在storage中;那也就没必要再找unstable了。
 		if uint64(len(storedEnts)) < min(hi, l.unstable.offset)-lo {
 			return storedEnts, nil
 		}
-
 		ents = storedEnts
 	}
+
+	// 日志有一部分在unstable中。
 	if hi > l.unstable.offset {
 		unstable := l.unstable.slice(max(lo, l.unstable.offset), hi)
 		if len(ents) > 0 {
@@ -383,7 +385,7 @@ func (l *raftLog) slice(lo, hi, maxSize uint64) ([]pb.Entry, error) {
 // l.firstIndex <= lo <= hi <= l.firstIndex + len(l.entries)
 func (l *raftLog) mustCheckOutOfBounds(lo, hi uint64) error {
 	if lo > hi {
-		l.logger.Panicf("invalid slice %d > %d", lo, hi)
+		l.logger.Panicf("无效的索引 %d > %d", lo, hi)
 	}
 	fi := l.firstIndex()
 	if lo < fi {

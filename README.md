@@ -33,6 +33,7 @@ ETCDCTL_API=3 etcdctl defrag
 清理alarm
 ETCDCTL_API=3 etcdctl alarm disarm
 ```
+
 ```
 //--auto-compaction-mode=revision --auto-compaction-retention=1000 每5分钟自动压缩"latest revision" - 1000；
 //--auto-compaction-mode=periodic --auto-compaction-retention=12h 每1小时自动压缩并保留12小时窗口.
@@ -44,38 +45,36 @@ ETCDCTL_API=3 etcdctl alarm disarm
 ```
 
 ### URL
+
 ```
 http://127.0.0.1:2379/members
 
 
 ```
 
-
-
 ### msg
-```
-MsgHup             
-MsgBeat            
-MsgProp            
-MsgApp             
-MsgAppResp         
-MsgVote            
-MsgVoteResp        
-MsgSnap            
-MsgHeartbeat       
-MsgHeartbeatResp   
-MsgUnreachable     
-MsgSnapStatus      
-MsgCheckQuorum               检查自己还是不是leader,electionTimeout定时触发  
-MsgTransferLeader  
-MsgTimeoutNow      
-MsgReadIndex       
-MsgReadIndexResp   
-MsgPreVote         
-MsgPreVoteResp     
-```
 
-
+```
+MsgHup                      本地：开启选举,---->会触发vote或pre-vote
+MsgBeat                     本地：心跳，---->给peers发送Msghearbeat
+MsgProp                     本地：Propose -----> MsgApp
+MsgApp                      非本地：操作日志【复制、配置变更 req】
+MsgAppResp                  非本地：操作日志【复制 res】
+MsgVote                     非本地：投票请求
+MsgVoteResp                 非本地：投票相应
+MsgPreVote                  非本地：预投票请求
+MsgPreVoteResp              非本地：预投票相应
+MsgSnap                     非本地：leader向follower拷贝快照,响应是MsgAppResp,告诉leader继续复制之后的值
+MsgHeartbeat                
+MsgHeartbeatResp            
+MsgUnreachable              非本地：etcdserver通过这个消息告诉raft状态机某个follower不可达,让其发送消息的方式由pipeline切成ping-pong模式
+MsgSnapStatus               非本地：etcdserver通过这个消息告诉raft状态机快照发送成功还是失败
+MsgCheckQuorum               
+MsgTransferLeader           非本地：
+MsgTimeoutNow               非本地：
+MsgReadIndex                非本地：
+MsgReadIndexResp            非本地：
+```
 
 ### issue
 
@@ -164,27 +163,11 @@ MsgPreVoteResp
   可能会耗费比较长的时间.更快更安全的方式是先写一条Log数据到文件中,然后由后台线程来完成最终数据的更新,这条log中通常包含的是一条指令.
   ```
 - 发送心跳消息的时候leader是怎么设置各个follower的commit？
-     
+
 - leader收到follower的心跳响应之后会怎么去修改对应的follower元数据呢？
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ![](./images/MsgReadIndex.png)
+
 ### Ref
 
 - https://blog.csdn.net/cuichongxin/article/details/118678009
@@ -208,7 +191,8 @@ MsgPreVoteResp
 - https://www.lixueduan.com/categories/
 - https://zhuanlan.zhihu.com/p/452483457
 - https://so.csdn.net/so/search?q=etcd&t=blog&u=devclouds
-
+- https://blog.csdn.net/weixin_42663840/article/details/100005978
+- https://www.jianshu.com/p/267e1d626c22
 
 ```
 tickHeartbeart 会同时推进两个计数器  heartbeatElapsed 和 electionElapsed .
@@ -240,6 +224,7 @@ grpc  client   --------grpc--------->    gateway ------------> etcd http server 
 ```
 
 ### module
-- github.com/soheilhy/cmux 可以在同一个listener上监听不同协议的请求 
+
+- github.com/soheilhy/cmux 可以在同一个listener上监听不同协议的请求
 - 
 

@@ -60,14 +60,9 @@ const (
 )
 
 const (
-	// campaignPreElection represents the first phase of a normal election when
-	// Config.PreVote is true.
-	campaignPreElection CampaignType = "CampaignPreElection"
-	// campaignElection represents a normal (time-based) election (the second phase
-	// of the election when Config.PreVote is true).
-	campaignElection CampaignType = "CampaignElection"
-	// campaignTransfer represents the type of leader transfer
-	campaignTransfer CampaignType = "CampaignTransfer"
+	campaignPreElection CampaignType = "CampaignPreElection" // 竞选类型： pre-vote模式
+	campaignElection    CampaignType = "CampaignElection"    // 竞选类型：vote模式
+	campaignTransfer    CampaignType = "CampaignTransfer"    // 竞选类型：leader开始转移
 )
 
 // ErrProposalDropped is returned when the proposal is ignored by some cases,
@@ -93,12 +88,10 @@ var globalRand = &lockedRand{
 	rand: rand.New(rand.NewSource(time.Now().UnixNano())),
 }
 
-// CampaignType represents the type of campaigning
-// the reason we use the type of string instead of uint64
-// is because it's simpler to compare and fill in raft entries
+// CampaignType 竞选类型
 type CampaignType string
 
-// StateType represents the role of a node in a cluster.
+// StateType 节点在集群中的状态
 type StateType uint64
 
 var stmap = [...]string{
@@ -215,7 +208,7 @@ type raft struct {
 	// isLearner 本节点是不是learner角色
 	isLearner bool
 
-	msgs []pb.Message
+	msgs []pb.Message // 本节点要发送出去的消息
 
 	lead uint64 // 当前leaderID
 	// leader转移到的节点ID
@@ -336,41 +329,28 @@ func (r *raft) hardState() pb.HardState {
 	}
 }
 
-// send schedules persisting state to a stable storage and AFTER that
-// sending the message (as part of next Ready message processing).
+// send 将状态持久化到一个稳定的存储中，之后再发送消息
 func (r *raft) send(m pb.Message) {
 	if m.From == None {
 		m.From = r.id
 	}
 	//数据校验，选举类消息必须带term属性
+	// 竞选投票相关的消息类型,必须设置term
 	if m.Type == pb.MsgVote || m.Type == pb.MsgVoteResp || m.Type == pb.MsgPreVote || m.Type == pb.MsgPreVoteResp {
 		if m.Term == 0 {
-			// All {pre-,}campaign messages need to have the term set when
-			// sending.
-			// - MsgVote: m.Term is the term the node is campaigning for,
-			//   non-zero as we increment the term when campaigning.
-			// - MsgVoteResp: m.Term is the new r.Term if the MsgVote was
-			//   granted, non-zero for the same reason MsgVote is
-			// - MsgPreVote: m.Term is the term the node will campaign,
-			//   non-zero as we use m.Term to indicate the next term we'll be
-			//   campaigning for
-			// - MsgPreVoteResp: m.Term is the term received in the original
-			//   MsgPreVote if the pre-vote was granted, non-zero for the
-			//   same reasons MsgPreVote is
-			panic(fmt.Sprintf("term should be set when sending %s", m.Type))
+			panic(fmt.Sprintf("任期应该被设置%s", m.Type))
 		}
 	} else {
+		//其它类消息不能带term属性
 		if m.Term != 0 {
-			panic(fmt.Sprintf("term should not be set when sending %s (was %d)", m.Type, m.Term))
+			panic(fmt.Sprintf("任期不能被设置,当 %s (was %d)", m.Type, m.Term))
 		}
-		// do not attach term to MsgProp, MsgReadIndex
-		// proposals are a way to forward to the leader and
-		// should be treated as local message.
-		// MsgReadIndex is also forwarded to leader.
+		//除了MsgProp和MsgReadIndex消息外，设置term为raft当前周期
 		if m.Type != pb.MsgProp && m.Type != pb.MsgReadIndex {
 			m.Term = r.Term
 		}
 	}
+	//将消息放入队列
 	r.msgs = append(r.msgs, m)
 }
 
@@ -611,8 +591,8 @@ func (r *raft) appendEntry(es ...pb.Entry) (accepted bool) {
 // tickElection is run by followers and candidates after r.electionTimeout.
 func (r *raft) tickElection() {
 	r.electionElapsed++
-
-	if r.promotable() && r.pastElectionTimeout() { // 选举超时
+	// 自己可以被promote & election timeout 超时了，规定时间没有听到心跳发起选举；发送MsgHup
+	if r.roleUp() && r.pastElectionTimeout() { // 选举超时
 		r.electionElapsed = 0
 		r.Step(pb.Message{From: r.id, Type: pb.MsgHup}) // 让自己选举
 	}
@@ -719,33 +699,35 @@ func (r *raft) becomeLeader() {
 	r.logger.Infof("%x became leader at term %d", r.id, r.Term)
 }
 
+// 开启竞选
 func (r *raft) hup(t CampaignType) {
+	// 主要核对是否是合法的Follower
 	if r.state == StateLeader {
-		r.logger.Debugf("%x ignoring MsgHup because already leader", r.id)
+		r.logger.Debugf("%x忽略MsgHup消息,因为已经是leader了", r.id)
 		return
 	}
 
-	if !r.promotable() {
-		r.logger.Warningf("%x is unpromotable and can not campaign", r.id)
+	if !r.roleUp() {
+		r.logger.Warningf("%x角色不可以提升,不能参与竞选", r.id)
 		return
 	}
 	ents, err := r.raftLog.slice(r.raftLog.applied+1, r.raftLog.committed+1, noLimit)
 	if err != nil {
-		r.logger.Panicf("unexpected error getting unapplied entries (%v)", err)
+		r.logger.Panicf("获取没有apply日志时出现错误(%v)", err)
 	}
 	if n := numOfPendingConf(ents); n != 0 && r.raftLog.committed > r.raftLog.applied {
-		r.logger.Warningf("%x cannot campaign at term %d since there are still %d pending configuration changes to apply", r.id, r.Term, n)
+		r.logger.Warningf("%x不能参与竞选在任期 %d 因为还有 %d 应用配置要更改 ", r.id, r.Term, n)
 		return
 	}
-
-	r.logger.Infof("%x is starting a new election at term %d", r.id, r.Term)
+	// 核对完成，开始选举
+	r.logger.Infof("%x开启新的任期在任期%d", r.id, r.Term)
 	r.campaign(t)
 }
 
 // campaign transitions the raft instance to candidate state. This must only be
 // called after verifying that this is a legitimate transition.
 func (r *raft) campaign(t CampaignType) {
-	if !r.promotable() {
+	if !r.roleUp() {
 		// This path should not be hit (callers are supposed to check), but
 		// better safe than sorry.
 		r.logger.Warningf("%x is unpromotable; campaign() should have been called", r.id)
@@ -1431,6 +1413,7 @@ func (r *raft) handleAppendEntries(m pb.Message) {
 	// 在leader在发消息时,也会将消息写入本地日志文件中,不会等待follower确认
 	// 判断是否是过时的消息
 	if m.Index < r.raftLog.committed {
+		// 日志索引 小于本地已经commit的消息
 		r.send(pb.Message{To: m.From, Type: pb.MsgAppResp, Index: r.raftLog.committed})
 		return
 	}
@@ -1592,9 +1575,10 @@ func (r *raft) restore(s pb.Snapshot) bool {
 	return true
 }
 
-// promotable 状态机是否可以被提升为领导者。 当自己的id在进度列表中时为真。
-func (r *raft) promotable() bool {
+// roleUp 是否可以被提升为领导者.
+func (r *raft) roleUp() bool {
 	pr := r.prs.Progress[r.id] // 是本节点raft的身份
+	// 节点不是learner 且 没有正在应用快照
 	return pr != nil && !pr.IsLearner && !r.raftLog.hasPendingSnapshot()
 }
 

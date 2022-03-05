@@ -27,9 +27,8 @@ var ErrCompacted = errors.New("requested index is unavailable due to compaction"
 
 var ErrSnapOutOfDate = errors.New("请求的索引比现有快照的老")
 
-// ErrUnavailable is returned by Storage interface when the requested log entries
-// are unavailable.
-var ErrUnavailable = errors.New("requested entry at index is unavailable")
+// ErrUnavailable 当请求的日志条目不可用时，存储接口会返回。
+var ErrUnavailable = errors.New("索引中的请求条目不可用")
 
 // ErrSnapshotTemporarilyUnavailable is returned by the Storage interface when the required
 // snapshot is temporarily unavailable.
@@ -64,7 +63,7 @@ func NewMemoryStorage() *MemoryStorage {
 	}
 }
 
-// Entries implements the Storage interface.
+// Entries 获取一定范围内的日志项
 func (ms *MemoryStorage) Entries(lo, hi, maxSize uint64) ([]pb.Entry, error) {
 	ms.Lock()
 	defer ms.Unlock()
@@ -73,7 +72,7 @@ func (ms *MemoryStorage) Entries(lo, hi, maxSize uint64) ([]pb.Entry, error) {
 		return nil, ErrCompacted
 	}
 	if hi > ms.lastIndex()+1 {
-		getLogger().Panicf("entries' hi(%d) is out of bound lastindex(%d)", hi, ms.lastIndex())
+		getLogger().Panicf("日志 hi(%d)超出范围的最后一个索引(%d)", hi, ms.lastIndex())
 	}
 	// only contains dummy entries.
 	if len(ms.ents) == 1 {
