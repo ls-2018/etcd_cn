@@ -1220,7 +1220,7 @@ func TestStepIgnoreOldTermMsg(t *testing.T) {
 	sm.Term = 2
 	sm.Step(pb.Message{Type: pb.MsgApp, Term: sm.Term - 1})
 	if called {
-		t.Errorf("stepFunc called = %v , want %v", called, false)
+		t.Errorf("stepFunc called = %v,want %v", called, false)
 	}
 }
 
@@ -1655,16 +1655,16 @@ func TestAllServerStepdown(t *testing.T) {
 			sm.Step(pb.Message{From: 2, Type: msgType, Term: tterm, LogTerm: tterm})
 
 			if sm.state != tt.wstate {
-				t.Errorf("#%d.%d state = %v , want %v", i, j, sm.state, tt.wstate)
+				t.Errorf("#%d.%d state = %v,want %v", i, j, sm.state, tt.wstate)
 			}
 			if sm.Term != tt.wterm {
-				t.Errorf("#%d.%d term = %v , want %v", i, j, sm.Term, tt.wterm)
+				t.Errorf("#%d.%d term = %v,want %v", i, j, sm.Term, tt.wterm)
 			}
 			if sm.raftLog.lastIndex() != tt.windex {
-				t.Errorf("#%d.%d index = %v , want %v", i, j, sm.raftLog.lastIndex(), tt.windex)
+				t.Errorf("#%d.%d index = %v,want %v", i, j, sm.raftLog.lastIndex(), tt.windex)
 			}
 			if uint64(len(sm.raftLog.allEntries())) != tt.windex {
-				t.Errorf("#%d.%d len(ents) = %v , want %v", i, j, len(sm.raftLog.allEntries()), tt.windex)
+				t.Errorf("#%d.%d len(ents) = %v,want %v", i, j, len(sm.raftLog.allEntries()), tt.windex)
 			}
 			wlead := uint64(2)
 			if msgType == pb.MsgVote {

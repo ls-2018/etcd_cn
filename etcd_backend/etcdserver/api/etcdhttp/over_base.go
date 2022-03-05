@@ -33,7 +33,7 @@ const (
 	versionPath = "/version"
 )
 
-// HandleBasic 添加处理程序到一个mux服务JSON etcd客户端请求不访问v2存储。
+// HandleBasic 添加处理程序到一个mux服务JSON etcd客户端请求不访问v2存储.
 func HandleBasic(lg *zap.Logger, mux *http.ServeMux, server etcdserver.ServerPeer) {
 	mux.HandleFunc(varsPath, serveVars)
 	mux.HandleFunc(versionPath, versionHandler(server.Cluster(), serveVersion)) // {"etcdserver":"3.5.2","etcdcluster":"3.5.0"}

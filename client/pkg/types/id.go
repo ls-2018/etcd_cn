@@ -16,7 +16,7 @@ package types
 
 import "strconv"
 
-// ID 代表一个通用的标识符，通常存储为uint64，但在输入/输出时通常表示为base-16字符串。
+// ID 代表一个通用的标识符,通常存储为uint64,但在输入/输出时通常表示为base-16字符串.
 type ID uint64
 
 func (i ID) String() string {

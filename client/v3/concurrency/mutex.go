@@ -68,8 +68,8 @@ func (m *Mutex) TryLock(ctx context.Context) error {
 
 // Lock locks the mutex with a cancelable context. If the context is canceled
 // while trying to acquire the lock, the mutex tries to clean its stale lock entry.
-// Lock 使用可取消的context锁定互斥锁。如果context被取消
-// 在尝试获取锁时，互斥锁会尝试清除其过时的锁条目。
+// Lock 使用可取消的context锁定互斥锁.如果context被取消
+// 在尝试获取锁时,互斥锁会尝试清除其过时的锁条目.
 func (m *Mutex) Lock(ctx context.Context) error {
 	resp, err := m.tryAcquire(ctx)
 	if err != nil {
@@ -83,8 +83,8 @@ func (m *Mutex) Lock(ctx context.Context) error {
 	}
 	client := m.s.Client()
 	// wait for deletion revisions prior to myKey
-	// waitDeletes 有效地等待，直到所有键匹配前缀且不大于
-	// 创建的version。
+	// waitDeletes 有效地等待,直到所有键匹配前缀且不大于
+	// 创建的version.
 	// TODO: early termination if the session key is deleted before other session keys with smaller revisions.
 	_, werr := waitDeletes(ctx, client, m.pfx, m.myRev-1)
 	// release lock key if wait failed
@@ -115,7 +115,7 @@ func (m *Mutex) tryAcquire(ctx context.Context) (*v3.TxnResponse, error) {
 	m.myKey = fmt.Sprintf("%s%x", m.pfx, s.Lease())
 	// 比较Revision, 这里构建了一个比较表达式
 	// 具体的比较逻辑在下面的client.Txn用到
-	// 如果等于0，写入当前的key，并设置租约，
+	// 如果等于0,写入当前的key,并设置租约,
 	// 否则获取这个key,重用租约中的锁(这里主要目的是在于重入)
 	// 通过第二次获取锁,判断锁是否存在来支持重入
 	// 所以只要租约一致,那么是可以重入的.
@@ -126,7 +126,7 @@ func (m *Mutex) tryAcquire(ctx context.Context) (*v3.TxnResponse, error) {
 	get := v3.OpGet(m.myKey)
 	// 仅使用一个 RPC 获取当前持有者以完成无竞争路径
 	getOwner := v3.OpGet(m.pfx, v3.WithFirstCreate()...)
-	// 这里是比较的逻辑，如果等于0，写入当前的key，否则则读取这个key
+	// 这里是比较的逻辑,如果等于0,写入当前的key,否则则读取这个key
 	// 大佬的代码写的就是奇妙
 	resp, err := client.Txn(ctx).If(cmp).Then(put, getOwner).Else(get, getOwner).Commit()
 	if err != nil {

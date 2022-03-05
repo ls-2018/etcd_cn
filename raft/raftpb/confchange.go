@@ -46,7 +46,7 @@ func MarshalConfChange(c ConfChangeI) (EntryType, []byte, error) {
 	return typ, ccdata, err
 }
 
-// AsV2 返回一个执行相同操作的V2配置变更。
+// AsV2 返回一个执行相同操作的V2配置变更.
 func (c ConfChange) AsV2() ConfChangeV2 {
 	return ConfChangeV2{
 		Changes: []ConfChangeSingle{{

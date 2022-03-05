@@ -49,7 +49,7 @@ func NewCertPool(CAFiles []string) (*x509.CertPool, error) {
 	return certPool, nil
 }
 
-// NewCert 通过使用给定的cert、key和解析函数生成TLS证书。
+// NewCert 通过使用给定的cert、key和解析函数生成TLS证书.
 func NewCert(certfile, keyfile string, parseFunc func([]byte, []byte) (tls.Certificate, error)) (*tls.Certificate, error) {
 	cert, err := ioutil.ReadFile(certfile)
 	if err != nil {

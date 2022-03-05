@@ -21,20 +21,20 @@ import pb "github.com/ls-2018/etcd_cn/raft/raftpb"
 // position in storage; this means that the next write to storage
 // might need to truncate the log before persisting unstable.entries.
 type unstable struct {
-	// 看到这个变量时，应该意识到笔者前面说的日志只是Entry的集合，其实这是不全面的，应该还有
-	// Snapshot。快照不是本文重点，读者可以简单理解为使用者某一时刻的全量序列化后的二进制数即可。
-	// 笔者没有重点说明快照的原因是：是否理解快照本身对于理解raft影响不大，所以读者如果感兴趣可以
-	// 自行了解。
+	// 看到这个变量时,应该意识到笔者前面说的日志只是Entry的集合,其实这是不全面的,应该还有
+	// Snapshot.快照不是本文重点,读者可以简单理解为使用者某一时刻的全量序列化后的二进制数即可.
+	// 笔者没有重点说明快照的原因是：是否理解快照本身对于理解raft影响不大,所以读者如果感兴趣可以
+	// 自行了解.
 	snapshot *pb.Snapshot
 
-	// 日志数组，证实了笔者前面std::vector<Entry>的观点，应该不用多说了吧
+	// 日志数组,证实了笔者前面std::vector<Entry>的观点,应该不用多说了吧
 	entries []pb.Entry
-	// offset是第一个不可靠日志的索引，相信有读者肯定会提出疑问，直接用entries[0].Index不就
-	// 可以了么？需要注意的是，在系统在很多时刻entries是空的，比如刚启动，日志持久化完成等，所以
-	// 需要单独一个变量。当entries为空的时候，该值就是未来可能成为不可靠日志的第一个索引。这个变
-	// 量在索引entries的时候非常有帮助，比如entries[index - offset]就获取了索引为index的Entry
+	// offset是第一个不可靠日志的索引,相信有读者肯定会提出疑问,直接用entries[0].Index不就
+	// 可以了么？需要注意的是,在系统在很多时刻entries是空的,比如刚启动,日志持久化完成等,所以
+	// 需要单独一个变量.当entries为空的时候,该值就是未来可能成为不可靠日志的第一个索引.这个变
+	// 量在索引entries的时候非常有帮助,比如entries[index - offset]就获取了索引为index的Entry
 	offset uint64
-	// 打印运行日志用的，不多解释
+	// 打印运行日志用的,不多解释
 	logger Logger
 }
 

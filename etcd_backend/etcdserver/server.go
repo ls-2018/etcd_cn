@@ -210,7 +210,7 @@ type EtcdServer struct {
 	consistIndex cindex.ConsistentIndexer // consistIndex is used to get/set/save consistentIndex
 	r            raftNode                 // uses 64-bit atomics; keep 64-bit aligned.
 
-	readych chan struct{} // 当etcd 准备好服务请求后，会关闭ready ch
+	readych chan struct{} // 当etcd 准备好服务请求后,会关闭ready ch
 	Cfg     config.ServerConfig
 
 	lgMu *sync.RWMutex
@@ -324,7 +324,7 @@ func (bh *backendHooks) SetConfState(confState *raftpb.ConfState) {
 	bh.confStateDirty = true
 }
 
-// NewServer 根据提供的配置创建一个新的EtcdServer。在EtcdServer的生命周期内，该配置被认为是静态的。
+// NewServer 根据提供的配置创建一个新的EtcdServer.在EtcdServer的生命周期内,该配置被认为是静态的.
 func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 	st := v2store.New(StoreClusterPrefix, StoreKeysPrefix) // 创建了一个store结构体
 
@@ -381,7 +381,7 @@ func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 	ci.SetBackend(be)
 	cindex.CreateMetaBucket(be.BatchTx())
 
-	// 启动时，判断要不要进行碎片整理
+	// 启动时,判断要不要进行碎片整理
 	if cfg.ExperimentalBootstrapDefragThresholdMegabytes != 0 {
 		err := maybeDefragBackend(cfg, be)
 		if err != nil {
@@ -1485,7 +1485,7 @@ func (s *EtcdServer) Stop() {
 	s.HardStop()
 }
 
-// ReadyNotify  当etcd 准备好服务请求后，会关闭ready ch
+// ReadyNotify  当etcd 准备好服务请求后,会关闭ready ch
 func (s *EtcdServer) ReadyNotify() <-chan struct{} { return s.readych }
 
 func (s *EtcdServer) stopWithDelay(d time.Duration, err error) {

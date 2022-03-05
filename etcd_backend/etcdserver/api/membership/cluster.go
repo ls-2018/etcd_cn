@@ -50,7 +50,7 @@ type RaftCluster struct {
 	lg *zap.Logger
 
 	localID types.ID // 本机节点ID
-	cid     types.ID // 集群ID，根据所有初始 memberID hash 得到的
+	cid     types.ID // 集群ID,根据所有初始 memberID hash 得到的
 
 	v2store v2store.Store // 存储
 	be      backend.Backend
@@ -81,7 +81,7 @@ const (
 	ApplyV2storeOnly = ShouldApplyV3(false)
 )
 
-// NewClusterFromURLsMap 使用提供的url映射创建一个新的raft集群。目前，该算法不支持使用raft learner成员创建集群。
+// NewClusterFromURLsMap 使用提供的url映射创建一个新的raft集群.目前,该算法不支持使用raft learner成员创建集群.
 func NewClusterFromURLsMap(lg *zap.Logger, token string, urlsmap types.URLsMap) (*RaftCluster, error) {
 	c := NewCluster(lg) //  RaftCluster struct
 	for name, urls := range urlsmap {

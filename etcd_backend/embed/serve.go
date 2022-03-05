@@ -47,7 +47,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-//监听一个端口，提供服务， http, rpc
+//监听一个端口,提供服务, http, rpc
 type serveCtx struct {
 	lg       *zap.Logger
 	l        net.Listener // 单个监听本地网卡2379端口的listener
@@ -89,10 +89,10 @@ func newServeCtx(lg *zap.Logger) *serveCtx {
 func (sctx *serveCtx) serve(s *etcdserver.EtcdServer, tlsinfo *transport.TLSInfo, handler http.Handler, errHandler func(error),
 	gopts ...grpc.ServerOption) (err error) {
 	logger := defaultLog.New(ioutil.Discard, "etcdhttp", 0)
-	<-s.ReadyNotify() // 准备好了，该channel会被关闭
+	<-s.ReadyNotify() // 准备好了,该channel会被关闭
 
 	sctx.lg.Info("随时准备为客户的要求提供服务")
-	// 实例化 连接多路复用器。可以同时解析不同的协议,都跑在一个listener上
+	// 实例化 连接多路复用器.可以同时解析不同的协议,都跑在一个listener上
 	m := cmux.New(sctx.l)
 	v3c := v3client.New(s) // server的客户端,可以直接操作server
 	servElection := v3election.NewElectionServer(v3c)
@@ -135,7 +135,7 @@ func (sctx *serveCtx) serve(s *etcdserver.EtcdServer, tlsinfo *transport.TLSInfo
 		go func() { errHandler(srvhttp.Serve(httpl)) }()
 
 		sctx.serversC <- &servers{grpc: gs, http: srvhttp}
-		sctx.lg.Info("以不安全的方式为客户流量提供服务；这是被强烈反对的。", zap.String("address", sctx.l.Addr().String()))
+		sctx.lg.Info("以不安全的方式为客户流量提供服务；这是被强烈反对的.", zap.String("address", sctx.l.Addr().String()))
 	}
 
 	if sctx.secure {

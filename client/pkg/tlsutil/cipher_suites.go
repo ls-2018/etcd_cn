@@ -16,7 +16,7 @@ package tlsutil
 
 import "crypto/tls"
 
-// GetCipherSuite 返回相应的密码套件. 和布尔值（如果它被支持）.
+// GetCipherSuite 返回相应的密码套件. 和布尔值(如果它被支持).
 func GetCipherSuite(s string) (uint16, bool) {
 	for _, c := range tls.CipherSuites() {
 		if s == c.Name {

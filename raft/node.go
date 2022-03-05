@@ -35,7 +35,7 @@ var (
 	ErrStopped = errors.New("raft: stopped")
 )
 
-// SoftState 提供对日志和调试有用的状态。该状态是不稳定的，不需要持久化到WAL中。
+// SoftState 提供对日志和调试有用的状态.该状态是不稳定的,不需要持久化到WAL中.
 type SoftState struct {
 	Lead      uint64    // 当前leader
 	RaftState StateType // 节点状态
@@ -123,17 +123,17 @@ func (rd Ready) appliedCursor() uint64 {
 
 // Node represents a node in a raft cluster.
 type Node interface {
-	// Tick 触发一次心跳，raft会在触发后检查leader选举超时或发送心跳
+	// Tick 触发一次心跳,raft会在触发后检查leader选举超时或发送心跳
 	Tick()
-	// Campaign 触发节点将自己变成候选人，开始选举
+	// Campaign 触发节点将自己变成候选人,开始选举
 	Campaign(ctx context.Context) error
 	// Propose 提交日志条目
 	Propose(ctx context.Context, data []byte) error
 	// ProposeConfChange 集群配置变更
 	ProposeConfChange(ctx context.Context, cc pb.ConfChangeI) error
-	// Step 发送一条消息给状态机，触发状态变化
+	// Step 发送一条消息给状态机,触发状态变化
 	Step(ctx context.Context, msg pb.Message) error
-	// Ready 如果raft状态机有变化，会通过channel返回一个Ready的数据结构，里面包含变化信息，比如日志变化、心跳发送等。
+	// Ready 如果raft状态机有变化,会通过channel返回一个Ready的数据结构,里面包含变化信息,比如日志变化、心跳发送等.
 	// 调用方在处理完后需要调用Advance()方法告诉状态机上一个Ready处理完了
 	Ready() <-chan Ready
 	Advance()
@@ -158,10 +158,10 @@ type Peer struct {
 	Context []byte // 成员信息序列化后的数据
 }
 
-// StartNode  它为每个给定的peer在初始日志中添加一个ConfChangeAddNode条目。
+// StartNode  它为每个给定的peer在初始日志中添加一个ConfChangeAddNode条目.
 func StartNode(c *Config, peers []Peer) Node {
 	if len(peers) == 0 {
-		panic("没有给定peers；使用RestartNode代替。")
+		panic("没有给定peers；使用RestartNode代替.")
 	}
 	rn, err := NewRawNode(c) // ✅
 	if err != nil {
@@ -175,8 +175,8 @@ func StartNode(c *Config, peers []Peer) Node {
 	return &n
 }
 
-// RestartNode   集群的当前成员将从Storage中恢复。
-// 如果调用者有一个现有的状态机，请传入最后应用于它的日志索引；否则使用0。
+// RestartNode   集群的当前成员将从Storage中恢复.
+// 如果调用者有一个现有的状态机,请传入最后应用于它的日志索引；否则使用0.
 func RestartNode(c *Config) Node {
 	rn, err := NewRawNode(c)
 	if err != nil {
@@ -205,15 +205,15 @@ type node struct {
 	readyc chan Ready
 	// 用于实现Advance()接口
 	advancec chan struct{}
-	// 用于实现Tick()接口，这个需要注意一下，创建node时tickc是有缓冲的，设计者的解释是当node
-	// 忙的时候可能一个操作会超过tick的周期，这样会使得计时不准，有了缓冲就可以避免这个问题。
+	// 用于实现Tick()接口,这个需要注意一下,创建node时tickc是有缓冲的,设计者的解释是当node
+	// 忙的时候可能一个操作会超过tick的周期,这样会使得计时不准,有了缓冲就可以避免这个问题.
 	tickc chan struct{}
-	// 在处理中避免不了各种chan操作，此时如果Stop()被调用了，相应的阻塞就应该被激活，否则可能
-	// 面临死锁以后长时间退出后者永远无法退出。
+	// 在处理中避免不了各种chan操作,此时如果Stop()被调用了,相应的阻塞就应该被激活,否则可能
+	// 面临死锁以后长时间退出后者永远无法退出.
 	done chan struct{}
-	// 为Stop接口实现的，应该还好理解
+	// 为Stop接口实现的,应该还好理解
 	stop chan struct{}
-	// 一看就是为实现Status()用的，但是chan chan Status这个类型有点意思，后面分析实现函数
+	// 一看就是为实现Status()用的,但是chan chan Status这个类型有点意思,后面分析实现函数
 	// 看看如何实现的
 	status chan chan Status
 	// 用来写运行日志的
@@ -256,7 +256,7 @@ func (n *node) run() {
 	var rd Ready
 
 	r := n.rn.raft
-	// 初始状态不知道谁是leader，需要通过Ready获取
+	// 初始状态不知道谁是leader,需要通过Ready获取
 	lead := None
 	for {
 		if advancec != nil {
@@ -330,7 +330,7 @@ func (n *node) run() {
 			case n.confstatec <- cs:
 			case <-n.done:
 			}
-		case <-n.tickc: //超时时间到，包括心跳超时和选举超时等
+		case <-n.tickc: //超时时间到,包括心跳超时和选举超时等
 			//https://www.cnblogs.com/myd620/p/13189604.html
 			n.rn.Tick()
 		case readyc <- rd: //数据ready
@@ -504,7 +504,7 @@ func (n *node) ReadIndex(ctx context.Context, rctx []byte) error {
 func newReady(r *raft, prevSoftSt *SoftState, prevHardSt pb.HardState) Ready {
 	rd := Ready{
 		Entries:          r.raftLog.unstableEntries(), //unstable中的日志交给上层持久化
-		CommittedEntries: r.raftLog.nextEnts(),        //已经提交待应用的日志，交给上层应用
+		CommittedEntries: r.raftLog.nextEnts(),        //已经提交待应用的日志,交给上层应用
 		Messages:         r.msgs,                      //raft要发送的消息
 	}
 	if softSt := r.softState(); !softSt.equal(prevSoftSt) {

@@ -28,7 +28,7 @@ type ReadState struct {
 
 type readIndexStatus struct {
 	req   pb.Message //记录了对应的MsgReadIndex请求
-	index uint64     //该MsgReadIndex请求到达时，对应的已提交位置
+	index uint64     //该MsgReadIndex请求到达时,对应的已提交位置
 	// NB: this never records 'false', but it's more convenient to use this
 	// instead of a map[uint64]struct{} due to the API of quorum.VoteResult. If
 	// this becomes performance sensitive enough (doubtful), quorum.VoteResult
@@ -38,13 +38,13 @@ type readIndexStatus struct {
 }
 
 type readOnly struct {
-	option ReadOnlyOption //当前只读请求的处理模式，ReadOnlySafe ReadOnlyOpt 和	ReadOnlyLeaseBased两种模式
+	option ReadOnlyOption //当前只读请求的处理模式,ReadOnlySafe ReadOnlyOpt 和	ReadOnlyLeaseBased两种模式
 	/*
-		在etcd服务端收到MsgReadIndex消息时，会为其创建一个唯一的消息ID，并作为MsgReadIndex消息的第一条Entry记录。
+		在etcd服务端收到MsgReadIndex消息时,会为其创建一个唯一的消息ID,并作为MsgReadIndex消息的第一条Entry记录.
 		在pendingReadIndex维护了消息ID与对应请求readIndexStatus实例的映射
 	*/
 	pendingReadIndex map[string]*readIndexStatus
-	readIndexQueue   []string //记录了MsgReadIndex请求对应的消息ID，这样可以保证MsgReadIndex的顺序
+	readIndexQueue   []string //记录了MsgReadIndex请求对应的消息ID,这样可以保证MsgReadIndex的顺序
 }
 
 // OK
@@ -61,9 +61,9 @@ func newReadOnly(option ReadOnlyOption) *readOnly {
 // `m` is the original read only request message from the local or remote node.
 //将已提交的位置(raftLog.committed)以及MsgReadIndex消息的相关信息存到readOnly中
 /*
-1.获取消息ID，在ReadIndex消息的第一个记录中记录了消息ID
-2.判断该消息是否已经记录在pendingReadIndex中，如果已存在则直接返回
-3.如果不存在，则维护到pendingReadIndex中，index是当前Leader已提交的位置，m是请求的消息
+1.获取消息ID,在ReadIndex消息的第一个记录中记录了消息ID
+2.判断该消息是否已经记录在pendingReadIndex中,如果已存在则直接返回
+3.如果不存在,则维护到pendingReadIndex中,index是当前Leader已提交的位置,m是请求的消息
 4.并将消息ID追加到readIndexQueue队列中
 */
 func (ro *readOnly) addRequest(index uint64, m pb.Message) {
@@ -79,8 +79,8 @@ func (ro *readOnly) addRequest(index uint64, m pb.Message) {
 // an acknowledgment of the heartbeat that attached with the read only request
 // context.
 /*
-recvAck通知readonly结构，即raft状态机接受了对只读请求上下文附加的心跳的确认。
-1.消息的Context即消息ID，根据消息id获取对应的readIndexStatus
+recvAck通知readonly结构,即raft状态机接受了对只读请求上下文附加的心跳的确认.
+1.消息的Context即消息ID,根据消息id获取对应的readIndexStatus
 2.如果获取不到则返回0
 3.记录了该Follower节点返回的MsgHeartbeatResp响应的信息
 4.返回Follower响应的数量
@@ -99,9 +99,9 @@ func (ro *readOnly) recvAck(id uint64, context []byte) map[uint64]bool {
 // It dequeues the requests until it finds the read only request that has
 // the same context as the given `m`.
 /*
-1.遍历readIndexQueue队列，如果能找到该消息的Context，则返回该消息及之前的所有记录rss，
+1.遍历readIndexQueue队列,如果能找到该消息的Context,则返回该消息及之前的所有记录rss,
 	并删除readIndexQueue队列和pendingReadIndex中对应的记录
-2.如果没有Context对应的消息ID，则返回nil
+2.如果没有Context对应的消息ID,则返回nil
 */
 func (ro *readOnly) advance(m pb.Message) []*readIndexStatus {
 	var (

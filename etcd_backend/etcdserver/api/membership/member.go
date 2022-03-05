@@ -28,16 +28,16 @@ import (
 
 // RaftAttributes  与raft相关的etcd成员属性
 type RaftAttributes struct {
-	// PeerURLs是raft集群中的对等体列表。
+	// PeerURLs是raft集群中的对等体列表.
 	PeerURLs []string `json:"peerURLs"`
-	// IsLearner表示该成员是否是raft Learner。
+	// IsLearner表示该成员是否是raft Learner.
 	IsLearner bool `json:"isLearner,omitempty"`
 }
 
-// Attributes 代表一个etcd成员的所有非raft的相关属性。
+// Attributes 代表一个etcd成员的所有非raft的相关属性.
 type Attributes struct {
 	Name       string   `json:"name,omitempty"`       // 节点创建时设置的name   默认default
-	ClientURLs []string `json:"clientURLs,omitempty"` // 当接受到来自该Name的请求时，会
+	ClientURLs []string `json:"clientURLs,omitempty"` // 当接受到来自该Name的请求时,会
 }
 
 type Member struct {
@@ -46,13 +46,13 @@ type Member struct {
 	Attributes //
 }
 
-// NewMember 创建一个没有ID的成员，并根据集群名称、peer的URLS 和时间生成一个ID。这是用来引导/添加新成员的。
+// NewMember 创建一个没有ID的成员,并根据集群名称、peer的URLS 和时间生成一个ID.这是用来引导/添加新成员的.
 func NewMember(name string, peerURLs types.URLs, clusterName string, now *time.Time) *Member {
 	memberId := computeMemberId(peerURLs, clusterName, now)
 	return newMember(name, peerURLs, memberId, false)
 }
 
-// NewMemberAsLearner 创建一个没有ID的成员，并根据集群名称、peer的URLS 和时间生成一个ID。这是用来引导新learner成员的。
+// NewMemberAsLearner 创建一个没有ID的成员,并根据集群名称、peer的URLS 和时间生成一个ID.这是用来引导新learner成员的.
 func NewMemberAsLearner(name string, peerURLs types.URLs, clusterName string, now *time.Time) *Member {
 	memberId := computeMemberId(peerURLs, clusterName, now)
 	return newMember(name, peerURLs, memberId, true)

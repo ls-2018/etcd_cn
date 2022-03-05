@@ -39,7 +39,7 @@ func flockTryLockFile(path string, flag int, perm os.FileMode) (*LockedFile, err
 	return &LockedFile{f}, nil
 }
 
-// 获取文件锁，阻塞等待
+// 获取文件锁,阻塞等待
 func flockLockFile(path string, flag int, perm os.FileMode) (*LockedFile, error) {
 	f, err := os.OpenFile(path, flag, perm)
 	if err != nil {

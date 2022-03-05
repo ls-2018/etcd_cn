@@ -82,7 +82,7 @@ func verifyEnv(lg *zap.Logger, prefix string, usedEnvKey, alreadySet map[string]
 		if alreadySet[kv[0]] {
 			if lg != nil {
 				lg.Fatal(
-					"冲突的环境变量被相应的命令行标志所掩盖（取消环境变量或禁用标志）", zap.String("environment-variable", kv[0]),
+					"冲突的环境变量被相应的命令行标志所掩盖(取消环境变量或禁用标志)", zap.String("environment-variable", kv[0]),
 				)
 			}
 		}

@@ -82,7 +82,7 @@ type store struct {
 	readonlySet    types.Set // 只读路径
 }
 
-// New 创建一个存储空间，给定的命名空间将被创建为初始目录。
+// New 创建一个存储空间,给定的命名空间将被创建为初始目录.
 func New(namespaces ...string) Store {
 	s := newStore(namespaces...)
 	s.clock = clockwork.NewRealClock()
@@ -104,12 +104,12 @@ func newStore(namespaces ...string) *store {
 	return s
 }
 
-// Version 检索存储的当前版本。 <= CurrentIndex
+// Version 检索存储的当前版本. <= CurrentIndex
 func (s *store) Version() int {
 	return s.CurrentVersion
 }
 
-// Index 检索存储的当前索引。
+// Index 检索存储的当前索引.
 func (s *store) Index() uint64 {
 	s.worldLock.RLock()
 	defer s.worldLock.RUnlock()

@@ -67,7 +67,7 @@ func openSnapshotBackend(cfg config.ServerConfig, ss *snap.Snapshotter, snapshot
 	return openBackend(cfg, hooks), nil
 }
 
-// openBackend 返回一个使用当前etcd数据库的后端。
+// openBackend 返回一个使用当前etcd数据库的后端.
 func openBackend(cfg config.ServerConfig, hooks backend.Hooks) backend.Backend {
 	fn := cfg.BackendPath() // default.etcd/member/snap/db
 
@@ -83,7 +83,7 @@ func openBackend(cfg config.ServerConfig, hooks backend.Hooks) backend.Backend {
 
 	case <-time.After(10 * time.Second):
 		cfg.Logger.Info(
-			"db文件被另一个进程占用，或占用时间过长",
+			"db文件被另一个进程占用,或占用时间过长",
 			zap.String("path", fn),
 			zap.Duration("took", time.Since(now)),
 		)

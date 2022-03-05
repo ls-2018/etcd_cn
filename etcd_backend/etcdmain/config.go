@@ -64,7 +64,7 @@ var (
 )
 
 type configProxy struct {
-	ProxyFailureWaitMs     uint `json:"proxy-failure-wait"` // 在重新考虑代理请求之前.endpoints 将处于失败状态的时间（以毫秒为单位）.
+	ProxyFailureWaitMs     uint `json:"proxy-failure-wait"` // 在重新考虑代理请求之前.endpoints 将处于失败状态的时间(以毫秒为单位).
 	ProxyRefreshIntervalMs uint `json:"proxy-refresh-interval"`
 	ProxyDialTimeoutMs     uint `json:"proxy-dial-timeout"`
 	ProxyWriteTimeoutMs    uint `json:"proxy-write-timeout"`
@@ -142,23 +142,23 @@ func newConfig() *config {
 	fs.Var(flags.NewUniqueURLsWithExceptions(embed.DefaultListenPeerURLs, ""), "listen-peer-urls", "和成员之间通信的地址.用于监听其他etcd member的url")
 	fs.Var(flags.NewUniqueURLsWithExceptions(embed.DefaultListenClientURLs, ""), "listen-client-urls", "对外提供服务的地址")
 	fs.Var(flags.NewUniqueURLsWithExceptions("", ""), "listen-metrics-urls", "要监听指标和运行状况端点的url列表.")
-	fs.UintVar(&cfg.ec.MaxSnapFiles, "max-snapshots", cfg.ec.MaxSnapFiles, "要保留的最大快照文件数（0表示不受限制）.5")
-	fs.UintVar(&cfg.ec.MaxWalFiles, "max-wals", cfg.ec.MaxWalFiles, "要保留的最大wal文件数（0表示不受限制）. 5")
+	fs.UintVar(&cfg.ec.MaxSnapFiles, "max-snapshots", cfg.ec.MaxSnapFiles, "要保留的最大快照文件数(0表示不受限制).5")
+	fs.UintVar(&cfg.ec.MaxWalFiles, "max-wals", cfg.ec.MaxWalFiles, "要保留的最大wal文件数(0表示不受限制). 5")
 	fs.StringVar(&cfg.ec.Name, "name", cfg.ec.Name, "本节点.人类可读的名字")
-	// 作用：此配置值作为此节点在--initial-cluster标志中列出的条目（例如.default=http://localhost:2380）引用.若使用静态引导.则需要匹配标志中使用的密钥.使用发现时.每个成员必须具有唯一的名称.建议使用Hostname或者machine-id.
+	// 作用：此配置值作为此节点在--initial-cluster标志中列出的条目(例如.default=http://localhost:2380)引用.若使用静态引导.则需要匹配标志中使用的密钥.使用发现时.每个成员必须具有唯一的名称.建议使用Hostname或者machine-id.
 	fs.Uint64Var(&cfg.ec.SnapshotCount, "snapshot-count", cfg.ec.SnapshotCount, "// 触发一次磁盘快照的提交事务的次数.")
 	fs.UintVar(&cfg.ec.TickMs, "heartbeat-interval", cfg.ec.TickMs, "心跳间隔 100ms")
 	fs.UintVar(&cfg.ec.ElectionMs, "election-timeout", cfg.ec.ElectionMs, "选举超时")
-	fs.BoolVar(&cfg.ec.InitialElectionTickAdvance, "initial-election-tick-advance", cfg.ec.InitialElectionTickAdvance, "是否提前初始化选举时钟启动，以便更快的选举.")
-	fs.Int64Var(&cfg.ec.QuotaBackendBytes, "quota-backend-bytes", cfg.ec.QuotaBackendBytes, "当后端大小超过给定配额时（0默认为低空间配额）.引发警报.")
-	fs.StringVar(&cfg.ec.BackendFreelistType, "backend-bbolt-freelist-type", cfg.ec.BackendFreelistType, "BackendFreelistType指定boltdb后端使用的freelist的类型（array and map是支持的类型）. map ")
+	fs.BoolVar(&cfg.ec.InitialElectionTickAdvance, "initial-election-tick-advance", cfg.ec.InitialElectionTickAdvance, "是否提前初始化选举时钟启动,以便更快的选举.")
+	fs.Int64Var(&cfg.ec.QuotaBackendBytes, "quota-backend-bytes", cfg.ec.QuotaBackendBytes, "当后端大小超过给定配额时(0默认为低空间配额).引发警报.")
+	fs.StringVar(&cfg.ec.BackendFreelistType, "backend-bbolt-freelist-type", cfg.ec.BackendFreelistType, "BackendFreelistType指定boltdb后端使用的freelist的类型(array and map是支持的类型). map ")
 	fs.DurationVar(&cfg.ec.BackendBatchInterval, "backend-batch-interval", cfg.ec.BackendBatchInterval, "BackendBatchInterval是提交后端事务前的最长时间.")
 	fs.IntVar(&cfg.ec.BackendBatchLimit, "backend-batch-limit", cfg.ec.BackendBatchLimit, "BackendBatchLimit是提交后端事务前的最大操作数.")
 	fs.UintVar(&cfg.ec.MaxTxnOps, "max-txn-ops", cfg.ec.MaxTxnOps, "事务中允许的最大操作数.")
-	fs.UintVar(&cfg.ec.MaxRequestBytes, "max-request-bytes", cfg.ec.MaxRequestBytes, "服务器将接受的最大客户端请求大小（字节）.")
+	fs.UintVar(&cfg.ec.MaxRequestBytes, "max-request-bytes", cfg.ec.MaxRequestBytes, "服务器将接受的最大客户端请求大小(字节).")
 	fs.DurationVar(&cfg.ec.GRPCKeepAliveMinTime, "grpc-keepalive-min-time", cfg.ec.GRPCKeepAliveMinTime, "客户端在ping服务器之前应等待的最短持续时间间隔.")
-	fs.DurationVar(&cfg.ec.GRPCKeepAliveInterval, "grpc-keepalive-interval", cfg.ec.GRPCKeepAliveInterval, "服务器到客户端ping的频率持续时间.以检查连接是否处于活动状态（0表示禁用）.")
-	fs.DurationVar(&cfg.ec.GRPCKeepAliveTimeout, "grpc-keepalive-timeout", cfg.ec.GRPCKeepAliveTimeout, "关闭非响应连接之前的额外持续等待时间（0表示禁用）.20s")
+	fs.DurationVar(&cfg.ec.GRPCKeepAliveInterval, "grpc-keepalive-interval", cfg.ec.GRPCKeepAliveInterval, "服务器到客户端ping的频率持续时间.以检查连接是否处于活动状态(0表示禁用).")
+	fs.DurationVar(&cfg.ec.GRPCKeepAliveTimeout, "grpc-keepalive-timeout", cfg.ec.GRPCKeepAliveTimeout, "关闭非响应连接之前的额外持续等待时间(0表示禁用).20s")
 	fs.BoolVar(&cfg.ec.SocketOpts.ReusePort, "socket-reuse-port", cfg.ec.SocketOpts.ReusePort, "启用在listener上设置套接字选项SO_REUSEPORT.允许重新绑定一个已经在使用的端口.false")
 	fs.BoolVar(&cfg.ec.SocketOpts.ReuseAddress, "socket-reuse-address", cfg.ec.SocketOpts.ReuseAddress, "启用在listener上设置套接字选项SO_REUSEADDR 允许重新绑定一个已经在使用的端口 在`TIME_WAIT` 状态.")
 
@@ -169,14 +169,14 @@ func newConfig() *config {
 	// 集群
 	fs.Var(flags.NewUniqueURLsWithExceptions(embed.DefaultInitialAdvertisePeerURLs, ""), "initial-advertise-peer-urls", "集群成员的 URL地址.且会通告群集的其余成员节点.")
 	fs.Var(flags.NewUniqueURLsWithExceptions(embed.DefaultAdvertiseClientURLs, ""), "advertise-client-urls", "就是客户端(etcdctl/curl等)跟etcd服务进行交互时请求的url")
-	// 注意，不能写http://localhost:237，这样就是通知其他节点，可以用localhost访问，将导致ectd的客户端用localhost访问本地,导致访问不通.还有一个更可怕情况，ectd布置了代理层，代理层将一直通过locahost访问自己的代理接口，导致无限循环
+	// 注意,不能写http://localhost:237,这样就是通知其他节点,可以用localhost访问,将导致ectd的客户端用localhost访问本地,导致访问不通.还有一个更可怕情况,ectd布置了代理层,代理层将一直通过locahost访问自己的代理接口,导致无限循环
 	fs.StringVar(&cfg.ec.Durl, "discovery", cfg.ec.Durl, "用于引导群集的发现URL.")
-	fs.Var(cfg.cf.fallback, "discovery-fallback", fmt.Sprintf("发现服务失败时的预期行为（“退出”或“代理”）.“proxy”仅支持v2 API. %q", cfg.cf.fallback.Valids()))
+	fs.Var(cfg.cf.fallback, "discovery-fallback", fmt.Sprintf("发现服务失败时的预期行为(“退出”或“代理”).“proxy”仅支持v2 API. %q", cfg.cf.fallback.Valids()))
 
 	fs.StringVar(&cfg.ec.Dproxy, "discovery-proxy", cfg.ec.Dproxy, "用于流量到发现服务的HTTP代理.")
 	fs.StringVar(&cfg.ec.DNSCluster, "discovery-srv", cfg.ec.DNSCluster, "DNS srv域用于引导群集.")
 	fs.StringVar(&cfg.ec.DNSClusterServiceName, "discovery-srv-name", cfg.ec.DNSClusterServiceName, "使用DNS引导时查询的DNS srv名称的后缀.")
-	fs.StringVar(&cfg.ec.InitialCluster, "initial-cluster", cfg.ec.InitialCluster, "用于引导初始集群配置，集群中所有节点的信息..")
+	fs.StringVar(&cfg.ec.InitialCluster, "initial-cluster", cfg.ec.InitialCluster, "用于引导初始集群配置,集群中所有节点的信息..")
 	fs.StringVar(&cfg.ec.InitialClusterToken, "initial-cluster-token", cfg.ec.InitialClusterToken, "创建集群的 token.这个值每个集群保持唯一.")
 	fs.Var(cfg.cf.clusterState, "initial-cluster-state", "初始集群状态 ('new' or 'existing').")
 
@@ -189,11 +189,11 @@ func newConfig() *config {
 
 	// proxy
 	fs.Var(cfg.cf.proxy, "proxy", fmt.Sprintf("代理模式设置  %q", cfg.cf.proxy.Valids()))
-	fs.UintVar(&cfg.cp.ProxyFailureWaitMs, "proxy-failure-wait", cfg.cp.ProxyFailureWaitMs, "在重新考虑代理请求之前.endpoints 将处于失败状态的时间（以毫秒为单位）.")
-	fs.UintVar(&cfg.cp.ProxyRefreshIntervalMs, "proxy-refresh-interval", cfg.cp.ProxyRefreshIntervalMs, "endpoints 刷新间隔的时间（以毫秒为单位）.")
-	fs.UintVar(&cfg.cp.ProxyDialTimeoutMs, "proxy-dial-timeout", cfg.cp.ProxyDialTimeoutMs, "拨号超时的时间（以毫秒为单位）或0表示禁用超时")
-	fs.UintVar(&cfg.cp.ProxyWriteTimeoutMs, "proxy-write-timeout", cfg.cp.ProxyWriteTimeoutMs, "写入超时的时间（以毫秒为单位）或0以禁用超时.")
-	fs.UintVar(&cfg.cp.ProxyReadTimeoutMs, "proxy-read-timeout", cfg.cp.ProxyReadTimeoutMs, "读取超时的时间（以毫秒为单位）或0以禁用超时.")
+	fs.UintVar(&cfg.cp.ProxyFailureWaitMs, "proxy-failure-wait", cfg.cp.ProxyFailureWaitMs, "在重新考虑代理请求之前.endpoints 将处于失败状态的时间(以毫秒为单位).")
+	fs.UintVar(&cfg.cp.ProxyRefreshIntervalMs, "proxy-refresh-interval", cfg.cp.ProxyRefreshIntervalMs, "endpoints 刷新间隔的时间(以毫秒为单位).")
+	fs.UintVar(&cfg.cp.ProxyDialTimeoutMs, "proxy-dial-timeout", cfg.cp.ProxyDialTimeoutMs, "拨号超时的时间(以毫秒为单位)或0表示禁用超时")
+	fs.UintVar(&cfg.cp.ProxyWriteTimeoutMs, "proxy-write-timeout", cfg.cp.ProxyWriteTimeoutMs, "写入超时的时间(以毫秒为单位)或0以禁用超时.")
+	fs.UintVar(&cfg.cp.ProxyReadTimeoutMs, "proxy-read-timeout", cfg.cp.ProxyReadTimeoutMs, "读取超时的时间(以毫秒为单位)或0以禁用超时.")
 
 	// etcdctl通信的证书配置
 	fs.StringVar(&cfg.ec.ClientTLSInfo.CertFile, "cert-file", "", "客户端证书")
@@ -236,7 +236,7 @@ func newConfig() *config {
 	// 版本
 	fs.BoolVar(&cfg.printVersion, "version", false, "打印版本并退出.")
 	//--auto-compaction-mode=revision --auto-compaction-retention=1000 每5分钟自动压缩"latest revision" - 1000；
-	//--auto-compaction-mode=periodic --auto-compaction-retention=12h 每1小时自动压缩并保留12小时窗口。
+	//--auto-compaction-mode=periodic --auto-compaction-retention=12h 每1小时自动压缩并保留12小时窗口.
 	fs.StringVar(&cfg.ec.AutoCompactionRetention, "auto-compaction-retention", "0", "在一个小时内为mvcc键值存储的自动压缩.0表示禁用自动压缩.")
 	fs.StringVar(&cfg.ec.AutoCompactionMode, "auto-compaction-mode", "periodic", "基于时间保留的三种模式：periodic, revision")
 
@@ -271,7 +271,7 @@ func newConfig() *config {
 	fs.DurationVar(&cfg.ec.ExperimentalWatchProgressNotifyInterval, "experimental-watch-progress-notify-interval", cfg.ec.ExperimentalWatchProgressNotifyInterval, "Duration of periodic watch progress notifications.")
 	fs.DurationVar(&cfg.ec.ExperimentalDowngradeCheckTime, "experimental-downgrade-check-time", cfg.ec.ExperimentalDowngradeCheckTime, "两次降级状态检查之间的时间间隔.")
 	fs.DurationVar(&cfg.ec.ExperimentalWarningApplyDuration, "experimental-warning-apply-duration", cfg.ec.ExperimentalWarningApplyDuration, "时间长度.如果应用请求的时间超过这个值.就会产生一个警告.")
-	fs.BoolVar(&cfg.ec.ExperimentalMemoryMlock, "experimental-memory-mlock", cfg.ec.ExperimentalMemoryMlock, "启用强制执行etcd页面（特别是bbolt）留在RAM中.")
+	fs.BoolVar(&cfg.ec.ExperimentalMemoryMlock, "experimental-memory-mlock", cfg.ec.ExperimentalMemoryMlock, "启用强制执行etcd页面(特别是bbolt)留在RAM中.")
 	fs.BoolVar(&cfg.ec.ExperimentalTxnModeWriteWithSharedBuffer, "experimental-txn-mode-write-with-shared-buffer", true, "启用写事务在其只读检查操作中使用共享缓冲区.")
 	fs.UintVar(&cfg.ec.ExperimentalBootstrapDefragThresholdMegabytes, "experimental-bootstrap-defrag-threshold-megabytes", 0, "Enable the defrag during etcd etcd bootstrap on condition that it will free at least the provided threshold of disk space. Needs to be set to non-zero value to take effect.")
 

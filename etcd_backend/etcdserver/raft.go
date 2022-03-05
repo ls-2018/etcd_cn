@@ -171,7 +171,7 @@ func (r *raftNode) start(rh *raftReadyHandler) {
 			case <-r.ticker.C:
 				r.tick()
 			case rd := <-r.Ready():
-				//获取ready结构中的committedEntries，提交给Apply模块应用到后端存储中。
+				//获取ready结构中的committedEntries,提交给Apply模块应用到后端存储中.
 				if rd.SoftState != nil {
 					newLeader := rd.SoftState.Lead != raft.None && rh.getLead() != rd.SoftState.Lead
 					if newLeader {
@@ -307,7 +307,7 @@ func (r *raftNode) start(rh *raftReadyHandler) {
 					notifyc <- struct{}{}
 				}
 				//更新raft模块的applied index和将日志从unstable转到stable中
-				//这里需要注意的是，在将已提交日志条目应用到状态机的操作是异步完成的，在Apply完成后，会将结果写到客户端调用进来时注册的channel中。这样一次完整的写操作就完成了。
+				//这里需要注意的是,在将已提交日志条目应用到状态机的操作是异步完成的,在Apply完成后,会将结果写到客户端调用进来时注册的channel中.这样一次完整的写操作就完成了.
 				r.Advance()
 			case <-r.stopped:
 				return
@@ -455,7 +455,7 @@ func startNode(cfg config.ServerConfig, cl *membership.RaftCluster, ids []types.
 		MaxInflightMsgs: maxInflightMsgs,   // 512
 		CheckQuorum:     true,              // 检查是否是leader
 		// etcd_backend/embed/config.go:NewConfig 432
-		PreVote: cfg.PreVote, // true      // 是否启用PreVote扩展，建议开启
+		PreVote: cfg.PreVote, // true      // 是否启用PreVote扩展,建议开启
 		Logger:  NewRaftLoggerZap(cfg.Logger.Named("raft")),
 	}
 

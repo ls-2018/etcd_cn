@@ -31,7 +31,7 @@ import (
 	"github.com/ls-2018/etcd_cn/raft/tracker"
 )
 
-// None 是一个占位的节点ID，在没有领导者时使用。
+// None 是一个占位的节点ID,在没有领导者时使用.
 const None uint64 = 0
 const noLimit = math.MaxUint64
 
@@ -50,12 +50,12 @@ const (
 	ReadOnlySafe ReadOnlyOption = iota
 	ReadOnlyLeaseBased
 	//1、 ReadOnlySafe
-	//	该线性读模式，每次 Follower 进行读请求时，需要和 Leader 同步日志提交位点信息，而 Leader ，需要向过半的 Follower 发起证明自己是 Leader 的轻量的 RPC 请求，
-	//	相当于一个 Follower 读，至少需要 1 + （n/2）+ 1 次的 RPC 请求。
+	//	该线性读模式,每次 Follower 进行读请求时,需要和 Leader 同步日志提交位点信息,而 Leader ,需要向过半的 Follower 发起证明自己是 Leader 的轻量的 RPC 请求,
+	//	相当于一个 Follower 读,至少需要 1 +(n/2)+ 1 次的 RPC 请求.
 	//2、ReadOnlyLeaseBased
-	//该线性读模式，每次 Follower 进行读请求时， Leader 只需要判断自己的 Leader 租约是否过期了，如果没有过期，直接可以回复 Follower 自己是 Leader ，
-	// 但是该机制对于机器时钟要求很严格，如果有做时钟同步的话，可以考虑使用该线性读模式。
-	//如果说对于配置的发布、修改操作比较频繁，可以将 Raft 快照的时间适当的进行调整，避免新节点加入或者节点重启时，由于 Raft 日志回放操作数太多导致节点可开始对外服务的时间过长。
+	//该线性读模式,每次 Follower 进行读请求时, Leader 只需要判断自己的 Leader 租约是否过期了,如果没有过期,直接可以回复 Follower 自己是 Leader ,
+	// 但是该机制对于机器时钟要求很严格,如果有做时钟同步的话,可以考虑使用该线性读模式.
+	//如果说对于配置的发布、修改操作比较频繁,可以将 Raft 快照的时间适当的进行调整,避免新节点加入或者节点重启时,由于 Raft 日志回放操作数太多导致节点可开始对外服务的时间过长.
 
 )
 
@@ -114,7 +114,7 @@ func (st StateType) String() string {
 
 // Config 启动raft的配置参数
 type Config struct {
-	// ID 是本节点raft的身份。ID不能为0。
+	// ID 是本节点raft的身份.ID不能为0.
 	ID uint64
 
 	// ElectionTick 选举超时
@@ -127,7 +127,7 @@ type Config struct {
 	// Applied 提交到用户状态机的索引
 	Applied uint64 // 起始为0
 
-	// 每条消息的最大大小 ：math.MaxUint64表示无限制，0表示每条消息最多一个条目。
+	// 每条消息的最大大小 ：math.MaxUint64表示无限制,0表示每条消息最多一个条目.
 	MaxSizePerMsg uint64 // 1m
 	// MaxCommittedSizePerReady 限制  commited --> apply 之间的数量
 	MaxCommittedSizePerReady uint64 // MaxSizePerMsg 它们之前是同一个参数
@@ -175,7 +175,7 @@ func (c *Config) validate() error {
 		c.MaxUncommittedEntriesSize = noLimit
 	}
 
-	//  它们之前是同一个参数。
+	//  它们之前是同一个参数.
 	if c.MaxCommittedSizePerReady == 0 {
 		c.MaxCommittedSizePerReady = c.MaxSizePerMsg
 	}
@@ -189,7 +189,7 @@ func (c *Config) validate() error {
 	}
 	// 作为leader时的检查
 	if c.ReadOnlyOption == ReadOnlyLeaseBased && !c.CheckQuorum {
-		return errors.New("如果ReadOnlyOption 是 ReadOnlyLeaseBased 的时候必须开启CheckQuorum。")
+		return errors.New("如果ReadOnlyOption 是 ReadOnlyLeaseBased 的时候必须开启CheckQuorum.")
 	}
 
 	return nil
@@ -199,7 +199,7 @@ type raft struct {
 	id uint64 // 是本节点raft的身份
 
 	Term uint64 // 任期
-	Vote uint64 // 上一次投票的节点，Leader等于自己的id
+	Vote uint64 // 上一次投票的节点,Leader等于自己的id
 
 	readStates []ReadState
 
@@ -208,7 +208,7 @@ type raft struct {
 	maxMsgSize         uint64 // 每条消息的最大大小
 	maxUncommittedSize uint64 // 每条日志最大消息体
 
-	prs tracker.ProgressTracker // 跟踪Follower节点的状态，比如日志复制的matchIndex
+	prs tracker.ProgressTracker // 跟踪Follower节点的状态,比如日志复制的matchIndex
 
 	state StateType // 当前节点的状态
 
@@ -228,19 +228,19 @@ type raft struct {
 	// value.
 	pendingConfIndex uint64
 
-	uncommittedSize uint64 // 还未提交的日志条数，非准确值
+	uncommittedSize uint64 // 还未提交的日志条数,非准确值
 
 	readOnly *readOnly
 
 	checkQuorum bool // 检查需要维持的选票数,一旦小于,就会丢失leader
 	preVote     bool
 
-	// 选举过期计数(electionElapsed)：主要用于follower来判断leader是不是正常工作，
-	// 如果这个值递增到大于随机化选举超时计数(randomizedElectionTimeout)，follower就认为leader已挂，它自己会开始竞选leader。
+	// 选举过期计数(electionElapsed)：主要用于follower来判断leader是不是正常工作,
+	// 如果这个值递增到大于随机化选举超时计数(randomizedElectionTimeout),follower就认为leader已挂,它自己会开始竞选leader.
 	electionElapsed int
 
-	// 心跳过期计数(heartbeatElapsed)：用于leader判断是不是要开始发送心跳了。
-	// 只要这个值超过或等于心跳超时计数(heartbeatTimeout)，就会触发leader广播heartbeat信息。
+	// 心跳过期计数(heartbeatElapsed)：用于leader判断是不是要开始发送心跳了.
+	// 只要这个值超过或等于心跳超时计数(heartbeatTimeout),就会触发leader广播heartbeat信息.
 	heartbeatElapsed int
 
 	heartbeatTimeout int // 心跳间隔    ,上限     heartbeatTimeout是当前距离上次心跳的时间
@@ -392,7 +392,7 @@ func (r *raft) sendHeartbeat(to uint64, ctx []byte) {
 
 // bcastAppend 同步日志给Follower
 func (r *raft) bcastAppend() {
-	//遍历所有节点，给除自己外的节点发送日志Append消息
+	//遍历所有节点,给除自己外的节点发送日志Append消息
 	r.prs.Visit(func(id uint64, _ *tracker.Progress) {
 		if id == r.id {
 			return
@@ -406,8 +406,8 @@ func (r *raft) sendAppend(to uint64) {
 	r.maybeSendAppend(to, true)
 }
 
-// maybeSendAppend 向给定的peer发送一个带有新条目的追加RPC。如果有消息被发送，返回true。
-// sendIfEmpty参数控制是否发送没有条目的消息（"空 "消息对于传达更新的Commit索引很有用，但当我们批量发送多条消息时就不可取）。
+// maybeSendAppend 向给定的peer发送一个带有新条目的追加RPC.如果有消息被发送,返回true.
+// sendIfEmpty参数控制是否发送没有条目的消息("空 "消息对于传达更新的Commit索引很有用,但当我们批量发送多条消息时就不可取).
 func (r *raft) maybeSendAppend(to uint64, sendIfEmpty bool) bool {
 	//1. 获取对端节点当前同步进度
 	pr := r.prs.Progress[to]
@@ -424,9 +424,9 @@ func (r *raft) maybeSendAppend(to uint64, sendIfEmpty bool) bool {
 	}
 
 	if errt != nil || erre != nil { // send snapshot if we failed to get term or entries
-		//3. 如果获取term或日志失败，说明follower落后太多，raftLog内存中日志已经做过快照后被删除了
-		// 根据日志进度去取日志条目的时候发现，follower日志落后太多，这通常出现在新节点刚加入或者网络连接出现故障的情况下。
-		// 那么在这种情况下，leader改为发送最近一次快照给Follower，从而提高同步效率
+		//3. 如果获取term或日志失败,说明follower落后太多,raftLog内存中日志已经做过快照后被删除了
+		// 根据日志进度去取日志条目的时候发现,follower日志落后太多,这通常出现在新节点刚加入或者网络连接出现故障的情况下.
+		// 那么在这种情况下,leader改为发送最近一次快照给Follower,从而提高同步效率
 
 		if !pr.RecentActive {
 			r.logger.Debugf("ignore sending snapshot to %x since it is not recently active", to)
@@ -584,8 +584,8 @@ func (r *raft) appendEntry(es ...pb.Entry) (accepted bool) {
 		es[i].Term = r.Term
 		es[i].Index = li + 1 + uint64(i)
 	}
-	// 3. 判断未提交的日志条目是不是超过限制，是的话拒绝并返回失败
-	// etcd限制了leader上最多有多少未提交的条目，防止因为leader和follower之间出现网络问题时，导致条目一直累积。
+	// 3. 判断未提交的日志条目是不是超过限制,是的话拒绝并返回失败
+	// etcd限制了leader上最多有多少未提交的条目,防止因为leader和follower之间出现网络问题时,导致条目一直累积.
 	if !r.increaseUncommittedSize(es) {
 		r.logger.Debugf(
 			"%x appending new entries to log would exceed uncommitted entry size limit; dropping proposal",
@@ -595,10 +595,10 @@ func (r *raft) appendEntry(es ...pb.Entry) (accepted bool) {
 		return false
 	}
 	// 4. 将日志条目追加到raftLog中
-	//将日志条目追加到raftLog内存队列中，并且返回最大一条日志的index，对于leader追加日志的情况，这里返回的li肯定等于方法第1行中获取的li
+	//将日志条目追加到raftLog内存队列中,并且返回最大一条日志的index,对于leader追加日志的情况,这里返回的li肯定等于方法第1行中获取的li
 	li = r.raftLog.append(es...)
 	// 5. 检查并更新日志进度
-	//raft的leader节点保存了所有节点的日志同步进度，这里面也包括它自己
+	//raft的leader节点保存了所有节点的日志同步进度,这里面也包括它自己
 	r.prs.Progress[r.id].MaybeUpdate(li)
 	// 6. 判断是否做一次commit
 	r.maybeCommit()
@@ -615,13 +615,13 @@ func (r *raft) tickElection() {
 	}
 }
 
-// tickHeartbeat leader执行，在r.heartbeatTimeout之后发送一个MsgBeat。
+// tickHeartbeat leader执行,在r.heartbeatTimeout之后发送一个MsgBeat.
 func (r *raft) tickHeartbeat() {
 	r.heartbeatElapsed++
 	r.electionElapsed++
 	if r.electionElapsed >= r.electionTimeout { // 如果选举计时超时
 		r.electionElapsed = 0 // 重置计时器
-		if r.checkQuorum {    // 给自己发送一条 MsgCheckQuorum 消息，检测是否出现网络隔离
+		if r.checkQuorum {    // 给自己发送一条 MsgCheckQuorum 消息,检测是否出现网络隔离
 			r.Step(pb.Message{From: r.id, Type: pb.MsgCheckQuorum})
 		}
 		// 判断leader是否转移; leadTransferee 为Node ,不转移
@@ -640,7 +640,7 @@ func (r *raft) tickHeartbeat() {
 	}
 }
 
-// 变成Follower       当前任期，当前leader
+// 变成Follower       当前任期,当前leader
 func (r *raft) becomeFollower(term uint64, lead uint64) {
 	r.step = stepFollower
 	r.reset(term)
@@ -960,7 +960,7 @@ func stepLeader(r *raft, m pb.Message) error {
 			pr.RecentActive = true
 		}
 		if !r.prs.QuorumActive() {
-			// 如果当前 leader 发现其不满足 quorum 的条件，则说明该 leader 有可能处于隔离状态，step down
+			// 如果当前 leader 发现其不满足 quorum 的条件,则说明该 leader 有可能处于隔离状态,step down
 			r.logger.Warningf("%x stepped down to follower since quorum is not active", r.id)
 			r.becomeFollower(r.Term, None)
 		}
@@ -981,12 +981,12 @@ func stepLeader(r *raft, m pb.Message) error {
 			return ErrProposalDropped
 		}
 		if r.leadTransferee != None {
-			// 如果正在进行leader切换，拒绝写入
-			r.logger.Debugf("%x [term %d]  // 如果正在进行leader切换，拒绝写入 %x  ", r.id, r.Term, r.leadTransferee)
+			// 如果正在进行leader切换,拒绝写入
+			r.logger.Debugf("%x [term %d]  // 如果正在进行leader切换,拒绝写入 %x  ", r.id, r.Term, r.leadTransferee)
 			return ErrProposalDropped
 		}
 
-		for i := range m.Entries { //判断是否有配置变更的日志，有的话做一些特殊处理
+		for i := range m.Entries { //判断是否有配置变更的日志,有的话做一些特殊处理
 			e := &m.Entries[i]
 			var cc pb.ConfChangeI
 			if e.Type == pb.EntryConfChange {
@@ -1060,11 +1060,11 @@ func stepLeader(r *raft, m pb.Message) error {
 	}
 	switch m.Type {
 	case pb.MsgAppResp:
-		// Leader节点在向Follower广播日志后，就一直在等待follower的MsgAppResp消息，收到后还是会进到stepLeader函数。
+		// Leader节点在向Follower广播日志后,就一直在等待follower的MsgAppResp消息,收到后还是会进到stepLeader函数.
 		pr.RecentActive = true
 
 		if m.Reject {
-			//如果收到的是reject消息，则根据follower反馈的index重新发送日志
+			//如果收到的是reject消息,则根据follower反馈的index重新发送日志
 			r.logger.Debugf("%x 收到 MsgAppResp(rejected, hint: (index %d, term %d)) from %x for index %d",
 				r.id, m.RejectHint, m.LogTerm, m.From, m.Index)
 			nextProbeIdx := m.RejectHint
@@ -1194,7 +1194,7 @@ func stepLeader(r *raft, m pb.Message) error {
 				case pr.State == tracker.StateReplicate:
 					pr.Inflights.FreeLE(m.Index)
 				}
-				//如果进度有更新，判断并更新commitIndex
+				//如果进度有更新,判断并更新commitIndex
 				if r.maybeCommit() {
 					// committed index has progressed for the term, so it is safe
 					// to respond to pending read index requests
@@ -1311,8 +1311,8 @@ func stepLeader(r *raft, m pb.Message) error {
 	return nil
 }
 
-// stepCandidate is shared by StateCandidate and StatePreCandidate; the difference is
-// whether they respond to MsgVoteResp or MsgPreVoteResp.
+// stepCandidate 两个阶段都会调用 StateCandidate and StatePreCandidate;
+// 区别在于对投票请求的处理
 func stepCandidate(r *raft, m pb.Message) error {
 	// Only handle vote responses corresponding to our candidacy (while in
 	// StateCandidate, we may get stale MsgPreVoteResp messages in this term from
@@ -1347,10 +1347,10 @@ func stepCandidate(r *raft, m pb.Message) error {
 				r.becomeLeader() // 变成 leader
 				r.bcastAppend()  // 发送 AppendEntries RPC
 			}
-		case quorum.VoteLost: // 集票失败，转为 follower
+		case quorum.VoteLost: // 集票失败,转为 follower
 			// pb.MsgPreVoteResp contains future term of pre-candidate
 			// m.Term > r.Term; reuse r.Term
-			r.becomeFollower(r.Term, None) // 注意，此时任期没有改变
+			r.becomeFollower(r.Term, None) // 注意,此时任期没有改变
 		}
 	case pb.MsgTimeoutNow:
 		r.logger.Debugf("%x [term %d state %v] ignored MsgTimeoutNow from %x", r.id, r.Term, r.state, m.From)
@@ -1358,6 +1358,7 @@ func stepCandidate(r *raft, m pb.Message) error {
 	return nil
 }
 
+// follower 的功能
 func stepFollower(r *raft, m pb.Message) error {
 	switch m.Type {
 	case pb.MsgProp:
@@ -1371,9 +1372,9 @@ func stepFollower(r *raft, m pb.Message) error {
 		m.To = r.lead
 		r.send(m)
 	case pb.MsgApp:
-		// Leader节点处理完命令后，发送日志和持久化操作都是异步进行的，但是这不代表leader已经收到回复。
-		// Raft协议要求在返回leader成功的时候，日志一定已经提交了，所以Leader需要等待超过半数的Follower节点处理完日志并反馈，下面先看一下Follower的日志处理。
-		// 日志消息到达Follower后，也是由EtcdServer.Process()方法来处理，最终会进到Raft模块的stepFollower()函数中。
+		// Leader节点处理完命令后,发送日志和持久化操作都是异步进行的,但是这不代表leader已经收到回复.
+		// Raft协议要求在返回leader成功的时候,日志一定已经提交了,所以Leader需要等待超过半数的Follower节点处理完日志并反馈,下面先看一下Follower的日志处理.
+		// 日志消息到达Follower后,也是由EtcdServer.Process()方法来处理,最终会进到Raft模块的stepFollower()函数中.
 
 		// 重置心跳计数
 		r.electionElapsed = 0
@@ -1421,23 +1422,35 @@ func stepFollower(r *raft, m pb.Message) error {
 
 // 处理追加日志
 func (r *raft) handleAppendEntries(m pb.Message) {
+	// 在leader在发消息时,也会将消息写入本地日志文件中,不会等待follower确认
 	// 判断是否是过时的消息
 	if m.Index < r.raftLog.committed {
 		r.send(pb.Message{To: m.From, Type: pb.MsgAppResp, Index: r.raftLog.committed})
 		return
 	}
+	//进行一致性检查,即搜索自己的日志文件中是否存在这样的日志条目,如果不存在,就向Leader
+	//返回AppendEntriesRPC 失败.如果返回失败信息,就意味着Follower 发
+	//现自己的日志与领导人的不一致.在失败之后,领导人会将nextlndex 递减( nextlndex －－),
+	//然后重试AppendEntriesRPC,直到AppendEntriesRPC
+	//返回成功为止.这才表明在nextlndex 位置的日志条目中领导人与追随者的保持一致.
+	//	【当然第一次拒绝时,可以直接将差值返回,nextlndex －－x;省略n次调用】
+
+	//当找到对应的槽位后随后, Leader 就从nextlndex号位置开始把余下的所有日志条目一次性推送给b
 
 	if mlastIndex, ok := r.raftLog.maybeAppend(m.Index, m.LogTerm, m.Commit, m.Entries...); ok {
-		// 处理成功，发送MsgAppResp给Leader
+		// 处理成功,发送MsgAppResp给Leader
 		r.send(pb.Message{To: m.From, Type: pb.MsgAppResp, Index: mlastIndex})
 	} else {
-		// 日志的index和Follower的lastIndex不匹配，返回reject消息; 出现原因
+		// 日志的index和Follower的lastIndex不匹配,返回reject消息; 出现原因
 
-		//  一种是日志条目中带的term和follower的term不一致，
-		//  一种是日志列表中最小的index大于follower的最大的日志index。
-		// 上面的maybeAppend() 方法只会将日志存储到RaftLog维护的内存队列中，
-		// 日志的持久化是异步进行的，这个和Leader节点的存储WAL逻辑基本相同。
-		// 有一点区别就是follower节点正式发送MsgAppResp消息会在wal保存成功后，而leader节点是先发送消息，后保存的wal。
+		//  一种是日志条目中带的term和follower的term不一致,
+		//  一种是日志列表中最小的index大于follower的最大的日志index.
+		// 上面的maybeAppend() 方法只会将日志存储到RaftLog维护的内存队列中,
+		// 日志的持久化是异步进行的,这个和Leader节点的存储WAL逻辑基本相同.
+		// 有一点区别就是follower节点正式发送MsgAppResp消息会在wal保存成功后,而leader节点是先发送消息,后保存的wal.
+
+		// extern 当flower多一些无用数据时, Leader是如何精准地找到每个Follower 与其日志条目不一致的那个槽位的呢
+		// Follower 将之后的删除,重新同步leader之后的数据
 
 		r.logger.Debugf("%x [logterm: %d, index: %d] rejected MsgApp [logterm: %d, index: %d] from %x",
 			r.id, r.raftLog.zeroTermOnErrCompacted(r.raftLog.term(m.Index)), m.Index, m.LogTerm, m.Index, m.From)
@@ -1601,8 +1614,8 @@ func (r *raft) applyConfChange(cc pb.ConfChangeV2) pb.ConfState {
 	return r.switchToConfig(cfg, prs)
 }
 
-// switchToConfig 重新配置这个节点以使用所提供的配置。它更新内存中的状态，并在必要时进行额外的操作，
-// 如对删除节点或改变的法定人数作出反应。要求。输入通常来自于恢复一个ConfState或应用一个ConfChange。
+// switchToConfig 重新配置这个节点以使用所提供的配置.它更新内存中的状态,并在必要时进行额外的操作,
+// 如对删除节点或改变的法定人数作出反应.要求.输入通常来自于恢复一个ConfState或应用一个ConfChange.
 func (r *raft) switchToConfig(cfg tracker.Config, prs tracker.ProgressMap) pb.ConfState {
 	r.prs.Config = cfg
 	r.prs.Progress = prs
@@ -1785,12 +1798,12 @@ func sendMsgReadIndexResponse(r *raft, m pb.Message) {
 	// We can express this in terms of the term and index instead of a user-supplied value.
 	// This would allow multiple reads to piggyback on the same message.
 	/*
-		Leader节点检测自身在当前任期中是否已提交Entry记录，如果没有，则无法进行读取操作
+		Leader节点检测自身在当前任期中是否已提交Entry记录,如果没有,则无法进行读取操作
 	*/
 	switch r.readOnly.option {
 	// If more than the local vote is needed, go through a full broadcast.
 	case ReadOnlySafe:
-		//记录当前节点的raftLog.committed字段值，即已提交位置
+		//记录当前节点的raftLog.committed字段值,即已提交位置
 		r.readOnly.addRequest(r.raftLog.committed, m)
 		// The local node automatically acks the request.
 		r.readOnly.recvAck(r.id, m.Entries[0].Data)

@@ -669,7 +669,7 @@ func (s *EtcdServer) processInternalRaftRequestOnce(ctx context.Context, r pb.In
 	if id == 0 {
 		id = r.Header.ID
 	}
-	ch := s.w.Register(id) //注册一个channel，等待处理完成
+	ch := s.w.Register(id) //注册一个channel,等待处理完成
 
 	cctx, cancel := context.WithTimeout(ctx, s.Cfg.ReqTimeout()) //设置请求超时
 	defer cancel()

@@ -140,7 +140,7 @@ type Config struct {
 	SnapshotCatchUpEntries uint64
 
 	MaxSnapFiles uint `json:"max-snapshots"` // 最大快照数
-	MaxWalFiles  uint `json:"max-wals"`      // 要保留的最大wal文件数（0表示不受限制）. 5
+	MaxWalFiles  uint `json:"max-wals"`      // 要保留的最大wal文件数(0表示不受限制). 5
 
 	// TickMs is the number of milliseconds between heartbeat ticks.
 	// TODO: decouple tickMs and heartbeat tick (current heartbeat tick = 1).
@@ -176,17 +176,17 @@ type Config struct {
 	//
 	// See https://github.com/etcd-io/etcd/issues/9333 for more detail.
 	// todo 是否在开机时快进初始选举点.以加快选举速度.
-	InitialElectionTickAdvance bool `json:"initial-election-tick-advance"` // 是否提前初始化选举时钟启动，以便更快的选举
+	InitialElectionTickAdvance bool `json:"initial-election-tick-advance"` // 是否提前初始化选举时钟启动,以便更快的选举
 
 	// BackendBatchInterval BackendBatchInterval是提交后端事务前的最长时间.
 	BackendBatchInterval time.Duration `json:"backend-batch-interval"`
 	// BackendBatchLimit BackendBatchLimit是提交后端事务前的最大操作数.
 	BackendBatchLimit int `json:"backend-batch-limit"`
 
-	BackendFreelistType string `json:"backend-bbolt-freelist-type"` // BackendFreelistType指定boltdb后端使用的freelist的类型（array and map是支持的类型）.
-	QuotaBackendBytes   int64  `json:"quota-backend-bytes"`         //当后端大小超过给定配额时（0默认为低空间配额）.引发警报.
+	BackendFreelistType string `json:"backend-bbolt-freelist-type"` // BackendFreelistType指定boltdb后端使用的freelist的类型(array and map是支持的类型).
+	QuotaBackendBytes   int64  `json:"quota-backend-bytes"`         //当后端大小超过给定配额时(0默认为低空间配额).引发警报.
 	MaxTxnOps           uint   `json:"max-txn-ops"`                 //事务中允许的最大操作数.
-	MaxRequestBytes     uint   `json:"max-request-bytes"`           //服务器将接受的最大客户端请求大小（字节）.
+	MaxRequestBytes     uint   `json:"max-request-bytes"`           //服务器将接受的最大客户端请求大小(字节).
 
 	LPUrls []url.URL // 和etcd  server 成员之间通信的地址.用于监听其他etcd member的url
 	LCUrls []url.URL // 这个参数是etcd服务器自己监听时用的,也就是说,监听本机上的哪个网卡,哪个端口
@@ -220,16 +220,16 @@ type Config struct {
 	AutoCompactionMode string `json:"auto-compaction-mode"`
 
 	//--auto-compaction-mode=revision --auto-compaction-retention=1000 每5分钟自动压缩"latest revision" - 1000；
-	//--auto-compaction-mode=periodic --auto-compaction-retention=12h 每1小时自动压缩并保留12小时窗口。
+	//--auto-compaction-mode=periodic --auto-compaction-retention=12h 每1小时自动压缩并保留12小时窗口.
 
 	AutoCompactionRetention string `json:"auto-compaction-retention"`
 
 	// GRPCKeepAliveMinTime  客户端在ping服务器之前应等待的最短持续时间间隔.
 	GRPCKeepAliveMinTime time.Duration `json:"grpc-keepalive-min-time"`
 
-	// GRPCKeepAliveInterval 服务器到客户端ping的频率持续时间.以检查连接是否处于活动状态（0表示禁用）.
+	// GRPCKeepAliveInterval 服务器到客户端ping的频率持续时间.以检查连接是否处于活动状态(0表示禁用).
 	GRPCKeepAliveInterval time.Duration `json:"grpc-keepalive-interval"`
-	// GRPCKeepAliveTimeout 关闭非响应连接之前的额外持续等待时间（0表示禁用）.20s
+	// GRPCKeepAliveTimeout 关闭非响应连接之前的额外持续等待时间(0表示禁用).20s
 	GRPCKeepAliveTimeout time.Duration `json:"grpc-keepalive-timeout"`
 
 	// SocketOpts are socket options passed to listener config.
@@ -241,12 +241,12 @@ type Config struct {
 	CORS map[string]struct{}
 
 	//列出可接受的来自HTTP客户端请求的主机名.客户端来源策略可以防止对不安全的etcd服务器的 "DNS重定向 "攻击.
-	//也就是说.任何网站可以简单地创建一个授权的DNS名称.并将DNS指向 "localhost"（或任何其他地址）.
+	//也就是说.任何网站可以简单地创建一个授权的DNS名称.并将DNS指向 "localhost"(或任何其他地址).
 	//然后.所有监听 "localhost "的etcd的HTTP端点都变得可以访问.从而容易受到DNS重定向攻击.
 	HostWhitelist map[string]struct{}
 
-	// UserHandlers 是用来注册用户处理程序的，只用于将etcd嵌入到其他应用程序中。
-	// map key 是处理程序的路径，你必须确保它不能与etcd的路径冲突。
+	// UserHandlers 是用来注册用户处理程序的,只用于将etcd嵌入到其他应用程序中.
+	// map key 是处理程序的路径,你必须确保它不能与etcd的路径冲突.
 	UserHandlers map[string]http.Handler `json:"-"`
 	// ServiceRegister is for registering users' gRPC services. A simple usage example:
 	//	cfg := embed.NewConfig()
@@ -292,7 +292,7 @@ type Config struct {
 	ListenMetricsUrls     []url.URL
 	ListenMetricsUrlsJSON string `json:"listen-metrics-urls"`
 
-	// ExperimentalEnableDistributedTracing 表示是否启用了使用OpenTelemetry的实验性追踪。
+	// ExperimentalEnableDistributedTracing 表示是否启用了使用OpenTelemetry的实验性追踪.
 	ExperimentalEnableDistributedTracing bool `json:"experimental-enable-distributed-tracing"`
 	// ExperimentalDistributedTracingAddress is the address of the OpenTelemetry Collector.
 	// Can only be set if ExperimentalEnableDistributedTracing is true.
@@ -332,7 +332,7 @@ type Config struct {
 	// EnableGRPCGateway 启用grpc网关,将 http 转换成 grpc / true
 	EnableGRPCGateway bool `json:"enable-grpc-gateway"`
 
-	// UnsafeNoFsync 禁用所有fsync的使用。设置这个是不安全的，会导致数据丢失。
+	// UnsafeNoFsync 禁用所有fsync的使用.设置这个是不安全的,会导致数据丢失.
 	UnsafeNoFsync bool `json:"unsafe-no-fsync"` // 默认false
 	// 两次降级状态检查之间的时间间隔.
 	ExperimentalDowngradeCheckTime time.Duration `json:"experimental-downgrade-check-time"`
@@ -400,8 +400,8 @@ func NewConfig() *Config {
 		ExperimentalWarningApplyDuration: DefaultWarningApplyDuration, // 是时间长度.如果应用请求的时间超过这个值.就会产生一个警告. 100ms
 
 		GRPCKeepAliveMinTime:  DefaultGRPCKeepAliveMinTime,  // 客户端在ping服务器之前应等待的最短持续时间间隔. 5s
-		GRPCKeepAliveInterval: DefaultGRPCKeepAliveInterval, // 服务器到客户端ping的探活周期.以检查连接是否处于活动状态（0表示禁用）.2h
-		GRPCKeepAliveTimeout:  DefaultGRPCKeepAliveTimeout,  // 关闭非响应连接之前的额外持续等待时间（0表示禁用）.20s
+		GRPCKeepAliveInterval: DefaultGRPCKeepAliveInterval, // 服务器到客户端ping的探活周期.以检查连接是否处于活动状态(0表示禁用).2h
+		GRPCKeepAliveTimeout:  DefaultGRPCKeepAliveTimeout,  // 关闭非响应连接之前的额外持续等待时间(0表示禁用).20s
 
 		SocketOpts: transport.SocketOpts{}, // 套接字配置
 
@@ -646,14 +646,14 @@ func (cfg *Config) Validate() error {
 	return fmt.Errorf("  experimental-enable-lease-checkpoint-persist   experimental-enable-lease-checkpoint 需要同时开启")
 }
 
-// PeerURLsMapAndToken 设置一个初始的peer URLsMap 和token，用于启动或发现。
+// PeerURLsMapAndToken 设置一个初始的peer URLsMap 和token,用于启动或发现.
 func (cfg *Config) PeerURLsMapAndToken(which string) (urlsmap types.URLsMap, token string, err error) {
 	token = cfg.InitialClusterToken
 	switch {
 	// todo 以下手动注释掉,一般不会使用以下的
 	//case cfg.Durl != "": // 用于引导群集的发现URL
 	//	urlsmap = types.URLsMap{}
-	//	// 如果使用discovery，根据advertised peer URLs 生成一个临时的集群
+	//	// 如果使用discovery,根据advertised peer URLs 生成一个临时的集群
 	//	urlsmap[cfg.Name] = cfg.APUrls
 	//	token = cfg.Durl
 	//
@@ -683,14 +683,14 @@ func (cfg *Config) PeerURLsMapAndToken(which string) (urlsmap types.URLsMap, tok
 	//	}
 
 	default:
-		// 我们是静态配置的，
+		// 我们是静态配置的,
 		// infra1=http://127.0.0.1:12380,infra2=http://127.0.0.1:22380,infra3=http://127.0.0.1:32380
 		urlsmap, err = types.NewURLsMap(cfg.InitialCluster) // 仅仅是类型转换
 	}
 	return urlsmap, token, err
 }
 
-// GetDNSClusterNames 使用DNS SRV记录来获取集群启动的初始节点列表。这个函数将返回一个或多个节点的列表，以及在执行服务发现时遇到的任何错误。
+// GetDNSClusterNames 使用DNS SRV记录来获取集群启动的初始节点列表.这个函数将返回一个或多个节点的列表,以及在执行服务发现时遇到的任何错误.
 // Note: Because this checks multiple sets of SRV records, discovery should only be considered to have
 // failed if the returned node list is empty.
 func (cfg *Config) GetDNSClusterNames() ([]string, error) {
@@ -817,7 +817,7 @@ func (cfg *Config) PeerSelfCert() (err error) {
 func (cfg *Config) UpdateDefaultClusterFromName(defaultInitialCluster string) (string, error) {
 	// default=http://localhost:2380
 	if defaultHostname == "" || defaultHostStatus != nil {
-		// 当 指定名称时,更新'initial-cluster'（例如,'etcd --name=abc'）.
+		// 当 指定名称时,更新'initial-cluster'(例如,'etcd --name=abc').
 		if cfg.Name != DefaultName && cfg.InitialCluster == defaultInitialCluster {
 			cfg.InitialCluster = cfg.InitialClusterFromName(cfg.Name)
 		}

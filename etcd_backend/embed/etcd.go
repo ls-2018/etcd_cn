@@ -69,7 +69,7 @@ const (
 	reservedInternalFDNum = 150
 )
 
-// Etcd 包含一个正在运行的etcd etcd和它的监听器。
+// Etcd 包含一个正在运行的etcd etcd和它的监听器.
 type Etcd struct {
 	Peers   []*peerListener
 	Clients []net.Listener
@@ -82,7 +82,7 @@ type Etcd struct {
 	Server *etcdserver.EtcdServer
 
 	cfg   Config
-	stopc chan struct{} // raft 停止，消息通道
+	stopc chan struct{} // raft 停止,消息通道
 	errc  chan error    // 接收运行过程中产生的err
 
 	closeOnce sync.Once
@@ -109,7 +109,7 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 			return
 		}
 		if !serving {
-			// 在为serveCtx.servicesC启动gRPC etcd之前出现错误。
+			// 在为serveCtx.servicesC启动gRPC etcd之前出现错误.
 			for _, sctx := range e.sctxs {
 				close(sctx.serversC)
 			}
@@ -159,7 +159,7 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 	if err != nil {
 		return e, err
 	}
-	// 返回boltdb存储的数据类型，array \ map
+	// 返回boltdb存储的数据类型,array \ map
 	backendFreelistType := parseBackendFreelistType(cfg.BackendFreelistType)
 
 	srvcfg := config.ServerConfig{
@@ -171,7 +171,7 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 		SnapshotCount:                            cfg.SnapshotCount,// 触发一次磁盘快照的提交事务的次数
 		SnapshotCatchUpEntries:                   cfg.SnapshotCatchUpEntries, //  快照追赶数据量
 		MaxSnapFiles:                             cfg.MaxSnapFiles,
-		MaxWALFiles:                              cfg.MaxWalFiles, // 要保留的最大wal文件数（0表示不受限制）. 5
+		MaxWALFiles:                              cfg.MaxWalFiles, // 要保留的最大wal文件数(0表示不受限制). 5
 		InitialPeerURLsMap:                       urlsmap,         //  节点--> url
 		InitialClusterToken:                      token,
 		DiscoveryURL:                             cfg.Durl,
@@ -180,7 +180,7 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 		PeerTLSInfo:                              cfg.PeerTLSInfo,                // server 证书信息
 		TickMs:                                   cfg.TickMs,                     // 心跳间隔
 		ElectionTicks:                            cfg.ElectionTicks(),            // 选举超时 对应多少次心跳
-		InitialElectionTickAdvance:               cfg.InitialElectionTickAdvance, // 是否提前初始化选举时钟启动，以便更快的选举
+		InitialElectionTickAdvance:               cfg.InitialElectionTickAdvance, // 是否提前初始化选举时钟启动,以便更快的选举
 		AutoCompactionRetention:                  autoCompactionRetention,        // 自动压缩值
 		AutoCompactionMode:                       cfg.AutoCompactionMode,         // 自动压缩模式
 		QuotaBackendBytes:                        cfg.QuotaBackendBytes,          // 资源存储阈值
@@ -188,7 +188,7 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 		BackendFreelistType:                      backendFreelistType,            // 返回boltdb存储的数据类型
 		BackendBatchInterval:                     cfg.BackendBatchInterval,       // BackendBatchInterval是提交后端事务前的最长时间.
 		MaxTxnOps:                                cfg.MaxTxnOps,
-		MaxRequestBytes:                          cfg.MaxRequestBytes, // 服务器将接受的最大客户端请求大小（字节）.
+		MaxRequestBytes:                          cfg.MaxRequestBytes, // 服务器将接受的最大客户端请求大小(字节).
 		SocketOpts:                               cfg.SocketOpts,
 		StrictReconfigCheck:                      cfg.StrictReconfigCheck,
 		ClientCertAuthEnabled:                    cfg.ClientTLSInfo.ClientCertAuth,
@@ -216,7 +216,7 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 		ExperimentalBootstrapDefragThresholdMegabytes: cfg.ExperimentalBootstrapDefragThresholdMegabytes,
 	}
 
-	if srvcfg.ExperimentalEnableDistributedTracing { // 使用OpenTelemetry协议实现分布式跟踪。默认false
+	if srvcfg.ExperimentalEnableDistributedTracing { // 使用OpenTelemetry协议实现分布式跟踪.默认false
 		tctx := context.Background()
 		tracingExporter, opts, err := e.setupTracing(tctx)
 		if err != nil {
@@ -312,7 +312,7 @@ func print(lg *zap.Logger, ec Config, sc config.ServerConfig, memberInitialized 
 		zap.Bool("force-new-cluster", sc.ForceNewCluster),
 		zap.String("heartbeat-interval", fmt.Sprintf("%v", time.Duration(sc.TickMs)*time.Millisecond)),
 		zap.String("election-timeout", fmt.Sprintf("%v", time.Duration(sc.ElectionTicks*int(sc.TickMs))*time.Millisecond)),
-		zap.Bool("initial-election-tick-advance", sc.InitialElectionTickAdvance), // 是否提前初始化选举时钟启动，以便更快的选举
+		zap.Bool("initial-election-tick-advance", sc.InitialElectionTickAdvance), // 是否提前初始化选举时钟启动,以便更快的选举
 		zap.Uint64("snapshot-count", sc.SnapshotCount),                           // 触发一次磁盘快照的提交事务的次数
 		zap.Uint64("snapshot-catchup-entries", sc.SnapshotCatchUpEntries),
 		zap.Strings("initial-advertise-peer-urls", ec.getAPURLs()),
@@ -594,10 +594,10 @@ func configureClientListeners(cfg *Config) (sctxs map[string]*serveCtx, err erro
 		sctx := newServeCtx(cfg.logger)
 		if u.Scheme == "http" || u.Scheme == "unix" {
 			if !cfg.ClientTLSInfo.Empty() {
-				cfg.logger.Warn("在钥匙和证书文件存在的情况下，方案为HTTP；忽略钥匙和证书文件", zap.String("client-url", u.String()))
+				cfg.logger.Warn("在钥匙和证书文件存在的情况下,方案为HTTP；忽略钥匙和证书文件", zap.String("client-url", u.String()))
 			}
 			if cfg.ClientTLSInfo.ClientCertAuth {
-				cfg.logger.Warn("方案是HTTP，同时启用了-客户证书认证；该URL忽略了客户证书认证。", zap.String("client-url", u.String()))
+				cfg.logger.Warn("方案是HTTP,同时启用了-客户证书认证；该URL忽略了客户证书认证.", zap.String("client-url", u.String()))
 			}
 		}
 		if (u.Scheme == "https" || u.Scheme == "unixs") && cfg.ClientTLSInfo.Empty() {
@@ -691,7 +691,7 @@ func (e *Etcd) serveClients() (err error) {
 		gopts = append(gopts, grpc.KeepaliveEnforcementPolicy(keepalive.EnforcementPolicy{
 			MinTime:             e.cfg.GRPCKeepAliveMinTime,
 			PermitWithoutStream: false, // 默认false
-			// 如果是true，即使没有活动流（RPCs），服务器也允许keepalive pings。如果是假的，客户端在没有活动流的情况下发送ping 流，服务器将发送GOAWAY并关闭连接。
+			// 如果是true,即使没有活动流(RPCs),服务器也允许keepalive pings.如果是假的,客户端在没有活动流的情况下发送ping 流,服务器将发送GOAWAY并关闭连接.
 		}))
 	}
 	if e.cfg.GRPCKeepAliveInterval > time.Duration(0) && e.cfg.GRPCKeepAliveTimeout > time.Duration(0) {

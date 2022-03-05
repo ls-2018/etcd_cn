@@ -111,7 +111,7 @@ func (c *Config) Clone() Config {
 	}
 }
 
-// ProgressTracker 追踪配置以及 节点信息。
+// ProgressTracker 追踪配置以及 节点信息.
 type ProgressTracker struct {
 	Config
 	// leader需要缓存当前所有Follower的日志同步进度
@@ -138,7 +138,7 @@ func MakeProgressTracker(maxInflight int) ProgressTracker {
 	return p
 }
 
-// ConfState 返回一个代表active配置的ConfState。
+// ConfState 返回一个代表active配置的ConfState.
 func (p *ProgressTracker) ConfState() pb.ConfState {
 	return pb.ConfState{
 		Voters:         p.Voters[0].Slice(),

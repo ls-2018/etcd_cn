@@ -264,9 +264,9 @@ func (ConfChangeType) EnumDescriptor() ([]byte, []int) {
 }
 
 type Entry struct {
-	// Term：表示该Entry所在的任期。
+	// Term：表示该Entry所在的任期.
 	Term uint64 `protobuf:"varint,2,opt,name=Term" json:"Term"`
-	// Index:当前这个entry在整个raft日志中的位置索引,有了Term和Index之后，一个`log entry`就能被唯一标识。
+	// Index:当前这个entry在整个raft日志中的位置索引,有了Term和Index之后,一个`log entry`就能被唯一标识.
 	Index uint64 `protobuf:"varint,3,opt,name=Index" json:"Index"`
 	// 当前entry的类型
 	// 目前etcd支持两种类型：EntryNormal和EntryConfChange
@@ -388,27 +388,27 @@ func (m *Snapshot) XXX_DiscardUnknown() {
 var xxx_messageInfo_Snapshot proto.InternalMessageInfo
 
 type Message struct {
-	// 该字段定义了不同的消息类型，etcd-raft就是通过不同的消息类型来进行处理的，etcd中一共定义了19种类型
+	// 该字段定义了不同的消息类型,etcd-raft就是通过不同的消息类型来进行处理的,etcd中一共定义了19种类型
 	Type MessageType `protobuf:"varint,1,opt,name=type,enum=raftpb.MessageType" json:"type"`
-	// 消息的目标节点 ID，在急群中每个节点都有一个唯一的id作为标识
+	// 消息的目标节点 ID,在急群中每个节点都有一个唯一的id作为标识
 	To uint64 `protobuf:"varint,2,opt,name=to" json:"to"`
 	// 发送消息的节点ID
 	From uint64 `protobuf:"varint,3,opt,name=from" json:"from"`
-	// 整个消息发出去时，所处的任期
+	// 整个消息发出去时,所处的任期
 	Term uint64 `protobuf:"varint,4,opt,name=term" json:"term"`
 	// 该消息携带的第一条Entry记录的的Term值
 	LogTerm uint64 `protobuf:"varint,5,opt,name=logTerm" json:"logTerm"`
-	// 索引值，该索引值和消息的类型有关,不同的消息类型代表的含义不同
+	// 索引值,该索引值和消息的类型有关,不同的消息类型代表的含义不同
 	Index uint64 `protobuf:"varint,6,opt,name=index" json:"index"`
 	// 需要存储的日志信息
 	Entries []Entry `protobuf:"bytes,7,rep,name=entries" json:"entries"`
-	// 已经提交的日志的索引值，用来向别人同步日志的提交信息。
+	// 已经提交的日志的索引值,用来向别人同步日志的提交信息.
 	Commit uint64 `protobuf:"varint,8,opt,name=commit" json:"commit"`
-	// 在传输快照时，该字段保存了快照数据
+	// 在传输快照时,该字段保存了快照数据
 	Snapshot Snapshot `protobuf:"bytes,9,opt,name=snapshot" json:"snapshot"`
-	// 主要用于响应类型的消息，表示是否拒绝收到的消息。
+	// 主要用于响应类型的消息,表示是否拒绝收到的消息.
 	Reject bool `protobuf:"varint,10,opt,name=reject" json:"reject"`
-	// Follower 节点拒绝 leader 节点的消息之后，会在该字段记录 一个Entry索引值供Leader节点。
+	// Follower 节点拒绝 leader 节点的消息之后,会在该字段记录 一个Entry索引值供Leader节点.
 	RejectHint uint64 `protobuf:"varint,11,opt,name=rejectHint" json:"rejectHint"`
 	// 携带的一些上下文的信息
 	Context []byte `protobuf:"bytes,12,opt,name=context" json:"context,omitempty"`
@@ -545,7 +545,7 @@ type ConfChange struct {
 	// Ideally it should really use the Context instead. No counterpart to
 	// this field exists in ConfChangeV2.
 	ID uint64 `protobuf:"varint,1,opt,name=id" json:"id"`
-	//ID: 表示节点变更的消息id，这个意义不大
+	//ID: 表示节点变更的消息id,这个意义不大
 	//Type: ConfChangeAddNode或者ConfChangeRemoveNode
 	//NodeID: 变更节点的id
 }
