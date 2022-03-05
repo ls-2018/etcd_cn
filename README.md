@@ -56,7 +56,7 @@ http://127.0.0.1:2379/members
 
 ```
 MsgHup                      本地：开启选举,---->会触发vote或pre-vote
-MsgBeat                     本地：心跳，---->给peers发送Msghearbeat
+MsgBeat                     本地：心跳,---->给peers发送Msghearbeat
 MsgProp                     本地：Propose -----> MsgApp
 MsgApp                      非本地：操作日志【复制、配置变更 req】
 MsgAppResp                  非本地：操作日志【复制 res】

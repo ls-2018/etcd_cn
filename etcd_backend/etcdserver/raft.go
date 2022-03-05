@@ -76,7 +76,7 @@ type apply struct {
 	notifyc chan struct{}
 }
 
-// raft状态机，维护raft状态机的步进和状态迁移。
+// raft状态机,维护raft状态机的步进和状态迁移.
 type raftNode struct {
 	lg *zap.Logger
 
@@ -170,9 +170,11 @@ func (r *raftNode) start(rh *raftReadyHandler) {
 			select {
 			case <-r.ticker.C:
 				r.tick()
-				//调用Node.Ready()，从返回的channel中获取数据
-			case rd := <-r.Ready():
+
+			//	 readyc = n.readyc    size为0
+			case rd := <-r.Ready(): // 调用Node.Ready(),从返回的channel中获取数据
 				//获取ready结构中的committedEntries,提交给Apply模块应用到后端存储中.
+				//ReadStates不为空的处理逻辑
 				if rd.SoftState != nil {
 					// SoftState不为空的处理逻辑
 					newLeader := rd.SoftState.Lead != raft.None && rh.getLead() != rd.SoftState.Lead
@@ -331,6 +333,7 @@ func updateCommittedIndex(ap *apply, rh *raftReadyHandler) {
 	}
 }
 
+//对消息封装成传输协议要求的格式,还会做超时控制
 func (r *raftNode) processMessages(ms []raftpb.Message) []raftpb.Message {
 	sentAppResp := false
 	for i := len(ms) - 1; i >= 0; i-- {
@@ -363,7 +366,7 @@ func (r *raftNode) processMessages(ms []raftpb.Message) []raftpb.Message {
 			if !ok {
 				// TODO: limit request rate.
 				r.lg.Warn(
-					"leader failed to send out heartbeat on time; took too long, leader is overloaded likely from slow disk",
+					"leader未能按时发出心跳,时间太长,可能是因为磁盘慢而过载",
 					zap.String("to", fmt.Sprintf("%x", ms[i].To)),
 					zap.Duration("heartbeat-interval", r.heartbeat),
 					zap.Duration("expected-duration", 2*r.heartbeat),

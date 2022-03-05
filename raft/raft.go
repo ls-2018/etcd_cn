@@ -229,9 +229,9 @@ type raft struct {
 	preVote     bool
 
 	// 选举过期计数(electionElapsed)：主要用于follower来判断leader是不是正常工作,
-	// 当follower接受到leader的心跳的时候会把electionElapsed的时候就会置为0，electionElapsed的相加是通过外部调用实现的，
-	// node对外提供一个tick的接口，需要外部定时去调用，调用的周期由外部决定，每次调用就++，
-	// 然后检查是否会超时，上方的tickElection就是为follower状态的定时调用函数，leader状态的定时调用函数就是向follower发送心跳。
+	// 当follower接受到leader的心跳的时候会把electionElapsed的时候就会置为0,electionElapsed的相加是通过外部调用实现的,
+	// node对外提供一个tick的接口,需要外部定时去调用,调用的周期由外部决定,每次调用就++,
+	// 然后检查是否会超时,上方的tickElection就是为follower状态的定时调用函数,leader状态的定时调用函数就是向follower发送心跳.
 	electionElapsed int
 
 	// 心跳过期计数(heartbeatElapsed)：用于leader判断是不是要开始发送心跳了.
@@ -329,12 +329,12 @@ func (r *raft) hardState() pb.HardState {
 	}
 }
 
-// send 将状态持久化到一个稳定的存储中，之后再发送消息
+// send 将状态持久化到一个稳定的存储中,之后再发送消息
 func (r *raft) send(m pb.Message) {
 	if m.From == None {
 		m.From = r.id
 	}
-	//数据校验，选举类消息必须带term属性
+	//数据校验,选举类消息必须带term属性
 	// 竞选投票相关的消息类型,必须设置term
 	if m.Type == pb.MsgVote || m.Type == pb.MsgVoteResp || m.Type == pb.MsgPreVote || m.Type == pb.MsgPreVoteResp {
 		if m.Term == 0 {
@@ -345,13 +345,13 @@ func (r *raft) send(m pb.Message) {
 		if m.Term != 0 {
 			panic(fmt.Sprintf("任期不能被设置,当 %s (was %d)", m.Type, m.Term))
 		}
-		//除了MsgProp和MsgReadIndex消息外，设置term为raft当前周期
+		//除了MsgProp和MsgReadIndex消息外,设置term为raft当前周期
 		if m.Type != pb.MsgProp && m.Type != pb.MsgReadIndex {
 			m.Term = r.Term
 		}
 	}
-	//将消息放入队列
-	r.msgs = append(r.msgs, m)
+
+	r.msgs = append(r.msgs, m) //将消息放入队列
 }
 
 // sendHeartbeat sends a heartbeat RPC to the given peer.
@@ -591,7 +591,7 @@ func (r *raft) appendEntry(es ...pb.Entry) (accepted bool) {
 // tickElection is run by followers and candidates after r.electionTimeout.
 func (r *raft) tickElection() {
 	r.electionElapsed++
-	// 自己可以被promote & election timeout 超时了，规定时间没有听到心跳发起选举；发送MsgHup
+	// 自己可以被promote & election timeout 超时了,规定时间没有听到心跳发起选举；发送MsgHup
 	if r.roleUp() && r.pastElectionTimeout() { // 选举超时
 		r.electionElapsed = 0
 		r.Step(pb.Message{From: r.id, Type: pb.MsgHup}) // 让自己选举
@@ -719,13 +719,12 @@ func (r *raft) hup(t CampaignType) {
 		r.logger.Warningf("%x不能参与竞选在任期 %d 因为还有 %d 应用配置要更改 ", r.id, r.Term, n)
 		return
 	}
-	// 核对完成，开始选举
+	// 核对完成,开始选举
 	r.logger.Infof("%x开启新的任期在任期%d", r.id, r.Term)
 	r.campaign(t)
 }
 
-// campaign transitions the raft instance to candidate state. This must only be
-// called after verifying that this is a legitimate transition.
+// campaign 竞选
 func (r *raft) campaign(t CampaignType) {
 	if !r.roleUp() {
 		// This path should not be hit (callers are supposed to check), but
@@ -872,7 +871,7 @@ func (r *raft) Step(m pb.Message) error {
 		}
 
 	case pb.MsgVote, pb.MsgPreVote:
-		// 我们可以投票，如果这是在重复我们已经投过的票
+		// 我们可以投票,如果这是在重复我们已经投过的票
 		// 1. 投票情况是已经投过了
 		// 2. 没投过并且没有leader
 		// 3. 预投票并且term大
@@ -1471,7 +1470,7 @@ func (r *raft) handleAppendEntries(m pb.Message) {
 }
 
 func (r *raft) handleHeartbeat(m pb.Message) {
-	// 把msg中的commit提交，commit是只增不减的
+	// 把msg中的commit提交,commit是只增不减的
 	r.raftLog.commitTo(m.Commit) // leader commit 了,follower再commit
 	r.send(pb.Message{To: m.From, Type: pb.MsgHeartbeatResp, Context: m.Context})
 
@@ -1671,9 +1670,9 @@ func (r *raft) loadState(state pb.HardState) {
 //判断是不是丢失了leader
 func (r *raft) pastElectionTimeout() bool {
 	// 选举过期计数(electionElapsed)：主要用于follower来判断leader是不是正常工作,
-	// 当follower接受到leader的心跳的时候会把electionElapsed的时候就会置为0，electionElapsed的相加是通过外部调用实现的，
-	// node对外提供一个tick的接口，需要外部定时去调用，调用的周期由外部决定，每次调用就++，
-	// 然后检查是否会超时，上方的tickElection就是为follower状态的定时调用函数，leader状态的定时调用函数就是向follower发送心跳。
+	// 当follower接受到leader的心跳的时候会把electionElapsed的时候就会置为0,electionElapsed的相加是通过外部调用实现的,
+	// node对外提供一个tick的接口,需要外部定时去调用,调用的周期由外部决定,每次调用就++,
+	// 然后检查是否会超时,上方的tickElection就是为follower状态的定时调用函数,leader状态的定时调用函数就是向follower发送心跳.
 	return r.electionElapsed >= r.randomizedElectionTimeout
 }
 

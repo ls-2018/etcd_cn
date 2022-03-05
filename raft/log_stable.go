@@ -27,7 +27,7 @@ var ErrCompacted = errors.New("requested index is unavailable due to compaction"
 
 var ErrSnapOutOfDate = errors.New("请求的索引比现有快照的老")
 
-// ErrUnavailable 当请求的日志条目不可用时，存储接口会返回。
+// ErrUnavailable 当请求的日志条目不可用时,存储接口会返回.
 var ErrUnavailable = errors.New("索引中的请求条目不可用")
 
 // ErrSnapshotTemporarilyUnavailable is returned by the Storage interface when the required

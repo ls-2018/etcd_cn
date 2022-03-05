@@ -45,9 +45,9 @@ func (a *SoftState) equal(b *SoftState) bool {
 	return a.Lead == b.Lead && a.RaftState == b.RaftState
 }
 
-// Ready encapsulates the entries and messages that are ready to read,
-// be saved to stable storage, committed or sent to other peers.
-// All fields in Ready are read-only.
+// Ready 封装了准备读取、保存到稳定存储、提交或发送至其他peer的entry和message
+// Ready中的所有字段都是只读的.
+// 对于这种 IO 网络密集型的应用,提高吞吐最好的手段就是批量操作,ETCD 与之相关的核心抽象就是 Ready 结构体.
 type Ready struct {
 	// The current volatile state of a Node.
 	// SoftState will be nil if there is no update.
@@ -121,18 +121,15 @@ func (rd Ready) appliedCursor() uint64 {
 	return 0
 }
 
-// Node represents a node in a raft cluster.
+// Node raft 节点
 type Node interface {
-	// Tick 触发一次心跳,raft会在触发后检查leader选举超时或发送心跳
-	Tick()
-	// Campaign 触发节点将自己变成候选人,开始选举
-	Campaign(ctx context.Context) error
+	Tick()                              // 触发一次Tick,会触发Node心跳或者选举
+	Campaign(ctx context.Context) error // 触发一次选举
 	// Propose 提交日志条目
 	Propose(ctx context.Context, data []byte) error
 	// ProposeConfChange 集群配置变更
 	ProposeConfChange(ctx context.Context, cc pb.ConfChangeI) error
-	// Step 发送一条消息给状态机,触发状态变化
-	Step(ctx context.Context, msg pb.Message) error
+	Step(ctx context.Context, msg pb.Message) error // 处理msg
 	// Ready 如果raft状态机有变化,会通过channel返回一个Ready的数据结构,里面包含变化信息,比如日志变化、心跳发送等.
 	// 调用方在处理完后需要调用Advance()方法告诉状态机上一个Ready处理完了
 	Ready() <-chan Ready
@@ -192,21 +189,21 @@ type msgWithResult struct {
 	result chan error
 }
 
-//包含在raftNode中，是Node接口的实现。里面包含一个协程和多个队列，是状态机消息处理的入口。
+//包含在raftNode中,是Node接口的实现.里面包含一个协程和多个队列,是状态机消息处理的入口.
 type node struct {
 	rn *RawNode
-	//Propose队列，调用raftNode的Propose即把Propose消息塞到这个队列里
+	//Propose队列,调用raftNode的Propose即把Propose消息塞到这个队列里
 	propc chan msgWithResult
-	//Message队列，除Propose消息以外其他消息塞到这个队列里
+	//Message队列,除Propose消息以外其他消息塞到这个队列里
 	recvc chan pb.Message
 	// 接受配置的管道
 	confc      chan pb.ConfChangeV2
 	confstatec chan pb.ConfState
-	//已经准备好apply的信息队列
+	// 已经准备好apply的信息队列
 	readyc chan Ready
-	//每次apply好了以后往这个队列里塞个空对象。通知可以继续准备Ready消息。
+	// 每次apply好了以后往这个队列里塞个空对象.通知可以继续准备Ready消息.
 	advancec chan struct{}
-	//tick信息队列，用于调用心跳
+	//tick信息队列,用于调用心跳
 	tickc chan struct{}
 	// 在处理中避免不了各种chan操作,此时如果Stop()被调用了,相应的阻塞就应该被激活,否则可能
 	// 面临死锁以后长时间退出后者永远无法退出.
@@ -259,10 +256,10 @@ func (n *node) run() {
 	// 初始状态不知道谁是leader,需要通过Ready获取
 	lead := None
 	for {
-		if advancec != nil {
+		if advancec != nil { // 开始时是nil
 			readyc = nil
-		} else if n.rn.HasReady() {
-			rd = n.rn.readyWithoutAccept()
+		} else if n.rn.HasReady() { //判断是否有Ready数据
+			rd = n.rn.readyWithoutAccept() // 获取Ready数据
 			readyc = n.readyc
 		}
 
@@ -294,7 +291,7 @@ func (n *node) run() {
 				pm.result <- err
 				close(pm.result)
 			}
-		case m := <-n.recvc: //接收到readindex 请求
+		case m := <-n.recvc: // 接收到readindex 请求
 			// filter out response message from unknown From.
 			if pr := r.prs.Progress[m.From]; pr != nil || !IsResponseMsg(m.Type) {
 				r.Step(m)
@@ -333,9 +330,9 @@ func (n *node) run() {
 		case <-n.tickc: //超时时间到,包括心跳超时和选举超时等
 			//https://www.cnblogs.com/myd620/p/13189604.html
 			n.rn.Tick()
-		case readyc <- rd: //数据ready
-			n.rn.acceptReady(rd)
-			advancec = n.advancec
+		case readyc <- rd: //数据放入ready channel中
+			n.rn.acceptReady(rd)  // 告诉raft,ready数据已被接收
+			advancec = n.advancec //赋值Advance channel等待Ready处理完成的消息
 		case <-advancec: //可以进行状态变更和日志提交
 			n.rn.Advance(rd)
 			rd = Ready{}
@@ -440,8 +437,10 @@ func (n *node) stepWithWaitOption(ctx context.Context, m pb.Message, wait bool) 
 	return nil
 }
 
+// 如果raft状态机有变化,会通过channel返回一个Ready的数据结构,里面包含变化信息,比如日志变化、心跳发送等.
 func (n *node) Ready() <-chan Ready { return n.readyc }
 
+// ready消息处理完后,发送一个通知消息
 func (n *node) Advance() {
 	select {
 	case n.advancec <- struct{}{}:
@@ -500,25 +499,28 @@ func (n *node) TransferLeadership(ctx context.Context, lead, transferee uint64) 
 func (n *node) ReadIndex(ctx context.Context, rctx []byte) error {
 	return n.step(ctx, pb.Message{Type: pb.MsgReadIndex, Entries: []pb.Entry{{Data: rctx}}})
 }
-
 func newReady(r *raft, prevSoftSt *SoftState, prevHardSt pb.HardState) Ready {
 	rd := Ready{
 		Entries:          r.raftLog.unstableEntries(), //unstable中的日志交给上层持久化
 		CommittedEntries: r.raftLog.nextEnts(),        //已经提交待应用的日志,交给上层应用
 		Messages:         r.msgs,                      //raft要发送的消息
 	}
+	//判断softState有没有变化,有则赋值
 	if softSt := r.softState(); !softSt.equal(prevSoftSt) {
 		rd.SoftState = softSt
 	}
+	//判断hardState有没有变化,有则赋值
 	if hardSt := r.hardState(); !isHardStateEqual(hardSt, prevHardSt) {
 		rd.HardState = hardSt
 	}
+	//判断是不是收到snapshot
 	if r.raftLog.unstable.snapshot != nil {
 		rd.Snapshot = *r.raftLog.unstable.snapshot
 	}
 	if len(r.readStates) != 0 {
 		rd.ReadStates = r.readStates
 	}
+	//处理该Ready后是否需要做fsync,将数据强制刷盘
 	rd.MustSync = MustSync(r.hardState(), prevHardSt, len(rd.Entries))
 	return rd
 }

@@ -360,14 +360,14 @@ func (l *raftLog) slice(lo, hi, maxSize uint64) ([]pb.Entry, error) {
 		}
 
 		// 检查ents是否达到大小限制
-		// 如果从storage获取的日志数量比预期少;说明没那么多日志存在storage中;那也就没必要再找unstable了。
+		// 如果从storage获取的日志数量比预期少;说明没那么多日志存在storage中;那也就没必要再找unstable了.
 		if uint64(len(storedEnts)) < min(hi, l.unstable.offset)-lo {
 			return storedEnts, nil
 		}
 		ents = storedEnts
 	}
 
-	// 日志有一部分在unstable中。
+	// 日志有一部分在unstable中.
 	if hi > l.unstable.offset {
 		unstable := l.unstable.slice(max(lo, l.unstable.offset), hi)
 		if len(ents) > 0 {
