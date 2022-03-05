@@ -198,81 +198,70 @@ type Server interface {
 	LeaderChangedNotify() <-chan struct{}
 }
 
-// EtcdServer is the production implementation of the Server interface
+// EtcdServer 整个etcd节点的功能的入口，包含etcd节点运行过程中需要的大部分成员。
 type EtcdServer struct {
-	// inflightSnapshots holds count the number of snapshots currently inflight.
-	inflightSnapshots int64  // must use atomic operations to access; keep 64-bit aligned.
-	appliedIndex      uint64 // must use atomic operations to access; keep 64-bit aligned.
-	committedIndex    uint64 // must use atomic operations to access; keep 64-bit aligned.
+	inflightSnapshots int64  // 当前正在发送的snapshot数量
+	appliedIndex      uint64 //已经apply到状态机的日志index
+	committedIndex    uint64 //已经提交的日志index，也就是leader确认多数成员已经同步了的日志index
 	term              uint64 // must use atomic operations to access; keep 64-bit aligned.
 	lead              uint64 // must use atomic operations to access; keep 64-bit aligned.
 
-	consistIndex cindex.ConsistentIndexer // consistIndex is used to get/set/save consistentIndex
-	r            raftNode                 // uses 64-bit atomics; keep 64-bit aligned.
+	consistIndex cindex.ConsistentIndexer // 已经持久化到kvstore的index
+	r            raftNode                 // 重要的数据结果，存储了raft的状态机信息。
 
-	readych chan struct{} // 当etcd 准备好服务请求后,会关闭ready ch
-	Cfg     config.ServerConfig
+	readych chan struct{}       // 启动成功并注册了自己到cluster，关闭这个通道。
+	Cfg     config.ServerConfig // 配置项
 
 	lgMu *sync.RWMutex
 	lg   *zap.Logger
 
-	w wait.Wait
+	w wait.Wait // 为了同步调用情况下让调用者阻塞等待调用结果的。
 
-	readMu sync.RWMutex
-	// read routine notifies etcd etcd that it waits for reading by sending an empty struct to
-	// readwaitC
-	readwaitc chan struct{}
-	// readNotifier is used to notify the read routine that it can process the request
-	// when there is no error
+	readMu sync.RWMutex // 下面3个结果都是为了实现linearizable 读使用的
+
+	readwaitc    chan struct{}
 	readNotifier *notifier
 
-	// stop signals the run goroutine should shutdown.
-	stop chan struct{}
-	// stopping is closed by run goroutine on shutdown.
-	stopping chan struct{}
-	// done is closed when all goroutines from start() complete.
-	done chan struct{}
-	// leaderChanged is used to notify the linearizable read loop to drop the old read requests.
-	leaderChanged   chan struct{}
+	stop chan struct{} // 停止通道
+
+	stopping chan struct{} // 停止时关闭这个通道
+
+	done chan struct{} // etcd的start函数中的循环退出，会关闭这个通道
+
+	leaderChanged   chan struct{} // leader变换后 通知linearizable read loop   drop掉旧的读请求
 	leaderChangedMu sync.RWMutex
 
-	errorc     chan error
-	id         types.ID
-	attributes membership.Attributes
+	errorc chan error // 错误通道，用以传入不可恢复的错误，关闭raft状态机。
 
-	cluster *membership.RaftCluster
+	id         types.ID              // etcd实例id
+	attributes membership.Attributes // etcd实例属性
 
-	v2store     v2store.Store
-	snapshotter *snap.Snapshotter
+	cluster *membership.RaftCluster // 集群信息
 
-	applyV2 ApplierV2
+	v2store     v2store.Store     // v2的kv存储
+	snapshotter *snap.Snapshotter // 用以snapshot
 
-	// applyV3 is the applier with auth and quotas
-	applyV3 applierV3
-	// applyV3Base is the core applier without auth or quotas
-	applyV3Base applierV3
-	// applyV3Internal is the applier for internal request
-	applyV3Internal applierV3Internal
-	applyWait       wait.WaitTime
+	applyV2 ApplierV2 // v2的applier，用于将commited index apply到raft状态机
 
-	kv         mvcc.WatchableKV
-	lessor     lease.Lessor
-	bemu       sync.Mutex
-	be         backend.Backend
+	applyV3         applierV3         //v3的applier，用于将commited index apply到raft状态机
+	applyV3Base     applierV3         //剥去了鉴权和配额功能的applyV3
+	applyV3Internal applierV3Internal //v3的内部applier
+	applyWait       wait.WaitTime     //apply的等待队列，等待某个index的日志apply完成
+
+	kv         mvcc.WatchableKV //v3用的kv存储
+	lessor     lease.Lessor     //v3用，作用是实现过期时间
+	bemu       sync.Mutex       //守护后端存储的锁，改变后端存储和获取后端存储是使用
+	be         backend.Backend  //后端存储
 	beHooks    *backendHooks
-	authStore  auth.AuthStore
-	alarmStore *v3alarm.AlarmStore
+	authStore  auth.AuthStore      //存储鉴权数据
+	alarmStore *v3alarm.AlarmStore //存储告警数据
 
-	stats  *stats.ServerStats
-	lstats *stats.LeaderStats
-
-	SyncTicker *time.Ticker
-	// compactor is used to auto-compact the KV.
-	compactor v3compactor.Compactor
-
-	// peerRt used to send requests (version, lease) to peers.
-	peerRt   http.RoundTripper
-	reqIDGen *idutil.Generator
+	stats      *stats.ServerStats    //当前节点状态
+	lstats     *stats.LeaderStats    //leader状态
+	SyncTicker *time.Ticker          //v2用，实现ttl数据过期的
+	compactor  v3compactor.Compactor //压缩数据的周期任务
+	peerRt     http.RoundTripper     //用于发送远程请求
+	reqIDGen   *idutil.Generator     //用于生成请求id
 
 	// wgMu blocks concurrent waitgroup mutation while etcd stopping
 	wgMu sync.RWMutex

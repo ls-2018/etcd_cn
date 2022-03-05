@@ -168,7 +168,7 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 		PeerURLs:                                 cfg.APUrls,
 		DataDir:                                  cfg.Dir,
 		DedicatedWALDir:                          cfg.WalDir,
-		SnapshotCount:                            cfg.SnapshotCount,// 触发一次磁盘快照的提交事务的次数
+		SnapshotCount:                            cfg.SnapshotCount,          // 触发一次磁盘快照的提交事务的次数
 		SnapshotCatchUpEntries:                   cfg.SnapshotCatchUpEntries, //  快照追赶数据量
 		MaxSnapFiles:                             cfg.MaxSnapFiles,
 		MaxWALFiles:                              cfg.MaxWalFiles, // 要保留的最大wal文件数(0表示不受限制). 5
@@ -268,7 +268,7 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 		"启动服务 peer/client/metrics",
 		zap.String("local-member-id", e.Server.ID().String()),
 		zap.Strings("initial-advertise-peer-urls", e.cfg.getAPURLs()),
-		zap.Strings("listen-peer-urls", e.cfg.getLPURLs()),// 集群节点之间通信监听的URL;如果指定的IP是0.0.0.0,那么etcd 会监昕所有网卡的指定端口
+		zap.Strings("listen-peer-urls", e.cfg.getLPURLs()), // 集群节点之间通信监听的URL;如果指定的IP是0.0.0.0,那么etcd 会监昕所有网卡的指定端口
 		zap.Strings("advertise-client-urls", e.cfg.getACURLs()),
 		zap.Strings("listen-client-urls", e.cfg.getLCURLs()),
 		zap.Strings("listen-metrics-urls", e.cfg.getMetricsURLs()),
@@ -316,7 +316,7 @@ func print(lg *zap.Logger, ec Config, sc config.ServerConfig, memberInitialized 
 		zap.Uint64("snapshot-count", sc.SnapshotCount),                           // 触发一次磁盘快照的提交事务的次数
 		zap.Uint64("snapshot-catchup-entries", sc.SnapshotCatchUpEntries),
 		zap.Strings("initial-advertise-peer-urls", ec.getAPURLs()),
-		zap.Strings("listen-peer-urls", ec.getLPURLs()),// 集群节点之间通信监听的URL;如果指定的IP是0.0.0.0,那么etcd 会监昕所有网卡的指定端口
+		zap.Strings("listen-peer-urls", ec.getLPURLs()), // 集群节点之间通信监听的URL;如果指定的IP是0.0.0.0,那么etcd 会监昕所有网卡的指定端口
 		zap.Strings("advertise-client-urls", ec.getACURLs()),
 		zap.Strings("listen-client-urls", ec.getLCURLs()),
 		zap.Strings("listen-metrics-urls", ec.getMetricsURLs()),

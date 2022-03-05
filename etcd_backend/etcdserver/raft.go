@@ -76,11 +76,12 @@ type apply struct {
 	notifyc chan struct{}
 }
 
+// raft状态机，维护raft状态机的步进和状态迁移。
 type raftNode struct {
 	lg *zap.Logger
 
-	tickMu *sync.Mutex
-	raftNodeConfig
+	tickMu         *sync.Mutex
+	raftNodeConfig // 包含了node、storage等重要数据结构
 
 	// a chan to send/receive snapshot
 	msgSnapC chan raftpb.Message
@@ -157,8 +158,7 @@ func (r *raftNode) tick() {
 	r.tickMu.Unlock()
 }
 
-// start prepares and starts raftNode in a new goroutine. It is no longer safe
-// to modify the fields after it has been started.
+//心跳触发EtcdServer定时触发   非常重要
 func (r *raftNode) start(rh *raftReadyHandler) {
 	internalTimeout := time.Second
 
@@ -215,7 +215,7 @@ func (r *raftNode) start(rh *raftReadyHandler) {
 				updateCommittedIndex(&ap, rh)
 
 				select {
-				case r.applyc <- ap:// 将已提交日志应用到状态机
+				case r.applyc <- ap: // 将已提交日志应用到状态机
 				case <-r.stopped:
 					return
 				}

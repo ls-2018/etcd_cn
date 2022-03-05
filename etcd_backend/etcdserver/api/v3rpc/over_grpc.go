@@ -79,7 +79,7 @@ func Server(s *etcdserver.EtcdServer, tls *tls.Config, interceptor grpc.UnarySer
 	pb.RegisterMaintenanceServer(grpcServer, NewMaintenanceServer(s)) // 维护
 
 	hsrv := health.NewServer()
-	hsrv.SetServingStatus("", healthpb.HealthCheckResponse_SERVING)// 设置初始状态
+	hsrv.SetServingStatus("", healthpb.HealthCheckResponse_SERVING) // 设置初始状态
 	healthpb.RegisterHealthServer(grpcServer, hsrv)
 
 	grpc_prometheus.Register(grpcServer)

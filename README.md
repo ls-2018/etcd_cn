@@ -163,6 +163,26 @@ MsgPreVoteResp
   WAL全称是Write Ahead Log,是数据库中常用的持久化数据的方法.比如我们更新数据库的一条数据,如果直接找到这条数据并更新,
   可能会耗费比较长的时间.更快更安全的方式是先写一条Log数据到文件中,然后由后台线程来完成最终数据的更新,这条log中通常包含的是一条指令.
   ```
+- 发送心跳消息的时候leader是怎么设置各个follower的commit？
+     
+- leader收到follower的心跳响应之后会怎么去修改对应的follower元数据呢？
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ![](./images/MsgReadIndex.png)
 ### Ref
@@ -186,6 +206,8 @@ MsgPreVoteResp
 - https://www.jianshu.com/p/518f75c5bf55
 - https://www.cnblogs.com/ricklz/p/15155095.html
 - https://www.lixueduan.com/categories/
+- https://zhuanlan.zhihu.com/p/452483457
+- https://so.csdn.net/so/search?q=etcd&t=blog&u=devclouds
 
 
 ```

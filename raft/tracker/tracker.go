@@ -111,7 +111,7 @@ func (c *Config) Clone() Config {
 	}
 }
 
-// ProgressTracker 追踪配置以及 节点信息.
+// ProgressTracker 追踪配置以及节点信息.
 type ProgressTracker struct {
 	Config
 	// leader需要缓存当前所有Follower的日志同步进度

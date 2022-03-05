@@ -143,10 +143,6 @@ func (t *Trace) IsEmpty() bool {
 	return t.isEmpty
 }
 
-
-
-
-
 func (t *Trace) updateFieldIfExist(f Field) bool {
 	for i, v := range t.fields {
 		if v.Key == f.Key {

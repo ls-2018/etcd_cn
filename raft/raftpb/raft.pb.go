@@ -387,6 +387,7 @@ func (m *Snapshot) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Snapshot proto.InternalMessageInfo
 
+// 消息格式
 type Message struct {
 	// 该字段定义了不同的消息类型,etcd-raft就是通过不同的消息类型来进行处理的,etcd中一共定义了19种类型
 	Type MessageType `protobuf:"varint,1,opt,name=type,enum=raftpb.MessageType" json:"type"`
@@ -394,15 +395,17 @@ type Message struct {
 	To uint64 `protobuf:"varint,2,opt,name=to" json:"to"`
 	// 发送消息的节点ID
 	From uint64 `protobuf:"varint,3,opt,name=from" json:"from"`
-	// 整个消息发出去时,所处的任期
+	// 领导人的任期号
 	Term uint64 `protobuf:"varint,4,opt,name=term" json:"term"`
-	// 该消息携带的第一条Entry记录的的Term值
+	// 领导人最新日志前一个位置日志的任期号
 	LogTerm uint64 `protobuf:"varint,5,opt,name=logTerm" json:"logTerm"`
 	// 索引值,该索引值和消息的类型有关,不同的消息类型代表的含义不同
 	Index uint64 `protobuf:"varint,6,opt,name=index" json:"index"`
-	// 需要存储的日志信息
+	// 将要追加到Follower上的日志条目。发生心跳包时为空，有时会为了效率而向多个节点并发发送
 	Entries []Entry `protobuf:"bytes,7,rep,name=entries" json:"entries"`
-	// 已经提交的日志的索引值,用来向别人同步日志的提交信息.
+	// 搜ProgressTracker
+	// handleAppendEntries 处理函数
+	// leader会为每个Follower都维护一个leaderCommit，表示领导人认为Follower已经提交的日志条目索引值
 	Commit uint64 `protobuf:"varint,8,opt,name=commit" json:"commit"`
 	// 在传输快照时,该字段保存了快照数据
 	Snapshot Snapshot `protobuf:"bytes,9,opt,name=snapshot" json:"snapshot"`

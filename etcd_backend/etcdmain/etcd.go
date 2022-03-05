@@ -90,10 +90,7 @@ func startEtcdOrProxy(args []string) {
 	// TODO 没明白这个函数是干啥的,  防止Name发生变化,InitialCluster没有生效
 	defaultHost, dhErr := (&cfg.ec).UpdateDefaultClusterFromName(defaultInitialCluster)
 	if defaultHost != "" {
-		lg.Info(
-			"检测到默认的advertise主机",
-			zap.String("host", defaultHost),
-		)
+		lg.Info("检测到默认的advertise主机", zap.String("host", defaultHost))
 	}
 	if dhErr != nil {
 		lg.Info("未能检测到默认主机", zap.Error(dhErr))
@@ -101,10 +98,7 @@ func startEtcdOrProxy(args []string) {
 
 	if cfg.ec.Dir == "" {
 		cfg.ec.Dir = fmt.Sprintf("%v.etcd", cfg.ec.Name)
-		lg.Warn(
-			"'data-dir'是空的,使用默认的default",
-			zap.String("data-dir", cfg.ec.Dir),
-		)
+		lg.Warn("'data-dir'是空的,使用默认的default", zap.String("data-dir", cfg.ec.Dir))
 	}
 
 	var stopped <-chan struct{}

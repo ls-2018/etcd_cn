@@ -192,21 +192,21 @@ type msgWithResult struct {
 	result chan error
 }
 
+//包含在raftNode中，是Node接口的实现。里面包含一个协程和多个队列，是状态机消息处理的入口。
 type node struct {
 	rn *RawNode
-	// 用于实现Propose()接口
+	//Propose队列，调用raftNode的Propose即把Propose消息塞到这个队列里
 	propc chan msgWithResult
-	// 用于实现Step()接口
+	//Message队列，除Propose消息以外其他消息塞到这个队列里
 	recvc chan pb.Message
-	// 这两个chan用于实现ApplyConfChange()接口
+	// 接受配置的管道
 	confc      chan pb.ConfChangeV2
 	confstatec chan pb.ConfState
-	// 用于实现Ready()接口
+	//已经准备好apply的信息队列
 	readyc chan Ready
-	// 用于实现Advance()接口
+	//每次apply好了以后往这个队列里塞个空对象。通知可以继续准备Ready消息。
 	advancec chan struct{}
-	// 用于实现Tick()接口,这个需要注意一下,创建node时tickc是有缓冲的,设计者的解释是当node
-	// 忙的时候可能一个操作会超过tick的周期,这样会使得计时不准,有了缓冲就可以避免这个问题.
+	//tick信息队列，用于调用心跳
 	tickc chan struct{}
 	// 在处理中避免不了各种chan操作,此时如果Stop()被调用了,相应的阻塞就应该被激活,否则可能
 	// 面临死锁以后长时间退出后者永远无法退出.

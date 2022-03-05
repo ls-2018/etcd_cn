@@ -358,7 +358,7 @@ type configYAML struct {
 
 // configJSON 有文件选项,被翻译成配置选项
 type configJSON struct {
-	LPUrlsJSON string `json:"listen-peer-urls"`// 集群节点之间通信监听的URL;如果指定的IP是0.0.0.0,那么etcd 会监昕所有网卡的指定端口
+	LPUrlsJSON string `json:"listen-peer-urls"` // 集群节点之间通信监听的URL;如果指定的IP是0.0.0.0,那么etcd 会监昕所有网卡的指定端口
 	LCUrlsJSON string `json:"listen-client-urls"`
 	APUrlsJSON string `json:"initial-advertise-peer-urls"`
 	ACUrlsJSON string `json:"advertise-client-urls"`
@@ -436,7 +436,7 @@ func NewConfig() *Config {
 		LogLevel:              logutil.DefaultLogLevel,    // info
 		EnableLogRotation:     false,                      // 默认不允许日志旋转
 		LogRotationConfigJSON: DefaultLogRotationConfig,   // 是用于日志轮换的默认配置. 默认情况下,日志轮换是禁用的.
-		EnableGRPCGateway:     true,// 将http->grpc
+		EnableGRPCGateway:     true,                       // 将http->grpc
 		//实验性
 		ExperimentalDowngradeCheckTime:           DefaultDowngradeCheckTime, // 两次降级状态检查之间的时间间隔.
 		ExperimentalMemoryMlock:                  false,                     // 内存页锁定
