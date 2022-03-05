@@ -351,7 +351,7 @@ func (r *raft) send(m pb.Message) {
 		}
 	}
 
-	r.msgs = append(r.msgs, m) //将消息放入队列
+	r.msgs = append(r.msgs, m) // 将消息放入队列 写
 }
 
 // sendHeartbeat sends a heartbeat RPC to the given peer.
@@ -1474,6 +1474,7 @@ func (r *raft) handleAppendEntries(m pb.Message) {
 func (r *raft) handleHeartbeat(m pb.Message) {
 	// 把msg中的commit提交,commit是只增不减的
 	r.raftLog.commitTo(m.Commit) // leader commit 了,follower再commit
+	//发送Response给Leader   按照raft协议的要求带上自己日志的进度。
 	r.send(pb.Message{To: m.From, Type: pb.MsgHeartbeatResp, Context: m.Context})
 }
 

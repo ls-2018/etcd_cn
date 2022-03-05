@@ -108,7 +108,7 @@ type ServerConfig struct {
 	InitialCorruptCheck bool
 	CorruptCheckTime    time.Duration
 
-	PreVote bool	// PreVote 是否启用PreVote
+	PreVote bool // PreVote 是否启用PreVote
 
 	// SocketOpts are socket options passed to listener config.
 	SocketOpts transport.SocketOpts

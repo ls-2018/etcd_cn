@@ -199,7 +199,7 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 		HostWhitelist:                            cfg.HostWhitelist,
 		InitialCorruptCheck:                      cfg.ExperimentalInitialCorruptCheck,
 		CorruptCheckTime:                         cfg.ExperimentalCorruptCheckTime,
-		PreVote:                                  cfg.PreVote,// PreVote 是否启用PreVote
+		PreVote:                                  cfg.PreVote, // PreVote 是否启用PreVote
 		Logger:                                   cfg.logger,
 		ForceNewCluster:                          cfg.ForceNewCluster,
 		EnableGRPCGateway:                        cfg.EnableGRPCGateway,                    // 启用grpc网关,将 http 转换成 grpc / true

@@ -77,11 +77,8 @@ type Ready struct {
 	// store.
 	CommittedEntries []pb.Entry
 
-	// Messages specifies outbound messages to be sent AFTER Entries are
-	// committed to stable storage.
-	// If it contains a MsgSnap message, the application MUST report back to raft
-	// when the snapshot has been received or has failed by calling ReportSnapshot.
-	Messages []pb.Message
+	// Messages 日志被提交到稳定的存储。如果它包含一个MsgSnap消息，应用程序必须在收到快照或调用ReportSnapshot失败时向raft报告。
+	Messages []pb.Message // 就是raft.msgs
 
 	// MustSync indicates whether the HardState and Entries必须是synchronously
 	// written to disk or if an asynchronous write is permissible.
@@ -505,9 +502,9 @@ func (n *localNode) ReadIndex(ctx context.Context, rctx []byte) error {
 }
 func newReady(r *raft, prevSoftSt *SoftState, prevHardSt pb.HardState) Ready {
 	rd := Ready{
-		Entries:          r.raftLog.unstableEntries(), //unstable中的日志交给上层持久化
-		CommittedEntries: r.raftLog.nextEnts(),        //已经提交待应用的日志,交给上层应用
-		Messages:         r.msgs,                      //raft要发送的消息
+		Entries:          r.raftLog.unstableEntries(), // unstable中的日志交给上层持久化
+		CommittedEntries: r.raftLog.nextEnts(),        // 已经提交待应用的日志,交给上层应用
+		Messages:         r.msgs,                      // raft要发送的消息   ，为了之后读
 	}
 	//判断softState有没有变化,有则赋值
 	if softSt := r.softState(); !softSt.equal(prevSoftSt) {
