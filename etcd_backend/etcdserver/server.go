@@ -950,21 +950,23 @@ func (h *downgradeEnabledHandler) ServeHTTP(w http.ResponseWriter, r *http.Reque
 	w.Write([]byte(strconv.FormatBool(enabled)))
 }
 
-// Process takes a raft message and applies it to the etcd's raft state
-// machine, respecting any timeout of the given context.
+// Process 接收一个raft信息并将其应用于etcd的raft状态机,使用ctx的超时。
 func (s *EtcdServer) Process(ctx context.Context, m raftpb.Message) error {
 	lg := s.Logger()
+	// 判断该消息的来源有没有被删除
 	if s.cluster.IsIDRemoved(types.ID(m.From)) {
-		lg.Warn(
-			"rejected Raft message from removed member",
+		lg.Warn("拒绝来自被删除的成员的raft的信息",
 			zap.String("local-member-id", s.ID().String()),
 			zap.String("removed-member-id", types.ID(m.From).String()),
 		)
-		return httptypes.NewHTTPError(http.StatusForbidden, "cannot process message from removed member")
+		return httptypes.NewHTTPError(http.StatusForbidden, "无法处理来自被删除成员的信息")
 	}
+	// 操作日志【复制、配置变更 req】
 	if m.Type == raftpb.MsgApp {
 		s.stats.RecvAppendReq(types.ID(m.From).String(), m.Size())
 	}
+	var _ raft.Node = raftNode{}
+	_ = raftNode{}.Step
 	return s.r.Step(ctx, m)
 }
 

@@ -59,7 +59,7 @@ type Ready struct {
 	// HardState will be equal to empty state if there is no update.
 	pb.HardState
 
-	// ReadStates can be used for node to serve linearizable read requests locally
+	// ReadStates can be used for localNode to serve linearizable read requests locally
 	// when its applied index is greater than the index in ReadState.
 	// Note that the readState will be returned when raft receives msgReadIndex.
 	// The returned is only valid for the request that requested to read.
@@ -166,9 +166,9 @@ func StartNode(c *Config, peers []Peer) Node {
 	}
 	rn.Bootstrap(peers) // [{"id":10276657743932975437,"peerURLs":["http://localhost:2380"],"name":"default"}]
 
-	n := newNode(rn)
+	n := newLocalNode(rn) // 本机，用于接收发消息
+	go n.run()            // ok
 
-	go n.run() // ok
 	return &n
 }
 
@@ -179,7 +179,7 @@ func RestartNode(c *Config) Node {
 	if err != nil {
 		panic(err)
 	}
-	n := newNode(rn)
+	n := newLocalNode(rn)
 	go n.run()
 	return &n
 }
@@ -190,11 +190,11 @@ type msgWithResult struct {
 }
 
 //包含在raftNode中,是Node接口的实现.里面包含一个协程和多个队列,是状态机消息处理的入口.
-type node struct {
+type localNode struct {
 	rn *RawNode
-	//Propose队列,调用raftNode的Propose即把Propose消息塞到这个队列里
+	// Propose队列,调用raftNode的Propose即把Propose消息塞到这个队列里
 	propc chan msgWithResult
-	//Message队列,除Propose消息以外其他消息塞到这个队列里
+	// Message队列,除Propose消息以外其他消息塞到这个队列里
 	recvc chan pb.Message
 	// 接受配置的管道
 	confc      chan pb.ConfChangeV2
@@ -218,8 +218,8 @@ type node struct {
 }
 
 // ok
-func newNode(rn *RawNode) node {
-	return node{
+func newLocalNode(rn *RawNode) localNode {
+	return localNode{
 		confc:      make(chan pb.ConfChangeV2), // 接收EntryConfChange类型消息比如动态添加节点
 		rn:         rn,
 		propc:      make(chan msgWithResult), // 接收网络层MsgProp类型消息
@@ -234,7 +234,7 @@ func newNode(rn *RawNode) node {
 	}
 }
 
-func (n *node) Stop() {
+func (n *localNode) Stop() {
 	select {
 	case n.stop <- struct{}{}:
 		// Not already stopped, so trigger it
@@ -246,7 +246,7 @@ func (n *node) Stop() {
 	<-n.done
 }
 
-func (n *node) run() {
+func (n *localNode) run() {
 	var propc chan msgWithResult
 	var readyc chan Ready
 	var advancec chan struct{}
@@ -266,13 +266,13 @@ func (n *node) run() {
 		if lead != r.lead {
 			if r.hasLeader() {
 				if lead == None {
-					r.logger.Infof("raft.node: %x elected leader %x at term %d", r.id, r.lead, r.Term)
+					r.logger.Infof("raft.localNode: %x elected leader %x at term %d", r.id, r.lead, r.Term)
 				} else {
-					r.logger.Infof("raft.node: %x changed leader from %x to %x at term %d", r.id, lead, r.lead, r.Term)
+					r.logger.Infof("raft.localNode: %x changed leader from %x to %x at term %d", r.id, lead, r.lead, r.Term)
 				}
 				propc = n.propc
 			} else {
-				r.logger.Infof("raft.node: %x lost leader %x at term %d", r.id, lead, r.Term)
+				r.logger.Infof("raft.localNode: %x lost leader %x at term %d", r.id, lead, r.Term)
 				propc = nil
 			}
 			lead = r.lead
@@ -291,16 +291,16 @@ func (n *node) run() {
 				pm.result <- err
 				close(pm.result)
 			}
-		case m := <-n.recvc: // 接收到readindex 请求
-			// filter out response message from unknown From.
+		case m := <-n.recvc: // Message队列,除Propose消息以外其他消息塞到这个队列里
+			// 过滤掉来自未知来源的响应信息。
 			if pr := r.prs.Progress[m.From]; pr != nil || !IsResponseMsg(m.Type) {
 				r.Step(m)
 			}
 		case cc := <-n.confc: //配置变更
 			_, okBefore := r.prs.Progress[r.id]
 			cs := r.applyConfChange(cc)
-			// If the node was removed, block incoming proposals. Note that we
-			// only do this if the node was in the config before. Nodes may be
+			// If the localNode was removed, block incoming proposals. Note that we
+			// only do this if the localNode was in the config before. Nodes may be
 			// a member of the group without knowing this (when they're catching
 			// up on the log and don't have the latest config) and we don't want
 			// to block the proposal channel in that case.
@@ -348,7 +348,7 @@ func (n *node) run() {
 
 // Tick increments the internal logical clock for this Node. Election timeouts
 // and heartbeat timeouts are in units of ticks.
-func (n *node) Tick() {
+func (n *localNode) Tick() {
 	select {
 	case n.tickc <- struct{}{}:
 	case <-n.done:
@@ -357,52 +357,40 @@ func (n *node) Tick() {
 	}
 }
 
-func (n *node) Campaign(ctx context.Context) error { return n.step(ctx, pb.Message{Type: pb.MsgHup}) }
+// 选举
+func (n *localNode) Campaign(ctx context.Context) error {
+	return n.step(ctx, pb.Message{Type: pb.MsgHup})
+}
 
-func (n *node) Propose(ctx context.Context, data []byte) error {
+// 提议
+func (n *localNode) Propose(ctx context.Context, data []byte) error {
 	return n.stepWait(ctx, pb.Message{Type: pb.MsgProp, Entries: []pb.Entry{{Data: data}}})
 }
 
-func (n *node) Step(ctx context.Context, m pb.Message) error {
-	// ignore unexpected local messages receiving over network
+//步骤
+func (n *localNode) Step(ctx context.Context, m pb.Message) error {
+	// 忽略通过网络接收的非本地信息
 	if IsLocalMsg(m.Type) {
-		// TODO: return an error?
 		return nil
 	}
 	return n.step(ctx, m)
 }
 
-func confChangeToMsg(c pb.ConfChangeI) (pb.Message, error) {
-	typ, data, err := pb.MarshalConfChange(c)
-	if err != nil {
-		return pb.Message{}, err
-	}
-	return pb.Message{Type: pb.MsgProp, Entries: []pb.Entry{{Type: typ, Data: data}}}, nil
-}
-
-func (n *node) ProposeConfChange(ctx context.Context, cc pb.ConfChangeI) error {
-	msg, err := confChangeToMsg(cc)
-	if err != nil {
-		return err
-	}
-	return n.Step(ctx, msg)
-}
-
-func (n *node) step(ctx context.Context, m pb.Message) error {
+// OK
+func (n *localNode) step(ctx context.Context, m pb.Message) error {
 	return n.stepWithWaitOption(ctx, m, false)
 }
 
-func (n *node) stepWait(ctx context.Context, m pb.Message) error {
+func (n *localNode) stepWait(ctx context.Context, m pb.Message) error {
 	return n.stepWithWaitOption(ctx, m, true)
 }
 
-// Step advances the state machine using msgs. The ctx.Err() will be returned,
-// if any.
-func (n *node) stepWithWaitOption(ctx context.Context, m pb.Message, wait bool) error {
-	if m.Type != pb.MsgProp {
+// Step 使用msgs推进状态机。如果有的话，ctx.Err()将被返回。
+func (n *localNode) stepWithWaitOption(ctx context.Context, m pb.Message, wait bool) error {
+	if m.Type != pb.MsgProp { // pb.MsgProp  本地：Propose -----> MsgApp
 		select {
 		case n.recvc <- m:
-			return nil
+			return nil // 一般都会走这里
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-n.done:
@@ -437,18 +425,34 @@ func (n *node) stepWithWaitOption(ctx context.Context, m pb.Message, wait bool) 
 	return nil
 }
 
+func confChangeToMsg(c pb.ConfChangeI) (pb.Message, error) {
+	typ, data, err := pb.MarshalConfChange(c)
+	if err != nil {
+		return pb.Message{}, err
+	}
+	return pb.Message{Type: pb.MsgProp, Entries: []pb.Entry{{Type: typ, Data: data}}}, nil
+}
+
+func (n *localNode) ProposeConfChange(ctx context.Context, cc pb.ConfChangeI) error {
+	msg, err := confChangeToMsg(cc)
+	if err != nil {
+		return err
+	}
+	return n.Step(ctx, msg)
+}
+
 // 如果raft状态机有变化,会通过channel返回一个Ready的数据结构,里面包含变化信息,比如日志变化、心跳发送等.
-func (n *node) Ready() <-chan Ready { return n.readyc }
+func (n *localNode) Ready() <-chan Ready { return n.readyc }
 
 // ready消息处理完后,发送一个通知消息
-func (n *node) Advance() {
+func (n *localNode) Advance() {
 	select {
 	case n.advancec <- struct{}{}:
 	case <-n.done:
 	}
 }
 
-func (n *node) ApplyConfChange(cc pb.ConfChangeI) *pb.ConfState {
+func (n *localNode) ApplyConfChange(cc pb.ConfChangeI) *pb.ConfState {
 	var cs pb.ConfState
 	select {
 	case n.confc <- cc.AsV2():
@@ -461,7 +465,7 @@ func (n *node) ApplyConfChange(cc pb.ConfChangeI) *pb.ConfState {
 	return &cs
 }
 
-func (n *node) Status() Status {
+func (n *localNode) Status() Status {
 	c := make(chan Status)
 	select {
 	case n.status <- c:
@@ -471,14 +475,14 @@ func (n *node) Status() Status {
 	}
 }
 
-func (n *node) ReportUnreachable(id uint64) {
+func (n *localNode) ReportUnreachable(id uint64) {
 	select {
 	case n.recvc <- pb.Message{Type: pb.MsgUnreachable, From: id}:
 	case <-n.done:
 	}
 }
 
-func (n *node) ReportSnapshot(id uint64, status SnapshotStatus) {
+func (n *localNode) ReportSnapshot(id uint64, status SnapshotStatus) {
 	rej := status == SnapshotFailure
 
 	select {
@@ -487,7 +491,7 @@ func (n *node) ReportSnapshot(id uint64, status SnapshotStatus) {
 	}
 }
 
-func (n *node) TransferLeadership(ctx context.Context, lead, transferee uint64) {
+func (n *localNode) TransferLeadership(ctx context.Context, lead, transferee uint64) {
 	select {
 	// manually set 'from' and 'to', so that leader can voluntarily transfers its leadership
 	case n.recvc <- pb.Message{Type: pb.MsgTransferLeader, From: transferee, To: lead}:
@@ -496,7 +500,7 @@ func (n *node) TransferLeadership(ctx context.Context, lead, transferee uint64) 
 	}
 }
 
-func (n *node) ReadIndex(ctx context.Context, rctx []byte) error {
+func (n *localNode) ReadIndex(ctx context.Context, rctx []byte) error {
 	return n.step(ctx, pb.Message{Type: pb.MsgReadIndex, Entries: []pb.Entry{{Data: rctx}}})
 }
 func newReady(r *raft, prevSoftSt *SoftState, prevHardSt pb.HardState) Ready {

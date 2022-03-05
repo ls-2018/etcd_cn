@@ -134,7 +134,7 @@ type Config struct {
 	CheckQuorum bool
 
 	// PreVote 防止分区服务器[term会很大]重新加入集群时出现中断
-	PreVote bool
+	PreVote bool // PreVote 是否启用PreVote
 
 	// CheckQuorum必须是enabled if ReadOnlyOption is ReadOnlyLeaseBased.
 	ReadOnlyOption ReadOnlyOption
@@ -226,7 +226,7 @@ type raft struct {
 	readOnly *readOnly
 
 	checkQuorum bool // 检查需要维持的选票数,一旦小于,就会丢失leader
-	preVote     bool
+	preVote     bool // PreVote 是否启用PreVote
 
 	// 选举过期计数(electionElapsed)：主要用于follower来判断leader是不是正常工作,
 	// 当follower接受到leader的心跳的时候会把electionElapsed的时候就会置为0,electionElapsed的相加是通过外部调用实现的,
@@ -281,8 +281,8 @@ func newRaft(c *Config) *raft {
 		electionTimeout:           c.ElectionTick,  // 选举超时
 		heartbeatTimeout:          c.HeartbeatTick, // 心跳间隔
 		logger:                    c.Logger,
-		checkQuorum:               c.CheckQuorum, // 检查需要维持的选票数,一旦小于,就会丢失leader
-		preVote:                   c.PreVote,
+		checkQuorum:               c.CheckQuorum,                 // 检查需要维持的选票数,一旦小于,就会丢失leader
+		preVote:                   c.PreVote,                     // PreVote 是否启用PreVote
 		readOnly:                  newReadOnly(c.ReadOnlyOption), // etcd_backend/etcdserver/raft.go:469    默认值0 ReadOnlySafe
 		disableProposalForwarding: c.DisableProposalForwarding,   // 禁止将请求转发到leader,默认FALSE
 	}
@@ -745,7 +745,7 @@ func (r *raft) campaign(t CampaignType) {
 	}
 	if _, _, res := r.poll(r.id, voteRespMsgType(voteMsg), true); res == quorum.VoteWon {
 		// We won the election after voting for ourselves (which must mean that
-		// this is a single-node cluster). Advance to the next state.
+		// this is a single-localNode cluster). Advance to the next state.
 		if t == campaignPreElection {
 			r.campaign(campaignElection)
 		} else {
@@ -787,12 +787,13 @@ func (r *raft) poll(id uint64, t pb.MessageType, v bool) (granted int, rejected 
 	return r.prs.TallyVotes()
 }
 
+// 分流各种消息
 func (r *raft) Step(m pb.Message) error {
-	// Handle the message term, which may result in our stepping down to a follower.
+	// 处理消息的期限，这可能会导致我们成为一名追随者。
 	switch {
 	case m.Term == 0:
-		// local message
-	case m.Term > r.Term:
+		// 本地消息
+	case m.Term > r.Term: // 投票或预投票请求
 		if m.Type == pb.MsgVote || m.Type == pb.MsgPreVote {
 			force := bytes.Equal(m.Context, []byte(campaignTransfer))
 			inLease := r.checkQuorum && r.lead != None && r.electionElapsed < r.electionTimeout
@@ -810,7 +811,7 @@ func (r *raft) Step(m pb.Message) error {
 		case m.Type == pb.MsgPreVoteResp && !m.Reject:
 			// We send pre-vote requests with a term in our future. If the
 			// pre-vote is granted, we will increment our term when we get a
-			// quorum. If it is not, the term comes from the node that
+			// quorum. If it is not, the term comes from the localNode that
 			// rejected our vote so we should become a follower at the new
 			// term.
 		default:
@@ -827,7 +828,7 @@ func (r *raft) Step(m pb.Message) error {
 		if (r.checkQuorum || r.preVote) && (m.Type == pb.MsgHeartbeat || m.Type == pb.MsgApp) {
 			// We have received messages from a leader at a lower term. It is possible
 			// that these messages were simply delayed in the network, but this could
-			// also mean that this node has advanced its term number during a network
+			// also mean that this localNode has advanced its term number during a network
 			// partition, and it is now unable to either win an election or to rejoin
 			// the majority on the old term. If checkQuorum is false, this will be
 			// handled by incrementing term numbers in response to MsgVote with a
@@ -835,16 +836,16 @@ func (r *raft) Step(m pb.Message) error {
 			// MsgVote and must generate other messages to advance the term. The net
 			// result of these two features is to minimize the disruption caused by
 			// nodes that have been removed from the cluster's configuration: a
-			// removed node will send MsgVotes (or MsgPreVotes) which will be ignored,
+			// removed localNode will send MsgVotes (or MsgPreVotes) which will be ignored,
 			// but it will not receive MsgApp or MsgHeartbeat, so it will not create
-			// disruptive term increases, by notifying leader of this node's activeness.
+			// disruptive term increases, by notifying leader of this localNode's activeness.
 			// The above comments also true for Pre-Vote
 			//
 			// When follower gets isolated, it soon starts an election ending
 			// up with a higher term than leader, although it won't receive enough
 			// votes to win the election. When it regains connectivity, this response
 			// with "pb.MsgAppResp" of higher term would force leader to step down.
-			// However, this disruption is inevitable to free this stuck node with
+			// However, this disruption is inevitable to free this stuck localNode with
 			// fresh election. This can be prevented with Pre-Vote phase.
 			r.send(pb.Message{To: m.From, Type: pb.MsgAppResp})
 		} else if m.Type == pb.MsgPreVote {
@@ -863,8 +864,8 @@ func (r *raft) Step(m pb.Message) error {
 	}
 
 	switch m.Type {
-	case pb.MsgHup:
-		if r.preVote {
+	case pb.MsgHup: // 开始选举
+		if r.preVote { // PreVote 是否启用PreVote
 			r.hup(campaignPreElection)
 		} else {
 			r.hup(campaignElection)
@@ -904,10 +905,10 @@ func (r *raft) Step(m pb.Message) error {
 				r.id, r.raftLog.lastTerm(), r.raftLog.lastIndex(), r.Vote, m.Type, m.From, m.LogTerm, m.Index, r.Term)
 			// When responding to Msg{Pre,}Vote messages we include the term
 			// from the message, not the local term. To see why, consider the
-			// case where a single node was previously partitioned away and
+			// case where a single localNode was previously partitioned away and
 			// it's local term is now out of date. If we include the local term
 			// (recall that for pre-votes we don't update the local term), the
-			// (pre-)campaigning node on the other end will proceed to ignore
+			// (pre-)campaigning localNode on the other end will proceed to ignore
 			// the message (it ignores all out of date messages).
 			// The term in the original message and current local term are the
 			// same in the case of regular votes, but different for pre-votes.
@@ -1188,7 +1189,7 @@ func stepLeader(r *raft, m pb.Message) error {
 					releasePendingReadIndexMessages(r)
 					r.bcastAppend()
 				} else if oldPaused {
-					// If we were paused before, this node may be missing the
+					// If we were paused before, this localNode may be missing the
 					// latest commit index, so send it.
 					r.sendAppend(m.From)
 				}
@@ -1252,7 +1253,7 @@ func stepLeader(r *raft, m pb.Message) error {
 			pr.BecomeProbe()
 			r.logger.Debugf("%x snapshot failed, resumed sending replication messages to %x [%s]", r.id, m.From, pr)
 		}
-		// If snapshot finish, wait for the MsgAppResp from the remote node before sending
+		// If snapshot finish, wait for the MsgAppResp from the remote localNode before sending
 		// out the next MsgApp.
 		// If snapshot failure, wait for a heartbeat interval before next try
 		pr.ProbeSent = true
@@ -1272,7 +1273,7 @@ func stepLeader(r *raft, m pb.Message) error {
 		lastLeadTransferee := r.leadTransferee
 		if lastLeadTransferee != None {
 			if lastLeadTransferee == leadTransferee {
-				r.logger.Infof("%x [term %d] transfer leadership to %x is in progress, ignores request to same node %x",
+				r.logger.Infof("%x [term %d] transfer leadership to %x is in progress, ignores request to same localNode %x",
 					r.id, r.Term, leadTransferee, leadTransferee)
 				return nil
 			}
@@ -1315,13 +1316,13 @@ func stepCandidate(r *raft, m pb.Message) error {
 		r.logger.Infof("%x no leader at term %d; dropping proposal", r.id, r.Term)
 		return ErrProposalDropped
 	case pb.MsgApp:
-		r.becomeFollower(m.Term, m.From) // always m.Term == r.Term
+		r.becomeFollower(m.Term, m.From)
 		r.handleAppendEntries(m)
-	case pb.MsgHeartbeat:
-		r.becomeFollower(m.Term, m.From) // always m.Term == r.Term
+	case pb.MsgHeartbeat: // √
+		r.becomeFollower(m.Term, m.From)
 		r.handleHeartbeat(m)
 	case pb.MsgSnap:
-		r.becomeFollower(m.Term, m.From) // always m.Term == r.Term
+		r.becomeFollower(m.Term, m.From)
 		r.handleSnapshot(m)
 	case myVoteRespType:
 		gr, rj, res := r.poll(m.From, m.Type, !m.Reject) // 计算当前收到多少投票
@@ -1469,11 +1470,11 @@ func (r *raft) handleAppendEntries(m pb.Message) {
 	}
 }
 
+// 处理leader发送来的心跳信息   【follower、Candidate】
 func (r *raft) handleHeartbeat(m pb.Message) {
 	// 把msg中的commit提交,commit是只增不减的
 	r.raftLog.commitTo(m.Commit) // leader commit 了,follower再commit
 	r.send(pb.Message{To: m.From, Type: pb.MsgHeartbeatResp, Context: m.Context})
-
 }
 
 func (r *raft) handleSnapshot(m pb.Message) {
@@ -1614,12 +1615,12 @@ func (r *raft) switchToConfig(cfg tracker.Config, prs tracker.ProgressMap) pb.Co
 	cs := r.prs.ConfState()
 	pr, ok := r.prs.Progress[r.id]
 
-	// Update whether the node itself is a learner, resetting to false when the
-	// node is removed.
+	// Update whether the localNode itself is a learner, resetting to false when the
+	// localNode is removed.
 	r.isLearner = ok && pr.IsLearner
 
 	if (!ok || r.isLearner) && r.state == StateLeader {
-		// This node is leader and was removed or demoted. We prevent demotions
+		// This localNode is leader and was removed or demoted. We prevent demotions
 		// at the time writing but hypothetically we handle them the same way as
 		// removing the leader: stepping down into the next Term.
 		//
@@ -1631,7 +1632,7 @@ func (r *raft) switchToConfig(cfg tracker.Config, prs tracker.ProgressMap) pb.Co
 		return cs
 	}
 
-	// The remaining steps only make sense if this node is the leader and there
+	// The remaining steps only make sense if this localNode is the leader and there
 	// are other nodes.
 	if r.state != StateLeader || len(cs.Voters) == 0 {
 		return cs
@@ -1797,7 +1798,7 @@ func sendMsgReadIndexResponse(r *raft, m pb.Message) {
 	case ReadOnlySafe:
 		//记录当前节点的raftLog.committed字段值,即已提交位置
 		r.readOnly.addRequest(r.raftLog.committed, m)
-		// The local node automatically acks the request.
+		// The local localNode automatically acks the request.
 		r.readOnly.recvAck(r.id, m.Entries[0].Data)
 		r.bcastHeartbeatWithCtx(m.Entries[0].Data) //发送心跳
 	case ReadOnlyLeaseBased:

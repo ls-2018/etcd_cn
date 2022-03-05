@@ -58,9 +58,7 @@ type RaftCluster struct {
 	sync.Mutex // guards the fields below
 	version    *semver.Version
 	members    map[types.ID]*Member
-	// removed contains the ids of removed members in the cluster.
-	// removed id cannot be reused.
-	removed map[types.ID]bool
+	removed    map[types.ID]bool // 记录被删除的节点ID,删除后的节点无法重用
 
 	downgradeInfo *DowngradeInfo // 降级信息
 }

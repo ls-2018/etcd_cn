@@ -30,7 +30,7 @@ Usage
 The primary object in raft is a Node. You either start a Node from scratch
 using raft.StartNode or start a Node from some initial state using raft.RestartNode.
 
-To start a node from scratch:
+To start a localNode from scratch:
 
   storage := raft.NewMemoryStorage()
   c := &Config{
@@ -43,7 +43,7 @@ To start a node from scratch:
   }
   n := raft.StartNode(c, []raft.Peer{{ID: 0x02}, {ID: 0x03}})
 
-To restart a node from previous state:
+To restart a localNode from previous state:
 
   storage := raft.NewMemoryStorage()
 
@@ -92,11 +92,11 @@ your main raft loop.
 
 3. Apply Snapshot (if any) and CommittedEntries to the state machine.
 If any committed Entry has Type EntryConfChange, call Node.ApplyConfChange()
-to apply it to the node. The configuration change may be cancelled at this point
+to apply it to the localNode. The configuration change may be cancelled at this point
 by setting the NodeID field to zero before calling ApplyConfChange
 (but ApplyConfChange必须是called one way or the other, and the decision to cancel
 must be based solely on the state machine and not external information such as
-the observed health of the node).
+the observed health of the localNode).
 
 4. Call Node.Advance() to signal readiness for the next batch of updates.
 This may be done at any time after step 1, although all updates必须是processed
@@ -107,7 +107,7 @@ implementation of the Storage interface. The provided MemoryStorage
 type can be used for this (if you repopulate its state upon a
 restart), or you can supply your own disk-backed implementation.
 
-Third, when you receive a message from another node, pass it to Node.Step:
+Third, when you receive a message from another localNode, pass it to Node.Step:
 
 	func recvRaftRPC(ctx context.Context, m raftpb.Message) {
 		n.Step(ctx, m)
@@ -144,7 +144,7 @@ The total state machine handling loop will look something like this:
     }
   }
 
-To propose changes to the state machine from your node take your application
+To propose changes to the state machine from your localNode take your application
 data, serialize it into a byte slice and call:
 
 	n.Propose(ctx, data)
@@ -153,20 +153,20 @@ If the proposal is committed, data will appear in committed entries with type
 raftpb.EntryNormal. There is no guarantee that a proposed command will be
 committed; you may have to re-propose after a timeout.
 
-To add or remove a node in a cluster, build ConfChange struct 'cc' and call:
+To add or remove a localNode in a cluster, build ConfChange struct 'cc' and call:
 
 	n.ProposeConfChange(ctx, cc)
 
 After config change is committed, some committed entry with type
-raftpb.EntryConfChange will be returned. You must apply it to node through:
+raftpb.EntryConfChange will be returned. You must apply it to localNode through:
 
 	var cc raftpb.ConfChange
 	cc.Unmarshal(data)
 	n.ApplyConfChange(cc)
 
-Note: An ID represents a unique node in a cluster for all time. A
-given ID必须是used only once even if the old node has been removed.
-This means that for example IP addresses make poor node IDs since they
+Note: An ID represents a unique localNode in a cluster for all time. A
+given ID必须是used only once even if the old localNode has been removed.
+This means that for example IP addresses make poor localNode IDs since they
 may be reused. Node IDs必须是non-zero.
 
 Implementation notes
@@ -175,7 +175,7 @@ This implementation is up to date with the final Raft thesis
 (https://github.com/ongardie/dissertation/blob/master/stanford.pdf), although our
 implementation of the membership change protocol differs somewhat from
 that described in chapter 4. The key invariant that membership changes
-happen one node at a time is preserved, but in our implementation the
+happen one localNode at a time is preserved, but in our implementation the
 membership change takes effect when its entry is applied, not when it
 is added to the log (so the entry is committed under the old
 membership instead of the new). This is equivalent in terms of safety,
@@ -201,17 +201,17 @@ in raftpb package). Each state (follower, candidate, leader) implements its
 own 'step' method ('stepFollower', 'stepCandidate', 'stepLeader') when
 advancing with the given raftpb.Message. Each step is determined by its
 raftpb.MessageType. Note that every step is checked by one common method
-'Step' that safety-checks the terms of node and incoming message to prevent
+'Step' that safety-checks the terms of localNode and incoming message to prevent
 stale log entries:
 
-	'MsgHup' is used for election. If a node is a follower or candidate, the
+	'MsgHup' is used for election. If a localNode is a follower or candidate, the
 	'tick' function in 'raft' struct is set as 'tickElection'. If a follower or
 	candidate has not received any heartbeat before the election timeout, it
 	passes 'MsgHup' to its Step method and becomes (or remains) a candidate to
 	start a new election.
 
 	'MsgBeat' is an internal type that signals the leader to send a heartbeat of
-	the 'MsgHeartbeat' type. If a node is a leader, the 'tick' function in
+	the 'MsgHeartbeat' type. If a localNode is a leader, the 'tick' function in
 	the 'raft' struct is set as 'tickHeartbeat', and triggers the leader to
 	send periodic 'MsgHeartbeat' messages to its followers.
 
@@ -238,10 +238,10 @@ stale log entries:
 	calling 'handleAppendEntries' method, which sends 'MsgAppResp' to raft
 	mailbox.
 
-	'MsgVote' requests votes for election. When a node is a follower or
-	candidate and 'MsgHup' is passed to its Step method, then the node calls
+	'MsgVote' requests votes for election. When a localNode is a follower or
+	candidate and 'MsgHup' is passed to its Step method, then the localNode calls
 	'campaign' method to campaign itself to become a leader. Once 'campaign'
-	method is called, the node becomes candidate and sends 'MsgVote' to peers
+	method is called, the localNode becomes candidate and sends 'MsgVote' to peers
 	in cluster to request votes. When passed to leader or candidate's Step
 	method and the message's Term is lower than leader's or candidate's,
 	'MsgVote' will be rejected ('MsgVoteResp' is returned with Reject true).
@@ -259,11 +259,11 @@ stale log entries:
 
 	'MsgPreVote' and 'MsgPreVoteResp' are used in an optional two-phase election
 	protocol. When Config.PreVote is true, a pre-election is carried out first
-	(using the same rules as a regular election), and no node increases its term
-	number unless the pre-election indicates that the campaigning node would win.
-	This minimizes disruption when a partitioned node rejoins the cluster.
+	(using the same rules as a regular election), and no localNode increases its term
+	number unless the pre-election indicates that the campaigning localNode would win.
+	This minimizes disruption when a partitioned localNode rejoins the cluster.
 
-	'MsgSnap' requests to install a snapshot message. When a node has just
+	'MsgSnap' requests to install a snapshot message. When a localNode has just
 	become a leader or the leader receives 'MsgProp' message, it calls
 	'bcastAppend' method, which then calls 'sendAppend' method to each
 	follower. In 'sendAppend', if a leader fails to get term or entries,

@@ -226,5 +226,7 @@ grpc  client   --------grpc--------->    gateway ------------> etcd http server 
 ### module
 
 - github.com/soheilhy/cmux 可以在同一个listener上监听不同协议的请求
-- 
+-
 
+etcdServer 会单独处理 Propose消息, 其余消息交给raft.step 来处理 [该函数，会随着节点角色的改变而发生改变] [会首先判断任期、索引，在判断消息类型]
+  

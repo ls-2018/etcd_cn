@@ -506,7 +506,7 @@ func restartNode(cfg config.ServerConfig, snapshot *raftpb.Snapshot) (types.ID, 
 		MaxSizePerMsg:   maxSizePerMsg, //每次发消息的最大size
 		MaxInflightMsgs: maxInflightMsgs,
 		CheckQuorum:     true,
-		PreVote:         cfg.PreVote,
+		PreVote:         cfg.PreVote, // PreVote 是否启用PreVote
 		Logger:          NewRaftLoggerZap(cfg.Logger.Named("raft")),
 	}
 
@@ -580,7 +580,7 @@ func restartAsStandaloneNode(cfg config.ServerConfig, snapshot *raftpb.Snapshot)
 		MaxSizePerMsg:   maxSizePerMsg, //每次发消息的最大size
 		MaxInflightMsgs: maxInflightMsgs,
 		CheckQuorum:     true,
-		PreVote:         cfg.PreVote,
+		PreVote:         cfg.PreVote, // PreVote 是否启用PreVote
 		Logger:          NewRaftLoggerZap(cfg.Logger.Named("raft")),
 	}
 
@@ -690,4 +690,12 @@ func createConfigChangeEnts(lg *zap.Logger, ids []uint64, self uint64, term, ind
 	}
 
 	return ents
+}
+
+// 凸(艹皿艹 )   明明没有实现这个方法啊
+func (r *raftNode) Demo() {
+	_ = r.raftNodeConfig.Node
+	//两层匿名结构体,该字段是个接口
+	_ = r.Step
+	//var _ raft.Node = raftNode{}
 }

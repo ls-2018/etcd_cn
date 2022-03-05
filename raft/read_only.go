@@ -58,7 +58,7 @@ func newReadOnly(option ReadOnlyOption) *readOnly {
 // addRequest adds a read only request into readonly struct.
 // `index` is the commit index of the raft state machine when it received
 // the read only request.
-// `m` is the original read only request message from the local or remote node.
+// `m` is the original read only request message from the local or remote localNode.
 //将已提交的位置(raftLog.committed)以及MsgReadIndex消息的相关信息存到readOnly中
 /*
 1.获取消息ID,在ReadIndex消息的第一个记录中记录了消息ID

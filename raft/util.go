@@ -40,11 +40,13 @@ func max(a, b uint64) uint64 {
 	return b
 }
 
+// OK
 func IsLocalMsg(msgt pb.MessageType) bool {
 	return msgt == pb.MsgHup || msgt == pb.MsgBeat || msgt == pb.MsgUnreachable ||
 		msgt == pb.MsgSnapStatus || msgt == pb.MsgCheckQuorum
 }
 
+// OK
 func IsResponseMsg(msgt pb.MessageType) bool {
 	return msgt == pb.MsgAppResp || msgt == pb.MsgVoteResp || msgt == pb.MsgHeartbeatResp || msgt == pb.MsgUnreachable || msgt == pb.MsgPreVoteResp
 }

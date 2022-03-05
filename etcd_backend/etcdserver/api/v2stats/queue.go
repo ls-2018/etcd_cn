@@ -58,12 +58,11 @@ func (q *statsQueue) frontAndBack() (*RequestStats, *RequestStats) {
 	return nil, nil
 }
 
-// Insert function insert a RequestStats into the queue and update the records
 func (q *statsQueue) Insert(p *RequestStats) {
 	q.rwl.Lock()
 	defer q.rwl.Unlock()
 
-	q.back = (q.back + 1) % queueCapacity
+	q.back = (q.back + 1) % queueCapacity // 200
 
 	if q.size == queueCapacity { //dequeue
 		q.totalReqSize -= q.items[q.front].Size
