@@ -145,7 +145,7 @@ MsgReadIndexResp            非本地：
   ```
 
 
-- checkquorum机制：
+- checkquorum  过半机制：
   ```
   每隔一段时间,leader节点会尝试连接集群中的节点(发送心跳),如果发现自己可以连接到的节点个数没有超过半数,则主动切换成follower状态.
   这样在网络分区的情况下,旧的leader节点可以很快的知道自己已经过期了.

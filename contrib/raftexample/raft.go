@@ -253,12 +253,12 @@ func (rc *raftNode) replayWAL() *wal.WAL {
 	}
 	rc.raftStorage = raft.NewMemoryStorage()
 	if snapshot != nil {
-		rc.raftStorage.ApplySnapshot(*snapshot)
+		rc.raftStorage.ApplySnapshot(*snapshot) // 从持久化的内存存储中恢复出快照
 	}
-	rc.raftStorage.SetHardState(st)
+	rc.raftStorage.SetHardState(st) // 从持久化的内存存储中恢复出状态
 
 	// append to storage so raft starts at the right place in log
-	rc.raftStorage.Append(ents)
+	rc.raftStorage.Append(ents) // 从持久化的内存存储中恢复出日志
 
 	return w
 }
@@ -452,10 +452,10 @@ func (rc *raftNode) serveChannels() {
 			rc.wal.Save(rd.HardState, rd.Entries)
 			if !raft.IsEmptySnap(rd.Snapshot) {
 				rc.saveSnap(rd.Snapshot)
-				rc.raftStorage.ApplySnapshot(rd.Snapshot)
+				rc.raftStorage.ApplySnapshot(rd.Snapshot) // 从持久化的内存存储中恢复出快照
 				rc.publishSnapshot(rd.Snapshot)
 			}
-			rc.raftStorage.Append(rd.Entries)
+			rc.raftStorage.Append(rd.Entries) // 从持久化的内存存储中恢复出日志
 			rc.transport.Send(rd.Messages)
 			applyDoneC, ok := rc.publishEntries(rc.entriesToApply(rd.CommittedEntries))
 			if !ok {

@@ -92,8 +92,7 @@ type raftNode struct {
 	// a chan to send out readState
 	readStateC chan raft.ReadState
 
-	// utility
-	ticker *time.Ticker
+	ticker *time.Ticker // raft 中有两个时间计数器，它们分别是选举计数器 (Follower/Candidate)和心跳计数器  (Leader),它们都依靠 tick 来推进时钟
 	// contention detectors for raft heartbeat message
 	td *contention.TimeoutDetector
 
@@ -151,7 +150,7 @@ func newRaftNode(cfg raftNodeConfig) *raftNode {
 	return r
 }
 
-// raft.Node does not have locks in Raft package
+// raft.Node raft包中没有lock
 func (r *raftNode) tick() {
 	r.tickMu.Lock()
 	r.Tick()
@@ -168,7 +167,7 @@ func (r *raftNode) start(rh *raftReadyHandler) {
 
 		for {
 			select {
-			case <-r.ticker.C:
+			case <-r.ticker.C: //推进心跳或者选举计时器
 				r.tick()
 
 			//	 readyc = n.readyc    size为0
@@ -260,7 +259,7 @@ func (r *raftNode) start(rh *raftReadyHandler) {
 					notifyc <- struct{}{}
 
 					// gofail: var raftBeforeApplySnap struct{}
-					r.raftStorage.ApplySnapshot(rd.Snapshot)
+					r.raftStorage.ApplySnapshot(rd.Snapshot) // 从持久化的内存存储中恢复出快照
 					r.lg.Info("applied incoming Raft snapshot", zap.Uint64("snapshot-index", rd.Snapshot.Metadata.Index))
 					// gofail: var raftAfterApplySnap struct{}
 
@@ -270,7 +269,7 @@ func (r *raftNode) start(rh *raftReadyHandler) {
 					// gofail: var raftAfterWALRelease struct{}
 				}
 
-				r.raftStorage.Append(rd.Entries)
+				r.raftStorage.Append(rd.Entries) // 从持久化的内存存储中恢复出日志
 
 				if !islead {
 					// finish processing incoming messages before we signal raftdone chan
@@ -494,10 +493,10 @@ func restartNode(cfg config.ServerConfig, snapshot *raftpb.Snapshot) (types.ID, 
 	cl.SetID(id, cid)
 	s := raft.NewMemoryStorage()
 	if snapshot != nil {
-		s.ApplySnapshot(*snapshot)
+		s.ApplySnapshot(*snapshot) // 从持久化的内存存储中恢复出快照
 	}
-	s.SetHardState(st)
-	s.Append(ents)
+	s.SetHardState(st) // 从持久化的内存存储中恢复出状态
+	s.Append(ents)     // 从持久化的内存存储中恢复出日志
 	c := &raft.Config{
 		ID:              uint64(id),
 		ElectionTick:    cfg.ElectionTicks,
@@ -568,10 +567,10 @@ func restartAsStandaloneNode(cfg config.ServerConfig, snapshot *raftpb.Snapshot)
 	cl.SetID(id, cid)
 	s := raft.NewMemoryStorage()
 	if snapshot != nil {
-		s.ApplySnapshot(*snapshot)
+		s.ApplySnapshot(*snapshot) // 从持久化的内存存储中恢复出快照
 	}
-	s.SetHardState(st)
-	s.Append(ents)
+	s.SetHardState(st) // 从持久化的内存存储中恢复出状态
+	s.Append(ents)     // 从持久化的内存存储中恢复出日志
 	c := &raft.Config{
 		ID:              uint64(id),
 		ElectionTick:    cfg.ElectionTicks,

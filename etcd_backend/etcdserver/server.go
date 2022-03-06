@@ -1172,7 +1172,7 @@ func (s *EtcdServer) Cleanup() {
 }
 
 func (s *EtcdServer) applyAll(ep *etcdProgress, apply *apply) {
-	s.applySnapshot(ep, apply)
+	s.applySnapshot(ep, apply) // 从持久化的内存存储中恢复出快照
 	s.applyEntries(ep, apply)
 
 	proposalsApplied.Set(float64(ep.appliedi))

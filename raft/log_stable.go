@@ -204,7 +204,7 @@ func (ms *MemoryStorage) InitialState() (pb.HardState, pb.ConfState, error) {
 	return ms.hardState, ms.snapshot.Metadata.ConfState, nil
 }
 
-// SetHardState OK
+// SetHardState 从持久化的内存存储中恢复出状态
 func (ms *MemoryStorage) SetHardState(st pb.HardState) error {
 	ms.Lock()
 	defer ms.Unlock()

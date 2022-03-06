@@ -51,7 +51,7 @@ func NewRawNode(config *Config) (*RawNode, error) {
 	return rn, nil
 }
 
-// Tick advances the internal logical clock by a single tick.
+// Tick 将内部逻辑时钟提前一个刻度。
 func (rn *RawNode) Tick() {
 	rn.raft.tick()
 }
