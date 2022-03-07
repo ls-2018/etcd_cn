@@ -49,7 +49,7 @@ type ServerConfig struct {
 	// We expect the follower has a millisecond level latency with the leader.
 	// The max throughput is around 10K. Keep a 5K entries is enough for helping
 	// follower to catch up.
-	// 是slow follower在raft存储条目落后追赶的条目数量.我们希望跟随者与领导者有一毫秒级的延迟.最大的吞吐量是10K左右.保持5K的条目就足以帮助跟随者赶上.
+	// 是slow follower在raft存储条目落后追赶的条目数量.我们希望follower与leader有一毫秒级的延迟.最大的吞吐量是10K左右.保持5K的条目就足以帮助follower赶上.
 	// WARNING: only change this for tests. Always use "DefaultSnapshotCatchUpEntries"
 	SnapshotCatchUpEntries uint64
 

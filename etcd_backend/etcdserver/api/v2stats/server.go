@@ -84,7 +84,7 @@ func (ss *ServerStats) JSON() []byte {
 	return b
 }
 
-// RecvAppendReq 在收到来自领导的AppendRequest后，更新ServerStats。
+// RecvAppendReq 在收到来自leader的AppendRequest后，更新ServerStats。
 func (ss *ServerStats) RecvAppendReq(leader string, reqSize int) {
 	ss.Lock()
 	defer ss.Unlock()

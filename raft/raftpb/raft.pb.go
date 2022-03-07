@@ -395,9 +395,9 @@ type Message struct {
 	To uint64 `protobuf:"varint,2,opt,name=to" json:"to"`
 	// 发送消息的节点ID
 	From uint64 `protobuf:"varint,3,opt,name=from" json:"from"`
-	// 领导人的任期号
+	// leader的任期号
 	Term uint64 `protobuf:"varint,4,opt,name=term" json:"term"`
-	// 领导人最新日志前一个位置日志的任期号
+	// leader最新日志前一个位置日志的任期号
 	LogTerm uint64 `protobuf:"varint,5,opt,name=logTerm" json:"logTerm"`
 	// 索引值,该索引值和消息的类型有关,不同的消息类型代表的含义不同
 	Index uint64 `protobuf:"varint,6,opt,name=index" json:"index"`
@@ -405,7 +405,7 @@ type Message struct {
 	Entries []Entry `protobuf:"bytes,7,rep,name=entries" json:"entries"`
 	// 搜ProgressTracker
 	// handleAppendEntries 处理函数
-	// leader会为每个Follower都维护一个leaderCommit,表示领导人认为Follower已经提交的日志条目索引值
+	// leader会为每个Follower都维护一个leaderCommit,表示leader认为Follower已经提交的日志条目索引值
 	Commit uint64 `protobuf:"varint,8,opt,name=commit" json:"commit"`
 	// 在传输快照时,该字段保存了快照数据
 	Snapshot Snapshot `protobuf:"bytes,9,opt,name=snapshot" json:"snapshot"`

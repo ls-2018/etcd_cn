@@ -166,7 +166,9 @@ MsgReadIndexResp            非本地：
 
 - leader收到follower的心跳响应之后会怎么去修改对应的follower元数据呢？
 
-![](./images/MsgReadIndex.png)
+- 快照 follower 当数据远落后于leader , leader会将快照发送过来 但由于网络原因，这一过程很慢 ,但是leader又生成了新的快照,wal没有旧的数据, 这时follower同步完，leader将最新新消息
+  发送follower , follower reject ,但是此时wal已经没有对应的wal 又会发送新的快照, 这就会陷入死循环。。。。。how? 看完源码再说吧
+  ![](./images/MsgReadIndex.png)
 
 ### Ref
 
@@ -189,13 +191,12 @@ MsgReadIndexResp            非本地：
 - https://www.jianshu.com/p/518f75c5bf55
 - https://www.cnblogs.com/ricklz/p/15155095.html
 - https://www.lixueduan.com/categories/
-<<<<<<< HEAD
-=======
 - https://zhuanlan.zhihu.com/p/452483457
 - https://so.csdn.net/so/search?q=etcd&t=blog&u=devclouds
 - https://blog.csdn.net/weixin_42663840/article/details/100005978
 - https://www.jianshu.com/p/267e1d626c22
->>>>>>> e92f147fedda937eaefb6b0d0d407f131651ff88
+- https://blog.csdn.net/qq_40504851/category_10905363.html
+- https://blog.csdn.net/cyq6239075/category_9756361.html             ☆
 
 ```
 tickHeartbeart 会同时推进两个计数器  heartbeatElapsed 和 electionElapsed .
@@ -227,12 +228,6 @@ curl    --------http--------->    gateway ------------> etcd grpc server 2379
 ```
 
 ### module
-<<<<<<< HEAD
-
-- github.com/soheilhy/cmux 可以在同一个listener上监听不同协议的请求
-- 
-=======
->>>>>>> e92f147fedda937eaefb6b0d0d407f131651ff88
 
 - github.com/soheilhy/cmux 可以在同一个listener上监听不同协议的请求
 -
