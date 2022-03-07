@@ -313,17 +313,27 @@ func (bh *backendHooks) SetConfState(confState *raftpb.ConfState) {
 	bh.confStateDirty = true
 }
 
-// NewServer 根据提供的配置创建一个新的EtcdServer.在EtcdServer的生命周期内,该配置被认为是静态的.
-func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
-	st := v2store.New(StoreClusterPrefix, StoreKeysPrefix) // 创建了一个store结构体
+type Temp struct {
+	Bepath   string
+	W        *wal.WAL
+	N        raft.Node
+	S        *raft.MemoryStorage
+	ID       types.ID
+	CL       *membership.RaftCluster
+	Remotes  []*membership.Member
+	Snapshot *raftpb.Snapshot
+	Prt      http.RoundTripper
+	SS       *snap.Snapshotter
+	ST       v2store.Store
+	CI       cindex.ConsistentIndexer
+	BeExist  bool
+	BeHooks  *backendHooks
+	BE       backend.Backend
+}
 
-	var (
-		w  *wal.WAL
-		n  raft.Node
-		s  *raft.MemoryStorage
-		id types.ID
-		cl *membership.RaftCluster
-	)
+func MySelfStartRaft(cfg config.ServerConfig) (temp *Temp, err error) {
+	temp = &Temp{}
+	temp.ST = v2store.New(StoreClusterPrefix, StoreKeysPrefix) // 创建了一个store结构体
 
 	if cfg.MaxRequestBytes > recommendedMaxRequestBytes { // 10M
 		cfg.Logger.Warn(
@@ -359,20 +369,20 @@ func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 		)
 	}
 	// 创建快照struct
-	ss := snap.New(cfg.Logger, cfg.SnapDir())
+	temp.SS = snap.New(cfg.Logger, cfg.SnapDir())
 
-	bepath := cfg.BackendPath() // default.etcd/member/snap/db
-	beExist := fileutil.Exist(bepath)
+	temp.Bepath = cfg.BackendPath() // default.etcd/member/snap/db
+	temp.BeExist = fileutil.Exist(temp.Bepath)
 
-	ci := cindex.NewConsistentIndex(nil) // pointer
-	beHooks := &backendHooks{lg: cfg.Logger, indexer: ci}
-	be := openBackend(cfg, beHooks)
-	ci.SetBackend(be)
-	cindex.CreateMetaBucket(be.BatchTx())
+	temp.CI = cindex.NewConsistentIndex(nil) // pointer
+	temp.BeHooks = &backendHooks{lg: cfg.Logger, indexer: temp.CI}
+	temp.BE = openBackend(cfg, temp.BeHooks)
+	temp.CI.SetBackend(temp.BE)
+	cindex.CreateMetaBucket(temp.BE.BatchTx())
 
 	// 启动时,判断要不要进行碎片整理
 	if cfg.ExperimentalBootstrapDefragThresholdMegabytes != 0 {
-		err := maybeDefragBackend(cfg, be)
+		err := maybeDefragBackend(cfg, temp.BE)
 		if err != nil {
 			return nil, err
 		}
@@ -380,57 +390,53 @@ func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 
 	defer func() {
 		if err != nil {
-			be.Close()
+			temp.BE.Close()
 		}
 	}()
 	// 服务端的
-	prt, err := rafthttp.NewRoundTripper(cfg.PeerTLSInfo, cfg.PeerDialTimeout())
+	temp.Prt, err = rafthttp.NewRoundTripper(cfg.PeerTLSInfo, cfg.PeerDialTimeout())
 	if err != nil {
 		return nil, err
 	}
-	var (
-		remotes  []*membership.Member
-		snapshot *raftpb.Snapshot
-	)
 
 	switch {
 	case !haveWAL && !cfg.NewCluster: // false true   重新加入的成员
 		if err = cfg.VerifyJoinExisting(); err != nil {
 			return nil, err
 		}
-		cl, err = membership.NewClusterFromURLsMap(cfg.Logger, cfg.InitialClusterToken, cfg.InitialPeerURLsMap)
+		temp.CL, err = membership.NewClusterFromURLsMap(cfg.Logger, cfg.InitialClusterToken, cfg.InitialPeerURLsMap)
 		if err != nil {
 			return nil, err
 		}
-		existingCluster, gerr := GetClusterFromRemotePeers(cfg.Logger, getRemotePeerURLs(cl, cfg.Name), prt)
+		existingCluster, gerr := GetClusterFromRemotePeers(cfg.Logger, getRemotePeerURLs(temp.CL, cfg.Name), temp.Prt)
 		if gerr != nil {
 			return nil, fmt.Errorf("cannot fetch cluster info from peer urls: %v", gerr)
 		}
-		if err = membership.ValidateClusterAndAssignIDs(cfg.Logger, cl, existingCluster); err != nil {
+		if err = membership.ValidateClusterAndAssignIDs(cfg.Logger, temp.CL, existingCluster); err != nil {
 			return nil, fmt.Errorf("error validating peerURLs %s: %v", existingCluster, err)
 		}
-		if !isCompatibleWithCluster(cfg.Logger, cl, cl.MemberByName(cfg.Name).ID, prt) {
+		if !isCompatibleWithCluster(cfg.Logger, temp.CL, temp.CL.MemberByName(cfg.Name).ID, temp.Prt) {
 			return nil, fmt.Errorf("incompatible with current running cluster")
 		}
 
-		remotes = existingCluster.Members()
-		cl.SetID(types.ID(0), existingCluster.ID())
-		cl.SetStore(st)
-		cl.SetBackend(be)
-		id, n, s, w = startNode(cfg, cl, nil)
-		cl.SetID(id, existingCluster.ID())
+		temp.Remotes = existingCluster.Members()
+		temp.CL.SetID(types.ID(0), existingCluster.ID())
+		temp.CL.SetStore(temp.ST)
+		temp.CL.SetBackend(temp.BE)
+		temp.ID, temp.N, temp.S, temp.W = startNode(cfg, temp.CL, nil)
+		temp.CL.SetID(temp.ID, existingCluster.ID())
 
 	case !haveWAL && cfg.NewCluster: // false true   初始新成员
 		if err = cfg.VerifyBootstrap(); err != nil { // 验证peer 通信地址、--initial-advertise-peer-urls" and "--initial-cluster
 			return nil, err
 		}
 		// 创建RaftCluster
-		cl, err = membership.NewClusterFromURLsMap(cfg.Logger, cfg.InitialClusterToken, cfg.InitialPeerURLsMap)
+		temp.CL, err = membership.NewClusterFromURLsMap(cfg.Logger, cfg.InitialClusterToken, cfg.InitialPeerURLsMap)
 		if err != nil {
 			return nil, err
 		}
-		m := cl.MemberByName(cfg.Name) // 返回本节点的信息
-		if isMemberBootstrapped(cfg.Logger, cl, cfg.Name, prt, cfg.BootstrapTimeoutEffective()) {
+		m := temp.CL.MemberByName(cfg.Name) // 返回本节点的信息
+		if isMemberBootstrapped(cfg.Logger, temp.CL, cfg.Name, temp.Prt, cfg.BootstrapTimeoutEffective()) {
 			return nil, fmt.Errorf("成员 %s 已经引导过", m.ID)
 		}
 		// TODO 是否使用discovery 发现其他节点
@@ -448,15 +454,15 @@ func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 			if config.CheckDuplicateURL(urlsmap) {
 				return nil, fmt.Errorf("discovery cluster %s has duplicate url", urlsmap)
 			}
-			if cl, err = membership.NewClusterFromURLsMap(cfg.Logger, cfg.InitialClusterToken, urlsmap); err != nil {
+			if temp.CL, err = membership.NewClusterFromURLsMap(cfg.Logger, cfg.InitialClusterToken, urlsmap); err != nil {
 				return nil, err
 			}
 		}
-		cl.SetStore(st) // 结构体
-		cl.SetBackend(be)
+		temp.CL.SetStore(temp.ST) // 结构体
+		temp.CL.SetBackend(temp.BE)
 		// 启动节点
-		id, n, s, w = startNode(cfg, cl, cl.MemberIDs()) // ✅
-		cl.SetID(id, cl.ID())
+		temp.ID, temp.N, temp.S, temp.W = startNode(cfg, temp.CL, temp.CL.MemberIDs()) // ✅✈️ 🚗🚴🏻😁
+		temp.CL.SetID(temp.ID, temp.CL.ID())
 
 	case haveWAL:
 		if err = fileutil.IsDirWriteable(cfg.MemberDir()); err != nil {
@@ -481,34 +487,34 @@ func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 		}
 		// snapshot files can be orphaned if etcd crashes after writing them but before writing the corresponding
 		// wal log entries
-		snapshot, err := ss.LoadNewestAvailable(walSnaps)
+		temp.Snapshot, err = temp.SS.LoadNewestAvailable(walSnaps)
 		if err != nil && err != snap.ErrNoSnapshot {
 			return nil, err
 		}
 
-		if snapshot != nil {
-			if err = st.Recovery(snapshot.Data); err != nil {
+		if temp.Snapshot != nil {
+			if err = temp.ST.Recovery(temp.Snapshot.Data); err != nil {
 				cfg.Logger.Panic("failed to recover from snapshot", zap.Error(err))
 			}
 
-			if err = assertNoV2StoreContent(cfg.Logger, st, cfg.V2Deprecation); err != nil {
+			if err = assertNoV2StoreContent(cfg.Logger, temp.ST, cfg.V2Deprecation); err != nil {
 				cfg.Logger.Error("illegal v2store content", zap.Error(err))
 				return nil, err
 			}
 
 			cfg.Logger.Info(
 				"recovered v2 store from snapshot",
-				zap.Uint64("snapshot-index", snapshot.Metadata.Index),
-				zap.String("snapshot-size", humanize.Bytes(uint64(snapshot.Size()))),
+				zap.Uint64("snapshot-index", temp.Snapshot.Metadata.Index),
+				zap.String("snapshot-size", humanize.Bytes(uint64(temp.Snapshot.Size()))),
 			)
 
-			if be, err = recoverSnapshotBackend(cfg, be, *snapshot, beExist, beHooks); err != nil {
+			if temp.BE, err = recoverSnapshotBackend(cfg, temp.BE, *temp.Snapshot, temp.BeExist, temp.BeHooks); err != nil {
 				cfg.Logger.Panic("failed to recover v3 backend from snapshot", zap.Error(err))
 			}
 			// A snapshot db may have already been recovered, and the old db should have
 			// already been closed in this case, so we should set the backend again.
-			ci.SetBackend(be)
-			s1, s2 := be.Size(), be.SizeInUse()
+			temp.CI.SetBackend(temp.BE)
+			s1, s2 := temp.BE.Size(), temp.BE.SizeInUse()
 			cfg.Logger.Info(
 				"recovered v3 backend from snapshot",
 				zap.Int64("backend-size-bytes", s1),
@@ -521,17 +527,17 @@ func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 		}
 
 		if !cfg.ForceNewCluster {
-			id, cl, n, s, w = restartNode(cfg, snapshot)
+			temp.ID, temp.CL, temp.N, temp.S, temp.W = restartNode(cfg, temp.Snapshot)
 		} else {
-			id, cl, n, s, w = restartAsStandaloneNode(cfg, snapshot)
+			temp.ID, temp.CL, temp.N, temp.S, temp.W = restartAsStandaloneNode(cfg, temp.Snapshot)
 		}
 
-		cl.SetStore(st)
-		cl.SetBackend(be)
-		cl.Recover(api.UpdateCapability)
-		if cl.Version() != nil && !cl.Version().LessThan(semver.Version{Major: 3}) && !beExist {
-			os.RemoveAll(bepath)
-			return nil, fmt.Errorf("database file (%v) of the backend is missing", bepath)
+		temp.CL.SetStore(temp.ST)
+		temp.CL.SetBackend(temp.BE)
+		temp.CL.Recover(api.UpdateCapability)
+		if temp.CL.Version() != nil && !temp.CL.Version().LessThan(semver.Version{Major: 3}) && !temp.BeExist {
+			os.RemoveAll(temp.Bepath)
+			return nil, fmt.Errorf("database file (%v) of the backend is missing", temp.Bepath)
 		}
 
 	default:
@@ -539,11 +545,18 @@ func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 	}
 
 	if terr := fileutil.TouchDirAll(cfg.MemberDir()); terr != nil {
-		return nil, fmt.Errorf("cannot access member directory: %v", terr)
+		return nil, fmt.Errorf("不能访问成员目录: %v", terr)
 	}
 
-	sstats := stats.NewServerStats(cfg.Name, id.String())
-	lstats := stats.NewLeaderStats(cfg.Logger, id.String())
+	return
+}
+
+// NewServer 根据提供的配置创建一个新的EtcdServer.在EtcdServer的生命周期内,该配置被认为是静态的.
+func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
+	var temp = &Temp{}
+	temp, err = MySelfStartRaft(cfg)// 逻辑时钟初始化
+	sstats := stats.NewServerStats(cfg.Name, temp.ID.String())
+	lstats := stats.NewLeaderStats(cfg.Logger, temp.ID.String())
 
 	heartbeat := time.Duration(cfg.TickMs) * time.Millisecond
 	srv = &EtcdServer{
@@ -552,36 +565,36 @@ func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 		lgMu:        new(sync.RWMutex),
 		lg:          cfg.Logger,
 		errorc:      make(chan error, 1),
-		v2store:     st,
-		snapshotter: ss,
+		v2store:     temp.ST,
+		snapshotter: temp.SS,
 		r: *newRaftNode(
 			raftNodeConfig{
 				lg:          cfg.Logger,
-				isIDRemoved: func(id uint64) bool { return cl.IsIDRemoved(types.ID(id)) },
-				Node:        n,
+				isIDRemoved: func(id uint64) bool { return temp.CL.IsIDRemoved(types.ID(id)) },
+				Node:        temp.N,
 				heartbeat:   heartbeat,
-				raftStorage: s,
-				storage:     NewStorage(w, ss),
+				raftStorage: temp.S,
+				storage:     NewStorage(temp.W, temp.SS),
 			},
 		),
-		id:                 id,
+		id:                 temp.ID,
 		attributes:         membership.Attributes{Name: cfg.Name, ClientURLs: cfg.ClientURLs.StringSlice()},
-		cluster:            cl,
+		cluster:            temp.CL,
 		stats:              sstats,
 		lstats:             lstats,
 		SyncTicker:         time.NewTicker(500 * time.Millisecond),
-		peerRt:             prt,
-		reqIDGen:           idutil.NewGenerator(uint16(id), time.Now()),
+		peerRt:             temp.Prt,
+		reqIDGen:           idutil.NewGenerator(uint16(temp.ID), time.Now()),
 		AccessController:   &AccessController{CORS: cfg.CORS, HostWhitelist: cfg.HostWhitelist},
-		consistIndex:       ci,
+		consistIndex:       temp.CI,
 		firstCommitInTermC: make(chan struct{}),
 	}
-	serverID.With(prometheus.Labels{"server_id": id.String()}).Set(1)
+	serverID.With(prometheus.Labels{"server_id": temp.ID.String()}).Set(1)
 
 	srv.applyV2 = NewApplierV2(cfg.Logger, srv.v2store, srv.cluster)
 
-	srv.be = be
-	srv.beHooks = beHooks
+	srv.be = temp.BE
+	srv.beHooks = temp.BeHooks
 	minTTL := time.Duration((3*cfg.ElectionTicks)/2) * heartbeat
 
 	// always recover lessor before kv. When we recover the mvcc.KV it will reattach keys to its leases.
@@ -605,18 +618,18 @@ func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 	}
 	srv.kv = mvcc.New(srv.Logger(), srv.be, srv.lessor, mvcc.StoreConfig{CompactionBatchLimit: cfg.CompactionBatchLimit})
 
-	kvindex := ci.ConsistentIndex()
+	kvindex := temp.CI.ConsistentIndex()
 	srv.lg.Debug("restore consistentIndex", zap.Uint64("index", kvindex))
-	if beExist {
+	if temp.BeExist {
 		// TODO: remove kvindex != 0 checking when we do not expect users to upgrade
 		// etcd from pre-3.0 release.
-		if snapshot != nil && kvindex < snapshot.Metadata.Index {
+		if temp.Snapshot != nil && kvindex < temp.Snapshot.Metadata.Index {
 			if kvindex != 0 {
-				return nil, fmt.Errorf("database file (%v index %d) does not match with snapshot (index %d)", bepath, kvindex, snapshot.Metadata.Index)
+				return nil, fmt.Errorf("database file (%v index %d) does not match with snapshot (index %d)", temp.Bepath, kvindex, temp.Snapshot.Metadata.Index)
 			}
 			cfg.Logger.Warn(
 				"consistent index was never saved",
-				zap.Uint64("snapshot-index", snapshot.Metadata.Index),
+				zap.Uint64("snapshot-index", temp.Snapshot.Metadata.Index),
 			)
 		}
 	}
@@ -657,11 +670,11 @@ func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 		Logger:      cfg.Logger,
 		TLSInfo:     cfg.PeerTLSInfo,
 		DialTimeout: cfg.PeerDialTimeout(),
-		ID:          id,
+		ID:          temp.ID,
 		URLs:        cfg.PeerURLs,
-		ClusterID:   cl.ID(),
+		ClusterID:   temp.CL.ID(),
 		Raft:        srv,
-		Snapshotter: ss,
+		Snapshotter: temp.SS,
 		ServerStats: sstats,
 		LeaderStats: lstats,
 		ErrorC:      srv.errorc,
@@ -670,13 +683,13 @@ func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 		return nil, err
 	}
 	// add all remotes into transport
-	for _, m := range remotes {
-		if m.ID != id {
+	for _, m := range temp.Remotes {
+		if m.ID != temp.ID {
 			tr.AddRemote(m.ID, m.PeerURLs)
 		}
 	}
-	for _, m := range cl.Members() {
-		if m.ID != id {
+	for _, m := range temp.CL.Members() {
+		if m.ID != temp.ID {
 			tr.AddPeer(m.ID, m.PeerURLs)
 		}
 	}
@@ -1096,15 +1109,15 @@ func (s *EtcdServer) run() {
 
 		close(s.done)
 	}()
-
-	var expiredLeaseC <-chan []*lease.Lease
-	if s.lessor != nil {
+	var expiredLeaseC <-chan []*lease.Lease // 返回一个用于接收过期租约的CHAN。
+	if s.lessor != nil {                    // v3用,作用是实现过期时间
 		expiredLeaseC = s.lessor.ExpiredLeasesC()
 	}
 
 	for {
 		select {
 		case ap := <-s.r.apply():
+			// 读取 放入applyc的消息
 			f := func(context.Context) { s.applyAll(&ep, &ap) }
 			sched.Schedule(f)
 		case leases := <-expiredLeaseC:
@@ -1137,7 +1150,7 @@ func (s *EtcdServer) run() {
 			})
 		case err := <-s.errorc:
 			lg.Warn("etcd error", zap.Error(err))
-			lg.Warn("data-dir used by this member必须是removed")
+			lg.Warn("本机使用的data-dir必须移除")
 			return
 		case <-getSyncC():
 			if s.v2store.HasTTLKeys() {
@@ -1452,7 +1465,7 @@ func (s *EtcdServer) TransferLeadership() error {
 	return err
 }
 
-// HardStop stops the etcd without coordination with other members in the cluster.
+// HardStop 在不与集群中其他成员协调的情况下停止etcd。
 func (s *EtcdServer) HardStop() {
 	select {
 	case s.stop <- struct{}{}:

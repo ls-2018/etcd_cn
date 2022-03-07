@@ -470,7 +470,7 @@ func (rc *raftNode) serveChannels() {
 		// 读取 node.readyc 通道
 		// 该通道是 etcd-raft 组件与上层应用交互的主要channel之一
 		// 其中传递的 Ready 实例也封装了很多信息
-		case rd := <-rc.node.Ready():
+		case rd := <-rc.node.Ready(): // demo
 			// 将当前 etcd raft 组件的状态信息,以及待持久化的 Entry 记录先记录到 WAL 日志文件中,
 			// 即使之后宕机,这些信息也可以在节点下次启动时,通过前面回放 WAL 日志的方式进行恢复
 			rc.wal.Save(rd.HardState, rd.Entries)

@@ -21,13 +21,10 @@ import (
 	pb "github.com/ls-2018/etcd_cn/raft/raftpb"
 )
 
-// ErrCompacted is returned by Storage.Entries/Compact when a requested
-// index is unavailable because it predates the last snapshot.
-var ErrCompacted = errors.New("requested index is unavailable due to compaction")
+var ErrCompacted = errors.New("由于压缩，请求的索引无法到达")
 
 var ErrSnapOutOfDate = errors.New("请求的索引比现有快照的老")
 
-// ErrUnavailable 当请求的日志条目不可用时,存储接口会返回.
 var ErrUnavailable = errors.New("索引中的请求条目不可用")
 
 // ErrSnapshotTemporarilyUnavailable is returned by the Storage interface when the required
@@ -84,7 +81,7 @@ func (ms *MemoryStorage) Entries(lo, hi, maxSize uint64) ([]pb.Entry, error) {
 	return limitSize(ents, maxSize), nil
 }
 
-// Term implements the Storage interface.
+// Term 获取指定索引日志的任期
 func (ms *MemoryStorage) Term(i uint64) (uint64, error) {
 	ms.Lock()
 	defer ms.Unlock()

@@ -290,9 +290,11 @@ func newRaft(c *Config) *raft {
 	}
 	assertConfStatesEquivalent(r.logger, cs, r.switchToConfig(cfg, prs)) // 判断相不相等
 	// -----------------------
+	//根据从Storage中获取的HardState，初始化raftLog.committed字段，以及raft.Term和Vote字段
 	if !IsEmptyHardState(hs) { // 判断初始状态是不是空的
 		r.loadState(hs) // 更新状态索引信息
 	}
+	//如采Config中己置了Applied，则将raftLog.applied字段重直为指定的Applied值上层模块自己的控制正确的己应用位置时使用该配置
 	if c.Applied > 0 {
 		raftlog.appliedTo(c.Applied) // ✅
 	}
@@ -517,17 +519,17 @@ func (r *raft) maybeCommit() bool {
 func (r *raft) reset(term uint64) {
 	if r.Term != term {
 		r.Term = term
-		r.Vote = None // 选票
+		r.Vote = None // 当前任期中当前节点将选票投给了哪个节点
 	}
 	r.lead = None
 
 	r.electionElapsed = 0
 	r.heartbeatElapsed = 0
-	r.resetRandomizedElectionTimeout()
+	r.resetRandomizedElectionTimeout() // 设置随机选举超时
+	r.abortLeaderTransfer()            // 置空 leader转移目标
 
-	r.abortLeaderTransfer()
-
-	r.prs.ResetVotes()
+	r.prs.ResetVotes() // 准备通过recordVote进行新一轮的计票工作
+	// 重直prs， 其中每个Progress中的Next设置为raftLog.lastindex
 	r.prs.Visit(func(id uint64, pr *tracker.Progress) {
 		*pr = tracker.Progress{
 			Match:     0,
@@ -536,13 +538,14 @@ func (r *raft) reset(term uint64) {
 			IsLearner: pr.IsLearner,
 		}
 		if id == r.id {
-			pr.Match = r.raftLog.lastIndex()
+			pr.Match = r.raftLog.lastIndex() // 对应Follower节点当前己经成功复制的Entry记录的索引值,不知有没有同步大多数节点
 		}
 	})
 
 	r.pendingConfIndex = 0
 	r.uncommittedSize = 0
-	r.readOnly = newReadOnly(r.readOnly.option)
+	r.readOnly = newReadOnly(r.readOnly.option) //只读请求的相关摄者
+
 }
 
 // 日志新增
@@ -1408,16 +1411,7 @@ func (r *raft) handleAppendEntries(m pb.Message) {
 		r.send(pb.Message{To: m.From, Type: pb.MsgAppResp, Index: r.raftLog.committed})
 		return
 	}
-	//进行一致性检查,即搜索自己的日志文件中是否存在这样的日志条目,如果不存在,就向Leader
-	//返回AppendEntriesRPC 失败.如果返回失败信息,就意味着Follower 发
-	//现自己的日志与leader的不一致.在失败之后,leader会将nextlndex 递减( nextlndex －－),
-	//然后重试AppendEntriesRPC,直到AppendEntriesRPC
-	//返回成功为止.这才表明在nextlndex 位置的日志条目中leader与follower的保持一致.
-	//	【当然第一次拒绝时,可以直接将差值返回,nextlndex －－x;省略n次调用】
-
-	//当找到对应的槽位后随后, Leader 就从nextlndex号位置开始把余下的所有日志条目一次性推送给b
-
-	//尝试将消息携带的Entry记录追加到raftLog中
+	// 会进行一致性检查
 	if mlastIndex, ok := r.raftLog.maybeAppend(m.Index, m.LogTerm, m.Commit, m.Entries...); ok {
 		//如采追加成功,则将最后一条记录的索引位通过MsgAppResp消息返回给Leader节点,这样Leader节点就可以根据此值更新其对应的Next和Match值
 		r.send(pb.Message{To: m.From, Type: pb.MsgAppResp, Index: mlastIndex})
@@ -1671,6 +1665,7 @@ func (r *raft) pastElectionTimeout() bool {
 	return r.electionElapsed >= r.randomizedElectionTimeout
 }
 
+// 设置随机选举超时
 func (r *raft) resetRandomizedElectionTimeout() {
 	r.randomizedElectionTimeout = r.electionTimeout + globalRand.Intn(r.electionTimeout)
 }
@@ -1679,6 +1674,7 @@ func (r *raft) sendTimeoutNow(to uint64) {
 	r.send(pb.Message{To: to, Type: pb.MsgTimeoutNow})
 }
 
+// 置空 leader转移目标
 func (r *raft) abortLeaderTransfer() {
 	r.leadTransferee = None
 }

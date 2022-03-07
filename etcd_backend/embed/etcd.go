@@ -114,7 +114,7 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 				close(sctx.serversC)
 			}
 		}
-		e.Close() // 优雅关闭
+		e.Close() // 启动失败时， 优雅关闭
 		e = nil
 	}()
 
@@ -396,7 +396,7 @@ func (e *Etcd) Close() {
 		e.tracingExporterShutdown()
 	}
 
-	// close rafthttp transports
+	// 关闭 rafthttp transports
 	if e.Server != nil {
 		e.Server.Stop()
 	}

@@ -92,7 +92,7 @@ type raftNode struct {
 	// a chan to send out readState
 	readStateC chan raft.ReadState
 
-	// utility
+	// 公用设施
 	ticker *time.Ticker
 	// contention detectors for raft heartbeat message
 	td *contention.TimeoutDetector
@@ -469,7 +469,7 @@ func startNode(cfg config.ServerConfig, cl *membership.RaftCluster, ids []types.
 		// 不会走这里
 		n = raft.RestartNode(c) // 不会引导peers
 	} else {
-		n = raft.StartNode(c, peers)
+		n = raft.StartNode(c, peers) // ✅✈️ 🚗🚴🏻😁
 	}
 	raftStatusMu.Lock()
 	raftStatus = n.Status
@@ -692,7 +692,7 @@ func createConfigChangeEnts(lg *zap.Logger, ids []uint64, self uint64, term, ind
 	return ents
 }
 
-// 凸(艹皿艹 )   明明没有实现这个方法啊
+// Demo 凸(艹皿艹 )   明明没有实现这个方法啊
 func (r *raftNode) Demo() {
 	_ = r.raftNodeConfig.Node
 	//两层匿名结构体,该字段是个接口

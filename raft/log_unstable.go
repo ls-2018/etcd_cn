@@ -21,16 +21,15 @@ import pb "github.com/ls-2018/etcd_cn/raft/raftpb"
 // 无论是Leader节点还是Follower节点，对于刚刚接收到的Entry记录首先都会被存储在unstable中。
 // 然后按照Raft协议将unstable中缓存的这些Entry记录交给上层模块进行处理，上层模块会将这些Entry记录发送到集群其他节点或进行保存（写入Storage中）。
 // 之后，上层模块会调用Advance（）方法通知底层的raft模块将unstable 中对应的Entry记录删除（因为己经保存到了Storage中）
+//
 type unstable struct {
 	snapshot *pb.Snapshot // 快照数据，该快照数据也是未写入Storage中的。
-	entries  []pb.Entry   // 用于保存未写入Storage中的Entry记录。
+	entries  []pb.Entry   // 用于保存未写入Storage中的Entry记录。刚生成的日志，没确认的
 	offset   uint64       // 当前entries中第一个日志的索引,起始索引
 	logger   Logger
 }
 
-// maybeFirstIndex returns the index of the first possible entry in entries
-// if it has a snapshot.
-// 会尝试获取unstable 的第一条Entry 记录的索引值
+// maybeFirstIndex 会尝试获取unstable的第一条Entry记录的索引值
 func (u *unstable) maybeFirstIndex() (uint64, bool) {
 	if u.snapshot != nil {
 		return u.snapshot.Metadata.Index + 1, true
@@ -116,6 +115,7 @@ func (u *unstable) restore(s pb.Snapshot) {
 }
 
 // 截断和追加
+// 本节点存在一些无效的数据，比leader多
 func (u *unstable) truncateAndAppend(ents []pb.Entry) {
 	after := ents[0].Index
 	switch {

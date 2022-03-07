@@ -154,7 +154,7 @@ type Peer struct {
 
 // StartNode  它为每个给定的peer在初始日志中添加一个ConfChangeAddNode条目.
 // Peer封装了节点的ID, peers记录了当前集群中全部节点的ID
-func StartNode(c *Config, peers []Peer) Node {
+func StartNode(c *Config, peers []Peer) Node { // ✅✈️ 🚗🚴🏻😁
 	if len(peers) == 0 {
 		panic("没有给定peers；使用RestartNode代替.")
 	}
@@ -355,17 +355,17 @@ func (n *localNode) Tick() {
 	}
 }
 
-// 选举
+// Campaign 选举
 func (n *localNode) Campaign(ctx context.Context) error {
 	return n.step(ctx, pb.Message{Type: pb.MsgHup})
 }
 
-// 提议
+// Propose 提议
 func (n *localNode) Propose(ctx context.Context, data []byte) error {
 	return n.stepWait(ctx, pb.Message{Type: pb.MsgProp, Entries: []pb.Entry{{Data: data}}})
 }
 
-//步骤
+// Step 步骤
 func (n *localNode) Step(ctx context.Context, m pb.Message) error {
 	// 忽略通过网络接收的非本地信息
 	if IsLocalMsg(m.Type) {

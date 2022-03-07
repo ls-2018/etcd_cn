@@ -130,7 +130,7 @@ type Lessor interface {
 	// Leases lists all leases.
 	Leases() []*Lease
 
-	// ExpiredLeasesC returns a chan that is used to receive expired leases.
+	// ExpiredLeasesC 返回一个用于接收过期租约的CHAN。
 	ExpiredLeasesC() <-chan []*Lease
 
 	// Recover recovers the lessor state from the given backend and RangeDeleter.

@@ -232,5 +232,52 @@ curl    --------http--------->    gateway ------------> etcd grpc server 2379
 - github.com/soheilhy/cmux 可以在同一个listener上监听不同协议的请求
 -
 
+```
 etcdServer 会单独处理 Propose消息, 其余消息交给raft.step 来处理 [该函数,会随着节点角色的改变而发生改变] [会首先判断任期、索引,在判断消息类型]
-  
+
+StartEtcd
+  1、etcdserver.NewServer -> 
+    MySelfStartRaft
+      newRaftNode
+        r.ticker = time.NewTicker(r.heartbeat)
+    startNode -> 
+      raft.StartNode -> 
+        go n.run()
+          - 处理commited的消息，将其apply
+          - 处理接收到的消息
+          - 发送用户命令
+          - 配置变更
+          - case <-n.tickc                                  F取出数据
+            n.rn.Tick()
+              rn.raft.tick()
+                r.tickElection或tickHeartbeat
+          - case readyc <- rd                               A放入数据
+          - case <-advancec: 
+          - case c := <-n.status:
+          - case <-n.stop: 
+  2、e.Server.Start ->
+    EtcdServer.strat ->
+      s.start()
+        go s.run()
+          # s.r=raftNode
+          s.r.start(rh)
+            go func()
+              - case <-r.ticker.C:
+                r.tick() 
+                  r.Tick()
+                    case n.tickc <- struct{}{}              F放入数据、不会阻塞,有size
+              - case rd := <-r.Ready()                      A取出数据 -----> B放入数据
+              - case <-r.stopped:
+          - case ap := <-s.r.apply()                                        B取出数据
+            读取applyc的数据,封装为JOB,放入调度器
+          - 处理过期租约
+          - 处理运行过程中出现的err,直接退出
+          - getSyncC
+          - case <-s.stop:
+            启动过程中失败
+    
+  3、e.servePeers
+  4、e.serveClients
+  5、e.serveMetrics
+    
+```
