@@ -20,26 +20,20 @@ import (
 	"strings"
 )
 
-// Progress 在leader看来，Progress代表follower的进度。leader维护所有follower的进度，并根据follower的进度向其发送条目。
-// NB(tbg)。Progress基本上是一个状态机
+// Progress 在leader看来,Progress代表follower的进度.leader维护所有follower的进度,并根据follower的进度向其发送条目.
+// NB(tbg).Progress基本上是一个状态机
 type Progress struct {
-	Match uint64 // 己经复制给Follower 节点的最大的日志索引值
-	Next  uint64 // 需要发送给Follower 节点的下一条日志的索引值
-	// State定义了leader应该如何与follower互动。
-	// 当处于StateProbe状态时，leader在每个心跳间隔内最多发送一条复制消息。它也会探测follower的实际进度。
-	// 当处于StateReplicate状态时，leader在发送复制消息后，乐观地增加next 索引。这是一个优化后的的状态，用于快速复制日志条目给follower。
-	// 当处于StateSnapshot状态时，leader应该已经发送了快照，并停止发送任何复制消息。
+	Match uint64 // 对应Follower节点当前己经成功复制的Entry记录的索引值.
+	Next  uint64 // 对应Follower节点下一个待复制的Entry记录的索引值
+	// State 对应Follower节点的复制状态
+	// 当处于StateProbe状态时,leader在每个心跳间隔内最多发送一条复制消息.它也会探测follower的实际进度.
+	// 当处于StateReplicate状态时,leader在发送复制消息后,乐观地增加next 索引.这是一个优化后的的状态,用于快速复制日志条目给follower.
+	// 当处于StateSnapshot状态时,leader应该已经发送了快照,并停止发送任何复制消息.
 	State StateType
 
-	// 是在StateSnapshot中使用的。如果有一个待定的快照，pendingSnapshot将被设置为快照的索引。
-	// 如果pendingSnapshot被设置，这个Progress的复制过程将被暂停。 raft将不会重新发送快照，直到待定的快照被报告为失败。
-	PendingSnapshot uint64
+	PendingSnapshot uint64 // 当前正在发送的快照数据信息.
 
-	// RecentActive  如果进程最近是活跃的，则为真。
-	// 从相应的follower接收到的任何消息都表明Progress是活动的。
-	// RecentActive可以在选举超时后重置为false。
-	// leader应该总是将此设置为true。
-	RecentActive bool
+	RecentActive bool // 从当前Leader节点的角度来看,该Progress实例对应的Follower节点是否存活.
 
 	ProbeSent bool // 是否暂停对follower的消息发送
 
@@ -66,15 +60,15 @@ func (pr *Progress) MaybeUpdate(n uint64) bool {
 // are in-flight. As a result, Next is increased to n+1.
 func (pr *Progress) OptimisticUpdate(n uint64) { pr.Next = n + 1 }
 
-// MaybeDecrTo 收到MsgApp拒绝消息,对进度进行调整。
+// MaybeDecrTo 收到MsgApp拒绝消息,对进度进行调整.
 // 其参数是被follower 拒绝的日志索引
 //
-// 拒绝可能是假的，因为消息是不按顺序发送或重复发送的。在这种情况下，拒绝涉及到一个索引，即Progress已经知道以前被确认过，所以返回false。但不改变进度。
+// 拒绝可能是假的,因为消息是不按顺序发送或重复发送的.在这种情况下,拒绝涉及到一个索引,即Progress已经知道以前被确认过,所以返回false.但不改变进度.
 //
-// 如果拒绝是真实的，Next将被合理地降低，并且Progress将被清除以发送日志条目。清空，以便发送日志条目。
+// 如果拒绝是真实的,Next将被合理地降低,并且Progress将被清除以发送日志条目.清空,以便发送日志条目.
 //maybeDecrTo()方法的两个参数都是MsgAppResp消息携带的信息：
-//reject是被拒绝MsgApp消息的Index字段佳，
-//last是被拒绝MsgAppResp消息的RejectHint字段佳（即对应Follower节点raftLog中最后一条Entry记录的索引）
+//reject是被拒绝MsgApp消息的Index字段佳,
+//last是被拒绝MsgAppResp消息的RejectHint字段佳(即对应Follower节点raftLog中最后一条Entry记录的索引)
 func (pr *Progress) MaybeDecrTo(rejected, matchHint uint64) bool {
 	if pr.State == StateReplicate {
 		// The rejection必须是stale if the progress has matched and "rejected"
@@ -115,20 +109,20 @@ func min(a, b uint64) uint64 {
 	return a
 }
 
-// ProbeAcked 当follower接受了append消息，标志着可以继续向该节点发送消息
+// ProbeAcked 当follower接受了append消息,标志着可以继续向该节点发送消息
 func (pr *Progress) ProbeAcked() {
 	pr.ProbeSent = false
 }
 
 // IsPaused 返回发往该节点的消息是否被限流
-// 当一个节点拒绝了最近的MsgApps，目前正在等待快照，或者已经达到MaxInflightMsgs限制时，就会这样做。
-// 在正常操作中，这是假的。一个被节流的节点将被减少联系的频率，直到它达到能够再次接受稳定的日志条目的状态。
+// 当一个节点拒绝了最近的MsgApps,目前正在等待快照,或者已经达到MaxInflightMsgs限制时,就会这样做.
+// 在正常操作中,这是假的.一个被节流的节点将被减少联系的频率,直到它达到能够再次接受稳定的日志条目的状态.
 func (pr *Progress) IsPaused() bool {
 	switch pr.State {
 	case StateProbe: // 每个心跳间隔内最多发送一条复制消息,默认false
 		return pr.ProbeSent
 	case StateReplicate: // 消息复制状态
-		return pr.Inflights.Full() // 根据队列是否满，判断
+		return pr.Inflights.Full() // 根据队列是否满,判断
 	case StateSnapshot:
 		return true // follower接收快照时,停止发送消息
 	default:
@@ -144,8 +138,8 @@ func (pr *Progress) ResetState(state StateType) {
 	pr.Inflights.reset()
 }
 
-// BecomeProbe 转变为StateProbe。下一步是重置为Match+1,或者，如果更大的话，重置为待定快照的索引。
-// 恢复follower状态，以正常发送消息
+// BecomeProbe 转变为StateProbe.下一步是重置为Match+1,或者,如果更大的话,重置为待定快照的索引.
+// 恢复follower状态,以正常发送消息
 func (pr *Progress) BecomeProbe() {
 	if pr.State == StateSnapshot { // 当前状态是发送快照
 		pendingSnapshot := pr.PendingSnapshot
@@ -162,7 +156,7 @@ func (pr *Progress) BecomeReplicate() {
 	pr.Next = pr.Match + 1
 }
 
-// BecomeSnapshot 正在发送快照 ，snapshoti 为快照的最新日志索引
+// BecomeSnapshot 正在发送快照 ,snapshoti 为快照的最新日志索引
 func (pr *Progress) BecomeSnapshot(snapshoti uint64) {
 	pr.ResetState(StateSnapshot)
 	pr.PendingSnapshot = snapshoti

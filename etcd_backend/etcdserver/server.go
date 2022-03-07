@@ -950,7 +950,7 @@ func (h *downgradeEnabledHandler) ServeHTTP(w http.ResponseWriter, r *http.Reque
 	w.Write([]byte(strconv.FormatBool(enabled)))
 }
 
-// Process 接收一个raft信息并将其应用于etcd的raft状态机,使用ctx的超时。
+// Process 接收一个raft信息并将其应用于etcd的raft状态机,使用ctx的超时.
 func (s *EtcdServer) Process(ctx context.Context, m raftpb.Message) error {
 	lg := s.Logger()
 	// 判断该消息的来源有没有被删除

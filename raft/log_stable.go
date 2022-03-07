@@ -48,11 +48,12 @@ type Storage interface {
 	Snapshot() (pb.Snapshot, error) // 反回最近的快照数据
 }
 
+// MemoryStorage 大部分操作都需要加锁
 type MemoryStorage struct {
 	sync.Mutex
-	hardState pb.HardState //状态信息(当前任期,当前节点投票给了谁,已提交的entry记录的位置)
-	snapshot  pb.Snapshot  //当前内存里的快照信息
-	ents      []pb.Entry   //snapshot之后的日志条目,第一条日志条目的index为snapshot.Metadata.Index
+	hardState pb.HardState // 状态信息(当前任期,当前节点投票给了谁,已提交的entry记录的位置)
+	snapshot  pb.Snapshot  // 当前内存里的快照信息
+	ents      []pb.Entry   // snapshot之后的日志条目,第一条日志条目的index为snapshot.Metadata.Index 已经apply的日志项
 }
 
 // NewMemoryStorage 创建内存存储
@@ -113,88 +114,30 @@ func (ms *MemoryStorage) ApplySnapshot(snap pb.Snapshot) error {
 	return nil
 }
 
-// CreateSnapshot makes a snapshot which can be retrieved with Snapshot() and
-// can be used to reconstruct the state at that point.
-// If any configuration changes have been made since the last compaction,
-// the result of the last ApplyConfChange必须是passed in.
+// CreateSnapshot 创建新的快照 i是新建Snapshot包含的最大的索引值,cs是当前集群的状态,data是状态机里的快照数据
 func (ms *MemoryStorage) CreateSnapshot(i uint64, cs *pb.ConfState, data []byte) (pb.Snapshot, error) {
+	// ents  [a,b,c,d,e,f,g,h,i,j,k]
+	//                  i
+	// 前提条件: i 必须>= a日志的索引
 	ms.Lock()
 	defer ms.Unlock()
+	// 新建立的快照是旧数据
 	if i <= ms.snapshot.Metadata.Index {
 		return pb.Snapshot{}, ErrSnapOutOfDate
 	}
 
-	offset := ms.ents[0].Index
-	if i > ms.lastIndex() {
-		getLogger().Panicf("snapshot %d is out of bound lastindex(%d)", i, ms.lastIndex())
+	offset := ms.ents[0].Index // snapshot之后的日志条目, apply之后的
+	if i > ms.lastIndex() {    // k 位置的索引
+		getLogger().Panicf("快照 %d 超过了最新的日志(%d)", i, ms.lastIndex())
 	}
 
 	ms.snapshot.Metadata.Index = i
-	ms.snapshot.Metadata.Term = ms.ents[i-offset].Term
+	ms.snapshot.Metadata.Term = ms.ents[i-offset].Term // 获取数组指定偏移位置的索引
 	if cs != nil {
 		ms.snapshot.Metadata.ConfState = *cs
 	}
 	ms.snapshot.Data = data
 	return ms.snapshot, nil
-}
-
-// Compact discards all log entries prior to compactIndex.
-// It is the application's responsibility to not attempt to compact an index
-// greater than raftLog.applied.
-func (ms *MemoryStorage) Compact(compactIndex uint64) error {
-	ms.Lock()
-	defer ms.Unlock()
-	offset := ms.ents[0].Index
-	if compactIndex <= offset {
-		return ErrCompacted
-	}
-	if compactIndex > ms.lastIndex() {
-		getLogger().Panicf("compact %d is out of bound lastindex(%d)", compactIndex, ms.lastIndex())
-	}
-
-	i := compactIndex - offset
-	ents := make([]pb.Entry, 1, 1+uint64(len(ms.ents))-i)
-	ents[0].Index = ms.ents[i].Index
-	ents[0].Term = ms.ents[i].Term
-	ents = append(ents, ms.ents[i+1:]...)
-	ms.ents = ents
-	return nil
-}
-
-// Append 向快照添加数据
-// 确保日志项是 连续的且entries[0].Index > ms.entries[0].Index
-func (ms *MemoryStorage) Append(entries []pb.Entry) error {
-	if len(entries) == 0 {
-		return nil
-	}
-
-	ms.Lock()
-	defer ms.Unlock()
-
-	first := ms.firstIndex()                            // 当前第一个
-	last := entries[0].Index + uint64(len(entries)) - 1 // 最后一个
-
-	if last < first {
-		return nil
-	}
-	// 截断已经记入snapshot中的
-	// entries[0]    first   entries[-1]
-	if first > entries[0].Index {
-		entries = entries[first-entries[0].Index:]
-	}
-
-	offset := entries[0].Index - ms.ents[0].Index
-	switch {
-	case uint64(len(ms.ents)) > offset:
-		ms.ents = append([]pb.Entry{}, ms.ents[:offset]...)
-		ms.ents = append(ms.ents, entries...)
-	case uint64(len(ms.ents)) == offset:
-		ms.ents = append(ms.ents, entries...)
-	default:
-		getLogger().Panicf("missing log entry [last: %d, append at: %d]",
-			ms.lastIndex(), entries[0].Index)
-	}
-	return nil
 }
 
 // -------------------------------------------------OVER-------------------------------------------------
@@ -231,7 +174,7 @@ func (ms *MemoryStorage) lastIndex() uint64 {
 	return ms.ents[0].Index + uint64(len(ms.ents)) - 1
 }
 
-// todo
+// FirstIndex todo
 func (ms *MemoryStorage) FirstIndex() (uint64, error) {
 	ms.Lock()
 	defer ms.Unlock()
@@ -240,4 +183,67 @@ func (ms *MemoryStorage) FirstIndex() (uint64, error) {
 
 func (ms *MemoryStorage) firstIndex() uint64 {
 	return ms.ents[0].Index + 1
+}
+
+// Compact  新建Snapshot之后,一般会调用MemoryStorage.Compact()方法将MemoryStorage.ents中指定索引之前的Entry记录全部抛弃,
+// 从而实现压缩MemoryStorage.ents 的目的,具体实现如下：    [GC]
+func (ms *MemoryStorage) Compact(compactIndex uint64) error {
+	ms.Lock()
+	defer ms.Unlock()
+	offset := ms.ents[0].Index // ents记录中第一条日志的索引
+	if compactIndex <= offset {
+		return ErrCompacted
+	}
+	if compactIndex > ms.lastIndex() { // ents记录中最新日志的索引
+		getLogger().Panicf("压缩 %d 超出范围 lastindex(%d)", compactIndex, ms.lastIndex())
+	}
+
+	i := compactIndex - offset
+	//创建新的切片，用来存储compactIndex之后的Entry
+	ents := make([]pb.Entry, 1, 1+uint64(len(ms.ents))-i)
+	ents[0].Index = ms.ents[i].Index
+	ents[0].Term = ms.ents[i].Term
+	//将compactlndex之后的Entry拷贝到ents中，并更新MemoryStorage.ents 字段
+	ents = append(ents, ms.ents[i+1:]...)
+	ms.ents = ents
+	return nil
+}
+
+// Append 向快照添加数据
+// 确保日志项是 连续的且entries[0].Index > ms.entries[0].Index
+func (ms *MemoryStorage) Append(entries []pb.Entry) error {
+	if len(entries) == 0 {
+		return nil
+	}
+
+	ms.Lock()
+	defer ms.Unlock()
+
+	first := ms.firstIndex()                            // 当前第一个
+	last := entries[0].Index + uint64(len(entries)) - 1 // 最后一个
+
+	if last < first {
+		return nil // entries切片中所有的Entry都已经过时,无须添加任何Entry
+	}
+	// first之前的Entry已经记入Snapshot中,不应该再记录到ents中,所以将这部分Entry截掉
+	// entries[0]    first   entries[-1]
+	if first > entries[0].Index {
+		entries = entries[first-entries[0].Index:]
+	}
+
+	//计算entries切片中第一条可用的Entry与first之间的差距
+	offset := entries[0].Index - ms.ents[0].Index
+	switch {
+	case uint64(len(ms.ents)) > offset:
+		//保留MemoryStorage.ents中first～offset的部分,offset之后的部分被抛弃
+		//然后将待追加的Entry追加到MemoryStorage.ents中
+		ms.ents = append([]pb.Entry{}, ms.ents[:offset]...)
+		ms.ents = append(ms.ents, entries...)
+	case uint64(len(ms.ents)) == offset:
+		//直接将待追加的日志记录(entries)追加到MemoryStorage中
+		ms.ents = append(ms.ents, entries...)
+	default:
+		getLogger().Panicf("丢失日志项 [last: %d, append at: %d]", ms.lastIndex(), entries[0].Index)
+	}
+	return nil
 }

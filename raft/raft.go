@@ -188,11 +188,12 @@ func (c *Config) validate() error {
 	return nil
 }
 
+// 封装了当前节点所有的核心数据.
 type raft struct {
 	id uint64 // 是本节点raft的身份
 
-	Term uint64 // 任期
-	Vote uint64 // 上一次投票的节点,Leader等于自己的id
+	Term uint64 // 任期.如果Message的Term字段为0,则表示该消息是本地消息,例如,MsgHup、 MsgProp、 MsgReadlndex 等消息,都属于本地消息.
+	Vote uint64 // 当前任期中当前节点将选票投给了哪个节点
 
 	readStates []ReadState
 
@@ -203,12 +204,12 @@ type raft struct {
 
 	prs tracker.ProgressTracker // 跟踪Follower节点的状态,比如日志复制的matchIndex
 
-	state StateType // 当前节点的状态
+	state StateType // 当前节点的状态 ,可选值分为StateFollower、StateCandidate、 StateLeader和StatePreCandidat巳四种状态.
 
 	// isLearner 本节点是不是learner角色
 	isLearner bool
 
-	msgs []pb.Message // 本节点要发送出去的消息
+	msgs []pb.Message // 缓存了当前节点等待发送的消息.
 
 	lead uint64 // 当前leaderID
 	// leader转移到的节点ID
@@ -225,27 +226,19 @@ type raft struct {
 
 	readOnly *readOnly
 
-	checkQuorum bool // 检查需要维持的选票数,一旦小于,就会丢失leader
-	preVote     bool // PreVote 是否启用PreVote
-
-	// 选举过期计数(electionElapsed)：主要用于follower来判断leader是不是正常工作,
-	// 当follower接受到leader的心跳的时候会把electionElapsed的时候就会置为0,electionElapsed的相加是通过外部调用实现的,
-	// node对外提供一个tick的接口,需要外部定时去调用,调用的周期由外部决定,每次调用就++,
-	// 然后检查是否会超时,上方的tickElection就是为follower状态的定时调用函数,leader状态的定时调用函数就是向follower发送心跳.
-	electionElapsed int
-
-	// 心跳过期计数(heartbeatElapsed)：用于leader判断是不是要开始发送心跳了.
-	// 只要这个值超过或等于心跳超时计数(heartbeatTimeout),就会触发leader广播heartbeat信息.
-	heartbeatElapsed int
+	checkQuorum      bool // 检查需要维持的选票数,一旦小于,就会丢失leader
+	preVote          bool // PreVote 是否启用PreVote
+	electionElapsed  int  // 选举计时器的指针,其单位是逻辑时钟的刻度,逻辑时钟每推进一次,该字段值就会增加1.
+	heartbeatElapsed int  // 心跳计时器的指针,其单位也是逻辑时钟的刻度,逻辑时钟每推进一次,该字段值就会增加1 .
 
 	heartbeatTimeout int // 心跳间隔    ,上限     heartbeatTimeout是当前距离上次心跳的时间
-	electionTimeout  int // 选举超时	   ,上限		electionElapsed是当前距离上次选举的时间
+	electionTimeout  int // 选举超时时间,当electionE!apsed 宇段值到达该值时,就会触发新一轮的选举.
 
 	// 随机选举超时
 	randomizedElectionTimeout int
 	disableProposalForwarding bool // 禁止将请求转发到leader,默认FALSE
 	// 由 r.ticker = time.NewTicker(r.heartbeat) ;触发该函数的执行  r.start
-	tick func() // 定时器到期执行的函数
+	tick func() // 当前节点推进逻辑时钟的函数.如果当前节点是Leader,则指向raft.tickHeartbeat()函数,如果当前节点是Follower 或是Candidate,则指向raft.tickElection()函数.
 
 	step stepFunc // 阶段函数、在那个角色就执行那个角色的函数、处理接收到的消息
 
@@ -582,7 +575,7 @@ func (r *raft) appendEntry(es ...pb.Entry) (accepted bool) {
 	return true
 }
 
-// follower以及candidate的tick函数，在r.electionTimeout之后被调用
+// follower以及candidate的tick函数,在r.electionTimeout之后被调用
 func (r *raft) tickElection() {
 	r.electionElapsed++
 	// promotable返回是否可以被提升为leader
@@ -785,7 +778,7 @@ func (r *raft) poll(id uint64, t pb.MessageType, v bool) (granted int, rejected 
 
 // 分流各种消息
 func (r *raft) Step(m pb.Message) error {
-	// 处理消息的期限，这可能会导致我们成为一名follower。
+	// 处理消息的期限,这可能会导致我们成为一名follower.
 	switch {
 	case m.Term == 0:
 		// 本地消息
@@ -921,7 +914,7 @@ func (r *raft) Step(m pb.Message) error {
 		}
 
 	default:
-		err := r.step(r, m) // 当前节点是Follower状态，raft.step字段指向stepFollower（ ）函数
+		err := r.step(r, m) // 当前节点是Follower状态,raft.step字段指向stepFollower( )函数
 		if err != nil {
 			return err
 		}
@@ -1035,7 +1028,7 @@ func stepLeader(r *raft, m pb.Message) error {
 
 		return nil
 	}
-	// 根据消息的From字段获取对应的Progress实例，为后面的消息处理做准备
+	// 根据消息的From字段获取对应的Progress实例,为后面的消息处理做准备
 
 	pr := r.prs.Progress[m.From]
 	if pr == nil {
@@ -1045,11 +1038,11 @@ func stepLeader(r *raft, m pb.Message) error {
 	switch m.Type {
 	case pb.MsgAppResp:
 		// Leader节点在向Follower广播日志后,就一直在等待follower的MsgAppResp消息,收到后还是会进到stepLeader函数.
-		// 更新对应Progress实例的RecentActive字段，从Leader节点的角度来看，MsgAppResp消息的发送节点还是存活的
+		// 更新对应Progress实例的RecentActive字段,从Leader节点的角度来看,MsgAppResp消息的发送节点还是存活的
 
 		pr.RecentActive = true
 
-		if m.Reject {//MsgApp 消息被拒绝
+		if m.Reject { //MsgApp 消息被拒绝
 			//如果收到的是reject消息,则根据follower反馈的index重新发送日志
 			r.logger.Debugf("%x 收到 MsgAppResp(rejected, hint: (index %d, term %d)) from %x for index %d",
 				r.id, m.RejectHint, m.LogTerm, m.From, m.Index)
@@ -1426,7 +1419,7 @@ func (r *raft) handleAppendEntries(m pb.Message) {
 
 	//尝试将消息携带的Entry记录追加到raftLog中
 	if mlastIndex, ok := r.raftLog.maybeAppend(m.Index, m.LogTerm, m.Commit, m.Entries...); ok {
-		//如采追加成功，则将最后一条记录的索引位通过MsgAppResp消息返回给Leader节点，这样Leader节点就可以根据此值更新其对应的Next和Match值
+		//如采追加成功,则将最后一条记录的索引位通过MsgAppResp消息返回给Leader节点,这样Leader节点就可以根据此值更新其对应的Next和Match值
 		r.send(pb.Message{To: m.From, Type: pb.MsgAppResp, Index: mlastIndex})
 	} else {
 		// 日志的index和Follower的lastIndex不匹配,返回reject消息; 出现原因
@@ -1439,7 +1432,7 @@ func (r *raft) handleAppendEntries(m pb.Message) {
 
 		// extern 当flower多一些无用数据时, Leader是如何精准地找到每个Follower 与其日志条目不一致的那个槽位的呢
 		// Follower 将之后的删除,重新同步leader之后的数据
-		// 如采追加记录失败，则将失/败信息返回给Leader节点（即MsgAppResp 消息的Reject字段为true),同时返回的还有一些提示信息（RejectHint字段保存了当前节点raftLog中最后一条记录的索引）
+		// 如采追加记录失败,则将失/败信息返回给Leader节点(即MsgAppResp 消息的Reject字段为true),同时返回的还有一些提示信息(RejectHint字段保存了当前节点raftLog中最后一条记录的索引)
 
 		r.logger.Debugf("%x [logterm: %d, index: %d] rejected MsgApp [logterm: %d, index: %d] from %x",
 			r.id, r.raftLog.zeroTermOnErrCompacted(r.raftLog.term(m.Index)), m.Index, m.LogTerm, m.Index, m.From)
@@ -1474,7 +1467,7 @@ func (r *raft) handleAppendEntries(m pb.Message) {
 func (r *raft) handleHeartbeat(m pb.Message) {
 	// 把msg中的commit提交,commit是只增不减的
 	r.raftLog.commitTo(m.Commit) // leader commit 了,follower再commit
-	//发送Response给Leader   按照raft协议的要求带上自己日志的进度。
+	//发送Response给Leader   按照raft协议的要求带上自己日志的进度.
 	r.send(pb.Message{To: m.From, Type: pb.MsgHeartbeatResp, Context: m.Context})
 }
 

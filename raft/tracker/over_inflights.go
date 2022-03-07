@@ -14,15 +14,15 @@
 
 package tracker
 
-// Inflights  在 Raft 中存储的是已发送给 Follower 的 MsgApp 消息，但没有收到 MsgAppResp 的消息 Index  值。
-// 简单的说就是 Leader 发送一个消息给 Follower，Leader 在对应的 Follower 状态维护结构(progress)中，
-// 将这个消息的 ID 记录在 inFlight 中， 当 Follower 收到消息之后，告知 Leader 收到了这个 ID 的消息，Leader 将从 inFlight 中删除，
-// 表示 Follower 已经接收，否则如果 Follower 在指定时间内没有响应，Leader 会根据一定策略进行重发。
+// Inflights  在 Raft 中存储的是已发送给 Follower 的 MsgApp 消息,但没有收到 MsgAppResp 的消息 Index  值.
+// 简单的说就是 Leader 发送一个消息给 Follower,Leader 在对应的 Follower 状态维护结构(progress)中,
+// 将这个消息的 ID 记录在 inFlight 中, 当 Follower 收到消息之后,告知 Leader 收到了这个 ID 的消息,Leader 将从 inFlight 中删除,
+// 表示 Follower 已经接收,否则如果 Follower 在指定时间内没有响应,Leader 会根据一定策略进行重发.
 type Inflights struct {
-	start  int      // 记录最旧的那个未被响应的消息，在buffer中的位置
-	count  int      // 已发送，但未响应的消息总数
+	start  int      // 记录最旧的那个未被响应的消息,在buffer中的位置
+	count  int      // 已发送,但未响应的消息总数
 	size   int      // buffer的最大长度
-	buffer []uint64 // 存储ID值           通过一个具有最大长度(size)的数组([]uint64)构造成一个环形数组。
+	buffer []uint64 // 存储ID值           通过一个具有最大长度(size)的数组([]uint64)构造成一个环形数组.
 }
 
 // NewInflights sets up an Inflights that allows up to 'size' inflight messages.
@@ -32,7 +32,7 @@ func NewInflights(size int) *Inflights {
 	}
 }
 
-// Clone 返回一个与相同的Inflights但不共享buffer。
+// Clone 返回一个与相同的Inflights但不共享buffer.
 func (in *Inflights) Clone() *Inflights {
 	ins := *in
 	ins.buffer = append([]uint64(nil), in.buffer...)
@@ -79,7 +79,7 @@ func (in *Inflights) FreeLE(to uint64) {
 
 	idx := in.start
 	var i int
-	//从 start 开始，直到找到最大且小于 to 的元素位置
+	//从 start 开始,直到找到最大且小于 to 的元素位置
 	for i = 0; i < in.count; i++ { // 当前有多少个条消息
 		if to < in.buffer[idx] { // found the first large inflight
 			break

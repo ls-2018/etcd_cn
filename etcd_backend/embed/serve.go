@@ -284,7 +284,7 @@ func (sctx *serveCtx) createMux(gwmux *gw.ServeMux, handler http.Handler) *http.
 	return httpmux
 }
 
-// createAccessController包装了HTTP多路复用器。
+// createAccessController包装了HTTP多路复用器.
 // - 突变gRPC 网关请求路径
 // - 检查主机名白名单
 // 客户端HTTP请求首先在这里进行
@@ -311,10 +311,10 @@ func (ac *accessController) ServeHTTP(rw http.ResponseWriter, req *http.Request)
 		req.URL.Path = strings.Replace(req.URL.Path, "/v3beta/", "/v3/", 1)
 	}
 
-	if req.TLS == nil { //如果客户端连接不安全，则检查origin
+	if req.TLS == nil { //如果客户端连接不安全,则检查origin
 		host := httputil.GetHostname(req) // 请求的主机名、域名、IP
 		if !ac.s.AccessController.IsHostWhitelisted(host) {
-			ac.lg.Warn("拒绝HTTP请求，以防止DNS重新绑定攻击", zap.String("host", host))
+			ac.lg.Warn("拒绝HTTP请求,以防止DNS重新绑定攻击", zap.String("host", host))
 			http.Error(rw, errCVE20185702(host), http.StatusMisdirectedRequest)
 			return
 		}
@@ -326,7 +326,7 @@ func (ac *accessController) ServeHTTP(rw http.ResponseWriter, req *http.Request)
 				continue
 			}
 			if len(chains[0].Subject.CommonName) != 0 {
-				http.Error(rw, "对网关发送请求的客户端的CommonName将被忽略，不按预期使用。", http.StatusBadRequest)
+				http.Error(rw, "对网关发送请求的客户端的CommonName将被忽略,不按预期使用.", http.StatusBadRequest)
 				return
 			}
 		}
@@ -348,7 +348,7 @@ func (ac *accessController) ServeHTTP(rw http.ResponseWriter, req *http.Request)
 	ac.mux.ServeHTTP(rw, req)
 }
 
-// addCORSHeader 在给定Origin的情况下，添加正确的cors头信息。
+// addCORSHeader 在给定Origin的情况下,添加正确的cors头信息.
 func addCORSHeader(w http.ResponseWriter, origin string) {
 	w.Header().Add("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 	w.Header().Add("Access-Control-Allow-Origin", origin)

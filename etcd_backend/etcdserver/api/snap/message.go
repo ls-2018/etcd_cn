@@ -29,6 +29,7 @@ import (
 // copying the entire snapshot into a byte array, which consumes a lot of memory.
 //
 // User of Message should close the Message after sending it.
+// Message是所有消息的抽象,包括了各种类型消息所需要的字段
 type Message struct {
 	raftpb.Message
 	ReadCloser io.ReadCloser

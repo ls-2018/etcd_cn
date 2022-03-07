@@ -166,8 +166,8 @@ MsgReadIndexResp            非本地：
 
 - leader收到follower的心跳响应之后会怎么去修改对应的follower元数据呢？
 
-- 快照 follower 当数据远落后于leader , leader会将快照发送过来 但由于网络原因，这一过程很慢 ,但是leader又生成了新的快照,wal没有旧的数据, 这时follower同步完，leader将最新新消息
-  发送follower , follower reject ,但是此时wal已经没有对应的wal 又会发送新的快照, 这就会陷入死循环。。。。。how? 看完源码再说吧
+- 快照 follower 当数据远落后于leader , leader会将快照发送过来 但由于网络原因,这一过程很慢 ,但是leader又生成了新的快照,wal没有旧的数据, 这时follower同步完,leader将最新新消息
+  发送follower , follower reject ,但是此时wal已经没有对应的wal 又会发送新的快照, 这就会陷入死循环.....how? 看完源码再说吧
   ![](./images/MsgReadIndex.png)
 
 ### Ref
@@ -232,5 +232,5 @@ curl    --------http--------->    gateway ------------> etcd grpc server 2379
 - github.com/soheilhy/cmux 可以在同一个listener上监听不同协议的请求
 -
 
-etcdServer 会单独处理 Propose消息, 其余消息交给raft.step 来处理 [该函数，会随着节点角色的改变而发生改变] [会首先判断任期、索引，在判断消息类型]
+etcdServer 会单独处理 Propose消息, 其余消息交给raft.step 来处理 [该函数,会随着节点角色的改变而发生改变] [会首先判断任期、索引,在判断消息类型]
   
