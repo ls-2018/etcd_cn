@@ -25,10 +25,10 @@ type raftLog struct {
 	//这里还是一个内存存储,用于保存自从最后一次snapshot之后提交的数据
 	storage Storage
 
-	// 用于保存还没有持久化的数据和快照,这些数据最终都会保存到storage中
+	// 用于存储未写入Storage的快照数据及Entry记录
 	unstable unstable
 
-	// committed保存是写入持久化存储中的最高index
+	// 己提交的位置，即己提交的Entry记录中最大的索引值。
 	committed uint64
 	// 而applied保存的是传入状态机中的最高index
 	// 即一条日志首先要提交成功(即committed),才能被applied到状态机中;因此以下不等式一直成立：applied <= committed
@@ -41,6 +41,8 @@ type raftLog struct {
 	maxNextEntsSize uint64
 }
 
+// handleAppendEntries maybeAppend
+
 // newLog returns log using the given storage and default options. It
 // recovers the log to the state that it just commits and applies the
 // latest snapshot.
@@ -48,57 +50,25 @@ func newLog(storage Storage, logger Logger) *raftLog {
 	return newLogWithSize(storage, logger, noLimit)
 }
 
-// 构建新的日志条目
-func newLogWithSize(storage Storage, logger Logger, maxNextEntsSize uint64) *raftLog {
-	if storage == nil {
-		log.Panic("存储不能为空")
-	}
-	log := &raftLog{ // struct
-		storage:         storage, // memory
-		logger:          logger,
-		maxNextEntsSize: maxNextEntsSize, // 消息最大大小
-	}
-	firstIndex, err := storage.FirstIndex() // 返回第一条数据的索引
-	if err != nil {
-		panic(err)
-	}
-	lastIndex, err := storage.LastIndex() // 返回最后一条数据的索引
-	if err != nil {
-		panic(err)
-	}
-	log.unstable.offset = lastIndex + 1 // 保存了尚未持久化的日志条目或快照
-	log.unstable.logger = logger
-	// 将我们的承诺和应用的指针初始化为最后一次压实的时间.
-
-	//   -------------------------------------
-	//    commit|apply      storage
-	log.committed = firstIndex - 1
-	log.applied = firstIndex - 1
-
-	return log
-}
-
-//OK
-func (l *raftLog) String() string {
-	return fmt.Sprintf("----> 【committed=%d, applied=%d, unstable.offset=%d, len(unstable.Entries)=%d】", l.committed, l.applied, l.unstable.offset, len(l.unstable.entries))
-}
-
-// maybeAppend returns (0, false) if the entries cannot be appended. Otherwise,
-// it returns (last index of new entries, true).
+// maybeAppend 当Follower节点或Candidate节点需要向raftLog 中追加Entry记录时，会通过raft.handleAppendEntriesO方法调用raftLog.maybeAppend
 func (l *raftLog) maybeAppend(index, logTerm, committed uint64, ents ...pb.Entry) (lastnewi uint64, ok bool) {
+	//调用matchTerm（）方法检测MsgApp消息的Index 字段及LogTerm字段是否合法
 	if l.matchTerm(index, logTerm) { //查看 index 的 term 与 logTerm 是否匹配·
-
 		lastnewi = index + uint64(len(ents))
-		ci := l.findConflict(ents) //查找 ents 中,index  与 term 冲突的位置.
+		ci := l.findConflict(ents) // 查找 ents 中,index与term 冲突的位置.
 		switch {
-		case ci == 0: //没有,全部追加完成
-		case ci <= l.committed: //如果冲突的位置在已提交的位置之前,有问题
-			l.logger.Panicf("entry %d conflict with committed entry [committed(%d)]", ci, l.committed)
-		default: //在提交位置之后,将未冲突的追加
+		case ci == 0: // 没有冲突
+		case ci <= l.committed: // 如果冲突的位置在已提交的位置之前,有问题
+			l.logger.Panicf("日志 %d 与已承诺的条目冲突  [committed(%d)]", ci, l.committed)
+		default: // 如果冲突位置是未提交的部分
+			// [1,2] ----> [1,3,4]
+			// 本节点存在一些无效的数据，比leader多
 			offset := index + 1
-			l.append(ents[ci-offset:]...)
+			// 则将ents中未发生冲突的部分追加到raftLog中
+			// etcd 深入解析 图1-11 f
+			l.append(ents[ci-offset:]...) // 追加到unstable
 		}
-		l.commitTo(min(committed, lastnewi))
+		l.commitTo(min(committed, lastnewi)) // committed:leader端发送过来的,认为本节点已committed的索引
 		return lastnewi, true
 	}
 	return 0, false
@@ -109,28 +79,18 @@ func (l *raftLog) append(ents ...pb.Entry) uint64 {
 		return l.lastIndex()
 	}
 	if after := ents[0].Index - 1; after < l.committed {
-		l.logger.Panicf("after(%d) is out of range [committed(%d)]", after, l.committed)
+		l.logger.Panicf("after(%d) 超出范围[committed(%d)]", after, l.committed)
 	}
 	l.unstable.truncateAndAppend(ents)
 	return l.lastIndex()
 }
 
-// findConflict finds the index of the conflict.
-// It returns the first pair of conflicting entries between the existing
-// entries and the given entries, if there are any.
-// If there is no conflicting entries, and the existing entries contains
-// all the given entries, zero will be returned.
-// If there is no conflicting entries, but the given entries contains new
-// entries, the index of the first new entry will be returned.
-// An entry is considered to be conflicting if it has the same index but
-// a different term.
-// The index of the given entries必须是continuously increasing.
+// findConflict 对每一个日志查找冲突
 func (l *raftLog) findConflict(ents []pb.Entry) uint64 {
 	for _, ne := range ents {
 		if !l.matchTerm(ne.Index, ne.Term) {
 			if ne.Index <= l.lastIndex() {
-				l.logger.Infof("found conflict at index %d [existing term: %d, conflicting term: %d]",
-					ne.Index, l.zeroTermOnErrCompacted(l.term(ne.Index)), ne.Term)
+				l.logger.Infof("发现索引冲突[任期不一致] %d [existing term: %d, conflicting term: %d]", ne.Index, l.zeroTermOnErrCompacted(l.term(ne.Index)), ne.Term)
 			}
 			return ne.Index
 		}
@@ -175,9 +135,7 @@ func (l *raftLog) unstableEntries() []pb.Entry {
 	return l.unstable.entries
 }
 
-// nextEnts returns all the available entries for execution.
-// If applied is smaller than the index of snapshot, it returns all committed
-// entries after the index of snapshot.
+// nextEnts 获取己提交且未应用的Entry记录返回给上层模块处理
 func (l *raftLog) nextEnts() (ents []pb.Entry) {
 	off := max(l.applied+1, l.firstIndex())
 	if l.committed+1 > off {
@@ -190,8 +148,7 @@ func (l *raftLog) nextEnts() (ents []pb.Entry) {
 	return nil
 }
 
-// hasNextEnts returns if there is any available entries for execution. This
-// is a fast check without heavy raftLog.slice() in raftLog.nextEnts().
+// hasNextEnts 当上层模块需要从raftLog获取Entry记录进行处理时,会先调用hasNextEnts（）方法检测是否有待应用的记录
 func (l *raftLog) hasNextEnts() bool {
 	off := max(l.applied+1, l.firstIndex())
 	return l.committed+1 > off
@@ -220,22 +177,23 @@ func (l *raftLog) firstIndex() uint64 {
 	return index
 }
 
+// 获取最新的日志索引
 func (l *raftLog) lastIndex() uint64 {
 	if i, ok := l.unstable.maybeLastIndex(); ok {
 		return i
 	}
 	i, err := l.storage.LastIndex()
 	if err != nil {
-		panic(err) // TODO(bdarnell)
+		panic(err)
 	}
 	return i
 }
 
+// 将日志commit到tocommit
 func (l *raftLog) commitTo(tocommit uint64) {
-	// 永不减少承诺
 	if l.committed < tocommit {
 		if l.lastIndex() < tocommit {
-			l.logger.Panicf("tocommit(%d) is out of range [lastIndex(%d)]. Was the raft log corrupted, truncated, or lost?", tocommit, l.lastIndex())
+			l.logger.Panicf("tocommit(%d)超过了 [lastIndex(%d)] raft log是否被损坏、截断或丢失？.?", tocommit, l.lastIndex())
 		}
 		l.committed = tocommit
 	}
@@ -264,28 +222,6 @@ func (l *raftLog) lastTerm() uint64 {
 	return t
 }
 
-func (l *raftLog) term(i uint64) (uint64, error) {
-	// the valid term range is [index of dummy entry, last index]
-	dummyIndex := l.firstIndex() - 1
-	if i < dummyIndex || i > l.lastIndex() {
-		// TODO: return an error instead?
-		return 0, nil
-	}
-
-	if t, ok := l.unstable.maybeTerm(i); ok {
-		return t, nil
-	}
-
-	t, err := l.storage.Term(i)
-	if err == nil {
-		return t, nil
-	}
-	if err == ErrCompacted || err == ErrUnavailable {
-		return 0, err
-	}
-	panic(err) // TODO(bdarnell)
-}
-
 func (l *raftLog) entries(i, maxsize uint64) ([]pb.Entry, error) {
 	if i > l.lastIndex() {
 		return nil, nil
@@ -302,26 +238,8 @@ func (l *raftLog) allEntries() []pb.Entry {
 	if err == ErrCompacted { // try again if there was a racing compaction
 		return l.allEntries()
 	}
-	// TODO (xiangli): handle error?
+
 	panic(err)
-}
-
-// isUpToDate determines if the given (lastIndex,term) log is more up-to-date
-// by comparing the index and term of the last entries in the existing logs.
-// If the logs have last entries with different terms, then the log with the
-// later term is more up-to-date. If the logs end with the same term, then
-// whichever log has the larger lastIndex is more up-to-date. If the logs are
-// the same, the given log is up-to-date.
-func (l *raftLog) isUpToDate(lasti, term uint64) bool {
-	return term > l.lastTerm() || (term == l.lastTerm() && lasti >= l.lastIndex())
-}
-
-func (l *raftLog) matchTerm(i, term uint64) bool {
-	t, err := l.term(i)
-	if err != nil {
-		return false
-	}
-	return t == term
 }
 
 func (l *raftLog) maybeCommit(maxIndex, term uint64) bool {
@@ -336,6 +254,54 @@ func (l *raftLog) restore(s pb.Snapshot) {
 	l.logger.Infof("log [%s] starts to restore snapshot [index: %d, term: %d]", l, s.Metadata.Index, s.Metadata.Term)
 	l.committed = s.Metadata.Index
 	l.unstable.restore(s)
+}
+
+func (l *raftLog) zeroTermOnErrCompacted(t uint64, err error) uint64 {
+	if err == nil {
+		return t
+	}
+	if err == ErrCompacted {
+		return 0
+	}
+	l.logger.Panicf("unexpected error (%v)", err)
+	return 0
+}
+
+// ------------------------------------------------------ OVER ------------------------------------------------------
+
+// 构建新的日志条目
+func newLogWithSize(storage Storage, logger Logger, maxNextEntsSize uint64) *raftLog {
+	if storage == nil {
+		log.Panic("存储不能为空")
+	}
+	log := &raftLog{ // struct
+		storage:         storage, // memory
+		logger:          logger,
+		maxNextEntsSize: maxNextEntsSize, // 消息最大大小
+	}
+	firstIndex, err := storage.FirstIndex() // 返回第一条数据的索引
+	if err != nil {
+		panic(err)
+	}
+	lastIndex, err := storage.LastIndex() // 返回最后一条数据的索引
+	if err != nil {
+		panic(err)
+	}
+	log.unstable.offset = lastIndex + 1 // 保存了尚未持久化的日志条目或快照
+	log.unstable.logger = logger
+	// 将我们的承诺和应用的指针初始化为最后一次压实的时间.
+
+	//   -------------------------------------
+	//    commit|apply      storage
+	log.committed = firstIndex - 1
+	log.applied = firstIndex - 1
+
+	return log
+}
+
+//OK
+func (l *raftLog) String() string {
+	return fmt.Sprintf("----> 【committed=%d, applied=%d, unstable.offset=%d, len(unstable.Entries)=%d】", l.committed, l.applied, l.unstable.offset, len(l.unstable.entries))
 }
 
 // slice 获取lo到hi-1的所有日志,但总量限制在maxsize
@@ -382,7 +348,7 @@ func (l *raftLog) slice(lo, hi, maxSize uint64) ([]pb.Entry, error) {
 	return limitSize(ents, maxSize), nil
 }
 
-// l.firstIndex <= lo <= hi <= l.firstIndex + len(l.entries)
+// 范围检查 l.firstIndex <= lo <= hi <= l.firstIndex + len(l.entries)
 func (l *raftLog) mustCheckOutOfBounds(lo, hi uint64) error {
 	if lo > hi {
 		l.logger.Panicf("无效的索引 %d > %d", lo, hi)
@@ -399,13 +365,42 @@ func (l *raftLog) mustCheckOutOfBounds(lo, hi uint64) error {
 	return nil
 }
 
-func (l *raftLog) zeroTermOnErrCompacted(t uint64, err error) uint64 {
+// 查看索引消息对应的任期
+func (l *raftLog) term(i uint64) (uint64, error) {
+	// 有效期限范围为[虚拟条目索引，最后一个索引]
+	// 会尝试获取unstable、storage 的第一条Entry记录的索引值
+	dummyIndex := l.firstIndex() - 1
+	// 会尝试获取unstable、storage 的最新的Entry记录的索引值
+	if i < dummyIndex || i > l.lastIndex() {
+		return 0, nil
+	}
+
+	if t, ok := l.unstable.maybeTerm(i); ok {
+		return t, nil
+	}
+
+	t, err := l.storage.Term(i)
 	if err == nil {
-		return t
+		return t, nil
 	}
-	if err == ErrCompacted {
-		return 0
+	if err == ErrCompacted || err == ErrUnavailable {
+		return 0, err
 	}
-	l.logger.Panicf("unexpected error (%v)", err)
-	return 0
+	panic(err)
+}
+
+// isUpToDate Follower节点在接收到Candidate节点的选举请求之后，会通过比较Candidate节点的本地日志与自身本地日志的新旧程度，从而决定是否投票。
+// raftLog提供了isUpToDat巳（）方法用于比较日志的新旧程度.
+func (l *raftLog) isUpToDate(lasti, term uint64) bool {
+	return term > l.lastTerm() || (term == l.lastTerm() && lasti >= l.lastIndex())
+}
+
+// 检测MsgApp消息的Index 字段及LogTerm字段是否合法
+func (l *raftLog) matchTerm(i, term uint64) bool {
+
+	t, err := l.term(i) // 查看索引消息对应的任期
+	if err != nil {
+		return false
+	}
+	return t == term
 }

@@ -14,7 +14,7 @@
 
 package tracker
 
-// StateType is the state of a tracked follower.
+// StateType follower状态追踪
 type StateType uint64
 
 const (
@@ -23,6 +23,8 @@ const (
 	// its last index. In the ideal (and common) case, only one round of probing
 	// is necessary as the follower will react with a hint. Followers that are
 	// probed over extended periods of time are often offline.
+	// 表示一个不知道最后索引的追随者.这样的追随者被 "探测"(即定期发送附录)以缩小其最后索引.
+	// 在理想(和常见)的情况下,只有一轮探测是必要的,因为追随者会做出提示.被长期探测的追随者往往是离线的.
 	StateProbe StateType = iota
 	// StateReplicate is the state steady in which a follower eagerly receives
 	// log entries to append to its log.

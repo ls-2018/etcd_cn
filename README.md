@@ -166,7 +166,9 @@ MsgReadIndexResp            非本地：
 
 - leader收到follower的心跳响应之后会怎么去修改对应的follower元数据呢？
 
-![](./images/MsgReadIndex.png)
+- 快照 follower 当数据远落后于leader , leader会将快照发送过来 但由于网络原因,这一过程很慢 ,但是leader又生成了新的快照,wal没有旧的数据, 这时follower同步完,leader将最新新消息
+  发送follower , follower reject ,但是此时wal已经没有对应的wal 又会发送新的快照, 这就会陷入死循环.....how? 看完源码再说吧
+  ![](./images/MsgReadIndex.png)
 
 ### Ref
 
@@ -193,6 +195,8 @@ MsgReadIndexResp            非本地：
 - https://so.csdn.net/so/search?q=etcd&t=blog&u=devclouds
 - https://blog.csdn.net/weixin_42663840/article/details/100005978
 - https://www.jianshu.com/p/267e1d626c22
+- https://blog.csdn.net/qq_40504851/category_10905363.html
+- https://blog.csdn.net/cyq6239075/category_9756361.html             ☆
 
 ```
 tickHeartbeart 会同时推进两个计数器  heartbeatElapsed 和 electionElapsed .
@@ -212,8 +216,8 @@ tickHeartbeart 会同时推进两个计数器  heartbeatElapsed 和 electionElap
 ```
 
 ```
-grpc  client   --------grpc--------->    gateway ------------> etcd http server 2379
-                            将grpc转换成了http 
+curl    --------http--------->    gateway ------------> etcd grpc server 2379
+                            将http转换成了grpc
 
 
 
@@ -228,5 +232,52 @@ grpc  client   --------grpc--------->    gateway ------------> etcd http server 
 - github.com/soheilhy/cmux 可以在同一个listener上监听不同协议的请求
 -
 
-etcdServer 会单独处理 Propose消息, 其余消息交给raft.step 来处理 [该函数，会随着节点角色的改变而发生改变] [会首先判断任期、索引，在判断消息类型]
-  
+```
+etcdServer 会单独处理 Propose消息, 其余消息交给raft.step 来处理 [该函数,会随着节点角色的改变而发生改变] [会首先判断任期、索引,在判断消息类型]
+
+StartEtcd
+  1、etcdserver.NewServer -> 
+    MySelfStartRaft
+      newRaftNode
+        r.ticker = time.NewTicker(r.heartbeat)
+    startNode -> 
+      raft.StartNode -> 
+        go n.run()
+          - 处理commited的消息，将其apply
+          - 处理接收到的消息
+          - 发送用户命令
+          - 配置变更
+          - case <-n.tickc                                  F取出数据
+            n.rn.Tick()
+              rn.raft.tick()
+                r.tickElection或tickHeartbeat
+          - case readyc <- rd                               A放入数据
+          - case <-advancec: 
+          - case c := <-n.status:
+          - case <-n.stop: 
+  2、e.Server.Start ->
+    EtcdServer.strat ->
+      s.start()
+        go s.run()
+          # s.r=raftNode
+          s.r.start(rh)
+            go func()
+              - case <-r.ticker.C:
+                r.tick() 
+                  r.Tick()
+                    case n.tickc <- struct{}{}              F放入数据、不会阻塞,有size
+              - case rd := <-r.Ready()                      A取出数据 -----> B放入数据
+              - case <-r.stopped:
+          - case ap := <-s.r.apply()                                        B取出数据
+            读取applyc的数据,封装为JOB,放入调度器
+          - 处理过期租约
+          - 处理运行过程中出现的err,直接退出
+          - getSyncC
+          - case <-s.stop:
+            启动过程中失败
+    
+  3、e.servePeers
+  4、e.serveClients
+  5、e.serveMetrics
+    
+```

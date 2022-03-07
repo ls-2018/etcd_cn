@@ -11,3 +11,26 @@
 5) 一旦日志项commit成功, Leader 就将该日志条目对应的指令应用(apply) 到本地状态机,并向客户端返回操作结果.
 6) Leader后续通过AppendEntries RPC 将已经成功(在大多数节点上)提交的日志项告知Follower .
 7) Follower 收到提交的日志项之后,将其应用至本地状态机.
+
+``` Goland
+type Storage interface {
+	InitialState() (pb.HardState, pb.ConfState, error)
+	Entries(lo, hi, maxSize uint64) ([]pb.Entry, error)
+	Term(i uint64) (uint64, error)
+	LastIndex() (uint64, error)     // 返回最后一条数据的索引
+	FirstIndex() (uint64, error)    // 返回第一条数据的索引
+	Snapshot() (pb.Snapshot, error) // 反回最近的快照数据
+}
+var _ Storage = &MemoryStorage{}
+
+
+type raftLog struct {
+	storage Storage   // stable 
+	unstable unstable
+	committed uint64
+	applied uint64
+	logger Logger
+	maxNextEntsSize uint64
+}
+
+```

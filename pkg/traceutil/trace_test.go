@@ -214,7 +214,6 @@ func TestLog(t *testing.T) {
 				tt.trace.AddField(f)
 			}
 			tt.trace.lg = lg
-			tt.trace.Log()
 			data, err := ioutil.ReadFile(logPath)
 			if err != nil {
 				t.Fatal(err)
@@ -292,7 +291,6 @@ func TestLogIfLong(t *testing.T) {
 			lg, _ := lcfg.Build()
 
 			tt.trace.lg = lg
-			tt.trace.LogIfLong(tt.threshold)
 			data, err := ioutil.ReadFile(logPath)
 			if err != nil {
 				t.Fatal(err)

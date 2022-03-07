@@ -115,8 +115,8 @@ func (c *Config) Clone() Config {
 type ProgressTracker struct {
 	Config
 	// leader需要缓存当前所有Follower的日志同步进度
-	Progress    ProgressMap // nodeID ---> nodeInfoMap
-	Votes       map[uint64]bool
+	Progress    ProgressMap     // nodeID ---> nodeInfoMap
+	Votes       map[uint64]bool // 记录接收到了哪些节点的投票
 	MaxInflight int
 }
 
@@ -244,7 +244,7 @@ func (p *ProgressTracker) LearnerNodes() []uint64 {
 	return nodes
 }
 
-// ResetVotes prepares for a new round of vote counting via recordVote.
+// ResetVotes 准备通过recordVote进行新一轮的计票工作。
 func (p *ProgressTracker) ResetVotes() {
 	p.Votes = map[uint64]bool{}
 }
