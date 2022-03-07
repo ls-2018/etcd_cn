@@ -53,7 +53,7 @@ var (
 	MetaTermKeyName            = []byte("term")
 )
 
-// DefaultIgnores 定义在哈希检查中要忽略的桶和键。
+// DefaultIgnores 定义在哈希检查中要忽略的桶和键.
 func DefaultIgnores(bucket, key []byte) bool {
 	// consistent index & term might be changed due to v2 internal sync, which
 	// is not controllable by the user.

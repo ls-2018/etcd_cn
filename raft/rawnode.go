@@ -25,7 +25,7 @@ import (
 var ErrStepLocalMsg = errors.New("raft: cannot step raft local message")
 
 // ErrStepPeerNotFound is returned when try to step a response message
-// but there is no peer found in raft.prs for that node.
+// but there is no peer found in raft.prs for that localNode.
 var ErrStepPeerNotFound = errors.New("raft: cannot step as peer not found")
 
 // RawNode is a thread-unsafe Node.
@@ -37,9 +37,9 @@ type RawNode struct {
 	prevHardSt pb.HardState
 }
 
-// NewRawNode 从给定的配置中实例化一个RawNode。
-// 参见Bootstrap()来引导一个初始状态；它取代了这个方法以前的'peers'参数（具有相同的行为）。
-// 然而，建议应用程序不要调用Bootstrap，而是通过设置一个第一索引大于1的存储空间，并将所需的ConfState作为其InitialState来手动引导其状态。
+// NewRawNode 从给定的配置中实例化一个RawNode.
+// 参见Bootstrap()来引导一个初始状态；它取代了这个方法以前的'peers'参数(具有相同的行为).
+// 然而,建议应用程序不要调用Bootstrap,而是通过设置一个第一索引大于1的存储空间,并将所需的ConfState作为其InitialState来手动引导其状态.
 func NewRawNode(config *Config) (*RawNode, error) {
 	r := newRaft(config) // ✅
 	rn := &RawNode{
@@ -95,7 +95,7 @@ func (rn *RawNode) ProposeConfChange(cc pb.ConfChangeI) error {
 	return rn.raft.Step(m)
 }
 
-// ApplyConfChange applies a config change to the local node. The app must call
+// ApplyConfChange applies a config change to the local localNode. The app must call
 // this when it applies a configuration change, except when it decides to reject
 // the configuration change, in which case no call must take place.
 func (rn *RawNode) ApplyConfChange(cc pb.ConfChangeI) *pb.ConfState {
@@ -125,8 +125,7 @@ func (rn *RawNode) Ready() Ready {
 	return rd
 }
 
-// readyWithoutAccept returns a Ready. This is a read-only operation, i.e. there
-// is no obligation that the Ready必须是handled.
+// readyWithoutAccept 返回ready结构体
 func (rn *RawNode) readyWithoutAccept() Ready {
 	return newReady(rn.raft, rn.prevSoftSt, rn.prevHardSt)
 }
@@ -197,7 +196,7 @@ const (
 	ProgressTypeLearner
 )
 
-// WithProgress is a helper to introspect the Progress for this node and its
+// WithProgress is a helper to introspect the Progress for this localNode and its
 // peers.
 func (rn *RawNode) WithProgress(visitor func(id uint64, typ ProgressType, pr tracker.Progress)) {
 	rn.raft.prs.Visit(func(id uint64, pr *tracker.Progress) {
@@ -211,7 +210,7 @@ func (rn *RawNode) WithProgress(visitor func(id uint64, typ ProgressType, pr tra
 	})
 }
 
-// ReportUnreachable reports the given node is not reachable for the last send.
+// ReportUnreachable reports the given localNode is not reachable for the last send.
 func (rn *RawNode) ReportUnreachable(id uint64) {
 	_ = rn.raft.Step(pb.Message{Type: pb.MsgUnreachable, From: id})
 }

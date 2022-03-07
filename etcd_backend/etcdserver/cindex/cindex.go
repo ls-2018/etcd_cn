@@ -27,19 +27,19 @@ type Backend interface {
 	BatchTx() backend.BatchTx
 }
 
-// ConsistentIndexer 是一个接口，它封装了一致性索引的Get/Set/Save方法。
+// ConsistentIndexer 是一个接口,它封装了一致性索引的Get/Set/Save方法.
 type ConsistentIndexer interface {
 
-	// ConsistentIndex 返回当前执行条目的一致索引。
+	// ConsistentIndex 返回当前执行条目的一致索引.
 	ConsistentIndex() uint64
 
-	// SetConsistentIndex 设置当前执行条目的一致索引。
+	// SetConsistentIndex 设置当前执行条目的一致索引.
 	SetConsistentIndex(v uint64, term uint64)
 
-	// UnsafeSave 必须在持有tx上的锁的情况下被调用。 它将一致索引保存到底层稳定存储中。
+	// UnsafeSave 必须在持有tx上的锁的情况下被调用. 它将一致索引保存到底层稳定存储中.
 	UnsafeSave(tx backend.BatchTx)
 
-	// SetBackend 为ConsistentIndexer设置可用的backend.BatchTx。
+	// SetBackend 为ConsistentIndexer设置可用的backend.BatchTx.
 	SetBackend(be Backend)
 }
 
@@ -121,7 +121,7 @@ func UnsafeCreateMetaBucket(tx backend.BatchTx) {
 	tx.UnsafeCreateBucket(buckets.Meta)
 }
 
-// CreateMetaBucket 创建meta bucket，如果不存在
+// CreateMetaBucket 创建meta bucket,如果不存在
 func CreateMetaBucket(tx backend.BatchTx) {
 	tx.Lock()
 	defer tx.Unlock()

@@ -24,9 +24,9 @@ import (
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v2error"
 )
 
-// A watcherHub  一个watcherHub包含所有订阅的watcher,watcher是一个以watched路径为key，以watcher为值的map，
-// EventHistory为watcherHub保存旧的事件。
-// 它被用来帮助watcher获得一个连续的事件历史。观察者可能会错过在第一个观察命令结束和第二个命令开始之间发生的事件。
+// A watcherHub  一个watcherHub包含所有订阅的watcher,watcher是一个以watched路径为key,以watcher为值的map,
+// EventHistory为watcherHub保存旧的事件.
+// 它被用来帮助watcher获得一个连续的事件历史.观察者可能会错过在第一个观察命令结束和第二个命令开始之间发生的事件.
 type watcherHub struct {
 	// count必须是64位对齐
 	count        int64 // current number of watchers.
@@ -35,7 +35,7 @@ type watcherHub struct {
 	EventHistory *EventHistory // 历史事件
 }
 
-// newWatchHub 创建一个watcherHub。容量决定了我们将在eventHistory中保留多少个事件。
+// newWatchHub 创建一个watcherHub.容量决定了我们将在eventHistory中保留多少个事件.
 func newWatchHub(capacity int) *watcherHub {
 	return &watcherHub{
 		watchers:     make(map[string]*list.List),

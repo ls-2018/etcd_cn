@@ -59,19 +59,19 @@ Member:
   --election-timeout '1000'
     选举超时
   --initial-election-tick-advance 'true'
-    是否提前初始化选举时钟启动，以便更快的选举
+    是否提前初始化选举时钟启动,以便更快的选举
   --listen-peer-urls 'http://localhost:2380'
     和成员之间通信的地址.用于监听其他etcd member的url
   --listen-client-urls 'http://localhost:2379'
     List of URLs to listen on for client traffic.
   --max-snapshots '` + strconv.Itoa(embed.DefaultMaxSnapshots) + `'
-    要保留的最大快照文件数（0表示不受限制）.5
+    要保留的最大快照文件数(0表示不受限制).5
   --max-wals '` + strconv.Itoa(embed.DefaultMaxWALs) + `'
-    要保留的最大wal文件数（0表示不受限制）. 5
+    要保留的最大wal文件数(0表示不受限制). 5
   --quota-backend-bytes '0'
-    当后端大小超过给定配额时（0默认为低空间配额）.引发警报.
+    当后端大小超过给定配额时(0默认为低空间配额).引发警报.
   --backend-bbolt-freelist-type 'map'
-    BackendFreelistType指定boltdb后端使用的freelist的类型（array and map是支持的类型）. map 
+    BackendFreelistType指定boltdb后端使用的freelist的类型(array and map是支持的类型). map 
   --backend-batch-interval ''
     BackendBatchInterval是提交后端事务前的最长时间.
   --backend-batch-limit '0'
@@ -79,13 +79,13 @@ Member:
   --max-txn-ops '128'
     事务中允许的最大操作数.
   --max-request-bytes '1572864'
-    服务器将接受的最大客户端请求大小（字节）.
+    服务器将接受的最大客户端请求大小(字节).
   --grpc-keepalive-min-time '5s'
     客户端在ping服务器之前应等待的最短持续时间间隔.
   --grpc-keepalive-interval '2h'
-    服务器到客户端ping的频率持续时间.以检查连接是否处于活动状态（0表示禁用）.
+    服务器到客户端ping的频率持续时间.以检查连接是否处于活动状态(0表示禁用).
   --grpc-keepalive-timeout '20s'
-    关闭非响应连接之前的额外持续等待时间（0表示禁用）.20s
+    关闭非响应连接之前的额外持续等待时间(0表示禁用).20s
   --socket-reuse-port 'false'
     启用在listener上设置套接字选项SO_REUSEPORT.允许重新绑定一个已经在使用的端口.false
   --socket-reuse-address 'false'
@@ -106,7 +106,7 @@ Clustering:
   --discovery ''
     用于引导群集的发现URL.
   --discovery-fallback 'proxy'
-    发现服务失败时的预期行为（“退出”或“代理”）.“proxy”仅支持v2 API. %q
+    发现服务失败时的预期行为(“退出”或“代理”).“proxy”仅支持v2 API. %q
   --discovery-proxy ''
     用于流量到发现服务的HTTP代理.
   --discovery-srv ''
@@ -211,15 +211,15 @@ v2 Proxy (to be deprecated in v3.6):
   --proxy 'off'
     代理模式设置  ('off', 'readonly' or 'on').
   --proxy-failure-wait 5000
-    在重新考虑代理请求之前.endpoints 将处于失败状态的时间（以毫秒为单位）.
+    在重新考虑代理请求之前.endpoints 将处于失败状态的时间(以毫秒为单位).
   --proxy-refresh-interval 30000
-    endpoints 刷新间隔的时间（以毫秒为单位）.
+    endpoints 刷新间隔的时间(以毫秒为单位).
   --proxy-dial-timeout 1000
-    拨号超时的时间（以毫秒为单位）或0表示禁用超时
+    拨号超时的时间(以毫秒为单位)或0表示禁用超时
   --proxy-write-timeout 5000
-    写入超时的时间（以毫秒为单位）或0以禁用超时.
+    写入超时的时间(以毫秒为单位)或0以禁用超时.
   --proxy-read-timeout 0
-    读取超时的时间（以毫秒为单位）或0以禁用超时.
+    读取超时的时间(以毫秒为单位)或0以禁用超时.
 
 Experimental feature:
   --experimental-initial-corrupt-check 'false'

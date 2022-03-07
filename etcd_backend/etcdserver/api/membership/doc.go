@@ -12,5 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package membership 描述单个etcd成员和成员集群。
+// Package membership 描述单个etcd成员和成员集群.
 package membership

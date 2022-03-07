@@ -21,7 +21,7 @@ ETCDCTL_KEY=/tmp/key.pem
 
 #### Options
 
-- lease -- 租约ID（十六进制）,以附加到key上.
+- lease -- 租约ID(十六进制),以附加到key上.
 - prev-kv -- 返回修改前的键值对.
 - ignore-value -- 使用其当前值更新该键.
 - ignore-lease -- 使用其当前租约更新key.

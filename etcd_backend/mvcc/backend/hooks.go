@@ -16,7 +16,7 @@ package backend
 
 type HookFunc func(tx BatchTx)
 
-// Hooks 允许事务有效期内执行的额外逻辑。
+// Hooks 允许事务有效期内执行的额外逻辑.
 type Hooks interface {
 	// OnPreCommitUnsafe 事务提交前执行的钩子
 	OnPreCommitUnsafe(tx BatchTx)

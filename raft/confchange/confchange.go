@@ -341,7 +341,7 @@ func (c Changer) checkAndCopy() (tracker.Config, tracker.ProgressMap, error) {
 	prs := tracker.ProgressMap{}
 
 	for id, pr := range c.Tracker.Progress {
-		// 一个浅层拷贝就足够了，因为我们只对Learner字段进行变异。
+		// 一个浅层拷贝就足够了,因为我们只对Learner字段进行变异.
 		ppr := *pr
 		prs[id] = &ppr
 	}

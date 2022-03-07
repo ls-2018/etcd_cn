@@ -53,7 +53,7 @@ var DefaultZapLoggerConfig = zap.Config{
 	ErrorOutputPaths: []string{"stderr"},
 }
 
-// MergeOutputPaths 合并日志输出路径,解决冲突.,如果有/dev/null , 就丢弃其他所有
+// MergeOutputPaths 合并日志输出路径,解决冲突.,如果有/dev/null,就丢弃其他所有
 func MergeOutputPaths(cfg zap.Config) zap.Config {
 	_ = zap.NewProductionEncoderConfig
 	outputs := make(map[string]struct{})

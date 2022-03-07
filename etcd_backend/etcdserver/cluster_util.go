@@ -33,12 +33,12 @@ import (
 	"go.uber.org/zap"
 )
 
-// isMemberBootstrapped 试图检查给定的成员是否已经在给定的集群中被引导了。
+// isMemberBootstrapped 试图检查给定的成员是否已经在给定的集群中被引导了.
 func isMemberBootstrapped(lg *zap.Logger, cl *membership.RaftCluster, member string, rt http.RoundTripper, timeout time.Duration) bool {
 	// 获取非本机的peer urls
 	rcl, err := getClusterFromRemotePeers(lg, getRemotePeerURLs(cl, member), timeout, false, rt) // 从远端节点获取到的集群节点信息
 	if err != nil {
-		// 初始化时,会有err ,此时member 是节点名字，而cl.member里的是hash之后的值
+		// 初始化时,会有err ,此时member 是节点名字,而cl.member里的是hash之后的值
 		return false
 	}
 	id := cl.MemberByName(member).ID

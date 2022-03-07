@@ -51,7 +51,7 @@ func NewSession(client *v3.Client, opts ...SessionOption) (*Session, error) {
 	}
 
 	ctx, cancel := context.WithCancel(ops.ctx)
-	// 保证锁，在线程的活动期间，实现锁的的续租
+	// 保证锁,在线程的活动期间,实现锁的的续租
 	keepAlive, err := client.KeepAlive(ctx, id)
 	if err != nil || keepAlive == nil {
 		cancel()

@@ -36,7 +36,7 @@ ETCDCTL_API=3 etcdctl alarm disarm
 
 ```
 //--auto-compaction-mode=revision --auto-compaction-retention=1000 每5分钟自动压缩"latest revision" - 1000；
-//--auto-compaction-mode=periodic --auto-compaction-retention=12h 每1小时自动压缩并保留12小时窗口。
+//--auto-compaction-mode=periodic --auto-compaction-retention=12h 每1小时自动压缩并保留12小时窗口.
 👁etcd_backend/embed/config_test.go:TestAutoCompactionModeParse
 
 - 只保存一个小时的历史版本```etcd --auto-compaction-retention=1```
@@ -55,25 +55,25 @@ http://127.0.0.1:2379/members
 ### msg
 
 ```
-MsgHup             
-MsgBeat            
-MsgProp            
-MsgApp             
-MsgAppResp         
-MsgVote            
-MsgVoteResp        
-MsgSnap            
-MsgHeartbeat       
-MsgHeartbeatResp   
-MsgUnreachable     
-MsgSnapStatus      
-MsgCheckQuorum               检查自己还是不是leader,electionTimeout定时触发  
-MsgTransferLeader  
-MsgTimeoutNow      
-MsgReadIndex       
-MsgReadIndexResp   
-MsgPreVote         
-MsgPreVoteResp     
+MsgHup                      本地：开启选举,---->会触发vote或pre-vote
+MsgBeat                     本地：心跳,---->给peers发送Msghearbeat
+MsgProp                     本地：Propose -----> MsgApp
+MsgApp                      非本地：操作日志【复制、配置变更 req】
+MsgAppResp                  非本地：操作日志【复制 res】
+MsgVote                     非本地：投票请求
+MsgVoteResp                 非本地：投票相应
+MsgPreVote                  非本地：预投票请求
+MsgPreVoteResp              非本地：预投票相应
+MsgSnap                     非本地：leader向follower拷贝快照,响应是MsgAppResp,告诉leader继续复制之后的值
+MsgHeartbeat                
+MsgHeartbeatResp            
+MsgUnreachable              非本地：etcdserver通过这个消息告诉raft状态机某个follower不可达,让其发送消息的方式由pipeline切成ping-pong模式
+MsgSnapStatus               非本地：etcdserver通过这个消息告诉raft状态机快照发送成功还是失败
+MsgCheckQuorum               
+MsgTransferLeader           非本地：
+MsgTimeoutNow               非本地：
+MsgReadIndex                非本地：
+MsgReadIndexResp            非本地：
 ```
 
 ### issue
@@ -147,21 +147,24 @@ MsgPreVoteResp
 
 - checkquorum机制：
   ```
-  每隔一段时间，leader节点会尝试连接集群中的节点（发送心跳），如果发现自己可以连接到的节点个数没有超过半数，则主动切换成follower状态。
-  这样在网络分区的情况下，旧的leader节点可以很快的知道自己已经过期了。
+  每隔一段时间,leader节点会尝试连接集群中的节点(发送心跳),如果发现自己可以连接到的节点个数没有超过半数,则主动切换成follower状态.
+  这样在网络分区的情况下,旧的leader节点可以很快的知道自己已经过期了.
   ```
 
 
 - PreVote优化
   ```
-  当follower节点准备发起选举时候，先连接其他节点，并询问它们是否愿意参与选举（其他人是否能正常收到leader节点的信息），当有半数以上节点响应并参与则可以发起新一轮选举。
+  当follower节点准备发起选举时候,先连接其他节点,并询问它们是否愿意参与选举(其他人是否能正常收到leader节点的信息),当有半数以上节点响应并参与则可以发起新一轮选举.
   解决分区之后节点重新恢复但term过大导致的leader选举问题
   ```
 - WAL
   ```
-  WAL全称是Write Ahead Log，是数据库中常用的持久化数据的方法。比如我们更新数据库的一条数据，如果直接找到这条数据并更新，
-  可能会耗费比较长的时间。更快更安全的方式是先写一条Log数据到文件中，然后由后台线程来完成最终数据的更新，这条log中通常包含的是一条指令。
+  WAL全称是Write Ahead Log,是数据库中常用的持久化数据的方法.比如我们更新数据库的一条数据,如果直接找到这条数据并更新,
+  可能会耗费比较长的时间.更快更安全的方式是先写一条Log数据到文件中,然后由后台线程来完成最终数据的更新,这条log中通常包含的是一条指令.
   ```
+- 发送心跳消息的时候leader是怎么设置各个follower的commit？
+
+- leader收到follower的心跳响应之后会怎么去修改对应的follower元数据呢？
 
 ![](./images/MsgReadIndex.png)
 
@@ -186,21 +189,28 @@ MsgPreVoteResp
 - https://www.jianshu.com/p/518f75c5bf55
 - https://www.cnblogs.com/ricklz/p/15155095.html
 - https://www.lixueduan.com/categories/
+<<<<<<< HEAD
+=======
+- https://zhuanlan.zhihu.com/p/452483457
+- https://so.csdn.net/so/search?q=etcd&t=blog&u=devclouds
+- https://blog.csdn.net/weixin_42663840/article/details/100005978
+- https://www.jianshu.com/p/267e1d626c22
+>>>>>>> e92f147fedda937eaefb6b0d0d407f131651ff88
 
 ```
-tickHeartbeart 会同时推进两个计数器  heartbeatElapsed 和 electionElapsed 。
+tickHeartbeart 会同时推进两个计数器  heartbeatElapsed 和 electionElapsed .
 
 (1) heartbeatElapsed
 
-当 heartbeatElapsed 超时，发送 MsgBeat 消息给当前节点，当前节点收到消息之后会广播心跳消息(bcastHeartbeat)给其他节点 MsgHeartbeat 消息。
+当 heartbeatElapsed 超时,发送 MsgBeat 消息给当前节点,当前节点收到消息之后会广播心跳消息(bcastHeartbeat)给其他节点 MsgHeartbeat 消息.
 
-当 Follower 或者 Candidate 收到 MsgHeartbeat 消息会重置 electionElapsed 为 0，同时会响应 MsgHeartbeatResp 消息。
+当 Follower 或者 Candidate 收到 MsgHeartbeat 消息会重置 electionElapsed 为 0,同时会响应 MsgHeartbeatResp 消息.
 
-当 Leader 收到 MsgHeartbeatResp 消息，会更新对应节点的状态(存活、日志复制状态等)
+当 Leader 收到 MsgHeartbeatResp 消息,会更新对应节点的状态(存活、日志复制状态等)
 
 (2) electionElapsed
 
-当 electionElapsed 超时，发送 MsgCheckQuorum 给当前节点，当前节点收到消息之后，进行自我检查，判断是否能继续维持 Leader 状态，如果不能切换为Follower。同时如果节点正在进行 Leader 切换(切换其他节点为Leader)，当 electionElapsed 超时，说明 Leader 节点转移超时，会终止切换。
+当 electionElapsed 超时,发送 MsgCheckQuorum 给当前节点,当前节点收到消息之后,进行自我检查,判断是否能继续维持 Leader 状态,如果不能切换为Follower.同时如果节点正在进行 Leader 切换(切换其他节点为Leader),当 electionElapsed 超时,说明 Leader 节点转移超时,会终止切换.
 
 ```
 
@@ -217,7 +227,15 @@ curl    --------http--------->    gateway ------------> etcd grpc server 2379
 ```
 
 ### module
+<<<<<<< HEAD
 
 - github.com/soheilhy/cmux 可以在同一个listener上监听不同协议的请求
 - 
+=======
+>>>>>>> e92f147fedda937eaefb6b0d0d407f131651ff88
 
+- github.com/soheilhy/cmux 可以在同一个listener上监听不同协议的请求
+-
+
+etcdServer 会单独处理 Propose消息, 其余消息交给raft.step 来处理 [该函数，会随着节点角色的改变而发生改变] [会首先判断任期、索引，在判断消息类型]
+  

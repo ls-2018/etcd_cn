@@ -124,7 +124,7 @@ func newListenConfig(sopts *SocketOpts) (net.ListenConfig, error) {
 }
 
 type TLSInfo struct {
-	// CertFile 服务端证书,如果ClientCertFile为空，它也将被用作_客户证书.
+	// CertFile 服务端证书,如果ClientCertFile为空,它也将被用作_客户证书.
 	CertFile string
 	// KeyFile 是CertFile的密钥.
 	KeyFile string
@@ -140,7 +140,7 @@ type TLSInfo struct {
 	InsecureSkipVerify  bool
 	SkipClientSANVerify bool
 
-	// ServerName 在发现/虚拟主机的情况下，确保证书与给定的主机相匹配
+	// ServerName 在发现/虚拟主机的情况下,确保证书与给定的主机相匹配
 	ServerName string
 
 	// HandshakeFailure  当一个连接无法握手时,会被选择性地调用.之后,连接将被立即关闭.
@@ -151,13 +151,13 @@ type TLSInfo struct {
 
 	selfCert bool // 自签
 
-	// parseFunc 的存在是为了简化测试。通常情况下，parseFunc应该留为零。在这种情况下，将使用tls.X509KeyPair。
+	// parseFunc 的存在是为了简化测试.通常情况下,parseFunc应该留为零.在这种情况下,将使用tls.X509KeyPair.
 	parseFunc func([]byte, []byte) (tls.Certificate, error)
 
 	// AllowedCN  客户端必须提供的common Name;在证书里
 	AllowedCN string
 
-	// AllowedHostname 是一个IP地址或主机名，必须与客户提供的TLS证书相匹配.
+	// AllowedHostname 是一个IP地址或主机名,必须与客户提供的TLS证书相匹配.
 	AllowedHostname string
 
 	Logger *zap.Logger
@@ -307,9 +307,9 @@ func (info TLSInfo) baseConfig() (*tls.Config, error) {
 		return nil, err
 	}
 
-	// 如果提供了客户证书和密钥，则对其进行预验证。这可以确保我们在接受任何连接之前崩溃。
+	// 如果提供了客户证书和密钥,则对其进行预验证.这可以确保我们在接受任何连接之前崩溃.
 	if (info.ClientKeyFile == "") != (info.ClientCertFile == "") {
-		return nil, fmt.Errorf("ClientKeyFile和ClientCertFile必须同时存在或同时不存在。: key: %v, cert: %v]", info.ClientKeyFile, info.ClientCertFile)
+		return nil, fmt.Errorf("ClientKeyFile和ClientCertFile必须同时存在或同时不存在.: key: %v, cert: %v]", info.ClientKeyFile, info.ClientCertFile)
 	}
 	if info.ClientCertFile != "" {
 		_, err := tlsutil.NewCert(info.ClientCertFile, info.ClientKeyFile, info.parseFunc)
@@ -457,7 +457,7 @@ func (info TLSInfo) ServerConfig() (*tls.Config, error) {
 	return cfg, nil
 }
 
-// ClientConfig 生成一个tls.Config对象，供HTTP客户端使用。
+// ClientConfig 生成一个tls.Config对象,供HTTP客户端使用.
 func (info TLSInfo) ClientConfig() (*tls.Config, error) {
 	var cfg *tls.Config
 	var err error

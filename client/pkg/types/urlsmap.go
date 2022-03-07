@@ -82,7 +82,7 @@ func (c URLsMap) Len() int {
 	return len(c)
 }
 
-// parse 解析给定的字符串，并返回一个列出每个键的指定值的map。
+// parse 解析给定的字符串,并返回一个列出每个键的指定值的map.
 func parse(s string) map[string][]string {
 	m := make(map[string][]string)
 	for s != "" {

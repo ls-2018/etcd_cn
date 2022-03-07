@@ -36,11 +36,11 @@ import (
 )
 
 const (
-	metadataType int64 = iota + 1 // 元数据类型，元数据会保存当前的node id和cluster id。
+	metadataType int64 = iota + 1 // 元数据类型,元数据会保存当前的node id和cluster id.
 	entryType                     // 日志条目
-	stateType                     // 存放的是集群当前的状态HardState，如果集群的状态有变化，就会在WAL中存放一个新集群状态数据。里面包括当前Term，当前竞选者、当前已经commit的日志。
-	crcType                       // 存放crc校验字段。读取数据是，会根据这个记录里的crc字段对前面已经读出来的数据进行校验。
-	snapshotType                  // 存放snapshot的日志点。包括日志的Index和Term。
+	stateType                     // 存放的是集群当前的状态HardState,如果集群的状态有变化,就会在WAL中存放一个新集群状态数据.里面包括当前Term,当前竞选者、当前已经commit的日志.
+	crcType                       // 存放crc校验字段.读取数据是,会根据这个记录里的crc字段对前面已经读出来的数据进行校验.
+	snapshotType                  // 存放snapshot的日志点.包括日志的Index和Term.
 
 	// warnSyncDuration is the amount of time allotted to an fsync before
 	// logging a warning
@@ -70,9 +70,9 @@ var (
 // A newly created WAL is in append mode, and ready for appending records.
 // A just opened WAL is in read mode, and ready for reading records.
 // The WAL will be ready for appending after reading out all the previous records.
-// WAL是稳定存储的一个逻辑表示。WAL要么处于读取模式，要么处于追加模式，但不能同时进行。
-// 一个新创建的WAL处于追加模式，并准备好追加记录。一个刚打开的WAL处于读模式，并准备好读取记录。
-// 在读出所有以前的记录后，WAL将准备好进行追加。
+// WAL是稳定存储的一个逻辑表示.WAL要么处于读取模式,要么处于追加模式,但不能同时进行.
+// 一个新创建的WAL处于追加模式,并准备好追加记录.一个刚打开的WAL处于读模式,并准备好读取记录.
+// 在读出所有以前的记录后,WAL将准备好进行追加.
 type WAL struct {
 	lg *zap.Logger
 
@@ -84,7 +84,7 @@ type WAL struct {
 	metadata []byte           // wal文件构建后会写的第一个metadata记录
 	state    raftpb.HardState // wal文件构建后会写的第一个state记录
 
-	start     walpb.Snapshot // wal开始的snapshot，代表读取wal时从这个snapshot的记录之后开始
+	start     walpb.Snapshot // wal开始的snapshot,代表读取wal时从这个snapshot的记录之后开始
 	decoder   *decoder       // wal记录的反序列化器
 	readClose func() error   // closer for decode reader
 
@@ -98,7 +98,7 @@ type WAL struct {
 	fp    *filePipeline
 }
 
-// Create 创建一个准备用于添加记录的WAL。给定的元数据被记录在每个WAL文件的头部，并且可以在文件打开后用ReadAll检索。
+// Create 创建一个准备用于添加记录的WAL.给定的元数据被记录在每个WAL文件的头部,并且可以在文件打开后用ReadAll检索.
 func Create(lg *zap.Logger, dirpath string, metadata []byte) (*WAL, error) {
 	if Exist(dirpath) {
 		return nil, os.ErrExist
@@ -108,7 +108,7 @@ func Create(lg *zap.Logger, dirpath string, metadata []byte) (*WAL, error) {
 		lg = zap.NewNop()
 	}
 
-	// 保持临时的WAL目录，这样WAL的初始化就会显得很原子化。
+	// 保持临时的WAL目录,这样WAL的初始化就会显得很原子化.
 	tmpdirpath := filepath.Clean(dirpath) + ".tmp"
 	if fileutil.Exist(tmpdirpath) {
 		if err := os.RemoveAll(tmpdirpath); err != nil {
@@ -912,7 +912,7 @@ func (w *WAL) saveState(s *raftpb.HardState) error {
 	return w.encoder.encode(rec)
 }
 
-// Save 日志发送给Follower的同时，Leader会将日志落盘，即写到WAL中，
+// Save 日志发送给Follower的同时,Leader会将日志落盘,即写到WAL中,
 func (w *WAL) Save(st raftpb.HardState, ents []raftpb.Entry) error {
 	//获取wal的写锁
 	w.mu.Lock()

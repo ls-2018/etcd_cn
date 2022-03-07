@@ -192,7 +192,7 @@ func NewZapLoggerBuilder(lg *zap.Logger) func(*Config) error {
 }
 
 // SetupGlobalLoggers 配置全loggers (grpc, zapGlobal)基于cfg
-// 该方法默认不被embed etcd执行（从3.5开始）,以实现grpc/zap.Global日志独立配置或跨越独立生命周期的设置（如测试）.
+// 该方法默认不被embed etcd执行(从3.5开始),以实现grpc/zap.Global日志独立配置或跨越独立生命周期的设置(如测试).
 func (cfg *Config) SetupGlobalLoggers() {
 	lg := cfg.GetLogger()
 	if lg != nil {

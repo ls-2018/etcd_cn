@@ -76,11 +76,12 @@ type apply struct {
 	notifyc chan struct{}
 }
 
+// raft状态机,维护raft状态机的步进和状态迁移.
 type raftNode struct {
 	lg *zap.Logger
 
-	tickMu *sync.Mutex
-	raftNodeConfig
+	tickMu         *sync.Mutex
+	raftNodeConfig // 包含了node、storage等重要数据结构
 
 	// a chan to send/receive snapshot
 	msgSnapC chan raftpb.Message
@@ -157,8 +158,7 @@ func (r *raftNode) tick() {
 	r.tickMu.Unlock()
 }
 
-// start prepares and starts raftNode in a new goroutine. It is no longer safe
-// to modify the fields after it has been started.
+//心跳触发EtcdServer定时触发   非常重要
 func (r *raftNode) start(rh *raftReadyHandler) {
 	internalTimeout := time.Second
 
@@ -170,9 +170,13 @@ func (r *raftNode) start(rh *raftReadyHandler) {
 			select {
 			case <-r.ticker.C:
 				r.tick()
-			case rd := <-r.Ready():
-				//获取ready结构中的committedEntries，提交给Apply模块应用到后端存储中。
+
+			//	 readyc = n.readyc    size为0
+			case rd := <-r.Ready(): // 调用Node.Ready(),从返回的channel中获取数据
+				//获取ready结构中的committedEntries,提交给Apply模块应用到后端存储中.
+				//ReadStates不为空的处理逻辑
 				if rd.SoftState != nil {
+					// SoftState不为空的处理逻辑
 					newLeader := rd.SoftState.Lead != raft.None && rh.getLead() != rd.SoftState.Lead
 					if newLeader {
 						leaderChanges.Inc()
@@ -194,7 +198,7 @@ func (r *raftNode) start(rh *raftReadyHandler) {
 					rh.updateLeadership(newLeader)
 					r.td.Reset()
 				}
-
+				//ReadStates不为空的处理逻辑
 				if len(rd.ReadStates) != 0 {
 					select {
 					case r.readStateC <- rd.ReadStates[len(rd.ReadStates)-1]:
@@ -215,12 +219,12 @@ func (r *raftNode) start(rh *raftReadyHandler) {
 				updateCommittedIndex(&ap, rh)
 
 				select {
-				case r.applyc <- ap:// 将已提交日志应用到状态机
+				case r.applyc <- ap: // 将已提交日志应用到状态机
 				case <-r.stopped:
 					return
 				}
 
-				// 如果有新的日志条目
+				// 如果是Leader发送消息给Follower
 				if islead {
 					r.transport.Send(r.processMessages(rd.Messages))
 				}
@@ -307,7 +311,7 @@ func (r *raftNode) start(rh *raftReadyHandler) {
 					notifyc <- struct{}{}
 				}
 				//更新raft模块的applied index和将日志从unstable转到stable中
-				//这里需要注意的是，在将已提交日志条目应用到状态机的操作是异步完成的，在Apply完成后，会将结果写到客户端调用进来时注册的channel中。这样一次完整的写操作就完成了。
+				//这里需要注意的是,在将已提交日志条目应用到状态机的操作是异步完成的,在Apply完成后,会将结果写到客户端调用进来时注册的channel中.这样一次完整的写操作就完成了.
 				r.Advance()
 			case <-r.stopped:
 				return
@@ -329,6 +333,7 @@ func updateCommittedIndex(ap *apply, rh *raftReadyHandler) {
 	}
 }
 
+//对消息封装成传输协议要求的格式,还会做超时控制
 func (r *raftNode) processMessages(ms []raftpb.Message) []raftpb.Message {
 	sentAppResp := false
 	for i := len(ms) - 1; i >= 0; i-- {
@@ -361,7 +366,7 @@ func (r *raftNode) processMessages(ms []raftpb.Message) []raftpb.Message {
 			if !ok {
 				// TODO: limit request rate.
 				r.lg.Warn(
-					"leader failed to send out heartbeat on time; took too long, leader is overloaded likely from slow disk",
+					"leader未能按时发出心跳,时间太长,可能是因为磁盘慢而过载",
 					zap.String("to", fmt.Sprintf("%x", ms[i].To)),
 					zap.Duration("heartbeat-interval", r.heartbeat),
 					zap.Duration("expected-duration", 2*r.heartbeat),
@@ -455,7 +460,7 @@ func startNode(cfg config.ServerConfig, cl *membership.RaftCluster, ids []types.
 		MaxInflightMsgs: maxInflightMsgs,   // 512
 		CheckQuorum:     true,              // 检查是否是leader
 		// etcd_backend/embed/config.go:NewConfig 432
-		PreVote: cfg.PreVote, // true      // 是否启用PreVote扩展，建议开启
+		PreVote: cfg.PreVote, // true      // 是否启用PreVote扩展,建议开启
 		Logger:  NewRaftLoggerZap(cfg.Logger.Named("raft")),
 	}
 
@@ -501,7 +506,7 @@ func restartNode(cfg config.ServerConfig, snapshot *raftpb.Snapshot) (types.ID, 
 		MaxSizePerMsg:   maxSizePerMsg, //每次发消息的最大size
 		MaxInflightMsgs: maxInflightMsgs,
 		CheckQuorum:     true,
-		PreVote:         cfg.PreVote,
+		PreVote:         cfg.PreVote, // PreVote 是否启用PreVote
 		Logger:          NewRaftLoggerZap(cfg.Logger.Named("raft")),
 	}
 
@@ -575,7 +580,7 @@ func restartAsStandaloneNode(cfg config.ServerConfig, snapshot *raftpb.Snapshot)
 		MaxSizePerMsg:   maxSizePerMsg, //每次发消息的最大size
 		MaxInflightMsgs: maxInflightMsgs,
 		CheckQuorum:     true,
-		PreVote:         cfg.PreVote,
+		PreVote:         cfg.PreVote, // PreVote 是否启用PreVote
 		Logger:          NewRaftLoggerZap(cfg.Logger.Named("raft")),
 	}
 
@@ -685,4 +690,12 @@ func createConfigChangeEnts(lg *zap.Logger, ids []uint64, self uint64, term, ind
 	}
 
 	return ents
+}
+
+// 凸(艹皿艹 )   明明没有实现这个方法啊
+func (r *raftNode) Demo() {
+	_ = r.raftNodeConfig.Node
+	//两层匿名结构体,该字段是个接口
+	_ = r.Step
+	//var _ raft.Node = raftNode{}
 }

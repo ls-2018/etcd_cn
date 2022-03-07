@@ -27,9 +27,8 @@ var ErrCompacted = errors.New("requested index is unavailable due to compaction"
 
 var ErrSnapOutOfDate = errors.New("请求的索引比现有快照的老")
 
-// ErrUnavailable is returned by Storage interface when the requested log entries
-// are unavailable.
-var ErrUnavailable = errors.New("requested entry at index is unavailable")
+// ErrUnavailable 当请求的日志条目不可用时,存储接口会返回.
+var ErrUnavailable = errors.New("索引中的请求条目不可用")
 
 // ErrSnapshotTemporarilyUnavailable is returned by the Storage interface when the required
 // snapshot is temporarily unavailable.
@@ -37,12 +36,12 @@ var ErrSnapshotTemporarilyUnavailable = errors.New("snapshot is temporarily unav
 
 // Storage raft状态机
 type Storage interface {
-	// InitialState 已经持久化的HardState和ConfState信息（里面存储了集群中有哪些节点）
+	// InitialState 已经持久化的HardState和ConfState信息(里面存储了集群中有哪些节点)
 	InitialState() (pb.HardState, pb.ConfState, error)
-	// Entries 传入起始和结束索引值，以及最大的尺寸，返回索引范围在这个传入范围以内并且不超过大小的日志条目数组。
+	// Entries 传入起始和结束索引值,以及最大的尺寸,返回索引范围在这个传入范围以内并且不超过大小的日志条目数组.
 	Entries(lo, hi, maxSize uint64) ([]pb.Entry, error)
-	// Term 传入日志索引i，返回这条日志对应的任期号。找不到的情况下error返回值不为空，其中当返回ErrCompacted表示传入的索引数据已经找不到，
-	// 说明已经被压缩成快照数据了；返回ErrUnavailable：表示传入的索引值大于当前的最大索引。
+	// Term 传入日志索引i,返回这条日志对应的任期号.找不到的情况下error返回值不为空,其中当返回ErrCompacted表示传入的索引数据已经找不到,
+	// 说明已经被压缩成快照数据了；返回ErrUnavailable：表示传入的索引值大于当前的最大索引.
 	Term(i uint64) (uint64, error)
 	LastIndex() (uint64, error)     // 返回最后一条数据的索引
 	FirstIndex() (uint64, error)    // 返回第一条数据的索引
@@ -51,20 +50,20 @@ type Storage interface {
 
 type MemoryStorage struct {
 	sync.Mutex
-	hardState pb.HardState //状态信息（当前任期，当前节点投票给了谁，已提交的entry记录的位置）
+	hardState pb.HardState //状态信息(当前任期,当前节点投票给了谁,已提交的entry记录的位置)
 	snapshot  pb.Snapshot  //当前内存里的快照信息
-	ents      []pb.Entry   //snapshot之后的日志条目，第一条日志条目的index为snapshot.Metadata.Index
+	ents      []pb.Entry   //snapshot之后的日志条目,第一条日志条目的index为snapshot.Metadata.Index
 }
 
 // NewMemoryStorage 创建内存存储
 func NewMemoryStorage() *MemoryStorage {
 	return &MemoryStorage{
-		// 当从头开始时，用一个假的条目来填充列表中的第零项。
+		// 当从头开始时,用一个假的条目来填充列表中的第零项.
 		ents: make([]pb.Entry, 1),
 	}
 }
 
-// Entries implements the Storage interface.
+// Entries 获取一定范围内的日志项
 func (ms *MemoryStorage) Entries(lo, hi, maxSize uint64) ([]pb.Entry, error) {
 	ms.Lock()
 	defer ms.Unlock()
@@ -73,7 +72,7 @@ func (ms *MemoryStorage) Entries(lo, hi, maxSize uint64) ([]pb.Entry, error) {
 		return nil, ErrCompacted
 	}
 	if hi > ms.lastIndex()+1 {
-		getLogger().Panicf("entries' hi(%d) is out of bound lastindex(%d)", hi, ms.lastIndex())
+		getLogger().Panicf("日志 hi(%d)超出范围的最后一个索引(%d)", hi, ms.lastIndex())
 	}
 	// only contains dummy entries.
 	if len(ms.ents) == 1 {
@@ -98,7 +97,7 @@ func (ms *MemoryStorage) Term(i uint64) (uint64, error) {
 	return ms.ents[i-offset].Term, nil
 }
 
-// ApplySnapshot 更新快照数据，将snapshot实例保存到memorystorage中
+// ApplySnapshot 更新快照数据,将snapshot实例保存到memorystorage中
 func (ms *MemoryStorage) ApplySnapshot(snap pb.Snapshot) error {
 	ms.Lock()
 	defer ms.Unlock()

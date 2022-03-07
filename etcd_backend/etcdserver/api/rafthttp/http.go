@@ -284,7 +284,7 @@ func (h *snapshotHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	downloadTook := time.Since(start)
 	h.lg.Info(
-		"received and saved database snapshot",
+		"接受并保存数据库快照",
 		zap.String("local-member-id", h.localID.String()),
 		zap.String("remote-snapshot-sender-id", from),
 		zap.Uint64("incoming-snapshot-index", m.Snapshot.Metadata.Index),

@@ -54,7 +54,7 @@ var (
 	maxExpoentialRetries = uint(8)
 )
 
-// JoinCluster 将连接到给定网址的发现服务，并将给定id和配置所代表的etcd注册到集群上。
+// JoinCluster 将连接到给定网址的发现服务,并将给定id和配置所代表的etcd注册到集群上.
 func JoinCluster(lg *zap.Logger, durl, dproxyurl string, id types.ID, config string) (string, error) {
 	d, err := newDiscovery(lg, durl, dproxyurl, id)
 	if err != nil {

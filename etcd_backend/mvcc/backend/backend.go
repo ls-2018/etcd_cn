@@ -51,18 +51,18 @@ type Backend interface {
 	ReadTx() ReadTx
 	// BatchTx 开启写事务
 	BatchTx() BatchTx
-	// ConcurrentReadTx 开启并发读事务，互相之间不阻塞
+	// ConcurrentReadTx 开启并发读事务,互相之间不阻塞
 	ConcurrentReadTx() ReadTx
 	// Snapshot 对db做快照
 	Snapshot() Snapshot
 	Hash(ignores func(bucketName, keyName []byte) bool) (uint32, error)
-	// Size DB占用的物理磁盘大小，空间可以预分配，所以不是实际数据大小
+	// Size DB占用的物理磁盘大小,空间可以预分配,所以不是实际数据大小
 	Size() int64
 	// SizeInUse 实际使用的磁盘空间
 	SizeInUse() int64
 	// OpenReadTxN 返回当前读事务个数
 	OpenReadTxN() int64
-	// Defrag 数据文件整理，会回收已删除key和已更新的key旧版本占用的磁盘
+	// Defrag 数据文件整理,会回收已删除key和已更新的key旧版本占用的磁盘
 	Defrag() error
 	ForceCommit()
 	Close() error
@@ -124,11 +124,11 @@ type backend struct {
 type BackendConfig struct {
 	// Path is the file path to the backend file.
 	Path string
-	// BatchInterval 是冲刷BatchTx之前的最长时间。
+	// BatchInterval 是冲刷BatchTx之前的最长时间.
 	BatchInterval time.Duration
-	// BatchLimit 是冲刷BatchTx之前的最大puts数。
+	// BatchLimit 是冲刷BatchTx之前的最大puts数.
 	BatchLimit int
-	// BackendFreelistType 是后端boltdb的freelist类型。
+	// BackendFreelistType 是后端boltdb的freelist类型.
 	BackendFreelistType bolt.FreelistType
 	// MmapSize is the number of bytes to mmap for the backend.
 	MmapSize uint64

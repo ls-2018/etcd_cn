@@ -31,7 +31,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// ServerConfig 持有从命令行或发现中获取的etcd的配置。
+// ServerConfig 持有从命令行或发现中获取的etcd的配置.
 type ServerConfig struct {
 	Name           string
 	DiscoveryURL   string // 节点发现
@@ -39,7 +39,7 @@ type ServerConfig struct {
 	ClientURLs     types.URLs
 	PeerURLs       types.URLs
 	DataDir        string
-	// DedicatedWALDir 配置将使etcd把WAL写到WALDir 而不是dataDir/member/wal。
+	// DedicatedWALDir 配置将使etcd把WAL写到WALDir 而不是dataDir/member/wal.
 	DedicatedWALDir string
 
 	SnapshotCount uint64 // 触发一次磁盘快照的提交事务的次数
@@ -49,16 +49,16 @@ type ServerConfig struct {
 	// We expect the follower has a millisecond level latency with the leader.
 	// The max throughput is around 10K. Keep a 5K entries is enough for helping
 	// follower to catch up.
-	// 是slow follower在raft存储条目落后追赶的条目数量。我们希望跟随者与领导者有一毫秒级的延迟。最大的吞吐量是10K左右。保持5K的条目就足以帮助跟随者赶上。
+	// 是slow follower在raft存储条目落后追赶的条目数量.我们希望跟随者与领导者有一毫秒级的延迟.最大的吞吐量是10K左右.保持5K的条目就足以帮助跟随者赶上.
 	// WARNING: only change this for tests. Always use "DefaultSnapshotCatchUpEntries"
 	SnapshotCatchUpEntries uint64
 
 	MaxSnapFiles uint
 	MaxWALFiles  uint
 
-	// BackendBatchInterval 提交后端事务前的最长时间。
+	// BackendBatchInterval 提交后端事务前的最长时间.
 	BackendBatchInterval time.Duration
-	// BackendBatchLimit  提交后端事务前的最大操作量。
+	// BackendBatchLimit  提交后端事务前的最大操作量.
 	BackendBatchLimit int
 
 	// BackendFreelistType boltdb存储的类型
@@ -71,13 +71,13 @@ type ServerConfig struct {
 
 	CORS map[string]struct{}
 
-	// HostWhitelist 列出了客户端请求中可接受的主机名。如果etcd是不安全的（没有TLS），etcd只接受其Host头值存在于此白名单的请求。
+	// HostWhitelist 列出了客户端请求中可接受的主机名.如果etcd是不安全的(没有TLS),etcd只接受其Host头值存在于此白名单的请求.
 	HostWhitelist map[string]struct{}
 
 	TickMs        uint // 心跳超时
 	ElectionTicks int  // 选举超时 对应多少次心跳
 
-	// InitialElectionTickAdvance 是否提前初始化选举时钟启动，以便更快的选举
+	// InitialElectionTickAdvance 是否提前初始化选举时钟启动,以便更快的选举
 	InitialElectionTickAdvance bool
 
 	BootstrapTimeout time.Duration // 引导超时
@@ -108,8 +108,7 @@ type ServerConfig struct {
 	InitialCorruptCheck bool
 	CorruptCheckTime    time.Duration
 
-	// PreVote 是否启用PreVote
-	PreVote bool
+	PreVote bool // PreVote 是否启用PreVote
 
 	// SocketOpts are socket options passed to listener config.
 	SocketOpts transport.SocketOpts
@@ -128,14 +127,14 @@ type ServerConfig struct {
 
 	EnableGRPCGateway bool // 启用grpc网关,将 http 转换成 grpc / true
 
-	// ExperimentalEnableDistributedTracing 使用OpenTelemetry协议实现分布式跟踪。
+	// ExperimentalEnableDistributedTracing 使用OpenTelemetry协议实现分布式跟踪.
 	ExperimentalEnableDistributedTracing bool // 默认false
 	// ExperimentalTracerOptions are options for OpenTelemetry gRPC interceptor.
 	ExperimentalTracerOptions []otelgrpc.Option
 
 	WatchProgressNotifyInterval time.Duration
 
-	// UnsafeNoFsync 禁用所有fsync的使用。设置这个是不安全的，会导致数据丢失。
+	// UnsafeNoFsync 禁用所有fsync的使用.设置这个是不安全的,会导致数据丢失.
 	UnsafeNoFsync bool `json:"unsafe-no-fsync"`
 
 	DowngradeCheckTime time.Duration
@@ -152,14 +151,14 @@ type ServerConfig struct {
 	// a shared buffer in its readonly check operations.
 	ExperimentalTxnModeWriteWithSharedBuffer bool `json:"experimental-txn-mode-write-with-shared-buffer"`
 
-	// ExperimentalBootstrapDefragThresholdMegabytes 是指在启动过程中 etcd考虑运行碎片整理所需释放的最小兆字节数。需要设置为非零值才能生效。
+	// ExperimentalBootstrapDefragThresholdMegabytes 是指在启动过程中 etcd考虑运行碎片整理所需释放的最小兆字节数.需要设置为非零值才能生效.
 	ExperimentalBootstrapDefragThresholdMegabytes uint `json:"experimental-bootstrap-defrag-threshold-megabytes"`
 
 	// V2Deprecation defines a phase of v2store deprecation process.
 	V2Deprecation V2DeprecationEnum `json:"v2-deprecation"`
 }
 
-// VerifyBootstrap 检查初始配置的引导情况，并对不应该发生的事情返回一个错误。
+// VerifyBootstrap 检查初始配置的引导情况,并对不应该发生的事情返回一个错误.
 func (c *ServerConfig) VerifyBootstrap() error {
 	if err := c.hasLocalMember(); err != nil { // initial-cluster 集群至少包含本机节点
 		return err
@@ -168,12 +167,12 @@ func (c *ServerConfig) VerifyBootstrap() error {
 	if err := c.advertiseMatchesCluster(); err != nil {
 		return err
 	}
-	// 检查所有ip:port 有没有重复的，有就返回 true
+	// 检查所有ip:port 有没有重复的,有就返回 true
 	if CheckDuplicateURL(c.InitialPeerURLsMap) {
 		return fmt.Errorf("初始集群有重复的网址%s", c.InitialPeerURLsMap)
 	}
 	if c.InitialPeerURLsMap.String() == "" && c.DiscoveryURL == "" {
-		return fmt.Errorf("初始集群未设置，没有发现discovery的URL")
+		return fmt.Errorf("初始集群未设置,没有发现discovery的URL")
 	}
 	return nil
 }
@@ -203,7 +202,7 @@ func (c *ServerConfig) hasLocalMember() error {
 	return nil
 }
 
-// advertiseMatchesCluster 确认peer URL与集群cluster peer中的URL一致。
+// advertiseMatchesCluster 确认peer URL与集群cluster peer中的URL一致.
 func (c *ServerConfig) advertiseMatchesCluster() error {
 	urls, apurls := c.InitialPeerURLsMap[c.Name], c.PeerURLs.StringSlice()
 	urls.Sort()
@@ -292,7 +291,7 @@ func (c *ServerConfig) PeerDialTimeout() time.Duration {
 	return time.Second + time.Duration(c.ElectionTicks*int(c.TickMs))*time.Millisecond
 }
 
-// CheckDuplicateURL 检查所有ip:port 有没有重复的，有就返回 true
+// CheckDuplicateURL 检查所有ip:port 有没有重复的,有就返回 true
 func CheckDuplicateURL(urlsmap types.URLsMap) bool {
 	um := make(map[string]bool)
 	for _, urls := range urlsmap {

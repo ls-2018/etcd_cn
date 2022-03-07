@@ -49,25 +49,24 @@ type serverStats struct {
 	// ID is the raft ID of the node.
 	// TODO(jonboulle): use ID instead of name?
 	ID        string         `json:"id"`
-	State     raft.StateType `json:"state"`
+	State     raft.StateType `json:"state"` // 本机状态
 	StartTime time.Time      `json:"startTime"`
 
 	LeaderInfo struct {
 		Name      string    `json:"leader"`
 		Uptime    string    `json:"uptime"`
-		StartTime time.Time `json:"startTime"`
+		StartTime time.Time `json:"startTime"` // leader首次通信的时间
 	} `json:"leaderInfo"`
 
-	RecvAppendRequestCnt uint64  `json:"recvAppendRequestCnt,"`
-	RecvingPkgRate       float64 `json:"recvPkgRate,omitempty"`
-	RecvingBandwidthRate float64 `json:"recvBandwidthRate,omitempty"`
+	sendRateQueue        *statsQueue // 发送消息的队列
+	SendAppendRequestCnt uint64      `json:"sendAppendRequestCnt"`
+	SendingPkgRate       float64     `json:"sendPkgRate,omitempty"`
+	SendingBandwidthRate float64     `json:"sendBandwidthRate,omitempty"`
 
-	SendAppendRequestCnt uint64  `json:"sendAppendRequestCnt"`
-	SendingPkgRate       float64 `json:"sendPkgRate,omitempty"`
-	SendingBandwidthRate float64 `json:"sendBandwidthRate,omitempty"`
-
-	sendRateQueue *statsQueue
-	recvRateQueue *statsQueue
+	recvRateQueue        *statsQueue // 处理接受消息的队列
+	RecvAppendRequestCnt uint64      `json:"recvAppendRequestCnt,"`
+	RecvingPkgRate       float64     `json:"recvPkgRate,omitempty"`
+	RecvingBandwidthRate float64     `json:"recvBandwidthRate,omitempty"`
 }
 
 func (ss *ServerStats) JSON() []byte {
@@ -85,8 +84,7 @@ func (ss *ServerStats) JSON() []byte {
 	return b
 }
 
-// RecvAppendReq updates the ServerStats in response to an AppendRequest
-// from the given leader being received
+// RecvAppendReq 在收到来自领导的AppendRequest后，更新ServerStats。
 func (ss *ServerStats) RecvAppendReq(leader string, reqSize int) {
 	ss.Lock()
 	defer ss.Unlock()

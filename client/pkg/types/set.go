@@ -48,7 +48,7 @@ type unsafeSet struct {
 	d map[string]struct{}
 }
 
-// Add 将一个新的值添加到集合中（如果该值已经存在，则不做任何操作）。
+// Add 将一个新的值添加到集合中(如果该值已经存在,则不做任何操作).
 func (us *unsafeSet) Add(value string) {
 	us.d[value] = struct{}{}
 }

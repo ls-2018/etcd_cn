@@ -26,7 +26,7 @@ import (
 type Status struct {
 	BasicStatus
 	Config   tracker.Config
-	Progress map[uint64]tracker.Progress   // 如果是Leader，还有其他节点的进度
+	Progress map[uint64]tracker.Progress // 如果是Leader,还有其他节点的进度
 }
 
 // BasicStatus contains basic information about the Raft peer. It does not allocate.
@@ -35,9 +35,9 @@ type BasicStatus struct {
 
 	pb.HardState
 	SoftState
-	Applied uint64 // 应用索引，其实这个使用者自己也知道，因为Ready的回调里提交日志被应用都会有日志的索引。
+	Applied uint64 // 应用索引,其实这个使用者自己也知道,因为Ready的回调里提交日志被应用都会有日志的索引.
 
-	LeadTransferee uint64// Leader转移ID，如果正处于Leader转移期间。
+	LeadTransferee uint64 // Leader转移ID,如果正处于Leader转移期间.
 
 }
 
