@@ -152,12 +152,8 @@ type Peer struct {
 	Context []byte // 成员信息序列化后的数据
 }
 
-<<<<<<< HEAD
 // StartNode  它为每个给定的peer在初始日志中添加一个ConfChangeAddNode条目。
 // Peer封装了节点的ID, peers记录了当前集群中全部节点的ID
-=======
-// StartNode  它为每个给定的peer在初始日志中添加一个ConfChangeAddNode条目.
->>>>>>> e92f147fedda937eaefb6b0d0d407f131651ff88
 func StartNode(c *Config, peers []Peer) Node {
 	if len(peers) == 0 {
 		panic("没有给定peers；使用RestartNode代替.")
