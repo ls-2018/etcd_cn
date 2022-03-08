@@ -222,6 +222,7 @@ func (l *raftLog) lastTerm() uint64 {
 	return t
 }
 
+// 获取日志切片
 func (l *raftLog) entries(i, maxsize uint64) ([]pb.Entry, error) {
 	if i > l.lastIndex() {
 		return nil, nil

@@ -360,7 +360,7 @@ func (r *raft) sendHeartbeat(to uint64, ctx []byte) {
 	r.send(m)
 }
 
-// bcastAppend 同步日志给Follower
+// bcastAppend 向集群中其他节点广播MsgApp消息
 func (r *raft) bcastAppend() {
 	//遍历所有节点,给除自己外的节点发送日志Append消息
 	r.prs.Visit(func(id uint64, _ *tracker.Progress) {
@@ -371,7 +371,7 @@ func (r *raft) bcastAppend() {
 	})
 }
 
-// OK
+// OK 向集群中特定节点发送MsgApp消息
 func (r *raft) sendAppend(to uint64) {
 	r.maybeSendAppend(to, true)
 }
@@ -379,6 +379,9 @@ func (r *raft) sendAppend(to uint64) {
 // maybeSendAppend 向给定的peer发送一个带有新条目的追加RPC.如果有消息被发送,返回true.
 // sendIfEmpty参数控制是否发送没有条目的消息("空 "消息对于传达更新的Commit索引很有用,但当我们批量发送多条消息时就不可取).
 func (r *raft) maybeSendAppend(to uint64, sendIfEmpty bool) bool {
+	// 在消息发送之前会检测当前节点的状态，然后查找待发迭的Entry记录并封装成MsgApp消息，
+	// 之后根据对应节点的Progress.State值决定发送消息之后的操作
+
 	//1. 获取对端节点当前同步进度
 	pr := r.prs.Progress[to]
 	if pr.IsPaused() {
@@ -387,13 +390,14 @@ func (r *raft) maybeSendAppend(to uint64, sendIfEmpty bool) bool {
 	m := pb.Message{}
 	m.To = to
 	//2. 注意这里带的term是本次发送给follower的第一条日志条目的term
-	term, errt := r.raftLog.term(pr.Next - 1)
-	ents, erre := r.raftLog.entries(pr.Next, r.maxMsgSize)
+	term, errt := r.raftLog.term(pr.Next - 1)              // leader认为 follower所在的任期
+	ents, erre := r.raftLog.entries(pr.Next, r.maxMsgSize) // 要发给follower的日志
 	if len(ents) == 0 && !sendIfEmpty {
+		// 这种情况就不发了
 		return false
 	}
 
-	if errt != nil || erre != nil { // send snapshot if we failed to get term or entries
+	if errt != nil || erre != nil {
 		//3. 如果获取term或日志失败,说明follower落后太多,raftLog内存中日志已经做过快照后被删除了
 		// 根据日志进度去取日志条目的时候发现,follower日志落后太多,这通常出现在新节点刚加入或者网络连接出现故障的情况下.
 		// 那么在这种情况下,leader改为发送最近一次快照给Follower,从而提高同步效率
@@ -423,23 +427,25 @@ func (r *raft) maybeSendAppend(to uint64, sendIfEmpty bool) bool {
 		r.logger.Debugf("%x paused sending replication messages to %x [%s]", r.id, to, pr)
 	} else {
 		//5. 发送Append消息
-		m.Type = pb.MsgApp
-		m.Index = pr.Next - 1
-		m.LogTerm = term
-		m.Entries = ents
+		m.Type = pb.MsgApp             //设置消息类型
+		m.Index = pr.Next - 1          //设置MsgApp消息的Index字段
+		m.LogTerm = term               //设置MsgApp消息的LogTerm字段
+		m.Entries = ents               //设置消息携带的Entry记录集合
+		m.Commit = r.raftLog.committed //设置消息的Commit字段，即当前节点的raftLog中最后一条已提交的记录索引值
 		//6. 每次发送日志或心跳都会带上最新的commitIndex
 		m.Commit = r.raftLog.committed
 		if n := len(m.Entries); n != 0 {
 			switch pr.State {
-			// optimistically increase the next when in StateReplicate
+			// 在StateReplicate中，乐观地增加
 			case tracker.StateReplicate:
 				last := m.Entries[n-1].Index
-				pr.OptimisticUpdate(last)
-				pr.Inflights.Add(last)
+				pr.OptimisticUpdate(last) // 新目标节点对应的Next值（这里不会更新Match）
+				pr.Inflights.Add(last)    // 记录已发送但是未收到响应的消息
 			case tracker.StateProbe:
+				// 消息发送后，就将Progress.Paused字段设置成true，暂停后续消息的发送
 				pr.ProbeSent = true
 			default:
-				r.logger.Panicf("%x is sending append in unhandled state %s", r.id, pr.State)
+				r.logger.Panicf("%x 在未知的状态下发送%s", r.id, pr.State)
 			}
 		}
 	}
@@ -1319,7 +1325,7 @@ func stepCandidate(r *raft, m pb.Message) error {
 	case pb.MsgSnap:
 		r.becomeFollower(m.Term, m.From)
 		r.handleSnapshot(m)
-	case myVoteRespType:
+	case myVoteRespType: // ✅
 		// 投票、预投票
 		//处理收到的选举响应消息，当前示例中处理的是MsgPreVoteResp消息
 		gr, rj, res := r.poll(m.From, m.Type, !m.Reject) // 计算当前收到多少投票
@@ -1330,8 +1336,8 @@ func stepCandidate(r *raft, m pb.Message) error {
 			if r.state == StatePreCandidate {
 				r.campaign(campaignElection) // 预投票发起正式投票
 			} else {
-				r.becomeLeader() // 变成 leader
-				r.bcastAppend()  // 发送 AppendEntries RPC
+				r.becomeLeader() // 当前节点切换成为Leader状态， 其中会重置每个节点对应的Next和Match两个索引，
+				r.bcastAppend()  // 向集群中其他节点广播MsgApp消息
 			}
 		case quorum.VoteLost: // 集票失败,转为 follower
 			r.becomeFollower(r.Term, None) // 注意,此时任期没有改变

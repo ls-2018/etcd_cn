@@ -31,7 +31,7 @@ type Progress struct {
 	// 当处于StateSnapshot状态时,leader应该已经发送了快照,并停止发送任何复制消息.
 	State StateType
 
-	PendingSnapshot uint64 // 当前正在发送的快照数据信息.
+	PendingSnapshot uint64 // 表示Leader节点正在向目标节点发送快照数据.
 
 	RecentActive bool // 从当前Leader节点的角度来看,该Progress实例对应的Follower节点是否存活.
 
@@ -56,8 +56,7 @@ func (pr *Progress) MaybeUpdate(n uint64) bool {
 	return updated
 }
 
-// OptimisticUpdate signals that appends all the way up to and including index n
-// are in-flight. As a result, Next is increased to n+1.
+// OptimisticUpdate 记录下次日志发送的起始位置,n是已发送的最新日志索引
 func (pr *Progress) OptimisticUpdate(n uint64) { pr.Next = n + 1 }
 
 // MaybeDecrTo 收到MsgApp拒绝消息,对进度进行调整.
@@ -143,12 +142,11 @@ func (pr *Progress) ResetState(state StateType) {
 func (pr *Progress) BecomeProbe() {
 	if pr.State == StateSnapshot { // 当前状态是发送快照
 		pendingSnapshot := pr.PendingSnapshot
-		pr.ResetState(StateProbe)
 		pr.Next = max(pr.Match+1, pendingSnapshot+1)
 	} else { // follower 链接有问题 、网络有问题
-		pr.ResetState(StateProbe)
 		pr.Next = pr.Match + 1
 	}
+	pr.ResetState(StateProbe)
 }
 
 func (pr *Progress) BecomeReplicate() {

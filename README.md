@@ -258,7 +258,7 @@ StartEtcd
                               r.msgs = append(r.msgs, m)          放入要发送的消息
                       - r.tickHeartbeat
                           r.Step(pb.Message{From: r.id, Type: pb.MsgCheckQuorum})
-              - case readyc <- rd                                 A放入数据
+              - case readyc <- rd                                                   A放入数据
               - case <-advancec: 
               - case c := <-n.status:
               - case <-n.stop: 
@@ -282,18 +282,20 @@ StartEtcd
             --> |       r.tick() 
             --> |         r.Tick()
             --> |           case n.tickc <- struct{}{}              F放入数据、不会阻塞,有size
-            --> |     - case rd := <-r.Ready()                      A取出数据  
-                          case r.applyc <- ap                           B放入数据
+            --> |     - case rd := <-r.Ready()                      获取可以发送的数据     A取出数据  
+                          case r.applyc <- ap                                           B放入数据
                           r.transport.Send(msgs)                        发出响应数据
             --> |     - case <-r.stopped:
             
-          - case ap := <-s.r.apply()                                        B取出数据
-            读取applyc的数据,封装为JOB,放入调度器
-          - 处理过期租约
-          - 处理运行过程中出现的err,直接退出
+          - case ap := <-s.r.apply()                                                   B取出数据
+              读取applyc的数据,封装为JOB,放入调度器
+          - case leases := <-expiredLeaseC
+              处理过期租约
+          - case err := <-s.errorc
+              处理运行过程中出现的err,直接退出
           - getSyncC
           - case <-s.stop:
-            启动过程中失败
+              启动过程中失败
     
   3、e.servePeers
   4、e.serveClients

@@ -39,7 +39,7 @@ func (in *Inflights) Clone() *Inflights {
 	return &ins
 }
 
-// Add 记录待确认的日志索引
+// Add 记录待确认的日志索引, inflight每批发送的消息中 最新的日志索引
 func (in *Inflights) Add(inflight uint64) {
 	if in.Full() { // ok
 		panic("不能添加到一个已满的inflights")
