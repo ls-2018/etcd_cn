@@ -233,11 +233,11 @@ type raft struct {
 	heartbeatTimeout int // 心跳间隔    ,上限     heartbeatTimeout是当前距离上次心跳的时间
 	electionTimeout  int // 选举超时时间,当electionE!apsed 宇段值到达该值时,就会触发新一轮的选举.
 
-	// 随机选举超时
-	randomizedElectionTimeout int
+	randomizedElectionTimeout int  // 随机选举超时
 	disableProposalForwarding bool // 禁止将请求转发到leader,默认FALSE
 	// 由 r.ticker = time.NewTicker(r.heartbeat) ;触发该函数的执行  r.start
-	tick func() // 当前节点推进逻辑时钟的函数.如果当前节点是Leader,则指向raft.tickHeartbeat()函数,如果当前节点是Follower 或是Candidate,则指向raft.tickElection()函数.
+
+	tick func() // 逻辑计数器推进函数， 当 Leader状态时 为 tickHeartbeat。其他状态为 tickElection。
 
 	step stepFunc // 阶段函数、在那个角色就执行那个角色的函数、处理接收到的消息
 
@@ -318,7 +318,7 @@ func (r *raft) softState() *SoftState { return &SoftState{Lead: r.lead, RaftStat
 func (r *raft) hardState() pb.HardState {
 	return pb.HardState{
 		Term:   r.Term,
-		Vote:   r.Vote,
+		Vote:   r.Vote, // 当前节点的选票投给了谁做我Leader
 		Commit: r.raftLog.committed,
 	}
 }
@@ -632,7 +632,7 @@ func (r *raft) becomeCandidate() {
 	r.step = stepCandidate
 	r.reset(r.Term + 1)
 	r.tick = r.tickElection
-	r.Vote = r.id // 给自己投票
+	r.Vote = r.id // 当前节点的选票投给了谁做我Leader
 	r.state = StateCandidate
 	r.logger.Infof("%x 成为Candidate 在任期: %d", r.id, r.Term)
 }
@@ -910,7 +910,7 @@ func (r *raft) Step(m pb.Message) error {
 			if m.Type == pb.MsgVote {
 				// Only record real votes.
 				r.electionElapsed = 0
-				r.Vote = m.From
+				r.Vote = m.From // 当前节点的选票投给了谁做我Leader
 			}
 		} else {
 			//不满足上述投赞同票条件时，当前节点会返回拒绝票(响应消息中的Reject字段会设立成true)
@@ -1655,7 +1655,7 @@ func (r *raft) loadState(state pb.HardState) {
 	}
 	r.raftLog.committed = state.Commit
 	r.Term = state.Term
-	r.Vote = state.Vote
+	r.Vote = state.Vote // 当前节点的选票投给了谁做我Leader
 }
 
 // 判断本节点是不是重新选举，因为丢失了leader
@@ -1664,14 +1664,13 @@ func (r *raft) pastElectionTimeout() bool {
 	// 当follower接受到leader的心跳的时候会把electionElapsed的时候就会置为0,electionElapsed的相加是通过外部调用实现的,
 	// node对外提供一个tick的接口,需要外部定时去调用,调用的周期由外部决定,每次调用就++,
 	// 然后检查是否会超时,上方的tickElection就是为follower状态的定时调用函数,leader状态的定时调用函数就是向follower发送心跳.
-	//
 	// 计时次数 超过了 限定的 选举次数,   规定：在randomizedElectionTimeout次数内必须收到来自leader的消息
 	return r.electionElapsed >= r.randomizedElectionTimeout
 }
 
 // 设置随机选举超时
 func (r *raft) resetRandomizedElectionTimeout() {
-	r.randomizedElectionTimeout = r.electionTimeout + globalRand.Intn(r.electionTimeout)
+	r.randomizedElectionTimeout = r.electionTimeout + globalRand.Intn(r.electionTimeout) // 随机选举超时
 }
 
 func (r *raft) sendTimeoutNow(to uint64) {

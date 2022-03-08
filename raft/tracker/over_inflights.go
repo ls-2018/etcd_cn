@@ -48,7 +48,7 @@ func (in *Inflights) Add(inflight uint64) {
 	size := in.size
 	if next >= size {
 		next -= size
-	}                           // 回执
+	} // 回执
 	if next >= len(in.buffer) { // 判断实际存储有没有足够空间
 		in.grow()
 	}
