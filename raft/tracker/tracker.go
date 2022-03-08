@@ -246,31 +246,25 @@ func (p *ProgressTracker) LearnerNodes() []uint64 {
 
 // ResetVotes 准备通过recordVote进行新一轮的计票工作。
 func (p *ProgressTracker) ResetVotes() {
-	p.Votes = map[uint64]bool{}
+	p.Votes = map[uint64]bool{} // 记录接收到了哪些节点的投票
 }
 
-// RecordVote records that the node with the given id voted for this Raft
-// instance if v == true (and declined it otherwise).
+// RecordVote id=true, 该节点给本节点投了票; id=false, 该节点没有给本节点投票
 func (p *ProgressTracker) RecordVote(id uint64, v bool) {
-	_, ok := p.Votes[id]
+	_, ok := p.Votes[id] // 记录接收到了哪些节点的投票
 	if !ok {
-		p.Votes[id] = v
+		p.Votes[id] = v // 记录接收到了哪些节点的投票
 	}
 }
 
-// TallyVotes returns the number of granted and rejected Votes, and whether the
-// election outcome is known.
+// TallyVotes 返回批准和拒绝的票数，以及是否知道选举结果。
 func (p *ProgressTracker) TallyVotes() (granted int, rejected int, _ quorum.VoteResult) {
-	// Make sure to populate granted/rejected correctly even if the Votes slice
-	// contains members no longer part of the configuration. This doesn't really
-	// matter in the way the numbers are used (they're informational), but might
-	// as well get it right.
 	for id, pr := range p.Progress {
 		if pr.IsLearner {
 			continue
 		}
-		v, voted := p.Votes[id]
-		if !voted {
+		v, voted := p.Votes[id] // 记录接收到了哪些节点的投票
+		if !voted {             // 没有收到结果
 			continue
 		}
 		if v {

@@ -299,8 +299,8 @@ func (rc *raftNode) startRaft() {
 	// 创建 raft.Config 实例
 	c := &raft.Config{
 		ID:                        uint64(rc.id),
-		ElectionTick:              10, // 选举超时
-		HeartbeatTick:             1,  // 心跳超时
+		ElectionTick:              10, // 返回选举权检查对应多少次tick触发次数
+		HeartbeatTick:             1,  // 返回心跳检查对应多少次tick触发次数
 		Storage:                   rc.raftStorage,
 		MaxSizePerMsg:             1024 * 1024,
 		MaxInflightMsgs:           256,

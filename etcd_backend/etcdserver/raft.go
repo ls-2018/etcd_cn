@@ -273,7 +273,7 @@ func (r *raftNode) start(rh *raftReadyHandler) {
 				r.raftStorage.Append(rd.Entries)
 
 				if !islead {
-					// finish processing incoming messages before we signal raftdone chan
+					// 对消息封装成传输协议要求的格式,还会做超时控制
 					msgs := r.processMessages(rd.Messages)
 
 					// now unblocks 'applyAll' that waits on Raft log disk writes before triggering snapshots
@@ -303,8 +303,7 @@ func (r *raftNode) start(rh *raftReadyHandler) {
 							return
 						}
 					}
-
-					// gofail: var raftBeforeFollowerSend struct{}
+					// 将响应数据返回给对端
 					r.transport.Send(msgs)
 				} else {
 					// leader already processed 'MsgSnap' and signaled
@@ -333,7 +332,7 @@ func updateCommittedIndex(ap *apply, rh *raftReadyHandler) {
 	}
 }
 
-//对消息封装成传输协议要求的格式,还会做超时控制
+// 对消息封装成传输协议要求的格式,还会做超时控制
 func (r *raftNode) processMessages(ms []raftpb.Message) []raftpb.Message {
 	sentAppResp := false
 	for i := len(ms) - 1; i >= 0; i-- {
@@ -453,8 +452,8 @@ func startNode(cfg config.ServerConfig, cl *membership.RaftCluster, ids []types.
 	s = raft.NewMemoryStorage() // 创建内存存储
 	c := &raft.Config{
 		ID:              uint64(id),        // 本机ID
-		ElectionTick:    cfg.ElectionTicks, // 选举超时
-		HeartbeatTick:   1,                 // 心跳间隔
+		ElectionTick:    cfg.ElectionTicks, // 返回选举权检查对应多少次tick触发次数
+		HeartbeatTick:   1,                 // 返回心跳检查对应多少次tick触发次数
 		Storage:         s,                 // 存储 memory ✅
 		MaxSizePerMsg:   maxSizePerMsg,     // 每次发消息的最大size
 		MaxInflightMsgs: maxInflightMsgs,   // 512
@@ -500,8 +499,8 @@ func restartNode(cfg config.ServerConfig, snapshot *raftpb.Snapshot) (types.ID, 
 	s.Append(ents)
 	c := &raft.Config{
 		ID:              uint64(id),
-		ElectionTick:    cfg.ElectionTicks,
-		HeartbeatTick:   1,
+		ElectionTick:    cfg.ElectionTicks, // 返回选举权检查对应多少次tick触发次数
+		HeartbeatTick:   1,                 // 返回心跳检查对应多少次tick触发次数
 		Storage:         s,
 		MaxSizePerMsg:   maxSizePerMsg, //每次发消息的最大size
 		MaxInflightMsgs: maxInflightMsgs,
@@ -574,8 +573,8 @@ func restartAsStandaloneNode(cfg config.ServerConfig, snapshot *raftpb.Snapshot)
 	s.Append(ents)
 	c := &raft.Config{
 		ID:              uint64(id),
-		ElectionTick:    cfg.ElectionTicks,
-		HeartbeatTick:   1,
+		ElectionTick:    cfg.ElectionTicks, // 返回选举权检查对应多少次tick触发次数
+		HeartbeatTick:   1,                 // 返回心跳检查对应多少次tick触发次数
 		Storage:         s,
 		MaxSizePerMsg:   maxSizePerMsg, //每次发消息的最大size
 		MaxInflightMsgs: maxInflightMsgs,

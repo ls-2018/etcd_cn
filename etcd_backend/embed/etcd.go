@@ -178,8 +178,8 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 		DiscoveryProxy:                           cfg.Dproxy,
 		NewCluster:                               cfg.IsNewCluster(),             // new existing
 		PeerTLSInfo:                              cfg.PeerTLSInfo,                // server 证书信息
-		TickMs:                                   cfg.TickMs,                     // 心跳间隔
-		ElectionTicks:                            cfg.ElectionTicks(),            // 选举超时 对应多少次心跳
+		TickMs:                                   cfg.TickMs,                     // tick计时器触发间隔
+		ElectionTicks:                            cfg.ElectionTicks(),            // 返回选举权检查对应多少次tick触发次数
 		InitialElectionTickAdvance:               cfg.InitialElectionTickAdvance, // 是否提前初始化选举时钟启动,以便更快的选举
 		AutoCompactionRetention:                  autoCompactionRetention,        // 自动压缩值
 		AutoCompactionMode:                       cfg.AutoCompactionMode,         // 自动压缩模式

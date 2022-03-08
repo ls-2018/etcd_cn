@@ -256,7 +256,7 @@ func (n *localNode) run() {
 	for {
 		if advancec != nil { // 开始时是nil
 			readyc = nil
-		} else if n.rn.HasReady() { //判断是否有Ready数据
+		} else if n.rn.HasReady() { //判断是否有Ready数据:待发送的数据
 			rd = n.rn.readyWithoutAccept() // 获取Ready数据
 			readyc = n.readyc              // 下边有放入数据的
 		}
@@ -290,7 +290,7 @@ func (n *localNode) run() {
 				close(pm.result)
 			}
 		case m := <-n.recvc: // Message队列,除Propose消息以外其他消息塞到这个队列里
-			// 过滤掉来自未知来源的响应信息.
+			// 必须是已知节点、或者是非响应类信息
 			if pr := r.prs.Progress[m.From]; pr != nil || !IsResponseMsg(m.Type) {
 				r.Step(m)
 			}
@@ -501,6 +501,7 @@ func (n *localNode) TransferLeadership(ctx context.Context, lead, transferee uin
 func (n *localNode) ReadIndex(ctx context.Context, rctx []byte) error {
 	return n.step(ctx, pb.Message{Type: pb.MsgReadIndex, Entries: []pb.Entry{{Data: rctx}}})
 }
+
 func newReady(r *raft, prevSoftSt *SoftState, prevHardSt pb.HardState) Ready {
 	rd := Ready{
 		Entries:          r.raftLog.unstableEntries(), // unstable中的日志交给上层持久化

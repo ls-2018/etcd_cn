@@ -74,8 +74,8 @@ type ServerConfig struct {
 	// HostWhitelist 列出了客户端请求中可接受的主机名.如果etcd是不安全的(没有TLS),etcd只接受其Host头值存在于此白名单的请求.
 	HostWhitelist map[string]struct{}
 
-	TickMs        uint // 心跳超时
-	ElectionTicks int  // 选举超时 对应多少次心跳
+	TickMs        uint // tick计时器触发间隔
+	ElectionTicks int  // 返回选举权检查对应多少次tick触发次数
 
 	// InitialElectionTickAdvance 是否提前初始化选举时钟启动,以便更快的选举
 	InitialElectionTickAdvance bool

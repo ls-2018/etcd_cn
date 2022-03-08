@@ -40,18 +40,17 @@ func max(a, b uint64) uint64 {
 	return b
 }
 
-// OK
+// IsLocalMsg OK
 func IsLocalMsg(msgt pb.MessageType) bool {
-	return msgt == pb.MsgHup || msgt == pb.MsgBeat || msgt == pb.MsgUnreachable ||
-		msgt == pb.MsgSnapStatus || msgt == pb.MsgCheckQuorum
+	return msgt == pb.MsgHup || msgt == pb.MsgBeat || msgt == pb.MsgUnreachable || msgt == pb.MsgSnapStatus || msgt == pb.MsgCheckQuorum
 }
 
-// OK
+// IsResponseMsg 是不是响应信息
 func IsResponseMsg(msgt pb.MessageType) bool {
 	return msgt == pb.MsgAppResp || msgt == pb.MsgVoteResp || msgt == pb.MsgHeartbeatResp || msgt == pb.MsgUnreachable || msgt == pb.MsgPreVoteResp
 }
 
-// voteResponseType maps vote and prevote message types to their corresponding responses.
+// 投票信息的响应类型
 func voteRespMsgType(msgt pb.MessageType) pb.MessageType {
 	switch msgt {
 	case pb.MsgVote:

@@ -142,11 +142,11 @@ type Config struct {
 	MaxSnapFiles uint `json:"max-snapshots"` // 最大快照数
 	MaxWalFiles  uint `json:"max-wals"`      // 要保留的最大wal文件数(0表示不受限制). 5
 
-	// TickMs is the number of milliseconds between heartbeat ticks.
-	// TODO: decouple tickMs and heartbeat tick (current heartbeat tick = 1).
-	// make ticks a cluster wide configuration.
-	TickMs     uint `json:"heartbeat-interval"` // 心跳间隔  100ms
-	ElectionMs uint `json:"election-timeout"`   // 选举超时   1s
+	// TickMs是心脏跳动间隔的毫秒数。
+	// TODO：将tickMs和心跳tick解耦（目前的心跳tick=1）
+	// 使tick成为集群范围内的配置。
+	TickMs     uint `json:"heartbeat-interval"` // 定时器触发间隔  100ms
+	ElectionMs uint `json:"election-timeout"`   // 选举权检查周期   1s
 
 	// InitialElectionTickAdvance is true, then local member fast-forwards
 	// election ticks to speed up "initial" leader election trigger. This
@@ -756,7 +756,11 @@ func (cfg Config) InitialClusterFromName(name string) (ret string) {
 }
 
 func (cfg Config) IsNewCluster() bool { return cfg.ClusterState == ClusterStateFlagNew }
-func (cfg Config) ElectionTicks() int { return int(cfg.ElectionMs / cfg.TickMs) }
+
+// ElectionTicks 返回选举权检查对应多少次tick触发次数
+func (cfg Config) ElectionTicks() int {
+	return int(cfg.ElectionMs / cfg.TickMs)
+}
 
 func (cfg Config) V2DeprecationEffective() config.V2DeprecationEnum {
 	if cfg.V2Deprecation == "" {
@@ -773,7 +777,7 @@ func (cfg Config) defaultClientHost() bool {
 	return len(cfg.ACUrls) == 1 && cfg.ACUrls[0].String() == DefaultAdvertiseClientURLs
 }
 
-// etcd LCUrls客户端自签
+// ClientSelfCert etcd LCUrls客户端自签
 func (cfg *Config) ClientSelfCert() (err error) {
 	if !cfg.ClientAutoTLS {
 		return nil
@@ -793,7 +797,7 @@ func (cfg *Config) ClientSelfCert() (err error) {
 	return updateCipherSuites(&cfg.ClientTLSInfo, cfg.CipherSuites)
 }
 
-// etcd LPUrls客户端自签
+// PeerSelfCert etcd LPUrls客户端自签
 func (cfg *Config) PeerSelfCert() (err error) {
 	if !cfg.PeerAutoTLS {
 		return nil

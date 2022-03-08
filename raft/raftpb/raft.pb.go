@@ -416,7 +416,7 @@ type Message struct {
 	Reject bool `protobuf:"varint,10,opt,name=reject" json:"reject"`
 	// Follower 节点拒绝 leader 节点的消息之后,会在该字段记录 一个Entry索引值 返回Leader节点.
 	RejectHint uint64 `protobuf:"varint,11,opt,name=rejectHint" json:"rejectHint"`
-	// 携带的一些上下文的信息
+	// 携带的一些上下文的信息, 例如,campaignTransfer
 	Context []byte `protobuf:"bytes,12,opt,name=context" json:"context,omitempty"`
 }
 

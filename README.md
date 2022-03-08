@@ -237,37 +237,56 @@ etcdServer 会单独处理 Propose消息, 其余消息交给raft.step 来处理 
 
 StartEtcd
   1、etcdserver.NewServer -> 
-    MySelfStartRaft
-      newRaftNode
-        r.ticker = time.NewTicker(r.heartbeat)
-    startNode -> 
-      raft.StartNode -> 
-        go n.run()
-          - 处理commited的消息，将其apply
-          - 处理接收到的消息
-          - 发送用户命令
-          - 配置变更
-          - case <-n.tickc                                  F取出数据
-            n.rn.Tick()
-              rn.raft.tick()
-                r.tickElection或tickHeartbeat
-          - case readyc <- rd                               A放入数据
-          - case <-advancec: 
-          - case c := <-n.status:
-          - case <-n.stop: 
+      heartbeat := time.Duration(cfg.TickMs) * time.Millisecond
+      MySelfStartRaft
+        newRaftNode
+          r.ticker = time.NewTicker(r.heartbeat)                创建定时器、心跳
+        startNode -> 
+          raft.StartNode -> 
+            go n.run()
+              rd = n.rn.readyWithoutAccept()                      获取待发送消息,会获取到r.msgs
+              readyc = n.readyc                                   待发送消息channel 
+              - case pm := <-propc                                网络发来的消息、除Propose消息
+              - case m := <-n.recvc                               G 处理来自peer的消息 
+              - case cc := <-n.confc
+              - case <-n.tickc                                    F取出数据
+                  n.rn.Tick()
+                    rn.raft.tick()                                根据角色调用自己的函数
+                      - r.tickElection 
+                          r.Step(pb.Message{From: r.id, Type: pb.MsgHup}) 该函数是处理所有到来消息的入口
+                            r.send(pb.Message
+                              r.msgs = append(r.msgs, m)          放入要发送的消息
+                      - r.tickHeartbeat
+                          r.Step(pb.Message{From: r.id, Type: pb.MsgCheckQuorum})
+              - case readyc <- rd                                 A放入数据
+              - case <-advancec: 
+              - case c := <-n.status:
+              - case <-n.stop: 
+      tr.AddPeer  
+        startPeer                                                 与每个peer都建立一个链接
+          r.Process
+            s.Process
+              s.r.Step(ctx, m)
+                n.step
+                  stepWithWaitOption
+                    case n.recvc <- m                             G 接收来自peer的消息 
+        
   2、e.Server.Start ->
     EtcdServer.strat ->
       s.start()
-        go s.run()
-          # s.r=raftNode
-          s.r.start(rh)
-            go func()
-              - case <-r.ticker.C:
-                r.tick() 
-                  r.Tick()
-                    case n.tickc <- struct{}{}              F放入数据、不会阻塞,有size
-              - case rd := <-r.Ready()                      A取出数据 -----> B放入数据
-              - case <-r.stopped:
+        go s.run() 
+            --> | # s.r=raftNode
+            --> | s.r.start(rh)
+            --> |   go func()
+            --> |     - case <-r.ticker.C:                          接收定时器信号
+            --> |       r.tick() 
+            --> |         r.Tick()
+            --> |           case n.tickc <- struct{}{}              F放入数据、不会阻塞,有size
+            --> |     - case rd := <-r.Ready()                      A取出数据  
+                          case r.applyc <- ap                           B放入数据
+                          r.transport.Send(msgs)                        发出响应数据
+            --> |     - case <-r.stopped:
+            
           - case ap := <-s.r.apply()                                        B取出数据
             读取applyc的数据,封装为JOB,放入调度器
           - 处理过期租约
@@ -281,3 +300,5 @@ StartEtcd
   5、e.serveMetrics
     
 ```
+
+rafthttp.Transport EtcdServer
