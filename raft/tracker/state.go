@@ -26,8 +26,7 @@ const (
 	// 表示一个不知道最后索引的追随者.这样的追随者被 "探测"(即定期发送附录)以缩小其最后索引.
 	// 在理想(和常见)的情况下,只有一轮探测是必要的,因为追随者会做出提示.被长期探测的追随者往往是离线的.
 	StateProbe StateType = iota
-	// StateReplicate is the state steady in which a follower eagerly receives
-	// log entries to append to its log.
+	// StateReplicate 是指追随者急于接收日志条目以追加到其日志中的稳定状态。
 	StateReplicate
 	// StateSnapshot indicates a follower that needs log entries not available
 	// from the leader's Raft log. Such a follower needs a full snapshot to

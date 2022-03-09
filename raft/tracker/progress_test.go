@@ -27,7 +27,7 @@ func TestProgressString(t *testing.T) {
 		State:           StateSnapshot,
 		PendingSnapshot: 123,
 		RecentActive:    false,
-		ProbeSent:       true,
+		StopSent:        true,
 		IsLearner:       true,
 		Inflights:       ins,
 	}
@@ -54,7 +54,7 @@ func TestProgressIsPaused(t *testing.T) {
 	for i, tt := range tests {
 		p := &Progress{
 			State:     tt.state,
-			ProbeSent: tt.paused,
+			StopSent:  tt.paused,
 			Inflights: NewInflights(256),
 		}
 		if g := p.IsPaused(); g != tt.w {
@@ -64,20 +64,20 @@ func TestProgressIsPaused(t *testing.T) {
 }
 
 // TestProgressResume ensures that MaybeUpdate and MaybeDecrTo will reset
-// ProbeSent.
+// StopSent.
 func TestProgressResume(t *testing.T) {
 	p := &Progress{
-		Next:      2,
-		ProbeSent: true,
+		Next:     2,
+		StopSent: true,
 	}
 	p.MaybeDecrTo(1, 1)
-	if p.ProbeSent {
-		t.Errorf("paused= %v, want false", p.ProbeSent)
+	if p.StopSent {
+		t.Errorf("paused= %v, want false", p.StopSent)
 	}
-	p.ProbeSent = true
+	p.StopSent = true
 	p.MaybeUpdate(2)
-	if p.ProbeSent {
-		t.Errorf("paused= %v, want false", p.ProbeSent)
+	if p.StopSent {
+		t.Errorf("paused= %v, want false", p.StopSent)
 	}
 }
 

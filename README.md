@@ -54,27 +54,27 @@ http://127.0.0.1:2379/members
 
 ### msg
 
-```
-MsgHup                      本地：开启选举,---->会触发vote或pre-vote
-MsgBeat                     本地：心跳,---->给peers发送Msghearbeat
-MsgProp                     本地：Propose -----> MsgApp
-MsgApp                      非本地：操作日志【复制、配置变更 req】
-MsgAppResp                  非本地：操作日志【复制 res】
-MsgVote                     非本地：投票请求
-MsgVoteResp                 非本地：投票相应
-MsgPreVote                  非本地：预投票请求
-MsgPreVoteResp              非本地：预投票相应
-MsgSnap                     非本地：leader向follower拷贝快照,响应是MsgAppResp,告诉leader继续复制之后的值
-MsgHeartbeat                
-MsgHeartbeatResp            
-MsgUnreachable              非本地：etcdserver通过这个消息告诉raft状态机某个follower不可达,让其发送消息的方式由pipeline切成ping-pong模式
-MsgSnapStatus               非本地：etcdserver通过这个消息告诉raft状态机快照发送成功还是失败
-MsgCheckQuorum               
-MsgTransferLeader           非本地：
-MsgTimeoutNow               非本地：
-MsgReadIndex                非本地：
-MsgReadIndexResp            非本地：
-```
+| 消息类型 | 处理方 | 描述 |
+| :--- | :--- | :--: |
+| MsgHup | 节点支持 | 本地：开启选举,---->会触发vote或pre-vote |
+| MsgBeat | Leader | 本地：心跳,---->给peers发送Msghearbeat |
+| MsgProp | Leader、Candidate、Follower | 本地：Propose -----> MsgApp |
+| MsgApp | Candidate、Follower | 非本地：操作日志【复制、配置变更 req】 |
+| MsgAppResp | Leader | 非本地：操作日志【复制 res】 |
+| MsgVote | 节点支持 | 非本地：投票请求 |
+| MsgVoteResp | Candidate | 非本地：投票相应 |
+| MsgPreVote | 节点支持 | 非本地：预投票请求 |
+| MsgPreVoteResp | Candidate | 非本地：预投票相应 |
+| MsgSnap | Candidate、Follower | 非本地：leader向follower拷贝快照,响应是MsgAppResp,告诉leader继续复制之后的值 |
+| MsgHeartbeat | Candidate、Follower | |
+| MsgHeartbeatResp | Leader | |
+| MsgUnreachable | Leader | 非本地：etcdserver通过这个消息告诉raft状态机某个follower不可达,让其发送消息的方式由pipeline切成ping-pong模式 |
+| MsgSnapStatus | Leader | 非本地：etcdserver通过这个消息告诉raft状态机快照发送成功还是失败 |
+| MsgCheckQuorum | Leader | |
+| MsgTransferLeader | Leader、Follower | 非本地： |
+| MsgTimeoutNow | Candidate、Follower | 非本地： |
+| MsgReadIndex | Leader、Follower | 非本地： |
+| MsgReadIndexResp | Follower | 非本地： |
 
 ### issue
 
@@ -90,7 +90,7 @@ MsgReadIndexResp            非本地：
   
   	ErrUnsetAdvertiseClientURLsFlag = fmt.Errorf("--advertise-client-urls is required when --listen-client-urls is set explicitly")
 	ErrLogRotationInvalidLogOutput  = fmt.Errorf("--log-outputs requires a single file path when --log-rotate-config-json is defined")
-
+  
     --data-dir 指定节点的数据存储目录,这些数据包括节点ID,集群ID,集群初始化配置,Snapshot文件,若未指定—wal-dir,还会存储WAL文件;
     --wal-dir 指定节点的was文件的存储目录,若指定了该参数,wal文件会和其他数据文件分开存储.
   # member  
@@ -98,7 +98,7 @@ MsgReadIndexResp            非本地：
     --listen-client-urls        DefaultListenClientURLs = "http://192.168.1.100:2379"
     和成员之间通信的地址.用于监听其他etcd member的url
     --listen-peer-urls          DefaultListenPeerURLs   = "http://192.168.1.100:2380"
-
+  
   # cluster
     就是客户端(etcdctl/curl等)跟etcd服务进行交互时请求的url
     --advertise-client-urls             http://127.0.0.1:2379,http://192.168.1.100:2379,http://10.10.10.10:2379      
@@ -106,7 +106,7 @@ MsgReadIndexResp            非本地：
     --initial-advertise-peer-urls       http://127.0.0.1:12380       告知集群其他节点url.           
     # 集群中所有节点的信息
     --initial-cluster 'infra1=http://127.0.0.1:12380,infra2=http://127.0.0.1:22380,infra3=http://127.0.0.1:32380' 
-
+  
   
     请求流程:
     etcdctl endpoints=http://192.168.1.100：2379 --debug ls
@@ -303,4 +303,4 @@ StartEtcd
     
 ```
 
-rafthttp.Transport EtcdServer
+快照 + storage + unstable 的区别

@@ -443,7 +443,7 @@ func (r *raft) maybeSendAppend(to uint64, sendIfEmpty bool) bool {
 				pr.Inflights.Add(last)    // 记录已发送但是未收到响应的消息
 			case tracker.StateProbe:
 				// 消息发送后，就将Progress.Paused字段设置成true，暂停后续消息的发送
-				pr.ProbeSent = true
+				pr.StopSent = true
 			default:
 				r.logger.Panicf("%x 在未知的状态下发送%s", r.id, pr.State)
 			}
@@ -584,8 +584,8 @@ func (r *raft) appendEntry(es ...pb.Entry) (accepted bool) {
 
 // 非leader角色的 tick函数, 每次逻辑计时器触发就会调用
 func (r *raft) tickElection() {
-	r.electionElapsed++
-	// promotable返回是否可以被提升为leader
+	r.electionElapsed++ // 收到MsgBeat消息时会重置其选举计时器，从而防止节点发起新一轮选举。
+	// roleUp返回是否可以被提升为leader
 	// pastElectionTimeout检测当前的候选超时间是否过期
 	if r.roleUp() && r.pastElectionTimeout() {
 		// 自己可以被promote & election timeout 超时了,规定时间没有听到心跳发起选举；发送MsgHup// 选举超时
@@ -937,13 +937,13 @@ func (r *raft) Step(m pb.Message) error {
 type stepFunc func(r *raft, m pb.Message) error
 
 func stepLeader(r *raft, m pb.Message) error {
-	// These message types do not require any progress for m.From.
+	// 这些消息不会处理These message types do not require any progress for m.From.
 	switch m.Type {
-	case pb.MsgBeat:
+	case pb.MsgBeat: // leader专属
 		r.bcastHeartbeat()
 		return nil
 		//--------------------其他消息处理----------------------
-	case pb.MsgCheckQuorum:
+	case pb.MsgCheckQuorum: // leader专属
 		// 将 leader 自己的 RecentActive 状态设置为 true
 		if pr := r.prs.Progress[r.id]; pr != nil {
 			pr.RecentActive = true
@@ -961,7 +961,7 @@ func stepLeader(r *raft, m pb.Message) error {
 			}
 		})
 		return nil
-	case pb.MsgProp:
+	case pb.MsgProp: // leader、Candidate、follower专属
 		if len(m.Entries) == 0 {
 			r.logger.Panicf("%x stepped empty MsgProp", r.id)
 		}
@@ -1054,121 +1054,38 @@ func stepLeader(r *raft, m pb.Message) error {
 
 		pr.RecentActive = true
 
-		if m.Reject { //MsgApp 消息被拒绝
-			//如果收到的是reject消息,则根据follower反馈的index重新发送日志
-			r.logger.Debugf("%x 收到 MsgAppResp(rejected, hint: (index %d, term %d)) from %x for index %d",
-				r.id, m.RejectHint, m.LogTerm, m.From, m.Index)
-			nextProbeIdx := m.RejectHint
-			if m.LogTerm > 0 {
-				// If the follower has an uncommitted log tail, we would end up
-				// probing one by one until we hit the common prefix.
-				//
-				// For example, if the leader has:
-				//
+		if m.Reject { //MsgApp 消息被拒绝;如果收到的是reject消息,则根据follower反馈的index重新发送日志
+			_ = r.handleAppendEntries // 含有拒绝的逻辑
+			r.logger.Debugf("%x 收到 MsgAppResp(rejected, hint: (index %d, term %d)) from %x for index %d", r.id, m.RejectHint, m.LogTerm, m.From, m.Index)
+			// 发送的是  9 5
+			nextProbeIdx := m.RejectHint // 拒绝之处的日志索引 6
+			if m.LogTerm > 0 {           // 拒绝之处的日志任期 2
+				//  example 1
 				//   idx        1 2 3 4 5 6 7 8 9
 				//              -----------------
 				//   term (L)   1 3 3 3 5 5 5 5 5
 				//   term (F)   1 1 1 1 2 2
-				//
-				// Then, after sending an append anchored at (idx=9,term=5) we
-				// would receive a RejectHint of 6 and LogTerm of 2. Without the
-				// code below, we would try an append at index 6, which would
-				// fail again.
-				//
-				// However, looking only at what the leader knows about its own
-				// log and the rejection hint, it is clear that a probe at index
-				// 6, 5, 4, 3, and 2 must fail as well:
-				//
-				// For all of these indexes, the leader's log term is larger than
-				// the rejection's log term. If a probe at one of these indexes
-				// succeeded, its log term at that index would match the leader's,
-				// i.e. 3 or 5 in this example. But the follower already told the
-				// leader that it is still at term 2 at index 9, and since the
-				// log term only ever goes up (within a log), this is a contradiction.
-				//
-				// At index 1, however, the leader can draw no such conclusion,
-				// as its term 1 is not larger than the term 2 from the
-				// follower's rejection. We thus probe at 1, which will succeed
-				// in this example. In general, with this approach we probe at
-				// most once per term found in the leader's log.
-				//
-				// There is a similar mechanism on the follower (implemented in
-				// handleAppendEntries via a call to findConflictByTerm) that is
-				// useful if the follower has a large divergent uncommitted log
-				// tail[1], as in this example:
-				//
-				//   idx        1 2 3 4 5 6 7 8 9
-				//              -----------------
-				//   term (L)   1 3 3 3 3 3 3 3 7
-				//   term (F)   1 3 3 4 4 5 5 5 6
-				//
-				// Naively, the leader would probe at idx=9, receive a rejection
-				// revealing the log term of 6 at the follower. Since the leader's
-				// term at the previous index is already smaller than 6, the leader-
-				// side optimization discussed above is ineffective. The leader thus
-				// probes at index 8 and, naively, receives a rejection for the same
-				// index and log term 5. Again, the leader optimization does not improve
-				// over linear probing as term 5 is above the leader's term 3 for that
-				// and many preceding indexes; the leader would have to probe linearly
-				// until it would finally hit index 3, where the probe would succeed.
-				//
-				// Instead, we apply a similar optimization on the follower. When the
-				// follower receives the probe at index 8 (log term 3), it concludes
-				// that all of the leader's log preceding that index has log terms of
-				// 3 or below. The largest index in the follower's log with a log term
-				// of 3 or below is index 3. The follower will thus return a rejection
-				// for index=3, log term=3 instead. The leader's next probe will then
-				// succeed at that index.
-				//
-				// [1]: more precisely, if the log terms in the large uncommitted
-				// tail on the follower are larger than the leader's. At first,
-				// it may seem unintuitive that a follower could even have such
-				// a large tail, but it can happen:
-				//
-				// 1. Leader appends (but does not commit) entries 2 and 3, crashes.
-				//   idx        1 2 3 4 5 6 7 8 9
-				//              -----------------
-				//   term (L)   1 2 2     [crashes]
-				//   term (F)   1
-				//   term (F)   1
-				//
-				// 2. a follower becomes leader and appends entries at term 3.
-				//              -----------------
-				//   term (x)   1 2 2     [down]
-				//   term (F)   1 3 3 3 3
-				//   term (F)   1
-				//
-				// 3. term 3 leader goes down, term 2 leader returns as term 4
-				//    leader. It commits the log & entries at term 4.
-				//
-				//              -----------------
-				//   term (L)   1 2 2 2
-				//   term (x)   1 3 3 3 3 [down]
-				//   term (F)   1
-				//              -----------------
-				//   term (L)   1 2 2 2 4 4 4
-				//   term (F)   1 3 3 3 3 [gets probed]
-				//   term (F)   1 2 2 2 4 4 4
-				//
-				// 4. the leader will now probe the returning follower at index
-				//    7, the rejection points it at the end of the follower's log
-				//    which is at a higher log term than the actually committed
-				//    log.
-				nextProbeIdx = r.raftLog.findConflictByTerm(m.RejectHint, m.LogTerm)
+				nextProbeIdx = r.raftLog.findConflictByTerm(m.RejectHint, m.LogTerm) // 下一次直接发送索引为1的消息  🐂
 			}
-			if pr.MaybeDecrTo(m.Index, nextProbeIdx) {
-				r.logger.Debugf("%x decreased progress of %x to [%s]", r.id, m.From, pr)
+			//通过MsgAppResp消息携带的信息及对应的Progress状态，重新设立其Next
+			//m.Index leader 发送出去的首个日志索引,但被拒绝了
+			if pr.MaybeDecrTo(m.Index, nextProbeIdx) { // leader是否降低对该节点索引记录
+				r.logger.Debugf("%x回滚进度  节点:%x to [%s]", r.id, m.From, pr)
 				if pr.State == tracker.StateReplicate {
 					pr.BecomeProbe()
 				}
 				r.sendAppend(m.From)
 			}
 		} else {
-			//更新缓存的日志同步进度
+			//之前发送的MsgApp消息已经被对反的Follower节点接收（Entry记录被成功追加）
 			oldPaused := pr.IsPaused()
+			//MsgAppResp消息的Index字段是对应Follower节点raftLog中最后一条Entry记录的索引，这里会根据该值更新其对应Progress实例的Match和Next,Progress. maybeUpdate ()
+			//方法在前面已经介绍过了
 			if pr.MaybeUpdate(m.Index) {
 				switch {
 				case pr.State == tracker.StateProbe:
+					//一旦MsgApp被Follower节点接收，则表示已经找到其正确的Next和Match,不必再进行“试探”，这里将对应的Progress.state切换成ProgressStateReplicate
+
 					pr.BecomeReplicate()
 				case pr.State == tracker.StateSnapshot && pr.Match >= pr.PendingSnapshot:
 					// TODO(tbg): we should also enter this branch if a snapshot is
@@ -1183,15 +1100,24 @@ func stepLeader(r *raft, m pb.Message) error {
 					pr.BecomeProbe()
 					pr.BecomeReplicate()
 				case pr.State == tracker.StateReplicate:
+					//之前向某个Follower节点发送MsgApp消息时，会将其相关信息保存到对应的
+					//Progress.ins中，在这里收到相应的MsgAppResp响应之后，会将其从ins中删除，
+					//这样可以实现了限流的效采，避免网络出现延迟时，继续发送消息，从而导致网络更加拥堵
 					pr.Inflights.FreeLE(m.Index)
 				}
 				//如果进度有更新,判断并更新commitIndex
+				//收到一个Follower节点的MsgAppResp消息之后，除了修改相应的Match和Next，还会尝试更新raftLog.committed，因为有些Entry记录可能在此次复制中被保存到了
+				//半数以上的节点中，raft.maybeCommit（）方法在前面已经分析过了
 				if r.maybeCommit() {
 					// committed index has progressed for the term, so it is safe
 					// to respond to pending read index requests
 					releasePendingReadIndexMessages(r)
+					//向所有节点发送MsgApp消息，注意，此次MsgApp消息的Commit字段与上次MsgApp消息已经不同，raft.bcastAppend()方法前面已经讲过
+
 					r.bcastAppend()
 				} else if oldPaused {
+					//之前是pause状态，现在可以任性地发消息了
+					//之前Leader节点暂停向该Follower节点发送消息，收到MsgAppResp消息后，在上述代码中已经重立了相应状态，所以可以继续发送MsgApp消息
 					// If we were paused before, this localNode may be missing the
 					// latest commit index, so send it.
 					r.sendAppend(m.From)
@@ -1214,7 +1140,7 @@ func stepLeader(r *raft, m pb.Message) error {
 		}
 	case pb.MsgHeartbeatResp:
 		pr.RecentActive = true
-		pr.ProbeSent = false
+		pr.StopSent = false
 
 		// free one slot for the full inflights window to allow progress.
 		if pr.State == tracker.StateReplicate && pr.Inflights.Full() {
@@ -1259,7 +1185,7 @@ func stepLeader(r *raft, m pb.Message) error {
 		// If snapshot finish, wait for the MsgAppResp from the remote localNode before sending
 		// out the next MsgApp.
 		// If snapshot failure, wait for a heartbeat interval before next try
-		pr.ProbeSent = true
+		pr.StopSent = true
 	case pb.MsgUnreachable:
 		// During optimistic replication, if the remote becomes unreachable,
 		// there is huge probability that a MsgApp is lost.
@@ -1313,7 +1239,7 @@ func stepCandidate(r *raft, m pb.Message) error {
 		myVoteRespType = pb.MsgVoteResp
 	}
 	switch m.Type {
-	case pb.MsgProp:
+	case pb.MsgProp: // leader、Candidate、follower专属
 		r.logger.Infof("%x no leader at term %d; dropping proposal", r.id, r.Term)
 		return ErrProposalDropped
 	case pb.MsgApp:
@@ -1351,7 +1277,7 @@ func stepCandidate(r *raft, m pb.Message) error {
 // follower 的功能
 func stepFollower(r *raft, m pb.Message) error {
 	switch m.Type {
-	case pb.MsgProp:
+	case pb.MsgProp: // leader、Candidate、follower专属
 		if r.lead == None {
 			r.logger.Infof("%x no leader at term %d; dropping proposal", r.id, r.Term)
 			return ErrProposalDropped
@@ -1413,43 +1339,41 @@ func stepFollower(r *raft, m pb.Message) error {
 // 处理日志
 func (r *raft) handleAppendEntries(m pb.Message) {
 	// 在leader在发消息时,也会将消息写入本地日志文件中,不会等待follower确认
-	// 判断是否是过时的消息
+	// 判断是否是过时的消息; 日志索引 小于本地已经commit的消息
 	if m.Index < r.raftLog.committed {
-		// 日志索引 小于本地已经commit的消息
 		r.send(pb.Message{To: m.From, Type: pb.MsgAppResp, Index: r.raftLog.committed})
 		return
 	}
-	// 会进行一致性检查
+	// 会进行一致性检查;尝试将消息携带的Entry记录追加到raftLog中
+	// m.Index:携带的日志的最小日志索引, m.LogTerm:携带的第一条日志任期, m.Commit:leader记录的本机点已经commit的日志索引
+	// m.Entries... 真正的日志数据
 	if mlastIndex, ok := r.raftLog.maybeAppend(m.Index, m.LogTerm, m.Commit, m.Entries...); ok {
-		//如采追加成功,则将最后一条记录的索引位通过MsgAppResp消息返回给Leader节点,这样Leader节点就可以根据此值更新其对应的Next和Match值
+		// 返回最后一条日志的索引,这样Leader节点就可以根据此值更新其对应的Next和Match值
 		r.send(pb.Message{To: m.From, Type: pb.MsgAppResp, Index: mlastIndex})
 	} else {
-		// 日志的index和Follower的lastIndex不匹配,返回reject消息; 出现原因
+		// 收到的日志索引任期不满足以下条件:任期一样,日志索引比lastIndex大1
 
-		//  一种是日志条目中带的term和follower的term不一致,
-		//  一种是日志列表中最小的index大于follower的最大的日志index.
 		// 上面的maybeAppend() 方法只会将日志存储到RaftLog维护的内存队列中,
 		// 日志的持久化是异步进行的,这个和Leader节点的存储WAL逻辑基本相同.
-		// 有一点区别就是follower节点正式发送MsgAppResp消息会在wal保存成功后,而leader节点是先发送消息,后保存的wal.
+		// 有一点区别就是follower节点正式发送MsgAppResp消息会在wal保存成功后
+		// 而leader节点是先发送消息,后保存的wal.
 
-		// extern 当flower多一些无用数据时, Leader是如何精准地找到每个Follower 与其日志条目不一致的那个槽位的呢
+		//   idx        1 2 3 4 5 6 7 8 9
+		//              -----------------
+		//   term (L)   1 3 3 3 5 5 5 5 5
+		//   term (F)   1 1 1 1 2 2
+		// extern 当flower多一些未commit数据时, Leader是如何精准地找到每个Follower 与其日志条目首个不一致的那个槽位的呢
 		// Follower 将之后的删除,重新同步leader之后的数据
-		// 如采追加记录失败,则将失/败信息返回给Leader节点(即MsgAppResp 消息的Reject字段为true),同时返回的还有一些提示信息(RejectHint字段保存了当前节点raftLog中最后一条记录的索引)
+		// 如采追加记录失败,则将失/败信息返回给Leader节点(即MsgAppResp 消息的Reject字段为true),
+		// 同时返回的还有一些提示信息(RejectHint字段保存了当前节点raftLog中最后一条记录的索引)
 
-		r.logger.Debugf("%x [logterm: %d, index: %d] rejected MsgApp [logterm: %d, index: %d] from %x",
-			r.id, r.raftLog.zeroTermOnErrCompacted(r.raftLog.term(m.Index)), m.Index, m.LogTerm, m.Index, m.From)
-
-		// Return a hint to the leader about the maximum index and term that the
-		// two logs could be divergent at. Do this by searching through the
-		// follower's log for the maximum (index, term) pair with a term <= the
-		// MsgApp's LogTerm and an index <= the MsgApp's Index. This can help
-		// skip all indexes in the follower's uncommitted tail with terms
-		// greater than the MsgApp's LogTerm.
-		//
-		// See the other caller for findConflictByTerm (in stepLeader) for a much
-		// more detailed explanation of this mechanism.
-		hintIndex := min(m.Index, r.raftLog.lastIndex())
-		hintIndex = r.raftLog.findConflictByTerm(hintIndex, m.LogTerm)
+		index, err := r.raftLog.term(m.Index) // 判断leader传过来的index在本地是否有存储
+		r.logger.Debugf("%x [logterm: %d, index: %d]拒绝消息MsgApp [logterm: %d, index: %d] from %x",
+			r.id, r.raftLog.zeroTermOnErrCompacted(index, err), m.Index, m.LogTerm, m.Index, m.From)
+		// 向leader返回一个关于两个日志可能出现分歧关于 index 和 term 的提示。
+		// if m.LogTerm >= term &&  m.Index >= index 可以跳过一些follower拥有的未提交数据
+		hintIndex := min(m.Index, r.raftLog.lastIndex())               // 发来的消息最小索引与当前最新消息, 一般来说后者会比较小,6
+		hintIndex = r.raftLog.findConflictByTerm(hintIndex, m.LogTerm) // 核心逻辑
 		hintTerm, err := r.raftLog.term(hintIndex)
 		if err != nil {
 			panic(fmt.Sprintf("term(%d)必须是valid, but got %v", hintIndex, err))

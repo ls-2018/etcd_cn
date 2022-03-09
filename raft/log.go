@@ -21,12 +21,14 @@ import (
 	pb "github.com/ls-2018/etcd_cn/raft/raftpb"
 )
 
+// 快照 + storage + unstable
+//
 type raftLog struct {
 	//这里还是一个内存存储,用于保存自从最后一次snapshot之后提交的数据
-	storage Storage
+	storage Storage // 最后存储数据
 
 	// 用于存储未写入Storage的快照数据及Entry记录
-	unstable unstable
+	unstable unstable // 快照之后的数据
 
 	// 己提交的位置，即己提交的Entry记录中最大的索引值。
 	committed uint64
@@ -98,28 +100,29 @@ func (l *raftLog) findConflict(ents []pb.Entry) uint64 {
 	return 0
 }
 
-// findConflictByTerm takes an (index, term) pair (indicating a conflicting log
-// entry on a leader/follower during an append) and finds the largest index in
-// log l with a term <= `term` and an index <= `index`. If no such index exists
-// in the log, the log's first index is returned.
-//
-// The index provided必须是equal to or less than l.lastIndex(). Invalid
-// inputs log a warning and the input index is returned.
+// 从此索引开始,查找第一个任期小于LogTerm的日志索引
 func (l *raftLog) findConflictByTerm(index uint64, term uint64) uint64 {
+	// case 1  follower   	index:6 本地存储的      term:9leader认为的				返回 6
+	//   idx        1 2 3 4 5 6 7 8 9 10 11 12
+	//              -------------------------
+	//   term (L)   1 3 3 3 5 5 5 5 5
+	//   term (F)   1 1 1 1 2 2
+	// case 2  follower   	index:12 本地存储的     term:9leader认为的				返回 12
+	//   idx        1 2 3 4 5 6 7 8 9 10 11 12
+	//              -------------------------
+	//   term (L)   1 3 3 3 5 5 5 5 5
+	//   term (F)   1 1 1 1 2 2 2 2 2  2  2  2
+	// case 3  leader   	index:6 本地存储的      term:2follower的				返回 1
+	//   idx        1 2 3 4 5 6 7 8 9 10 11 12
+	//              -------------------------
+	//   term (L)   1 3 3 3 5 5 5 5 5
+	//   term (F)   1 1 1 1 2 2
 	if li := l.lastIndex(); index > li {
-		// NB: such calls should not exist, but since there is a straightfoward
-		// way to recover, do it.
-		//
-		// It is tempting to also check something about the first index, but
-		// there is odd behavior with peers that have no log, in which case
-		// lastIndex will return zero and firstIndex will return one, which
-		// leads to calls with an index of zero into this method.
-		l.logger.Warningf("index(%d) is out of range [0, lastIndex(%d)] in findConflictByTerm",
-			index, li)
+		l.logger.Warningf("index(%d) 超出范围 [0, lastIndex(%d)] in findConflictByTerm", index, li)
 		return index
 	}
 	for {
-		logTerm, err := l.term(index)
+		logTerm, err := l.term(index) // 2
 		if logTerm <= term || err != nil {
 			break
 		}
@@ -166,13 +169,14 @@ func (l *raftLog) snapshot() (pb.Snapshot, error) {
 	return l.storage.Snapshot()
 }
 
+// 获取
 func (l *raftLog) firstIndex() uint64 {
 	if i, ok := l.unstable.maybeFirstIndex(); ok {
 		return i
 	}
 	index, err := l.storage.FirstIndex()
 	if err != nil {
-		panic(err) // TODO(bdarnell)
+		panic(err)
 	}
 	return index
 }
@@ -257,6 +261,7 @@ func (l *raftLog) restore(s pb.Snapshot) {
 	l.unstable.restore(s)
 }
 
+//当err 是因为数据经过压缩,找不到索引,任期返回0
 func (l *raftLog) zeroTermOnErrCompacted(t uint64, err error) uint64 {
 	if err == nil {
 		return t
@@ -264,7 +269,7 @@ func (l *raftLog) zeroTermOnErrCompacted(t uint64, err error) uint64 {
 	if err == ErrCompacted {
 		return 0
 	}
-	l.logger.Panicf("unexpected error (%v)", err)
+	l.logger.Panicf("未知的 error (%v)", err)
 	return 0
 }
 

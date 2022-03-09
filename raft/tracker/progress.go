@@ -35,7 +35,7 @@ type Progress struct {
 
 	RecentActive bool // 从当前Leader节点的角度来看,该Progress实例对应的Follower节点是否存活.
 
-	ProbeSent bool // 是否暂停对follower的消息发送
+	StopSent bool // 是否暂停对follower的消息发送
 
 	Inflights *Inflights // 维护着向该follower已发送,但未收到确认的消息索引 [环形队列]
 
@@ -59,36 +59,36 @@ func (pr *Progress) MaybeUpdate(n uint64) bool {
 // OptimisticUpdate 记录下次日志发送的起始位置,n是已发送的最新日志索引
 func (pr *Progress) OptimisticUpdate(n uint64) { pr.Next = n + 1 }
 
-// MaybeDecrTo 收到MsgApp拒绝消息,对进度进行调整.
-// 其参数是被follower 拒绝的日志索引
-//
-// 拒绝可能是假的,因为消息是不按顺序发送或重复发送的.在这种情况下,拒绝涉及到一个索引,即Progress已经知道以前被确认过,所以返回false.但不改变进度.
-//
-// 如果拒绝是真实的,Next将被合理地降低,并且Progress将被清除以发送日志条目.清空,以便发送日志条目.
-//maybeDecrTo()方法的两个参数都是MsgAppResp消息携带的信息：
-//reject是被拒绝MsgApp消息的Index字段佳,
-//last是被拒绝MsgAppResp消息的RejectHint字段佳(即对应Follower节点raftLog中最后一条Entry记录的索引)
+// MaybeDecrTo  follower拒绝了rejected索引的日志, matchHint是应该重新调整的日志索引[leader记录的];
+// leader是否降低对该节点索引记录
 func (pr *Progress) MaybeDecrTo(rejected, matchHint uint64) bool {
 	if pr.State == StateReplicate {
-		// The rejection必须是stale if the progress has matched and "rejected"
-		// is smaller than "match".
 		if rejected <= pr.Match {
 			return false
 		}
 		// Directly decrease next to match + 1.
 		//
 		// TODO(tbg): why not use matchHint if it's larger?
+		//根据前面对MsgApp消息发送过程的分析，处于ProgressStateReplicate状态时，发送MsgApp
+		//消息的同时会直接调用Progress.optimisticUpdate（）方法增加Next，这就使得Next可能会
+		//比Match大很多，这里回退Next至Match位置，并在后面重新发送MsgApp消息进行尝试
 		pr.Next = pr.Match + 1
 		return true
 	}
 	// The rejection必须是stale if "rejected" does not match next - 1. This
 	// is because non-replicating followers are probed one entry at a time.
+	//出现过时的MsgAppResp消息直接忽略
+	// 只有拒绝比当前大,才会重新      一般都是当前记录了A ,给follower发送了A+1,[leader会将Next设为A+2] ,被拒绝了   此时 rejected=A+1
 	if pr.Next-1 != rejected {
 		return false
 	}
 
-	pr.Next = max(min(rejected, matchHint+1), 1)
-	pr.ProbeSent = false
+	//   idx        1 2 3 4 5 6 7 8 9
+	//              -----------------
+	//   term (L)   1 3 3 3 5 5 5 5 5
+	//   term (F)   1 1 1 1 2 2
+	pr.Next = max(min(rejected, matchHint+1), 1) // 此时Next就设为2
+	pr.StopSent = false                             // Next重置完成，恢复消息发送，并在后面重新发送MsgApp消息
 	return true
 }
 
@@ -110,7 +110,7 @@ func min(a, b uint64) uint64 {
 
 // ProbeAcked 当follower接受了append消息,标志着可以继续向该节点发送消息
 func (pr *Progress) ProbeAcked() {
-	pr.ProbeSent = false
+	pr.StopSent = false
 }
 
 // IsPaused 返回发往该节点的消息是否被限流
@@ -119,7 +119,7 @@ func (pr *Progress) ProbeAcked() {
 func (pr *Progress) IsPaused() bool {
 	switch pr.State {
 	case StateProbe: // 每个心跳间隔内最多发送一条复制消息,默认false
-		return pr.ProbeSent
+		return pr.StopSent
 	case StateReplicate: // 消息复制状态
 		return pr.Inflights.Full() // 根据队列是否满,判断
 	case StateSnapshot:
@@ -131,7 +131,7 @@ func (pr *Progress) IsPaused() bool {
 
 // ResetState 重置节点的跟踪状态
 func (pr *Progress) ResetState(state StateType) {
-	pr.ProbeSent = false
+	pr.StopSent = false
 	pr.PendingSnapshot = 0
 	pr.State = state
 	pr.Inflights.reset()
@@ -140,6 +140,7 @@ func (pr *Progress) ResetState(state StateType) {
 // BecomeProbe 转变为StateProbe.下一步是重置为Match+1,或者,如果更大的话,重置为待定快照的索引.
 // 恢复follower状态,以正常发送消息
 func (pr *Progress) BecomeProbe() {
+	// 变成探测状态,等发出去的消息响应了，再继续发消息
 	if pr.State == StateSnapshot { // 当前状态是发送快照
 		pendingSnapshot := pr.PendingSnapshot
 		pr.Next = max(pr.Match+1, pendingSnapshot+1)
