@@ -18,20 +18,16 @@ package tracker
 type StateType uint64
 
 const (
-	// StateProbe indicates a follower whose last index isn't known. Such a
-	// follower is "probed" (i.e. an append sent periodically) to narrow down
-	// its last index. In the ideal (and common) case, only one round of probing
-	// is necessary as the follower will react with a hint. Followers that are
-	// probed over extended periods of time are often offline.
-	// 表示一个不知道最后索引的追随者.这样的追随者被 "探测"(即定期发送附录)以缩小其最后索引.
-	// 在理想(和常见)的情况下,只有一轮探测是必要的,因为追随者会做出提示.被长期探测的追随者往往是离线的.
-	StateProbe StateType = iota
-	// StateReplicate 是指追随者急于接收日志条目以追加到其日志中的稳定状态。
-	StateReplicate
-	// StateSnapshot indicates a follower that needs log entries not available
-	// from the leader's Raft log. Such a follower needs a full snapshot to
-	// return to StateReplicate.
-	StateSnapshot
+	// StateProbe 一般是系统选举完成后,Leader不知道所有Follower都是什么进度,所以需要发消息探测一下,从
+	// Follower的回复消息获取进度.在还没有收到回消息前都还是探测状态.因为不确定Follower是否活跃,
+	// 所以发送太多的探测消息意义不大,只发送一个探测消息即可.
+	StateProbe StateType = iota // 探测
+	// StateReplicate :当Peer回复探测消息后,消息中有该节点接收的最大日志索引,如果回复的最大索引大于Match,   【可能会出现日志冲突】
+	//    以此索引更新Match,Progress就进入了复制状态,开启高速复制模式.复制制状态不同于
+	//    探测状态,Leader会发送更多的日志消息来提升IO效率,就是上面提到的异步发送.这里就要引入
+	//    Inflight概念了,飞行中的日志,意思就是已经发送给Follower还没有被确认接收的日志数据,
+	StateReplicate // 复制
+	StateSnapshot  // 快照状态说明Follower正在复制Leader的快照
 )
 
 var prstmap = [...]string{

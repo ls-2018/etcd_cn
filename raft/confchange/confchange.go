@@ -245,29 +245,26 @@ func (c Changer) remove(cfg *tracker.Config, prs tracker.ProgressMap, id uint64)
 	}
 }
 
-// initProgress initializes a new progress for the given node or learner.
+// initProgress 初始化给定Follower或Learner的Progress,该节点不能以任何一种形式存在,否则异常.
+// ID是Peer的ID,match和next用来初始化Progress的.
 func (c Changer) initProgress(cfg *tracker.Config, prs tracker.ProgressMap, id uint64, isLearner bool) {
 	if !isLearner {
+		//等同于  cfg.Voters[0][id] = struct{}{}
 		incoming(cfg.Voters)[id] = struct{}{}
 	} else {
 		nilAwareAdd(&cfg.Learners, id)
 	}
+	// Follower可以参与选举和投票,Learner不可以,只要知道这一点就可以了.无论是Follower还是
+	// Learner都会有一个Progress,但是他们再次进行了分组管理.
 	prs[id] = &tracker.Progress{
-		// Initializing the Progress with the last index means that the follower
-		// can be probed (with the last index).
-		//
-		// TODO(tbg): seems awfully optimistic. Using the first index would be
-		// better. The general expectation here is that the follower has no log
-		// at all (and will thus likely need a snapshot), though the app may
-		// have applied a snapshot out of band before adding the replica (thus
-		// making the first index the better choice).
+		// 初始化Progress需要给定Next、Match、Inflights容量以及是否是learner,其他也没啥
+		// 此处可以剧透一下,raft的代码初始化的时候Match=0,Next=1.
 		Next:      c.LastIndex,
 		Match:     0,
 		Inflights: tracker.NewInflights(c.Tracker.MaxInflight),
 		IsLearner: isLearner,
-		// When a node is first added, we should mark it as recently active.
-		// Otherwise, CheckQuorum may cause us to step down if it is invoked
-		// before the added node has had a chance to communicate with us.
+		// 当一个节点第一次被添加时,我们应该把它标记为最近活跃.否则,如果CheckQuorum在被调用之前,可能会导致我们停止工作.
+		// 在被添加的节点有机会与我们通信之前调用它,可能会导致我们降级.
 		RecentActive: true,
 	}
 }

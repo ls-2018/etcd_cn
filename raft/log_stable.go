@@ -21,7 +21,7 @@ import (
 	pb "github.com/ls-2018/etcd_cn/raft/raftpb"
 )
 
-var ErrCompacted = errors.New("由于压缩，请求的索引无法到达")
+var ErrCompacted = errors.New("由于压缩,请求的索引无法到达")
 
 var ErrSnapOutOfDate = errors.New("请求的索引比现有快照的老")
 
@@ -196,11 +196,11 @@ func (ms *MemoryStorage) Compact(compactIndex uint64) error {
 	}
 
 	i := compactIndex - offset
-	//创建新的切片，用来存储compactIndex之后的Entry
+	//创建新的切片,用来存储compactIndex之后的Entry
 	ents := make([]pb.Entry, 1, 1+uint64(len(ms.ents))-i)
 	ents[0].Index = ms.ents[i].Index
 	ents[0].Term = ms.ents[i].Term
-	//将compactlndex之后的Entry拷贝到ents中，并更新MemoryStorage.ents 字段
+	//将compactlndex之后的Entry拷贝到ents中,并更新MemoryStorage.ents 字段
 	ents = append(ents, ms.ents[i+1:]...)
 	ms.ents = ents
 	return nil

@@ -30,7 +30,7 @@ type raftLog struct {
 	// 用于存储未写入Storage的快照数据及Entry记录
 	unstable unstable // 快照之后的数据
 
-	// 己提交的位置，即己提交的Entry记录中最大的索引值。
+	// 己提交的位置,即己提交的Entry记录中最大的索引值.
 	committed uint64
 	// 而applied保存的是传入状态机中的最高index
 	// 即一条日志首先要提交成功(即committed),才能被applied到状态机中;因此以下不等式一直成立：applied <= committed
@@ -52,9 +52,10 @@ func newLog(storage Storage, logger Logger) *raftLog {
 	return newLogWithSize(storage, logger, noLimit)
 }
 
-// maybeAppend 当Follower节点或Candidate节点需要向raftLog 中追加Entry记录时，会通过raft.handleAppendEntriesO方法调用raftLog.maybeAppend
+// maybeAppend 当Follower节点或Candidate节点需要向raftLog 中追加Entry记录时,会通过raft.handleAppendEntriesO方法调用raftLog.maybeAppend
+// m.Index:携带的日志的最小日志索引, m.LogTerm:携带的第一条日志任期, m.Commit:leader记录的本机点已经commit的日志索引
+// m.Entries... 真正的日志数据
 func (l *raftLog) maybeAppend(index, logTerm, committed uint64, ents ...pb.Entry) (lastnewi uint64, ok bool) {
-	//调用matchTerm（）方法检测MsgApp消息的Index 字段及LogTerm字段是否合法
 	if l.matchTerm(index, logTerm) { //查看 index 的 term 与 logTerm 是否匹配·
 		lastnewi = index + uint64(len(ents))
 		ci := l.findConflict(ents) // 查找 ents 中,index与term 冲突的位置.
@@ -64,7 +65,7 @@ func (l *raftLog) maybeAppend(index, logTerm, committed uint64, ents ...pb.Entry
 			l.logger.Panicf("日志 %d 与已承诺的条目冲突  [committed(%d)]", ci, l.committed)
 		default: // 如果冲突位置是未提交的部分
 			// [1,2] ----> [1,3,4]
-			// 本节点存在一些无效的数据，比leader多
+			// 本节点存在一些无效的数据,比leader多
 			offset := index + 1
 			// 则将ents中未发生冲突的部分追加到raftLog中
 			// etcd 深入解析 图1-11 f
@@ -373,7 +374,7 @@ func (l *raftLog) mustCheckOutOfBounds(lo, hi uint64) error {
 
 // 查看索引消息对应的任期
 func (l *raftLog) term(i uint64) (uint64, error) {
-	// 有效期限范围为[虚拟条目索引，最后一个索引]
+	// 有效期限范围为[虚拟条目索引,最后一个索引]
 	// 会尝试获取unstable、storage 的第一条Entry记录的索引值
 	dummyIndex := l.firstIndex() - 1
 	// 会尝试获取unstable、storage 的最新的Entry记录的索引值
@@ -395,7 +396,7 @@ func (l *raftLog) term(i uint64) (uint64, error) {
 	panic(err)
 }
 
-// isUpToDate Follower节点在接收到Candidate节点的选举请求之后，会通过比较Candidate节点的本地日志与自身本地日志的新旧程度，从而决定是否投票。
+// isUpToDate Follower节点在接收到Candidate节点的选举请求之后,会通过比较Candidate节点的本地日志与自身本地日志的新旧程度,从而决定是否投票.
 // raftLog提供了isUpToDat巳（）方法用于比较日志的新旧程度.
 func (l *raftLog) isUpToDate(lasti, term uint64) bool {
 	return term > l.lastTerm() || (term == l.lastTerm() && lasti >= l.lastIndex())

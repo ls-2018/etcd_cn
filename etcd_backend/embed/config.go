@@ -142,9 +142,9 @@ type Config struct {
 	MaxSnapFiles uint `json:"max-snapshots"` // 最大快照数
 	MaxWalFiles  uint `json:"max-wals"`      // 要保留的最大wal文件数(0表示不受限制). 5
 
-	// TickMs是心脏跳动间隔的毫秒数。
+	// TickMs是心脏跳动间隔的毫秒数.
 	// TODO：将tickMs和心跳tick解耦（目前的心跳tick=1）
-	// 使tick成为集群范围内的配置。
+	// 使tick成为集群范围内的配置.
 	TickMs     uint `json:"heartbeat-interval"` // 定时器触发间隔  100ms
 	ElectionMs uint `json:"election-timeout"`   // 选举权检查周期   1s
 

@@ -244,7 +244,7 @@ func (p *ProgressTracker) LearnerNodes() []uint64 {
 	return nodes
 }
 
-// ResetVotes 准备通过recordVote进行新一轮的计票工作。
+// ResetVotes 准备通过recordVote进行新一轮的计票工作.
 func (p *ProgressTracker) ResetVotes() {
 	p.Votes = map[uint64]bool{} // 记录接收到了哪些节点的投票
 }
@@ -257,7 +257,7 @@ func (p *ProgressTracker) RecordVote(id uint64, v bool) {
 	}
 }
 
-// TallyVotes 返回批准和拒绝的票数，以及是否知道选举结果。
+// TallyVotes 返回批准和拒绝的票数,以及是否知道选举结果.
 func (p *ProgressTracker) TallyVotes() (granted int, rejected int, _ quorum.VoteResult) {
 	for id, pr := range p.Progress {
 		if pr.IsLearner {

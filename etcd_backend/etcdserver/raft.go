@@ -92,7 +92,7 @@ type raftNode struct {
 	// a chan to send out readState
 	readStateC chan raft.ReadState
 
-	ticker *time.Ticker // raft 中有两个时间计数器，它们分别是选举计数器 (Follower/Candidate)和心跳计数器  (Leader),它们都依靠 tick 来推进时钟
+	ticker *time.Ticker // raft 中有两个时间计数器,它们分别是选举计数器 (Follower/Candidate)和心跳计数器  (Leader),它们都依靠 tick 来推进时钟
 
 	// contention detectors for raft heartbeat message
 	td *contention.TimeoutDetector

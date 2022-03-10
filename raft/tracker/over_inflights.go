@@ -14,10 +14,11 @@
 
 package tracker
 
-// Inflights  在 Raft 中存储的是已发送给 Follower 的 MsgApp 消息,但没有收到 MsgAppResp 的消息 Index  值.
+// Inflights  在 Raft 中存储的是已发送给 Follower 的 MsgApp 消息,但没有收到 MsgAppResp 的消息 最大Index  值.
 // 简单的说就是 Leader 发送一个消息给 Follower,Leader 在对应的 Follower 状态维护结构(progress)中,
 // 将这个消息的 ID 记录在 inFlight 中, 当 Follower 收到消息之后,告知 Leader 收到了这个 ID 的消息,Leader 将从 inFlight 中删除,
 // 表示 Follower 已经接收,否则如果 Follower 在指定时间内没有响应,Leader 会根据一定策略进行重发.
+// 一批一批的发送
 type Inflights struct {
 	start  int      // 记录最旧的那个未被响应的消息,在buffer中的位置
 	count  int      // 已发送,但未响应的消息总数

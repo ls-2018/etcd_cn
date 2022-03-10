@@ -114,7 +114,7 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 				close(sctx.serversC)
 			}
 		}
-		e.Close() // 启动失败时， 优雅关闭
+		e.Close() // 启动失败时, 优雅关闭
 		e = nil
 	}()
 

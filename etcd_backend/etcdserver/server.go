@@ -554,7 +554,7 @@ func MySelfStartRaft(cfg config.ServerConfig) (temp *Temp, err error) {
 // NewServer 根据提供的配置创建一个新的EtcdServer.在EtcdServer的生命周期内,该配置被认为是静态的.
 func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 	var temp = &Temp{}
-	temp, err = MySelfStartRaft(cfg)// 逻辑时钟初始化
+	temp, err = MySelfStartRaft(cfg) // 逻辑时钟初始化
 	sstats := stats.NewServerStats(cfg.Name, temp.ID.String())
 	lstats := stats.NewLeaderStats(cfg.Logger, temp.ID.String())
 
@@ -1109,7 +1109,7 @@ func (s *EtcdServer) run() {
 
 		close(s.done)
 	}()
-	var expiredLeaseC <-chan []*lease.Lease // 返回一个用于接收过期租约的CHAN。
+	var expiredLeaseC <-chan []*lease.Lease // 返回一个用于接收过期租约的CHAN.
 	if s.lessor != nil {                    // v3用,作用是实现过期时间
 		expiredLeaseC = s.lessor.ExpiredLeasesC()
 	}
@@ -1465,7 +1465,7 @@ func (s *EtcdServer) TransferLeadership() error {
 	return err
 }
 
-// HardStop 在不与集群中其他成员协调的情况下停止etcd。
+// HardStop 在不与集群中其他成员协调的情况下停止etcd.
 func (s *EtcdServer) HardStop() {
 	select {
 	case s.stop <- struct{}{}:
