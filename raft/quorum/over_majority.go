@@ -21,7 +21,7 @@ import (
 	"strings"
 )
 
-// MajorityConfig is a set of IDs that uses majority quorums to make decisions.
+// MajorityConfig 其实就是peerID的set
 type MajorityConfig map[uint64]struct{}
 
 func (c MajorityConfig) String() string {
@@ -112,6 +112,7 @@ func (c MajorityConfig) Slice() []uint64 {
 	return sl
 }
 
+//插入排序
 func insertionSort(sl []uint64) {
 	a, b := 0, len(sl)
 	for i := a + 1; i < b; i++ {
@@ -121,23 +122,17 @@ func insertionSort(sl []uint64) {
 	}
 }
 
-// CommittedIndex computes the committed index from those supplied via the
-// provided AckedIndexer (for the active config).
+// CommittedIndex 获取已经提交了的 大多数索引 ；计算raft的提交索引
 func (c MajorityConfig) CommittedIndex(l AckedIndexer) Index {
 	n := len(c)
 	if n == 0 {
-		// This plays well with joint quorums which, when one half is the zero
-		// MajorityConfig, should behave like the other half.
+		// 这里很有意思，当没有任何peer的时候返回值居然是无穷大（64位无符号范围内），如果都没有任何
+		// peer，0不是更合适？其实这跟JoinConfig类型有关，此处先放一放，后面会给出解释。
 		return math.MaxUint64
 	}
 
-	// Use an on-stack slice to collect the committed indexes when n <= 7
-	// (otherwise we alloc). The alternative is to stash a slice on
-	// MajorityConfig, but this impairs usability (as is, MajorityConfig is just
-	// a map, and that's nice). The assumption is that running with a
-	// replication factor of >7 is rare, and in cases in which it happens
-	// performance is a lesser concern (additionally the performance
-	// implications of an allocation here are far from drastic).
+	// 下面的代码对理解函数的实现原理没有多大影响，只是用了一个小技巧，在Peer数量不大于7个的情况下
+	// 优先用栈数组，否则通过堆申请内存。因为raft集群超过7个的概率不大，用栈效率会更高
 	var stk [7]uint64
 	var srt []uint64
 	if len(stk) >= n {
@@ -147,10 +142,7 @@ func (c MajorityConfig) CommittedIndex(l AckedIndexer) Index {
 	}
 
 	{
-		// Fill the slice with the indexes observed. Any unused slots will be
-		// left as zero; these correspond to voters that may report in, but
-		// haven't yet. We fill from the right (since the zeroes will end up on
-		// the left after sorting below anyway).
+		// 把所有的Peer.Progress.Match放入srt数组中
 		i := n - 1
 		for id := range c {
 			if idx, ok := l.AckedIndex(id); ok {
@@ -160,31 +152,22 @@ func (c MajorityConfig) CommittedIndex(l AckedIndexer) Index {
 		}
 	}
 
-	// Sort by index. Use a bespoke algorithm (copied from the stdlib's sort
-	// package) to keep srt on the stack.
+	// 插入排序
 	insertionSort(srt)
 
-	// The smallest index into the array for which the value is acked by a
-	// quorum. In other words, from the end of the slice, move n/2+1 to the
-	// left (accounting for zero-indexing).
+	//	升序之后，取提交了大多数的日志索引
 	pos := n - (n/2 + 1)
 	return Index(srt[pos])
 }
 
-// VoteResult takes a mapping of voters to yes/no (true/false) votes and returns
-// a result indicating whether the vote is pending (i.e. neither a quorum of
-// yes/no has been reached), won (a quorum of yes has been reached), or lost (a
-// quorum of no has been reached).
+// VoteResult 做选举结果统计
 func (c MajorityConfig) VoteResult(votes map[uint64]bool) VoteResult {
 	if len(c) == 0 {
-		// By convention, the elections on an empty config win. This comes in
-		// handy with joint quorums because it'll make a half-populated joint
-		// quorum behave like a majority quorum.
 		return VoteWon
 	}
-
-	ny := [2]int{} // vote counts for no and yes, respectively
-
+	// 统计支持者(nv[1])和反对者(nv[0])的数量
+	ny := [2]int{}
+	//  当然还有弃权的，raft的弃权不是peer主动弃权的，而是丢包或者超时造成的
 	var missing int
 	for id := range c {
 		v, ok := votes[id]

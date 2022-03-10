@@ -1091,9 +1091,6 @@ func stepLeader(r *raft, m pb.Message) error {
 					pr.BecomeProbe()     // 再探测一次
 					pr.BecomeReplicate() // 正常发送日志
 				case pr.State == tracker.StateReplicate:
-					//之前向某个Follower节点发送MsgApp消息时,会将其相关信息保存到对应的
-					//Progress.ins中,在这里收到相应的MsgAppResp响应之后,会将其从ins中删除,
-					//这样可以实现了限流的效采,避免网络出现延迟时,继续发送消息,从而导致网络更加拥堵
 					pr.Inflights.FreeLE(m.Index)
 				}
 				//如果进度有更新,判断并更新commitIndex

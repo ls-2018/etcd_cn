@@ -15,26 +15,36 @@
 package quorum
 
 import (
-	"fmt"
 	"math"
-	"math/rand"
-	"testing"
+	"strconv"
 )
 
-func BenchmarkMajorityConfig_CommittedIndex(b *testing.B) {
-	// go test -run - -bench . -benchmem ./raft/quorum
-	for _, n := range []int{1, 3, 5, 7, 9, 11} {
-		b.Run(fmt.Sprintf("voters=%d", n), func(b *testing.B) {
-			c := MajorityConfig{}
-			l := mapAckIndexer{}
-			for i := uint64(0); i < uint64(n); i++ {
-				c[i+1] = struct{}{}
-				l[i+1] = Index(rand.Int63n(math.MaxInt64))
-			}
+// Index raft日志索引
+type Index uint64
 
-			for i := 0; i < b.N; i++ {
-				_ = c.CommittedIndex(l)
-			}
-		})
+func (i Index) String() string {
+	if i == math.MaxUint64 {
+		return "∞"
 	}
+	return strconv.FormatUint(uint64(i), 10)
 }
+
+type AckedIndexer interface {
+	AckedIndex(voterID uint64) (idx Index, found bool)
+}
+
+type mapAckIndexer map[uint64]Index
+
+func (m mapAckIndexer) AckedIndex(id uint64) (Index, bool) {
+	idx, ok := m[id]
+	return idx, ok
+}
+
+//go:generate stringer -type=VoteResult
+type VoteResult uint8
+
+const (
+	VotePending VoteResult = 1 + iota // 竞选中
+	VoteLost                          // 竞选失败
+	VoteWon                           // 竞选获胜
+)

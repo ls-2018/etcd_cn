@@ -105,8 +105,6 @@ func (pr *Progress) MaybeDecrTo(rejected, matchHint uint64) bool {
 	return true
 }
 
-// -------------------------------------------------- over --------------------------------------------------
-
 func max(a, b uint64) uint64 {
 	if a > b {
 		return a

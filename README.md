@@ -169,6 +169,7 @@ http://127.0.0.1:2379/members
 - 快照 follower 当数据远落后于leader , leader会将快照发送过来 但由于网络原因,这一过程很慢 ,但是leader又生成了新的快照,wal没有旧的数据, 这时follower同步完,leader将最新新消息
   发送follower , follower reject ,但是此时wal已经没有对应的wal 又会发送新的快照, 这就会陷入死循环.....how? 看完源码再说吧
   ![](./images/MsgReadIndex.png)
+- JointConfig 为什么是两个
 
 ### Ref
 

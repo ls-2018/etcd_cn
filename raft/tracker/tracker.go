@@ -126,8 +126,8 @@ func MakeProgressTracker(maxInflight int) ProgressTracker {
 		MaxInflight: maxInflight, // 最大的处理中的消息数量
 		Config: Config{
 			Voters: quorum.JointConfig{
-				quorum.MajorityConfig{},
-				nil, // 使用时初始化
+				quorum.MajorityConfig{}, // 只初始化了第一个
+				nil,                     // 使用时初始化
 			},
 			Learners:     nil, // 使用时初始化
 			LearnersNext: nil, // 使用时初始化
@@ -159,7 +159,7 @@ type matchAckIndexer map[uint64]*Progress
 
 var _ quorum.AckedIndexer = matchAckIndexer(nil)
 
-// AckedIndex implements IndexLookuper.
+// AckedIndex 返回指定ID的Peer接收的最大日志索引，就是Progress.Match。
 func (l matchAckIndexer) AckedIndex(id uint64) (quorum.Index, bool) {
 	pr, ok := l[id]
 	if !ok {
@@ -168,8 +168,7 @@ func (l matchAckIndexer) AckedIndex(id uint64) (quorum.Index, bool) {
 	return quorum.Index(pr.Match), true
 }
 
-// Committed returns the largest log index known to be committed based on what
-// the voting members of the group have acknowledged.
+// Committed 根据投票成员已确认的 返回已提交的最大日志索引。
 func (p *ProgressTracker) Committed() uint64 {
 	return uint64(p.Voters.CommittedIndex(matchAckIndexer(p.Progress)))
 }

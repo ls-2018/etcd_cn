@@ -14,8 +14,9 @@
 
 package quorum
 
-// JointConfig is a configuration of two groups of (possibly overlapping)
-// majority configurations. Decisions require the support of both majorities.
+// JointConfig JointConfig和MajorityConfig功能是一样的，只是JointConfig的做法是
+// 根据两个MajorityConfig的结果做一次融合性操作
+// MakeProgressTracker 初始化
 type JointConfig [2]MajorityConfig
 
 func (c JointConfig) String() string {
@@ -25,8 +26,6 @@ func (c JointConfig) String() string {
 	return c[0].String()
 }
 
-// IDs returns a newly initialized map representing the set of voters present
-// in the joint configuration.
 func (c JointConfig) IDs() map[uint64]struct{} {
 	m := map[uint64]struct{}{}
 	for _, cc := range c {
@@ -37,16 +36,15 @@ func (c JointConfig) IDs() map[uint64]struct{} {
 	return m
 }
 
-// Describe returns a (multi-line) representation of the commit indexes for the
-// given lookuper.
+// Describe
 func (c JointConfig) Describe(l AckedIndexer) string {
 	return MajorityConfig(c.IDs()).Describe(l)
 }
 
-// CommittedIndex returns the largest committed index for the given joint
-// quorum. An index is jointly committed if it is committed in both constituent
-// majorities.
+// CommittedIndex 已提交索引
 func (c JointConfig) CommittedIndex(l AckedIndexer) Index {
+	// 返回的是二者最小的那个，这时候可以理解MajorityConfig.CommittedIndex()为什么Peers数
+	// 为0的时候返回无穷大了吧，如果返回0该函数就永远返回0了。
 	idx0 := c[0].CommittedIndex(l)
 	idx1 := c[1].CommittedIndex(l)
 	if idx0 < idx1 {
@@ -55,21 +53,16 @@ func (c JointConfig) CommittedIndex(l AckedIndexer) Index {
 	return idx1
 }
 
-// VoteResult takes a mapping of voters to yes/no (true/false) votes and returns
-// a result indicating whether the vote is pending, lost, or won. A joint quorum
-// requires both majority quorums to vote in favor.
 func (c JointConfig) VoteResult(votes map[uint64]bool) VoteResult {
 	r1 := c[0].VoteResult(votes)
 	r2 := c[1].VoteResult(votes)
-
+	// 相同的，下里面的判断逻辑基就可以知道MajorityConfig.VoteResult()在peers数为0返回选举
+	// 胜利的原因。
 	if r1 == r2 {
-		// If they agree, return the agreed state.
 		return r1
 	}
 	if r1 == VoteLost || r2 == VoteLost {
-		// If either config has lost, loss is the only possible outcome.
 		return VoteLost
 	}
-	// One side won, the other one is pending, so the whole outcome is.
 	return VotePending
 }
