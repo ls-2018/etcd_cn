@@ -19,7 +19,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ls-2018/etcd_cn/client/pkg/testutil"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/testutil"
 )
 
 func TestNodeExternClone(t *testing.T) {

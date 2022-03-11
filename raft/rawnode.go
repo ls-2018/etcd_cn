@@ -28,8 +28,8 @@ var ErrStepLocalMsg = errors.New("raft: cannot step raft local message")
 // but there is no peer found in raft.prs for that localNode.
 var ErrStepPeerNotFound = errors.New("raft: cannot step as peer not found")
 
-// RawNode is a thread-unsafe Node.
-// The methods of this struct correspond to the methods of Node and are described
+// RawNode is a thread-unsafe RaftNodeInterFace.
+// The methods of this struct correspond to the methods of RaftNodeInterFace and are described
 // more fully there.
 type RawNode struct {
 	raft       *raft
@@ -82,7 +82,7 @@ func (rn *RawNode) Propose(data []byte) error {
 		}})
 }
 
-// ProposeConfChange proposes a config change. See (Node).ProposeConfChange for
+// ProposeConfChange proposes a config change. See (RaftNodeInterFace).ProposeConfChange for
 // details.
 func (rn *RawNode) ProposeConfChange(cc pb.ConfChangeI) error {
 	m, err := confChangeToMsg(cc)

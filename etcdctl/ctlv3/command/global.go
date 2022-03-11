@@ -25,9 +25,9 @@ import (
 	"time"
 
 	"github.com/bgentry/speakeasy"
-	"github.com/ls-2018/etcd_cn/client/pkg/srv"
-	"github.com/ls-2018/etcd_cn/client/pkg/transport"
-	clientv3 "github.com/ls-2018/etcd_cn/client/v3"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/srv"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/transport"
+	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 	"github.com/ls-2018/etcd_cn/pkg/cobrautl"
 	"github.com/ls-2018/etcd_cn/pkg/flags"
 	"github.com/spf13/cobra"

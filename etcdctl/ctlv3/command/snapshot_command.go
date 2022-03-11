@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"os"
 
-	snapshot "github.com/ls-2018/etcd_cn/client/v3/snapshot"
+	snapshot "github.com/ls-2018/etcd_cn/client_sdk/v3/snapshot"
 	"github.com/ls-2018/etcd_cn/etcdutl/etcdutl"
 	"github.com/ls-2018/etcd_cn/pkg/cobrautl"
 	"github.com/spf13/cobra"

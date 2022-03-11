@@ -126,13 +126,13 @@ func insertionSort(sl []uint64) {
 func (c MajorityConfig) CommittedIndex(l AckedIndexer) Index {
 	n := len(c)
 	if n == 0 {
-		// 这里很有意思，当没有任何peer的时候返回值居然是无穷大（64位无符号范围内），如果都没有任何
-		// peer，0不是更合适？其实这跟JoinConfig类型有关，此处先放一放，后面会给出解释。
+		// 这里很有意思,当没有任何peer的时候返回值居然是无穷大（64位无符号范围内）,如果都没有任何
+		// peer,0不是更合适？其实这跟JoinConfig类型有关,此处先放一放,后面会给出解释.
 		return math.MaxUint64
 	}
 
-	// 下面的代码对理解函数的实现原理没有多大影响，只是用了一个小技巧，在Peer数量不大于7个的情况下
-	// 优先用栈数组，否则通过堆申请内存。因为raft集群超过7个的概率不大，用栈效率会更高
+	// 下面的代码对理解函数的实现原理没有多大影响,只是用了一个小技巧,在Peer数量不大于7个的情况下
+	// 优先用栈数组,否则通过堆申请内存.因为raft集群超过7个的概率不大,用栈效率会更高
 	var stk [7]uint64
 	var srt []uint64
 	if len(stk) >= n {
@@ -155,7 +155,7 @@ func (c MajorityConfig) CommittedIndex(l AckedIndexer) Index {
 	// 插入排序
 	insertionSort(srt)
 
-	//	升序之后，取提交了大多数的日志索引
+	//	升序之后,取提交了大多数的日志索引
 	pos := n - (n/2 + 1)
 	return Index(srt[pos])
 }
@@ -167,7 +167,7 @@ func (c MajorityConfig) VoteResult(votes map[uint64]bool) VoteResult {
 	}
 	// 统计支持者(nv[1])和反对者(nv[0])的数量
 	ny := [2]int{}
-	//  当然还有弃权的，raft的弃权不是peer主动弃权的，而是丢包或者超时造成的
+	//  当然还有弃权的,raft的弃权不是peer主动弃权的,而是丢包或者超时造成的
 	var missing int
 	for id := range c {
 		v, ok := votes[id]

@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/coreos/go-semver/semver"
-	"github.com/ls-2018/etcd_cn/client/pkg/types"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
 	betesting "github.com/ls-2018/etcd_cn/etcd_backend/mvcc/backend/testing"
 	"github.com/stretchr/testify/assert"
 

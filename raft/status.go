@@ -29,16 +29,12 @@ type Status struct {
 	Progress map[uint64]tracker.Progress // 如果是Leader,还有其他节点的进度
 }
 
-// BasicStatus contains basic information about the Raft peer. It does not allocate.
 type BasicStatus struct {
 	ID uint64
-
 	pb.HardState
 	SoftState
-	Applied uint64 // 应用索引,其实这个使用者自己也知道,因为Ready的回调里提交日志被应用都会有日志的索引.
-
+	Applied        uint64 // 应用索引,其实这个使用者自己也知道,因为Ready的回调里提交日志被应用都会有日志的索引.
 	LeadTransferee uint64 // Leader转移ID,如果正处于Leader转移期间.
-
 }
 
 func getProgressCopy(r *raft) map[uint64]tracker.Progress {
@@ -102,4 +98,14 @@ func (s Status) String() string {
 		getLogger().Panicf("unexpected error: %v", err)
 	}
 	return string(b)
+}
+
+// SoftState 提供对日志和调试有用的状态.该状态是不稳定的,不需要持久化到WAL中.
+type SoftState struct {
+	Lead      uint64    // 当前leader
+	RaftState StateType // 节点状态
+}
+
+func (a *SoftState) equal(b *SoftState) bool {
+	return a.Lead == b.Lead && a.RaftState == b.RaftState
 }

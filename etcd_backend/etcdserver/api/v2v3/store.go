@@ -17,13 +17,13 @@ package v2v3
 import (
 	"context"
 	"fmt"
-	clientv3 "github.com/ls-2018/etcd_cn/client/v3"
+	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 	"path"
 	"sort"
 	"strings"
 	"time"
 
-	"github.com/ls-2018/etcd_cn/client/v3/concurrency"
+	"github.com/ls-2018/etcd_cn/client_sdk/v3/concurrency"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v2error"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v2store"
 	"go.etcd.io/etcd/api/v3/mvccpb"

@@ -15,7 +15,7 @@
 package rafthttp
 
 import (
-	"github.com/ls-2018/etcd_cn/client/pkg/types"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
 	"github.com/ls-2018/etcd_cn/raft/raftpb"
 
 	"go.uber.org/zap"

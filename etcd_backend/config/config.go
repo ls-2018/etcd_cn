@@ -21,8 +21,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ls-2018/etcd_cn/client/pkg/transport"
-	"github.com/ls-2018/etcd_cn/client/pkg/types"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/transport"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
 	"github.com/ls-2018/etcd_cn/etcd_backend/datadir"
 	"github.com/ls-2018/etcd_cn/pkg/netutil"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"

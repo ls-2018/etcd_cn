@@ -18,7 +18,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ls-2018/etcd_cn/client/pkg/testutil"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/testutil"
 )
 
 // Ensure that a successful Get is recorded in the stats.

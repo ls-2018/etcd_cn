@@ -18,7 +18,7 @@ import (
 	"crypto/tls"
 	"math"
 
-	"github.com/ls-2018/etcd_cn/client/v3/credentials"
+	"github.com/ls-2018/etcd_cn/client_sdk/v3/credentials"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 

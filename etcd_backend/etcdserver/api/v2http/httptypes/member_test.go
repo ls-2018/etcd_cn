@@ -20,7 +20,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/ls-2018/etcd_cn/client/pkg/types"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
 )
 
 func TestMemberUnmarshal(t *testing.T) {

@@ -24,8 +24,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/ls-2018/etcd_cn/client/pkg/transport"
-	"github.com/ls-2018/etcd_cn/client/v3/credentials"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/transport"
+	"github.com/ls-2018/etcd_cn/client_sdk/v3/credentials"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v3client"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v3election"

@@ -23,7 +23,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ls-2018/etcd_cn/client/pkg/types"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
 )
 
 // RaftAttributes  与raft相关的etcd成员属性

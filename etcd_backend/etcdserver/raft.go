@@ -18,23 +18,23 @@ import (
 	"encoding/json"
 	"expvar"
 	"fmt"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
+	"github.com/ls-2018/etcd_cn/etcd_backend/config"
+	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/membership"
+	"github.com/ls-2018/etcd_cn/etcd_backend/wal"
+	"github.com/ls-2018/etcd_cn/etcd_backend/wal/walpb"
+	"github.com/ls-2018/etcd_cn/pkg/pbutil"
 	"github.com/ls-2018/etcd_cn/raft"
+	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 	"log"
 	"sort"
 	"sync"
 	"time"
 
-	"github.com/ls-2018/etcd_cn/client/pkg/logutil"
-	"github.com/ls-2018/etcd_cn/client/pkg/types"
-	"github.com/ls-2018/etcd_cn/etcd_backend/config"
-	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/membership"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/logutil"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/rafthttp"
-	"github.com/ls-2018/etcd_cn/etcd_backend/wal"
-	"github.com/ls-2018/etcd_cn/etcd_backend/wal/walpb"
 	"github.com/ls-2018/etcd_cn/pkg/contention"
-	"github.com/ls-2018/etcd_cn/pkg/pbutil"
 	"github.com/ls-2018/etcd_cn/raft/raftpb"
-	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 	"go.uber.org/zap"
 )
 
@@ -75,38 +75,12 @@ type apply struct {
 	// notifyc synchronizes etcd etcd applies with the raft node
 	notifyc chan struct{}
 }
-
-// raft状态机,维护raft状态机的步进和状态迁移.
-type raftNode struct {
-	lg *zap.Logger
-
-	tickMu         *sync.Mutex
-	raftNodeConfig // 包含了node、storage等重要数据结构
-
-	// a chan to send/receive snapshot
-	msgSnapC chan raftpb.Message
-
-	// a chan to send out apply
-	applyc chan apply
-
-	// a chan to send out readState
-	readStateC chan raft.ReadState
-
-	ticker *time.Ticker // raft 中有两个时间计数器,它们分别是选举计数器 (Follower/Candidate)和心跳计数器  (Leader),它们都依靠 tick 来推进时钟
-
-	// contention detectors for raft heartbeat message
-	td *contention.TimeoutDetector
-
-	stopped chan struct{}
-	done    chan struct{}
-}
-
 type raftNodeConfig struct {
 	lg *zap.Logger
 
 	// to check if msg receiver is removed from cluster
 	isIDRemoved func(id uint64) bool
-	raft.Node
+	raft.RaftNodeInterFace
 	raftStorage *raft.MemoryStorage
 	storage     Storage
 	heartbeat   time.Duration // for logging
@@ -151,7 +125,305 @@ func newRaftNode(cfg raftNodeConfig) *raftNode {
 	return r
 }
 
-// raft.Node raft包中没有lock
+// raft状态机,维护raft状态机的步进和状态迁移.
+type raftNode struct {
+	lg *zap.Logger
+
+	tickMu         *sync.Mutex
+	raftNodeConfig // 包含了node、storage等重要数据结构
+
+	// a chan to send/receive snapshot
+	msgSnapC chan raftpb.Message
+
+	// a chan to send out apply
+	applyc chan apply
+
+	// a chan to send out readState
+	readStateC chan raft.ReadState
+
+	ticker *time.Ticker // raft 中有两个时间计数器,它们分别是选举计数器 (Follower/Candidate)和心跳计数器  (Leader),它们都依靠 tick 来推进时钟
+
+	// contention detectors for raft heartbeat message
+	td *contention.TimeoutDetector
+
+	stopped chan struct{}
+	done    chan struct{}
+}
+
+// 启动节点
+func startNode(cfg config.ServerConfig, cl *membership.RaftCluster, ids []types.ID) (id types.ID, n raft.RaftNodeInterFace, s *raft.MemoryStorage, w *wal.WAL) {
+	var err error
+	member := cl.MemberByName(cfg.Name)
+	metadata := pbutil.MustMarshal(
+		&pb.Metadata{
+			NodeID:    uint64(member.ID),
+			ClusterID: uint64(cl.ID()),
+		},
+	)
+	if w, err = wal.Create(cfg.Logger, cfg.WALDir(), metadata); err != nil {
+		cfg.Logger.Panic("创建WAL失败", zap.Error(err))
+	}
+	if cfg.UnsafeNoFsync { // 非安全存储 默认是 false    ,
+		w.SetUnsafeNoFsync()
+	}
+	peers := make([]raft.Peer, len(ids))
+	for i, id := range ids {
+		var ctx []byte
+		ctx, err = json.Marshal((*cl).Member(id)) // 本机
+		if err != nil {
+			cfg.Logger.Panic("序列化member失败", zap.Error(err))
+		}
+		peers[i] = raft.Peer{ID: uint64(id), Context: ctx}
+	}
+	id = member.ID // 本机ID
+	cfg.Logger.Info(
+		"启动本节点",
+		zap.String("local-member-id", id.String()),
+		zap.String("cluster-id", cl.ID().String()),
+	)
+	s = raft.NewMemoryStorage() // 创建内存存储
+	c := &raft.Config{
+		ID:              uint64(id),        // 本机ID
+		ElectionTick:    cfg.ElectionTicks, // 返回选举权检查对应多少次tick触发次数
+		HeartbeatTick:   1,                 // 返回心跳检查对应多少次tick触发次数
+		Storage:         s,                 // 存储 memory ✅
+		MaxSizePerMsg:   maxSizePerMsg,     // 每次发消息的最大size
+		MaxInflightMsgs: maxInflightMsgs,   // 512
+		CheckQuorum:     true,              // 检查是否是leader
+		// etcd_backend/embed/config.go:NewConfig 432
+		PreVote: cfg.PreVote, // true      // 是否启用PreVote扩展,建议开启
+		Logger:  NewRaftLoggerZap(cfg.Logger.Named("raft")),
+	}
+
+	_ = membership.NewClusterFromURLsMap
+	if len(peers) == 0 {
+		// 不会走这里
+		n = raft.RestartNode(c) // 不会引导peers
+	} else {
+		n = raft.StartNode(c, peers) // ✅✈️ 🚗🚴🏻😁
+	}
+	raftStatusMu.Lock()
+	raftStatus = n.Status
+	raftStatusMu.Unlock()
+	return id, n, s, w
+}
+
+func restartNode(cfg config.ServerConfig, snapshot *raftpb.Snapshot) (types.ID, *membership.RaftCluster, raft.RaftNodeInterFace, *raft.MemoryStorage, *wal.WAL) {
+	var walsnap walpb.Snapshot
+	if snapshot != nil {
+		walsnap.Index, walsnap.Term = snapshot.Metadata.Index, snapshot.Metadata.Term
+	}
+	w, id, cid, st, ents := readWAL(cfg.Logger, cfg.WALDir(), walsnap, cfg.UnsafeNoFsync)
+
+	cfg.Logger.Info(
+		"restarting local member",
+		zap.String("cluster-id", cid.String()),
+		zap.String("local-member-id", id.String()),
+		zap.Uint64("commit-index", st.Commit),
+	)
+	cl := membership.NewCluster(cfg.Logger)
+	cl.SetID(id, cid)
+	s := raft.NewMemoryStorage()
+	if snapshot != nil {
+		s.ApplySnapshot(*snapshot) // 从持久化的内存存储中恢复出快照
+	}
+	s.SetHardState(st) // 从持久化的内存存储中恢复出状态
+	s.Append(ents)     // 从持久化的内存存储中恢复出日志
+	c := &raft.Config{
+		ID:              uint64(id),
+		ElectionTick:    cfg.ElectionTicks, // 返回选举权检查对应多少次tick触发次数
+		HeartbeatTick:   1,                 // 返回心跳检查对应多少次tick触发次数
+		Storage:         s,
+		MaxSizePerMsg:   maxSizePerMsg, //每次发消息的最大size
+		MaxInflightMsgs: maxInflightMsgs,
+		CheckQuorum:     true,
+		PreVote:         cfg.PreVote, // PreVote 是否启用PreVote
+		Logger:          NewRaftLoggerZap(cfg.Logger.Named("raft")),
+	}
+
+	n := raft.RestartNode(c)
+	raftStatusMu.Lock()
+	raftStatus = n.Status
+	raftStatusMu.Unlock()
+	return id, cl, n, s, w
+}
+
+func restartAsStandaloneNode(cfg config.ServerConfig, snapshot *raftpb.Snapshot) (types.ID, *membership.RaftCluster, raft.RaftNodeInterFace, *raft.MemoryStorage, *wal.WAL) {
+	var walsnap walpb.Snapshot
+	if snapshot != nil {
+		walsnap.Index, walsnap.Term = snapshot.Metadata.Index, snapshot.Metadata.Term
+	}
+	w, id, cid, st, ents := readWAL(cfg.Logger, cfg.WALDir(), walsnap, cfg.UnsafeNoFsync)
+
+	// discard the previously uncommitted entries
+	for i, ent := range ents {
+		if ent.Index > st.Commit {
+			cfg.Logger.Info(
+				"discarding uncommitted WAL entries",
+				zap.Uint64("entry-index", ent.Index),
+				zap.Uint64("commit-index-from-wal", st.Commit),
+				zap.Int("number-of-discarded-entries", len(ents)-i),
+			)
+			ents = ents[:i]
+			break
+		}
+	}
+
+	// force append the configuration change entries
+	toAppEnts := createConfigChangeEnts(
+		cfg.Logger,
+		getIDs(cfg.Logger, snapshot, ents),
+		uint64(id),
+		st.Term,
+		st.Commit,
+	)
+	ents = append(ents, toAppEnts...)
+
+	// force commit newly appended entries
+	err := w.Save(raftpb.HardState{}, toAppEnts)
+	if err != nil {
+		cfg.Logger.Fatal("failed to save hard state and entries", zap.Error(err))
+	}
+	if len(ents) != 0 {
+		st.Commit = ents[len(ents)-1].Index
+	}
+
+	cfg.Logger.Info(
+		"forcing restart member",
+		zap.String("cluster-id", cid.String()),
+		zap.String("local-member-id", id.String()),
+		zap.Uint64("commit-index", st.Commit),
+	)
+
+	cl := membership.NewCluster(cfg.Logger)
+	cl.SetID(id, cid)
+	s := raft.NewMemoryStorage()
+	if snapshot != nil {
+		s.ApplySnapshot(*snapshot) // 从持久化的内存存储中恢复出快照
+	}
+	s.SetHardState(st) // 从持久化的内存存储中恢复出状态
+	s.Append(ents)     // 从持久化的内存存储中恢复出日志
+	c := &raft.Config{
+		ID:              uint64(id),
+		ElectionTick:    cfg.ElectionTicks, // 返回选举权检查对应多少次tick触发次数
+		HeartbeatTick:   1,                 // 返回心跳检查对应多少次tick触发次数
+		Storage:         s,
+		MaxSizePerMsg:   maxSizePerMsg, //每次发消息的最大size
+		MaxInflightMsgs: maxInflightMsgs,
+		CheckQuorum:     true,
+		PreVote:         cfg.PreVote, // PreVote 是否启用PreVote
+		Logger:          NewRaftLoggerZap(cfg.Logger.Named("raft")),
+	}
+
+	n := raft.RestartNode(c)
+	raftStatus = n.Status
+	return id, cl, n, s, w
+}
+
+// getIDs returns an ordered set of IDs included in the given snapshot and
+// the entries. The given snapshot/entries can contain three kinds of
+// ID-related entry:
+// - ConfChangeAddNode, in which case the contained ID will be added into the set.
+// - ConfChangeRemoveNode, in which case the contained ID will be removed from the set.
+// - ConfChangeAddLearnerNode, in which the contained ID will be added into the set.
+func getIDs(lg *zap.Logger, snap *raftpb.Snapshot, ents []raftpb.Entry) []uint64 {
+	ids := make(map[uint64]bool)
+	if snap != nil {
+		for _, id := range snap.Metadata.ConfState.Voters {
+			ids[id] = true
+		}
+	}
+	for _, e := range ents {
+		if e.Type != raftpb.EntryConfChange {
+			continue
+		}
+		var cc raftpb.ConfChange
+		pbutil.MustUnmarshal(&cc, e.Data)
+		switch cc.Type {
+		case raftpb.ConfChangeAddLearnerNode:
+			ids[cc.NodeID] = true
+		case raftpb.ConfChangeAddNode:
+			ids[cc.NodeID] = true
+		case raftpb.ConfChangeRemoveNode:
+			delete(ids, cc.NodeID)
+		case raftpb.ConfChangeUpdateNode:
+			// do nothing
+		default:
+			lg.Panic("unknown ConfChange Type", zap.String("type", cc.Type.String()))
+		}
+	}
+	sids := make(types.Uint64Slice, 0, len(ids))
+	for id := range ids {
+		sids = append(sids, id)
+	}
+	sort.Sort(sids)
+	return []uint64(sids)
+}
+
+// createConfigChangeEnts creates a series of Raft entries (i.e.
+// EntryConfChange) to remove the set of given IDs from the cluster. The ID
+// `self` is _not_ removed, even if present in the set.
+// If `self` is not inside the given ids, it creates a Raft entry to add a
+// default member with the given `self`.
+func createConfigChangeEnts(lg *zap.Logger, ids []uint64, self uint64, term, index uint64) []raftpb.Entry {
+	found := false
+	for _, id := range ids {
+		if id == self {
+			found = true
+		}
+	}
+
+	var ents []raftpb.Entry
+	next := index + 1
+
+	// NB: always add self first, then remove other nodes. Raft will panic if the
+	// set of voters ever becomes empty.
+	if !found {
+		m := membership.Member{
+			ID:             types.ID(self),
+			RaftAttributes: membership.RaftAttributes{PeerURLs: []string{"http://localhost:2380"}},
+		}
+		ctx, err := json.Marshal(m)
+		if err != nil {
+			lg.Panic("failed to marshal member", zap.Error(err))
+		}
+		cc := &raftpb.ConfChange{
+			Type:    raftpb.ConfChangeAddNode,
+			NodeID:  self,
+			Context: ctx,
+		}
+		e := raftpb.Entry{
+			Type:  raftpb.EntryConfChange,
+			Data:  pbutil.MustMarshal(cc),
+			Term:  term,
+			Index: next,
+		}
+		ents = append(ents, e)
+		next++
+	}
+
+	for _, id := range ids {
+		if id == self {
+			continue
+		}
+		cc := &raftpb.ConfChange{
+			Type:   raftpb.ConfChangeRemoveNode,
+			NodeID: id,
+		}
+		e := raftpb.Entry{
+			Type:  raftpb.EntryConfChange,
+			Data:  pbutil.MustMarshal(cc),
+			Term:  term,
+			Index: next,
+		}
+		ents = append(ents, e)
+		next++
+	}
+
+	return ents
+}
+
+// raft.RaftNodeInterFace raft包中没有lock
 func (r *raftNode) tick() {
 	r.tickMu.Lock()
 	r.Tick()
@@ -418,283 +690,10 @@ func (r *raftNode) advanceTicks(ticks int) {
 	}
 }
 
-// 启动节点
-func startNode(cfg config.ServerConfig, cl *membership.RaftCluster, ids []types.ID) (id types.ID, n raft.Node, s *raft.MemoryStorage, w *wal.WAL) {
-	var err error
-	member := cl.MemberByName(cfg.Name)
-	metadata := pbutil.MustMarshal(
-		&pb.Metadata{
-			NodeID:    uint64(member.ID),
-			ClusterID: uint64(cl.ID()),
-		},
-	)
-	if w, err = wal.Create(cfg.Logger, cfg.WALDir(), metadata); err != nil {
-		cfg.Logger.Panic("创建WAL失败", zap.Error(err))
-	}
-	if cfg.UnsafeNoFsync { // 非安全存储 默认是 false    ,
-		w.SetUnsafeNoFsync()
-	}
-	peers := make([]raft.Peer, len(ids))
-	for i, id := range ids {
-		var ctx []byte
-		ctx, err = json.Marshal((*cl).Member(id)) // 本机
-		if err != nil {
-			cfg.Logger.Panic("序列化member失败", zap.Error(err))
-		}
-		peers[i] = raft.Peer{ID: uint64(id), Context: ctx}
-	}
-	id = member.ID // 本机ID
-	cfg.Logger.Info(
-		"启动本节点",
-		zap.String("local-member-id", id.String()),
-		zap.String("cluster-id", cl.ID().String()),
-	)
-	s = raft.NewMemoryStorage() // 创建内存存储
-	c := &raft.Config{
-		ID:              uint64(id),        // 本机ID
-		ElectionTick:    cfg.ElectionTicks, // 返回选举权检查对应多少次tick触发次数
-		HeartbeatTick:   1,                 // 返回心跳检查对应多少次tick触发次数
-		Storage:         s,                 // 存储 memory ✅
-		MaxSizePerMsg:   maxSizePerMsg,     // 每次发消息的最大size
-		MaxInflightMsgs: maxInflightMsgs,   // 512
-		CheckQuorum:     true,              // 检查是否是leader
-		// etcd_backend/embed/config.go:NewConfig 432
-		PreVote: cfg.PreVote, // true      // 是否启用PreVote扩展,建议开启
-		Logger:  NewRaftLoggerZap(cfg.Logger.Named("raft")),
-	}
-
-	_ = membership.NewClusterFromURLsMap
-	if len(peers) == 0 {
-		// 不会走这里
-		n = raft.RestartNode(c) // 不会引导peers
-	} else {
-		n = raft.StartNode(c, peers) // ✅✈️ 🚗🚴🏻😁
-	}
-	raftStatusMu.Lock()
-	raftStatus = n.Status
-	raftStatusMu.Unlock()
-	return id, n, s, w
-}
-
-func restartNode(cfg config.ServerConfig, snapshot *raftpb.Snapshot) (types.ID, *membership.RaftCluster, raft.Node, *raft.MemoryStorage, *wal.WAL) {
-	var walsnap walpb.Snapshot
-	if snapshot != nil {
-		walsnap.Index, walsnap.Term = snapshot.Metadata.Index, snapshot.Metadata.Term
-	}
-	w, id, cid, st, ents := readWAL(cfg.Logger, cfg.WALDir(), walsnap, cfg.UnsafeNoFsync)
-
-	cfg.Logger.Info(
-		"restarting local member",
-		zap.String("cluster-id", cid.String()),
-		zap.String("local-member-id", id.String()),
-		zap.Uint64("commit-index", st.Commit),
-	)
-	cl := membership.NewCluster(cfg.Logger)
-	cl.SetID(id, cid)
-	s := raft.NewMemoryStorage()
-	if snapshot != nil {
-		s.ApplySnapshot(*snapshot) // 从持久化的内存存储中恢复出快照
-	}
-	s.SetHardState(st) // 从持久化的内存存储中恢复出状态
-	s.Append(ents)     // 从持久化的内存存储中恢复出日志
-	c := &raft.Config{
-		ID:              uint64(id),
-		ElectionTick:    cfg.ElectionTicks, // 返回选举权检查对应多少次tick触发次数
-		HeartbeatTick:   1,                 // 返回心跳检查对应多少次tick触发次数
-		Storage:         s,
-		MaxSizePerMsg:   maxSizePerMsg, //每次发消息的最大size
-		MaxInflightMsgs: maxInflightMsgs,
-		CheckQuorum:     true,
-		PreVote:         cfg.PreVote, // PreVote 是否启用PreVote
-		Logger:          NewRaftLoggerZap(cfg.Logger.Named("raft")),
-	}
-
-	n := raft.RestartNode(c)
-	raftStatusMu.Lock()
-	raftStatus = n.Status
-	raftStatusMu.Unlock()
-	return id, cl, n, s, w
-}
-
-func restartAsStandaloneNode(cfg config.ServerConfig, snapshot *raftpb.Snapshot) (types.ID, *membership.RaftCluster, raft.Node, *raft.MemoryStorage, *wal.WAL) {
-	var walsnap walpb.Snapshot
-	if snapshot != nil {
-		walsnap.Index, walsnap.Term = snapshot.Metadata.Index, snapshot.Metadata.Term
-	}
-	w, id, cid, st, ents := readWAL(cfg.Logger, cfg.WALDir(), walsnap, cfg.UnsafeNoFsync)
-
-	// discard the previously uncommitted entries
-	for i, ent := range ents {
-		if ent.Index > st.Commit {
-			cfg.Logger.Info(
-				"discarding uncommitted WAL entries",
-				zap.Uint64("entry-index", ent.Index),
-				zap.Uint64("commit-index-from-wal", st.Commit),
-				zap.Int("number-of-discarded-entries", len(ents)-i),
-			)
-			ents = ents[:i]
-			break
-		}
-	}
-
-	// force append the configuration change entries
-	toAppEnts := createConfigChangeEnts(
-		cfg.Logger,
-		getIDs(cfg.Logger, snapshot, ents),
-		uint64(id),
-		st.Term,
-		st.Commit,
-	)
-	ents = append(ents, toAppEnts...)
-
-	// force commit newly appended entries
-	err := w.Save(raftpb.HardState{}, toAppEnts)
-	if err != nil {
-		cfg.Logger.Fatal("failed to save hard state and entries", zap.Error(err))
-	}
-	if len(ents) != 0 {
-		st.Commit = ents[len(ents)-1].Index
-	}
-
-	cfg.Logger.Info(
-		"forcing restart member",
-		zap.String("cluster-id", cid.String()),
-		zap.String("local-member-id", id.String()),
-		zap.Uint64("commit-index", st.Commit),
-	)
-
-	cl := membership.NewCluster(cfg.Logger)
-	cl.SetID(id, cid)
-	s := raft.NewMemoryStorage()
-	if snapshot != nil {
-		s.ApplySnapshot(*snapshot) // 从持久化的内存存储中恢复出快照
-	}
-	s.SetHardState(st) // 从持久化的内存存储中恢复出状态
-	s.Append(ents)     // 从持久化的内存存储中恢复出日志
-	c := &raft.Config{
-		ID:              uint64(id),
-		ElectionTick:    cfg.ElectionTicks, // 返回选举权检查对应多少次tick触发次数
-		HeartbeatTick:   1,                 // 返回心跳检查对应多少次tick触发次数
-		Storage:         s,
-		MaxSizePerMsg:   maxSizePerMsg, //每次发消息的最大size
-		MaxInflightMsgs: maxInflightMsgs,
-		CheckQuorum:     true,
-		PreVote:         cfg.PreVote, // PreVote 是否启用PreVote
-		Logger:          NewRaftLoggerZap(cfg.Logger.Named("raft")),
-	}
-
-	n := raft.RestartNode(c)
-	raftStatus = n.Status
-	return id, cl, n, s, w
-}
-
-// getIDs returns an ordered set of IDs included in the given snapshot and
-// the entries. The given snapshot/entries can contain three kinds of
-// ID-related entry:
-// - ConfChangeAddNode, in which case the contained ID will be added into the set.
-// - ConfChangeRemoveNode, in which case the contained ID will be removed from the set.
-// - ConfChangeAddLearnerNode, in which the contained ID will be added into the set.
-func getIDs(lg *zap.Logger, snap *raftpb.Snapshot, ents []raftpb.Entry) []uint64 {
-	ids := make(map[uint64]bool)
-	if snap != nil {
-		for _, id := range snap.Metadata.ConfState.Voters {
-			ids[id] = true
-		}
-	}
-	for _, e := range ents {
-		if e.Type != raftpb.EntryConfChange {
-			continue
-		}
-		var cc raftpb.ConfChange
-		pbutil.MustUnmarshal(&cc, e.Data)
-		switch cc.Type {
-		case raftpb.ConfChangeAddLearnerNode:
-			ids[cc.NodeID] = true
-		case raftpb.ConfChangeAddNode:
-			ids[cc.NodeID] = true
-		case raftpb.ConfChangeRemoveNode:
-			delete(ids, cc.NodeID)
-		case raftpb.ConfChangeUpdateNode:
-			// do nothing
-		default:
-			lg.Panic("unknown ConfChange Type", zap.String("type", cc.Type.String()))
-		}
-	}
-	sids := make(types.Uint64Slice, 0, len(ids))
-	for id := range ids {
-		sids = append(sids, id)
-	}
-	sort.Sort(sids)
-	return []uint64(sids)
-}
-
-// createConfigChangeEnts creates a series of Raft entries (i.e.
-// EntryConfChange) to remove the set of given IDs from the cluster. The ID
-// `self` is _not_ removed, even if present in the set.
-// If `self` is not inside the given ids, it creates a Raft entry to add a
-// default member with the given `self`.
-func createConfigChangeEnts(lg *zap.Logger, ids []uint64, self uint64, term, index uint64) []raftpb.Entry {
-	found := false
-	for _, id := range ids {
-		if id == self {
-			found = true
-		}
-	}
-
-	var ents []raftpb.Entry
-	next := index + 1
-
-	// NB: always add self first, then remove other nodes. Raft will panic if the
-	// set of voters ever becomes empty.
-	if !found {
-		m := membership.Member{
-			ID:             types.ID(self),
-			RaftAttributes: membership.RaftAttributes{PeerURLs: []string{"http://localhost:2380"}},
-		}
-		ctx, err := json.Marshal(m)
-		if err != nil {
-			lg.Panic("failed to marshal member", zap.Error(err))
-		}
-		cc := &raftpb.ConfChange{
-			Type:    raftpb.ConfChangeAddNode,
-			NodeID:  self,
-			Context: ctx,
-		}
-		e := raftpb.Entry{
-			Type:  raftpb.EntryConfChange,
-			Data:  pbutil.MustMarshal(cc),
-			Term:  term,
-			Index: next,
-		}
-		ents = append(ents, e)
-		next++
-	}
-
-	for _, id := range ids {
-		if id == self {
-			continue
-		}
-		cc := &raftpb.ConfChange{
-			Type:   raftpb.ConfChangeRemoveNode,
-			NodeID: id,
-		}
-		e := raftpb.Entry{
-			Type:  raftpb.EntryConfChange,
-			Data:  pbutil.MustMarshal(cc),
-			Term:  term,
-			Index: next,
-		}
-		ents = append(ents, e)
-		next++
-	}
-
-	return ents
-}
-
 // Demo 凸(艹皿艹 )   明明没有实现这个方法啊
 func (r *raftNode) Demo() {
-	_ = r.raftNodeConfig.Node
+	_ = r.raftNodeConfig.RaftNodeInterFace
 	//两层匿名结构体,该字段是个接口
 	_ = r.Step
-	//var _ raft.Node = raftNode{}
+	//var _ raft.RaftNodeInterFace = raftNode{}
 }

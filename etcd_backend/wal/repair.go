@@ -20,7 +20,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/ls-2018/etcd_cn/client/pkg/fileutil"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/fileutil"
 	"github.com/ls-2018/etcd_cn/etcd_backend/wal/walpb"
 	"go.uber.org/zap"
 )

@@ -21,7 +21,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/ls-2018/etcd_cn/client/pkg/types"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
 )
 
 // UniqueURLs 包含独特的URL,有非URL例外.

@@ -26,11 +26,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ls-2018/etcd_cn/client/pkg/logutil"
-	"github.com/ls-2018/etcd_cn/client/pkg/srv"
-	"github.com/ls-2018/etcd_cn/client/pkg/tlsutil"
-	"github.com/ls-2018/etcd_cn/client/pkg/transport"
-	"github.com/ls-2018/etcd_cn/client/pkg/types"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/logutil"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/srv"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/tlsutil"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/transport"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
 	"github.com/ls-2018/etcd_cn/etcd_backend/config"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v3compactor"
@@ -124,6 +124,8 @@ func init() {
 	defaultHostname, defaultHostStatus = netutil.GetDefaultHost()
 	fmt.Println("defaultHostname", defaultHostname)
 	fmt.Println("defaultHostStatus", defaultHostStatus)
+	//defaultHostname 172.17.0.2
+	//defaultHostStatus <nil>
 }
 
 // Config 保存配置etcd的参数etcd.

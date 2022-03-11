@@ -15,7 +15,7 @@
 package mockwait
 
 import (
-	"github.com/ls-2018/etcd_cn/client/pkg/testutil"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/testutil"
 	"github.com/ls-2018/etcd_cn/pkg/wait"
 )
 

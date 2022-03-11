@@ -19,7 +19,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ls-2018/etcd_cn/client/pkg/fileutil"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/fileutil"
 
 	"go.uber.org/zap"
 )

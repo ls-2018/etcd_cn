@@ -18,7 +18,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	clientv3 "github.com/ls-2018/etcd_cn/client/v3"
+	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -26,7 +26,7 @@ import (
 	"github.com/bgentry/speakeasy"
 	"github.com/ls-2018/etcd_cn/pkg/cobrautl"
 
-	"github.com/ls-2018/etcd_cn/client/v3/mirror"
+	"github.com/ls-2018/etcd_cn/client_sdk/v3/mirror"
 	"go.etcd.io/etcd/api/v3/mvccpb"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
 

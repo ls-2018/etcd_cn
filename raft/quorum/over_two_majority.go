@@ -14,7 +14,7 @@
 
 package quorum
 
-// JointConfig JointConfig和MajorityConfig功能是一样的，只是JointConfig的做法是
+// JointConfig JointConfig和MajorityConfig功能是一样的,只是JointConfig的做法是
 // 根据两个MajorityConfig的结果做一次融合性操作
 // MakeProgressTracker 初始化
 type JointConfig [2]MajorityConfig
@@ -36,15 +36,14 @@ func (c JointConfig) IDs() map[uint64]struct{} {
 	return m
 }
 
-// Describe
 func (c JointConfig) Describe(l AckedIndexer) string {
 	return MajorityConfig(c.IDs()).Describe(l)
 }
 
 // CommittedIndex 已提交索引
 func (c JointConfig) CommittedIndex(l AckedIndexer) Index {
-	// 返回的是二者最小的那个，这时候可以理解MajorityConfig.CommittedIndex()为什么Peers数
-	// 为0的时候返回无穷大了吧，如果返回0该函数就永远返回0了。
+	// 返回的是二者最小的那个,这时候可以理解MajorityConfig.CommittedIndex()为什么Peers数
+	// 为0的时候返回无穷大了吧,如果返回0该函数就永远返回0了.
 	idx0 := c[0].CommittedIndex(l)
 	idx1 := c[1].CommittedIndex(l)
 	if idx0 < idx1 {
@@ -56,8 +55,8 @@ func (c JointConfig) CommittedIndex(l AckedIndexer) Index {
 func (c JointConfig) VoteResult(votes map[uint64]bool) VoteResult {
 	r1 := c[0].VoteResult(votes)
 	r2 := c[1].VoteResult(votes)
-	// 相同的，下里面的判断逻辑基就可以知道MajorityConfig.VoteResult()在peers数为0返回选举
-	// 胜利的原因。
+	// 相同的,下里面的判断逻辑基就可以知道MajorityConfig.VoteResult()在peers数为0返回选举
+	// 胜利的原因.
 	if r1 == r2 {
 		return r1
 	}

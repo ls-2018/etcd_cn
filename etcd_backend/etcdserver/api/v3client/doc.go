@@ -17,7 +17,7 @@
 // Use v3client by creating an EtcdServer instance, then wrapping it with v3client.New:
 //
 //	import (
-//	    "github.com/ls-2018/etcd_cn/client/v3"
+//	    "github.com/ls-2018/etcd_cn/client_sdk/v3"
 //		"context"
 //
 //		"github.com/ls-2018/etcd_cn/etcd_backend/embed"

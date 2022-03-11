@@ -31,9 +31,9 @@ import (
 
 func main() {
 	if runtime.GOOS == "windows" {
-		fmt.Println(os.RemoveAll("/Users/liushuo/Desktop/source_code/etcd_cn/default.etcd"))
-	} else {
 		fmt.Println(os.RemoveAll("E:\\etcd_cn\\default.etcd"))
+	} else {
+		fmt.Println(os.RemoveAll("/Users/liushuo/Desktop/source_code/etcd_cn/default.etcd"))
 	}
 
 	etcdmain.Main(os.Args)

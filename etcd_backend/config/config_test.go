@@ -18,7 +18,7 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/ls-2018/etcd_cn/client/pkg/types"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
 
 	"go.uber.org/zap"
 )
@@ -72,7 +72,7 @@ func TestConfigVerifyLocalMember(t *testing.T) {
 		shouldError    bool
 	}{
 		{
-			// Node must exist in cluster
+			// RaftNodeInterFace must exist in cluster
 			"",
 			nil,
 			true,

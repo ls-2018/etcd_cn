@@ -17,9 +17,9 @@ package v3election
 import (
 	"context"
 	"errors"
-	clientv3 "github.com/ls-2018/etcd_cn/client/v3"
+	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 
-	"github.com/ls-2018/etcd_cn/client/v3/concurrency"
+	"github.com/ls-2018/etcd_cn/client_sdk/v3/concurrency"
 	epb "github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v3election/v3electionpb"
 )
 

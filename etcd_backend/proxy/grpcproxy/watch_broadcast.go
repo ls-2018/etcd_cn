@@ -19,7 +19,7 @@ import (
 	"sync"
 	"time"
 
-	clientv3 "github.com/ls-2018/etcd_cn/client/v3"
+	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 
 	"go.uber.org/zap"

@@ -23,7 +23,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/ls-2018/etcd_cn/client/pkg/fileutil"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/fileutil"
 	"github.com/ls-2018/etcd_cn/etcd_backend/wal/walpb"
 	"github.com/ls-2018/etcd_cn/raft/raftpb"
 	"go.uber.org/zap"

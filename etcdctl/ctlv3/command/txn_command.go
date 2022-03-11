@@ -18,7 +18,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	clientv3 "github.com/ls-2018/etcd_cn/client/v3"
+	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 	"os"
 	"strconv"
 	"strings"

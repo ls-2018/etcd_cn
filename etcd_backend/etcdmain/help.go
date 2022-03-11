@@ -106,7 +106,7 @@ Clustering:
   --discovery ''
     用于引导群集的发现URL.
   --discovery-fallback 'proxy'
-    发现服务失败时的预期行为(“退出”或“代理”).“proxy”仅支持v2 API. %q
+    发现服务失败时的预期行为("退出"或"代理")."proxy"仅支持v2 API. %q
   --discovery-proxy ''
     用于流量到发现服务的HTTP代理.
   --discovery-srv ''
@@ -179,9 +179,9 @@ Auth:
 
 Profiling and Monitoring:
   --enable-pprof 'false'
-    通过HTTP服务器启用运行时分析数据.地址位于客户端URL +“/ debug / pprof /”
+    通过HTTP服务器启用运行时分析数据.地址位于客户端URL +"/ debug / pprof /"
   --metrics 'basic'
-    设置导出的指标的详细程度,指定“扩展”以包括直方图指标(extensive,basic)
+    设置导出的指标的详细程度,指定"扩展"以包括直方图指标(extensive,basic)
   --listen-metrics-urls ''
     List of URLs to listen on for the metrics and health endpoints.
 

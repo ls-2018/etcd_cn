@@ -30,7 +30,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ls-2018/etcd_cn/client/pkg/testutil"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/testutil"
 	"github.com/ls-2018/etcd_cn/etcd_backend/lease"
 	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc/backend"
 	betesting "github.com/ls-2018/etcd_cn/etcd_backend/mvcc/backend/testing"

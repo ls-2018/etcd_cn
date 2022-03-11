@@ -18,11 +18,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	clientv3 "github.com/ls-2018/etcd_cn/client/v3"
+	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 	"os"
 	"sync"
 
-	"github.com/ls-2018/etcd_cn/client/v3/naming/endpoints"
+	"github.com/ls-2018/etcd_cn/client_sdk/v3/naming/endpoints"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 	"golang.org/x/time/rate"
 

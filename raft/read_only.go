@@ -21,6 +21,7 @@ import pb "github.com/ls-2018/etcd_cn/raft/raftpb"
 // this state from ready, it's also caller's duty to differentiate if this
 // state is what it requests through RequestCtx, eg. given a unique id as
 // RequestCtx
+// 这个参数就是Node.ReadIndex()的结果回调。
 type ReadState struct {
 	Index      uint64
 	RequestCtx []byte
@@ -110,7 +111,7 @@ func (ro *readOnly) advance(m pb.Message) []*readIndexStatus {
 	)
 
 	ctx := string(m.Context)
-	rss := []*readIndexStatus{}
+	var rss []*readIndexStatus
 
 	for _, okctx := range ro.readIndexQueue {
 		i++

@@ -38,8 +38,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 
-	"github.com/ls-2018/etcd_cn/client/pkg/fileutil"
-	"github.com/ls-2018/etcd_cn/client/pkg/types"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/fileutil"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
 	"github.com/ls-2018/etcd_cn/etcd_backend/auth"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/membership"
@@ -316,7 +316,7 @@ func (bh *backendHooks) SetConfState(confState *raftpb.ConfState) {
 type Temp struct {
 	Bepath   string
 	W        *wal.WAL
-	N        raft.Node
+	N        raft.RaftNodeInterFace
 	S        *raft.MemoryStorage
 	ID       types.ID
 	CL       *membership.RaftCluster
@@ -569,12 +569,12 @@ func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 		snapshotter: temp.SS,
 		r: *newRaftNode(
 			raftNodeConfig{
-				lg:          cfg.Logger,
-				isIDRemoved: func(id uint64) bool { return temp.CL.IsIDRemoved(types.ID(id)) },
-				Node:        temp.N,
-				heartbeat:   heartbeat,
-				raftStorage: temp.S,
-				storage:     NewStorage(temp.W, temp.SS),
+				lg:                cfg.Logger,
+				isIDRemoved:       func(id uint64) bool { return temp.CL.IsIDRemoved(types.ID(id)) },
+				RaftNodeInterFace: temp.N,
+				heartbeat:         heartbeat,
+				raftStorage:       temp.S,
+				storage:           NewStorage(temp.W, temp.SS),
 			},
 		),
 		id:                 temp.ID,
@@ -978,7 +978,7 @@ func (s *EtcdServer) Process(ctx context.Context, m raftpb.Message) error {
 	if m.Type == raftpb.MsgApp {
 		s.stats.RecvAppendReq(types.ID(m.From).String(), m.Size())
 	}
-	var _ raft.Node = raftNode{}
+	var _ raft.RaftNodeInterFace = raftNode{}
 	_ = raftNode{}.Step
 	return s.r.Step(ctx, m)
 }
@@ -1982,7 +1982,7 @@ func (s *EtcdServer) publishV3(timeout time.Duration) {
 		case nil:
 			close(s.readych)
 			lg.Info(
-				"published local member to cluster through raft",
+				"通过raft发布本地成员群集",
 				zap.String("local-member-id", s.ID().String()),
 				zap.String("local-member-attributes", fmt.Sprintf("%+v", s.attributes)),
 				zap.String("cluster-id", s.cluster.ID().String()),
@@ -1992,7 +1992,7 @@ func (s *EtcdServer) publishV3(timeout time.Duration) {
 
 		default:
 			lg.Warn(
-				"failed to publish local member to cluster through raft",
+				"通过raft发布本地成员群集失败",
 				zap.String("local-member-id", s.ID().String()),
 				zap.String("local-member-attributes", fmt.Sprintf("%+v", s.attributes)),
 				zap.Duration("publish-timeout", timeout),
@@ -2685,7 +2685,7 @@ func (s *EtcdServer) IsMemberExist(id types.ID) bool {
 
 // raftStatus 返回当前节点的raft状态
 func (s *EtcdServer) raftStatus() raft.Status {
-	return s.r.Node.Status()
+	return s.r.RaftNodeInterFace.Status()
 }
 
 // 碎片整理

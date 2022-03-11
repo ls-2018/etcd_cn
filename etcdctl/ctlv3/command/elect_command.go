@@ -17,12 +17,12 @@ package command
 import (
 	"context"
 	"errors"
-	clientv3 "github.com/ls-2018/etcd_cn/client/v3"
+	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github.com/ls-2018/etcd_cn/client/v3/concurrency"
+	"github.com/ls-2018/etcd_cn/client_sdk/v3/concurrency"
 	"github.com/ls-2018/etcd_cn/pkg/cobrautl"
 
 	"github.com/spf13/cobra"

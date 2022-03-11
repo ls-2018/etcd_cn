@@ -16,11 +16,11 @@ package grpcproxy
 
 import (
 	"encoding/json"
-	clientv3 "github.com/ls-2018/etcd_cn/client/v3"
+	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 	"os"
 
-	"github.com/ls-2018/etcd_cn/client/v3/concurrency"
-	"github.com/ls-2018/etcd_cn/client/v3/naming/endpoints"
+	"github.com/ls-2018/etcd_cn/client_sdk/v3/concurrency"
+	"github.com/ls-2018/etcd_cn/client_sdk/v3/naming/endpoints"
 
 	"go.uber.org/zap"
 	"golang.org/x/time/rate"

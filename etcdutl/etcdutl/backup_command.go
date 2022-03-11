@@ -20,8 +20,8 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/ls-2018/etcd_cn/client/pkg/fileutil"
-	"github.com/ls-2018/etcd_cn/client/pkg/types"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/fileutil"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
 	"github.com/ls-2018/etcd_cn/etcd_backend/datadir"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/membership"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/snap"

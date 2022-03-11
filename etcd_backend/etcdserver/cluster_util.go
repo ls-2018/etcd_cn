@@ -25,7 +25,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ls-2018/etcd_cn/client/pkg/types"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/membership"
 	"go.etcd.io/etcd/api/v3/version"
 

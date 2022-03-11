@@ -24,7 +24,7 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/ls-2018/etcd_cn/client/pkg/logutil"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/logutil"
 	cconfig "github.com/ls-2018/etcd_cn/etcd_backend/config"
 	"github.com/ls-2018/etcd_cn/etcd_backend/embed"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/rafthttp"
@@ -171,7 +171,7 @@ func newConfig() *config {
 	fs.Var(flags.NewUniqueURLsWithExceptions(embed.DefaultAdvertiseClientURLs, ""), "advertise-client-urls", "就是客户端(etcdctl/curl等)跟etcd服务进行交互时请求的url")
 	// 注意,不能写http://localhost:237,这样就是通知其他节点,可以用localhost访问,将导致ectd的客户端用localhost访问本地,导致访问不通.还有一个更可怕情况,ectd布置了代理层,代理层将一直通过locahost访问自己的代理接口,导致无限循环
 	fs.StringVar(&cfg.ec.Durl, "discovery", cfg.ec.Durl, "用于引导群集的发现URL.")
-	fs.Var(cfg.cf.fallback, "discovery-fallback", fmt.Sprintf("发现服务失败时的预期行为(“退出”或“代理”).“proxy”仅支持v2 API. %q", cfg.cf.fallback.Valids()))
+	fs.Var(cfg.cf.fallback, "discovery-fallback", fmt.Sprintf(`发现服务失败时的预期行为("退出"或"代理")."proxy"仅支持v2 API. %q`, cfg.cf.fallback.Valids()))
 
 	fs.StringVar(&cfg.ec.Dproxy, "discovery-proxy", cfg.ec.Dproxy, "用于流量到发现服务的HTTP代理.")
 	fs.StringVar(&cfg.ec.DNSCluster, "discovery-srv", cfg.ec.DNSCluster, "DNS srv域用于引导群集.")
@@ -241,10 +241,10 @@ func newConfig() *config {
 	fs.StringVar(&cfg.ec.AutoCompactionMode, "auto-compaction-mode", "periodic", "基于时间保留的三种模式：periodic, revision")
 
 	// 性能分析器 通过 HTTP
-	fs.BoolVar(&cfg.ec.EnablePprof, "enable-pprof", false, "通过HTTP服务器启用运行时分析数据.地址位于客户端URL +“/ debug / pprof /”")
+	fs.BoolVar(&cfg.ec.EnablePprof, "enable-pprof", false, `通过HTTP服务器启用运行时分析数据.地址位于客户端URL +/debug/pprof/`)
 
 	// additional metrics
-	fs.StringVar(&cfg.ec.Metrics, "metrics", cfg.ec.Metrics, "设置导出的指标的详细程度,指定“扩展”以包括直方图指标(extensive,basic)")
+	fs.StringVar(&cfg.ec.Metrics, "metrics", cfg.ec.Metrics, `设置导出的指标的详细程度,指定"扩展"以包括直方图指标(extensive,basic)`)
 
 	// experimental distributed tracing
 	fs.BoolVar(&cfg.ec.ExperimentalEnableDistributedTracing, "experimental-enable-distributed-tracing", false, "Enable experimental distributed  tracing using OpenTelemetry Tracing.")

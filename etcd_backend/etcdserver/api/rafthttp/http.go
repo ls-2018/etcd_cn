@@ -24,7 +24,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ls-2018/etcd_cn/client/pkg/types"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/snap"
 	pioutil "github.com/ls-2018/etcd_cn/pkg/ioutil"
 	"github.com/ls-2018/etcd_cn/raft/raftpb"
@@ -296,7 +296,7 @@ func (h *snapshotHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err := h.r.Process(context.TODO(), m); err != nil {
 		switch v := err.(type) {
 		// Process may return writerToResponse error when doing some
-		// additional checks before calling raft.Node.Step.
+		// additional checks before calling raft.RaftNodeInterFace.Step.
 		case writerToResponse:
 			v.WriteTo(w)
 		default:

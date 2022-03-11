@@ -29,8 +29,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ls-2018/etcd_cn/client/pkg/transport"
-	"github.com/ls-2018/etcd_cn/client/pkg/types"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/transport"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
 	"github.com/ls-2018/etcd_cn/etcd_backend/config"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/etcdhttp"

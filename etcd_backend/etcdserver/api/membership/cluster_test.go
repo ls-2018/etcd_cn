@@ -28,8 +28,8 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
 
-	"github.com/ls-2018/etcd_cn/client/pkg/testutil"
-	"github.com/ls-2018/etcd_cn/client/pkg/types"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/testutil"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v2store"
 	"github.com/ls-2018/etcd_cn/etcd_backend/mock/mockstore"
 	"github.com/ls-2018/etcd_cn/raft/raftpb"

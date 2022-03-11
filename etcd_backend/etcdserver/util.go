@@ -20,7 +20,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/ls-2018/etcd_cn/client/pkg/types"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/membership"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/rafthttp"
 	"go.uber.org/zap"

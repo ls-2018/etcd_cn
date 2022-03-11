@@ -20,7 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	clientv2 "github.com/ls-2018/etcd_cn/client/v2"
+	clientv2 "github.com/ls-2018/etcd_cn/client_sdk/v2"
 	"math"
 	"net/http"
 	"net/url"
@@ -31,8 +31,8 @@ import (
 	"time"
 
 	"github.com/jonboulle/clockwork"
-	"github.com/ls-2018/etcd_cn/client/pkg/transport"
-	"github.com/ls-2018/etcd_cn/client/pkg/types"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/transport"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
 	"go.uber.org/zap"
 )
 

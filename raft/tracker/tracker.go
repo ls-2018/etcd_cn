@@ -159,7 +159,7 @@ type matchAckIndexer map[uint64]*Progress
 
 var _ quorum.AckedIndexer = matchAckIndexer(nil)
 
-// AckedIndex 返回指定ID的Peer接收的最大日志索引，就是Progress.Match。
+// AckedIndex 返回指定ID的Peer接收的最大日志索引,就是Progress.Match.
 func (l matchAckIndexer) AckedIndex(id uint64) (quorum.Index, bool) {
 	pr, ok := l[id]
 	if !ok {
@@ -168,7 +168,7 @@ func (l matchAckIndexer) AckedIndex(id uint64) (quorum.Index, bool) {
 	return quorum.Index(pr.Match), true
 }
 
-// Committed 根据投票成员已确认的 返回已提交的最大日志索引。
+// Committed 根据投票成员已确认的 返回已提交的最大日志索引.
 func (p *ProgressTracker) Committed() uint64 {
 	return uint64(p.Voters.CommittedIndex(matchAckIndexer(p.Progress)))
 }

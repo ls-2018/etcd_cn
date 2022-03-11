@@ -18,7 +18,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ls-2018/etcd_cn/client/pkg/transport"
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/transport"
 
 	"github.com/spf13/cobra"
 	"gopkg.in/cheggaaa/pb.v1"
