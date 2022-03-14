@@ -35,7 +35,6 @@ import (
 	"github.com/coreos/go-semver/semver"
 	humanize "github.com/dustin/go-humanize"
 	"github.com/ls-2018/etcd_cn/etcd_backend/config"
-	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/fileutil"
@@ -589,8 +588,6 @@ func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 		consistIndex:       temp.CI,
 		firstCommitInTermC: make(chan struct{}),
 	}
-	serverID.With(prometheus.Labels{"server_id": temp.ID.String()}).Set(1)
-
 	srv.applyV2 = NewApplierV2(cfg.Logger, srv.v2store, srv.cluster)
 
 	srv.be = temp.BE
@@ -799,7 +796,6 @@ func (s *EtcdServer) Start() {
 	// Support for cluster_member_set_attr was added in 3.5.
 	s.GoAttach(func() { s.publish(s.Cfg.ReqTimeout()) })
 	s.GoAttach(s.purgeFile)
-	s.GoAttach(func() { monitorFileDescriptor(s.Logger(), s.stopping) })
 	s.GoAttach(s.monitorVersions)
 	s.GoAttach(s.linearizableReadLoop)
 	s.GoAttach(s.monitorKVHash)
@@ -846,7 +842,6 @@ func (s *EtcdServer) start() {
 			zap.String("cluster-id", s.Cluster().ID().String()),
 			zap.String("cluster-version", version.Cluster(s.ClusterVersion().String())),
 		)
-		membership.ClusterVersionMetrics.With(prometheus.Labels{"cluster_version": version.Cluster(s.ClusterVersion().String())}).Set(1)
 	} else {
 		lg.Info(
 			"starting etcd etcd",
@@ -1135,7 +1130,6 @@ func (s *EtcdServer) run() {
 						ctx := s.authStore.WithRoot(s.ctx)
 						_, lerr := s.LeaseRevoke(ctx, &pb.LeaseRevokeRequest{ID: int64(lid)})
 						if lerr == nil {
-							leaseExpired.Inc()
 						} else {
 							lg.Warn(
 								"failed to revoke lease",
@@ -1188,7 +1182,6 @@ func (s *EtcdServer) applyAll(ep *etcdProgress, apply *apply) {
 	s.applySnapshot(ep, apply) // 从持久化的内存存储中恢复出快照
 	s.applyEntries(ep, apply)
 
-	proposalsApplied.Set(float64(ep.appliedi))
 	s.applyWait.Trigger(ep.appliedi)
 
 	// wait for the raft routine to finish the disk writes before triggering a
@@ -1210,7 +1203,6 @@ func (s *EtcdServer) applySnapshot(ep *etcdProgress, apply *apply) {
 	if raft.IsEmptySnap(apply.snapshot) {
 		return
 	}
-	applySnapshotInProgress.Inc()
 
 	lg := s.Logger()
 	lg.Info(
@@ -1228,7 +1220,6 @@ func (s *EtcdServer) applySnapshot(ep *etcdProgress, apply *apply) {
 			zap.Uint64("incoming-leader-snapshot-index", apply.snapshot.Metadata.Index),
 			zap.Uint64("incoming-leader-snapshot-term", apply.snapshot.Metadata.Term),
 		)
-		applySnapshotInProgress.Dec()
 	}()
 
 	if apply.snapshot.Metadata.Index <= ep.appliedi {
@@ -1627,11 +1618,9 @@ func (s *EtcdServer) PromoteMember(ctx context.Context, id uint64) ([]*membershi
 	// other than ErrNotLeader, return the error.
 	resp, err := s.promoteMember(ctx, id)
 	if err == nil {
-		learnerPromoteSucceed.Inc()
 		return resp, nil
 	}
 	if err != ErrNotLeader {
-		learnerPromoteFailed.WithLabelValues(err.Error()).Inc()
 		return resp, err
 	}
 
@@ -2289,15 +2278,6 @@ func (s *EtcdServer) applyConfChange(cc raftpb.ConfChange, confState *raftpb.Con
 
 			if confChangeContext.Member.ID != s.id {
 				s.r.transport.AddPeer(confChangeContext.Member.ID, confChangeContext.PeerURLs)
-			}
-		}
-
-		// update the isLearner metric when this etcd id is equal to the id in raft member confChange
-		if confChangeContext.Member.ID == s.id {
-			if cc.Type == raftpb.ConfChangeAddLearnerNode {
-				isLearner.Set(1)
-			} else {
-				isLearner.Set(0)
 			}
 		}
 

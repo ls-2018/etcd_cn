@@ -124,7 +124,7 @@ func (rn *RawNode) Ready() Ready {
 
 // readyWithoutAccept 计算状态变化；返回ready结构体
 func (rn *RawNode) readyWithoutAccept() Ready {
-	return newReady(rn.raft, rn.prevSoftSt, rn.prevHardSt)// 计算状态变化
+	return newReady(rn.raft, rn.prevSoftSt, rn.prevHardSt) // 计算状态变化
 }
 
 // acceptReady is called when the consumer of the RawNode has decided to go

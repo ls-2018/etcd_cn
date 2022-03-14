@@ -376,7 +376,6 @@ func (l *raftLog) entries(i, maxsize uint64) ([]pb.Entry, error) {
 	return l.slice(i, l.lastIndex()+1, maxsize)
 }
 
-
 // ------------------------------------------	entrance	----------------------------------------
 
 // maybeAppend 当Follower节点或Candidate节点需要向raftLog 中追加Entry记录时,会通过raft.handleAppendEntriesO方法调用raftLog.maybeAppend
@@ -403,7 +402,6 @@ func (l *raftLog) maybeAppend(index, logTerm, committed uint64, ents ...pb.Entry
 	}
 	return 0, false
 }
-
 
 // 收到快照
 func (l *raftLog) restore(s pb.Snapshot) {

@@ -275,7 +275,6 @@ func (p *peer) send(m raftpb.Message) {
 				)
 			}
 		}
-		sentFailures.WithLabelValues(types.ID(m.To).String()).Inc()
 	}
 }
 

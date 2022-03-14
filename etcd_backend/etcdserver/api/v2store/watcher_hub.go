@@ -48,7 +48,6 @@ func newWatchHub(capacity int) *watcherHub {
 // If recursive is false, the first change after index at key will be sent to the event channel of the watcher.
 // If index is zero, watch will start from the current index + 1.
 func (wh *watcherHub) watch(key string, recursive, stream bool, index, storeIndex uint64) (Watcher, *v2error.Error) {
-	reportWatchRequest()
 	event, err := wh.EventHistory.scan(key, recursive, index)
 
 	if err != nil {
@@ -94,15 +93,12 @@ func (wh *watcherHub) watch(key string, recursive, stream bool, index, storeInde
 		w.removed = true
 		l.Remove(elem)
 		atomic.AddInt64(&wh.count, -1)
-		reportWatcherRemoved()
 		if l.Len() == 0 {
 			delete(wh.watchers, key)
 		}
 	}
 
 	atomic.AddInt64(&wh.count, 1)
-	reportWatcherAdded()
-
 	return w, nil
 }
 
@@ -151,7 +147,6 @@ func (wh *watcherHub) notifyWatchers(e *Event, nodePath string, deleted bool) {
 					w.removed = true
 					l.Remove(curr)
 					atomic.AddInt64(&wh.count, -1)
-					reportWatcherRemoved()
 				}
 			}
 

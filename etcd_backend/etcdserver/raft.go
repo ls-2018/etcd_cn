@@ -190,8 +190,8 @@ func startNode(cfg config.ServerConfig, cl *membership.RaftCluster, ids []types.
 		MaxSizePerMsg:   maxSizePerMsg,     // 每次发消息的最大size
 		MaxInflightMsgs: maxInflightMsgs,   // 512
 		CheckQuorum:     true,              // 检查是否是leader
-		PreVote: cfg.PreVote, // true      // 是否启用PreVote扩展,建议开启
-		Logger:  NewRaftLoggerZap(cfg.Logger.Named("raft")),
+		PreVote:         cfg.PreVote,       // true      // 是否启用PreVote扩展,建议开启
+		Logger:          NewRaftLoggerZap(cfg.Logger.Named("raft")),
 	}
 
 	_ = membership.NewClusterFromURLsMap

@@ -348,7 +348,7 @@ func (b *backend) Snapshot() Snapshot {
 				)
 
 			case <-stopc:
-				snapshotTransferSec.Observe(time.Since(start).Seconds())
+
 				return
 			}
 		}
@@ -433,8 +433,6 @@ func (b *backend) Defrag() error {
 // 碎片整理
 func (b *backend) defrag() error {
 	now := time.Now()
-	isDefragActive.Set(1)
-	defer isDefragActive.Set(0)
 
 	// TODO: make this non-blocking?
 	// lock batchTx to ensure nobody is using previous tx, and then
@@ -533,7 +531,6 @@ func (b *backend) defrag() error {
 	atomic.StoreInt64(&b.sizeInUse, size-(int64(db.Stats().FreePageN)*int64(db.Info().PageSize)))
 
 	took := time.Since(now)
-	defragSec.Observe(took.Seconds())
 
 	size2, sizeInUse2 := b.Size(), b.SizeInUse()
 	if b.lg != nil {

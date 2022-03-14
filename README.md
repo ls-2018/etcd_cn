@@ -198,17 +198,34 @@ http://127.0.0.1:2379/members
 - https://www.jianshu.com/p/267e1d626c22
 - https://blog.csdn.net/qq_40504851/category_10905363.html
 - https://blog.csdn.net/cyq6239075/category_9756361.html             ☆
-
-```
-tickHeartbeart 会同时推进两个计数器  heartbeatElapsed 和 electionElapsed .
-
-(1) heartbeatElapsed
-
-当 heartbeatElapsed 超时,发送 MsgBeat 消息给当前节点,当前节点收到消息之后会广播心跳消息(bcastHeartbeat)给其他节点 MsgHeartbeat 消息.
-
-当 Follower 或者 Candidate 收到 MsgHeartbeat 消息会重置 electionElapsed 为 0,同时会响应 MsgHeartbeatResp 消息.
-
-当 Leader 收到 MsgHeartbeatResp 消息,会更新对应节点的状态(存活、日志复制状态等)
+-【一文搞懂Raft算法】https://www.cnblogs.com/xybaby/p/10124083.html    
+-【寻找一种易于理解的一致性算法（扩展版）】https://github.com/maemual/raft-zh_cn/blob/master/raft-zh_cn.md  
+-【raft演示动画】https://raft.github.io/raftscope/index.html    
+-【理解 raft 算法】https://sanyuesha.com/2019/04/18/raft/  
+-【理解Raft一致性算法—一篇学术论文总结】https://mp.weixin.qq.com/s/RkMeYyUck1WQPjNiGvahKQ  
+-【Raft协议原理详解】https://zhuanlan.zhihu.com/p/91288179  
+-【Raft算法详解】https://zhuanlan.zhihu.com/p/32052223
+-【etcd技术内幕】一本关于etcd不错的书籍  
+-【高可用分布式存储 etcd 的实现原理】https://draveness.me/etcd-introduction/  ```
+-【Raft 在 etcd 中的实现】https://blog.betacat.io/post/raft-implementation-in-etcd/  tickHeartbeart 会同时推进两个计数器  heartbeatElapsed 和 electionElapsed .
+-【etcd Raft库解析】https://www.codedump.info/post/20180922-etcd-raft/  
+-【etcd raft 设计与实现《一》】https://zhuanlan.zhihu.com/p/51063866    (1) heartbeatElapsed
+-【raftexample 源码解读】https://zhuanlan.zhihu.com/p/91314329  
+-【etcd实现-全流程分析】https://zhuanlan.zhihu.com/p/135891186    当 heartbeatElapsed 超时,发送 MsgBeat 消息给当前节点,当前节点收到消息之后会广播心跳消息(bcastHeartbeat)给其他节点 MsgHeartbeat 消息.
+-【线性一致性和Raft】https://pingcap.com/zh/blog/linearizability-and-raft  
+-【etcd raft 设计与实现《二》】https://zhuanlan.zhihu.com/p/51065416  当 Follower 或者 Candidate 收到 MsgHeartbeat 消息会重置 electionElapsed 为 0,同时会响应 MsgHeartbeatResp 消息.
+-【《深入浅出etcd》part 3 – 解析etcd的日志同步机制】https://mp.weixin.qq.com/s/o_g5z77VZbImgTqjNBSktA    
+-【一文入门ETCD】https://juejin.cn/post/6844904031186321416   
+-【etcd：从应用场景到实现原理的全方位解读】https://www.infoq.cn/article/etcd-interpretation-application-scenario-implement-principle   
+-【Etcd 架构与实现解析】http://jolestar.com/etcd-architecture/   
+-【linux单节点和集群的etcd】https://www.jianshu.com/p/07ca88b6ff67   
+-【软负载均衡与硬负载均衡、4层与7层负载均衡】https://cloud.tencent.com/developer/article/1446391   
+-【Etcd Lock详解】https://tangxusc.github.io/blog/2019/05/etcd-lock%E8%AF%A6%E8%A7%A3/   
+-【etcd基础与使用】https://zhuyasen.com/post/etcd.html   
+-【ETCD核心机制解析】https://www.cnblogs.com/FG123/p/13632095.html      
+-【etcd watch机制】http://liangjf.top/2019/12/31/110.etcd-watch%E6%9C%BA%E5%88%B6%E5%88%86%E6%9E%90/   
+-【ETCD 源码学习--Watch(server)】https://www.codeleading.com/article/15455457381/   
+-【etcdV3—watcher服务端源码解析】https://blog.csdn.net/stayfoolish_yj/article/details/104497233
 
 (2) electionElapsed
 

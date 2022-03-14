@@ -54,7 +54,6 @@ func (s *peerStatus) activate() {
 		s.active = true
 		s.since = time.Now()
 
-		activePeers.WithLabelValues(s.local.String(), s.id.String()).Inc()
 	}
 }
 
@@ -67,8 +66,6 @@ func (s *peerStatus) deactivate(failure failureType, reason string) {
 		s.active = false
 		s.since = time.Time{}
 
-		activePeers.WithLabelValues(s.local.String(), s.id.String()).Dec()
-		disconnectedPeers.WithLabelValues(s.local.String(), s.id.String()).Inc()
 		return
 	}
 

@@ -591,7 +591,6 @@ func (c *RaftCluster) SetVersion(ver *semver.Version, onSet func(*zap.Logger, *s
 			zap.String("cluster-version", version.Cluster(ver.String())),
 		)
 	}
-	oldVer := c.version
 	c.version = ver
 	mustDetectDowngrade(c.lg, c.version, c.downgradeInfo)
 	if c.v2store != nil {
@@ -600,10 +599,6 @@ func (c *RaftCluster) SetVersion(ver *semver.Version, onSet func(*zap.Logger, *s
 	if c.be != nil && shouldApplyV3 {
 		mustSaveClusterVersionToBackend(c.be, ver)
 	}
-	if oldVer != nil {
-		ClusterVersionMetrics.With(prometheus.Labels{"cluster_version": version.Cluster(oldVer.String())}).Set(0)
-	}
-	ClusterVersionMetrics.With(prometheus.Labels{"cluster_version": version.Cluster(ver.String())}).Set(1)
 	onSet(c.lg, ver)
 }
 

@@ -67,7 +67,6 @@ func newSnapshotSender(tr *Transport, picker *urlPicker, to types.ID, status *pe
 func (s *snapshotSender) stop() { close(s.stopc) }
 
 func (s *snapshotSender) send(merged snap.Message) {
-	start := time.Now()
 
 	m := merged.Message
 	to := types.ID(m.To).String()
@@ -89,11 +88,6 @@ func (s *snapshotSender) send(merged snap.Message) {
 			zap.String("size", snapshotSize),
 		)
 	}
-
-	snapshotSendInflights.WithLabelValues(to).Inc()
-	defer func() {
-		snapshotSendInflights.WithLabelValues(to).Dec()
-	}()
 
 	err := s.post(req)
 	defer merged.CloseWithError(err)
@@ -122,8 +116,6 @@ func (s *snapshotSender) send(merged snap.Message) {
 		// machine knows about it, it would pause a while and retry sending
 		// new snapshot message.
 		s.r.ReportSnapshot(m.To, raft.SnapshotFailure)
-		sentFailures.WithLabelValues(to).Inc()
-		snapshotSendFailures.WithLabelValues(to).Inc()
 		return
 	}
 	s.status.activate()
@@ -139,9 +131,6 @@ func (s *snapshotSender) send(merged snap.Message) {
 		)
 	}
 
-	sentBytes.WithLabelValues(to).Add(float64(merged.TotalSize))
-	snapshotSend.WithLabelValues(to).Inc()
-	snapshotSendSeconds.WithLabelValues(to).Observe(time.Since(start).Seconds())
 }
 
 // post posts the given request.

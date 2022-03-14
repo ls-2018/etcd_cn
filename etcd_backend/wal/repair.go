@@ -15,14 +15,12 @@
 package wal
 
 import (
-	"io"
-	"os"
-	"path/filepath"
-	"time"
-
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/fileutil"
 	"github.com/ls-2018/etcd_cn/etcd_backend/wal/walpb"
 	"go.uber.org/zap"
+	"io"
+	"os"
+	"path/filepath"
 )
 
 // Repair tries to repair ErrUnexpectedEOF in the
@@ -86,13 +84,10 @@ func Repair(lg *zap.Logger, dirpath string) bool {
 				return false
 			}
 
-			start := time.Now()
 			if err = fileutil.Fsync(f.File); err != nil {
 				lg.Warn("failed to fsync", zap.String("path", f.Name()), zap.Error(err))
 				return false
 			}
-			walFsyncSec.Observe(time.Since(start).Seconds())
-
 			lg.Info("repaired", zap.String("path", f.Name()), zap.Error(io.ErrUnexpectedEOF))
 			return true
 

@@ -24,10 +24,7 @@ import (
 
 func (s *store) scheduleCompaction(compactMainRev int64, keep map[revision]struct{}) bool {
 	totalStart := time.Now()
-	defer func() { dbCompactionTotalMs.Observe(float64(time.Since(totalStart) / time.Millisecond)) }()
 	keyCompactions := 0
-	defer func() { dbCompactionKeysCounter.Add(float64(keyCompactions)) }()
-	defer func() { dbCompactionLast.Set(float64(time.Now().Unix())) }()
 
 	end := make([]byte, 8)
 	binary.BigEndian.PutUint64(end, uint64(compactMainRev+1))
@@ -67,7 +64,6 @@ func (s *store) scheduleCompaction(compactMainRev int64, keep map[revision]struc
 		tx.Unlock()
 		// Immediately commit the compaction deletes instead of letting them accumulate in the write buffer
 		s.b.ForceCommit()
-		dbCompactionPauseMs.Observe(float64(time.Since(start) / time.Millisecond))
 
 		select {
 		case <-time.After(10 * time.Millisecond):

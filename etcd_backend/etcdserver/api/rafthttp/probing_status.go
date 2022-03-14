@@ -89,7 +89,6 @@ func monitorProbingStatus(lg *zap.Logger, s probing.Status, id string, roundTrip
 					)
 				}
 			}
-			rttSecProm.WithLabelValues(id).Observe(s.SRTT().Seconds())
 
 		case <-s.StopNotify():
 			return

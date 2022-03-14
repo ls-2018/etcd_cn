@@ -17,7 +17,12 @@ package snap
 import (
 	"errors"
 	"fmt"
+	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/snap/snappb"
+	"github.com/ls-2018/etcd_cn/etcd_backend/wal/walpb"
+	pioutil "github.com/ls-2018/etcd_cn/pkg/ioutil"
+	"github.com/ls-2018/etcd_cn/pkg/pbutil"
 	"github.com/ls-2018/etcd_cn/raft"
+	"github.com/ls-2018/etcd_cn/raft/raftpb"
 	"hash/crc32"
 	"io/ioutil"
 	"os"
@@ -25,13 +30,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"time"
-
-	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/snap/snappb"
-	"github.com/ls-2018/etcd_cn/etcd_backend/wal/walpb"
-	pioutil "github.com/ls-2018/etcd_cn/pkg/ioutil"
-	"github.com/ls-2018/etcd_cn/pkg/pbutil"
-	"github.com/ls-2018/etcd_cn/raft/raftpb"
 
 	"go.uber.org/zap"
 )
@@ -50,12 +48,12 @@ var (
 	}
 )
 
+// Snapshotter 快照管理器
 type Snapshotter struct {
 	lg  *zap.Logger
 	dir string
 }
 
-// New OK
 func New(lg *zap.Logger, dir string) *Snapshotter {
 	if lg == nil {
 		lg = zap.NewNop()
@@ -73,8 +71,8 @@ func (s *Snapshotter) SaveSnap(snapshot raftpb.Snapshot) error {
 	return s.save(&snapshot)
 }
 
+// 保存一个快照
 func (s *Snapshotter) save(snapshot *raftpb.Snapshot) error {
-	start := time.Now()
 
 	fname := fmt.Sprintf("%016x-%016x%s", snapshot.Metadata.Term, snapshot.Metadata.Index, snapSuffix)
 	b := pbutil.MustMarshal(snapshot)
@@ -84,33 +82,28 @@ func (s *Snapshotter) save(snapshot *raftpb.Snapshot) error {
 	if err != nil {
 		return err
 	}
-	snapMarshallingSec.Observe(time.Since(start).Seconds())
 
 	spath := filepath.Join(s.dir, fname)
-
-	fsyncStart := time.Now()
 	err = pioutil.WriteAndSyncFile(spath, d, 0666)
-	snapFsyncSec.Observe(time.Since(fsyncStart).Seconds())
 
 	if err != nil {
-		s.lg.Warn("failed to write a snap file", zap.String("path", spath), zap.Error(err))
+		s.lg.Warn("写快照文件失败", zap.String("path", spath), zap.Error(err))
 		rerr := os.Remove(spath)
 		if rerr != nil {
-			s.lg.Warn("failed to remove a broken snap file", zap.String("path", spath), zap.Error(err))
+			s.lg.Warn("删除损坏的snap文件失败", zap.String("path", spath), zap.Error(err))
 		}
 		return err
 	}
 
-	snapSaveSec.Observe(time.Since(start).Seconds())
 	return nil
 }
 
-// Load returns the newest snapshot.
+// Load 返回最新的快照
 func (s *Snapshotter) Load() (*raftpb.Snapshot, error) {
 	return s.loadMatching(func(*raftpb.Snapshot) bool { return true })
 }
 
-// LoadNewestAvailable loads the newest snapshot available that is in walSnaps.
+// LoadNewestAvailable 返回最新的快照
 func (s *Snapshotter) LoadNewestAvailable(walSnaps []walpb.Snapshot) (*raftpb.Snapshot, error) {
 	return s.loadMatching(func(snapshot *raftpb.Snapshot) bool {
 		m := snapshot.Metadata

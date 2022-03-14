@@ -176,6 +176,7 @@ func (ms *MemoryStorage) FirstIndex() (uint64, error) {
 	defer ms.Unlock()
 	return ms.firstIndex(), nil
 }
+
 // 第一条日志索引,默认ents里有一个索引为0的EntryNormal
 func (ms *MemoryStorage) firstIndex() uint64 {
 	return ms.ents[0].Index + 1

@@ -18,17 +18,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"hash/crc32"
-	"math"
-	"sync"
-	"time"
-
 	"github.com/ls-2018/etcd_cn/etcd_backend/lease"
 	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc/backend"
 	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc/buckets"
 	"github.com/ls-2018/etcd_cn/pkg/schedule"
 	"github.com/ls-2018/etcd_cn/pkg/traceutil"
 	"go.etcd.io/etcd/api/v3/mvccpb"
+	"hash/crc32"
+	"math"
+	"sync"
 
 	"go.uber.org/zap"
 )
@@ -156,17 +154,14 @@ func (s *store) compactBarrier(ctx context.Context, ch chan struct{}) {
 
 func (s *store) Hash() (hash uint32, revision int64, err error) {
 	// TODO: hash and revision could be inconsistent, one possible fix is to add s.revMu.RLock() at the beginning of function, which is costly
-	start := time.Now()
 
 	s.b.ForceCommit()
 	h, err := s.b.Hash(buckets.DefaultIgnores)
 
-	hashSec.Observe(time.Since(start).Seconds())
 	return h, s.currentRev, err
 }
 
 func (s *store) HashByRev(rev int64) (hash uint32, currentRev int64, compactRev int64, err error) {
-	start := time.Now()
 
 	s.mu.RLock()
 	s.revMu.RLock()
@@ -214,7 +209,6 @@ func (s *store) HashByRev(rev int64) (hash uint32, currentRev int64, compactRev 
 	})
 	hash = h.Sum32()
 
-	hashRevSec.Observe(time.Since(start).Seconds())
 	return hash, currentRev, compactRev, err
 }
 
@@ -256,9 +250,7 @@ func (s *store) compact(trace *traceutil.Trace, rev int64) (<-chan struct{}, err
 			s.compactBarrier(ctx, ch)
 			return
 		}
-		start := time.Now()
 		keep := s.kvindex.Compact(rev)
-		indexCompactionPauseMs.Observe(float64(time.Since(start) / time.Millisecond))
 		if !s.scheduleCompaction(rev, keep) {
 			s.compactBarrier(context.TODO(), ch)
 			return
@@ -325,8 +317,6 @@ func (s *store) Restore(b backend.Backend) error {
 }
 
 func (s *store) restore() error {
-	s.setupMetricsReporter()
-
 	min, max := newRevBytes(), newRevBytes()
 	revToBytes(revision{main: 1}, min)
 	revToBytes(revision{main: math.MaxInt64, sub: math.MaxInt64}, max)
@@ -357,7 +347,6 @@ func (s *store) restore() error {
 	}
 
 	// index keys concurrently as they're loaded in from tx
-	keysGauge.Set(0)
 	rkvc, revc := restoreIntoIndex(s.lg, s.kvindex)
 	for {
 		keys, vals := tx.UnsafeRange(buckets.Key, min, max, int64(restoreChunkKeys))
@@ -505,36 +494,6 @@ func (s *store) Close() error {
 	close(s.stopc)
 	s.fifoSched.Stop()
 	return nil
-}
-
-func (s *store) setupMetricsReporter() {
-	b := s.b
-	reportDbTotalSizeInBytesMu.Lock()
-	reportDbTotalSizeInBytes = func() float64 { return float64(b.Size()) }
-	reportDbTotalSizeInBytesMu.Unlock()
-	reportDbTotalSizeInBytesDebugMu.Lock()
-	reportDbTotalSizeInBytesDebug = func() float64 { return float64(b.Size()) }
-	reportDbTotalSizeInBytesDebugMu.Unlock()
-	reportDbTotalSizeInUseInBytesMu.Lock()
-	reportDbTotalSizeInUseInBytes = func() float64 { return float64(b.SizeInUse()) }
-	reportDbTotalSizeInUseInBytesMu.Unlock()
-	reportDbOpenReadTxNMu.Lock()
-	reportDbOpenReadTxN = func() float64 { return float64(b.OpenReadTxN()) }
-	reportDbOpenReadTxNMu.Unlock()
-	reportCurrentRevMu.Lock()
-	reportCurrentRev = func() float64 {
-		s.revMu.RLock()
-		defer s.revMu.RUnlock()
-		return float64(s.currentRev)
-	}
-	reportCurrentRevMu.Unlock()
-	reportCompactRevMu.Lock()
-	reportCompactRev = func() float64 {
-		s.revMu.RLock()
-		defer s.revMu.RUnlock()
-		return float64(s.compactMainRev)
-	}
-	reportCompactRevMu.Unlock()
 }
 
 // appendMarkTombstone appends tombstone mark to normal revision bytes.

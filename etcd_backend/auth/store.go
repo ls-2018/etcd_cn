@@ -1060,8 +1060,6 @@ func NewAuthStore(lg *zap.Logger, be backend.Backend, tp TokenProvider, bcryptCo
 		as.commitRevision(tx)
 	}
 
-	as.setupMetricsReporter()
-
 	tx.Unlock()
 	be.ForceCommit()
 
@@ -1304,12 +1302,4 @@ func (as *authStore) HasRole(user, role string) bool {
 
 func (as *authStore) BcryptCost() int {
 	return as.bcryptCost
-}
-
-func (as *authStore) setupMetricsReporter() {
-	reportCurrentAuthRevMu.Lock()
-	reportCurrentAuthRev = func() float64 {
-		return float64(as.Revision())
-	}
-	reportCurrentAuthRevMu.Unlock()
 }

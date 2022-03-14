@@ -88,7 +88,7 @@ type WAL struct {
 	decoder   *decoder       // wal记录的反序列化器
 	readClose func() error   // closer for decode reader
 
-	unsafeNoSync bool // if set, do not fsync
+	unsafeNoSync bool //  非安全存储 默认是 false
 
 	mu      sync.Mutex
 	enti    uint64   // index of the last entry saved to the wal
@@ -217,7 +217,6 @@ func Create(lg *zap.Logger, dirpath string, metadata []byte) (*WAL, error) {
 		}
 		return nil
 	}
-	start := time.Now()
 	if perr = fileutil.Fsync(pdir); perr != nil {
 		dirCloser()
 		lg.Warn(
@@ -228,7 +227,6 @@ func Create(lg *zap.Logger, dirpath string, metadata []byte) (*WAL, error) {
 		)
 		return nil, perr
 	}
-	walFsyncSec.Observe(time.Since(start).Seconds())
 	if err = dirCloser(); err != nil {
 		return nil, err
 	}
@@ -238,7 +236,7 @@ func Create(lg *zap.Logger, dirpath string, metadata []byte) (*WAL, error) {
 
 // SetUnsafeNoFsync ok
 func (w *WAL) SetUnsafeNoFsync() {
-	w.unsafeNoSync = true
+	w.unsafeNoSync = true // 非安全存储 默认是 false    ,
 }
 
 func (w *WAL) cleanupWAL(lg *zap.Logger) {
@@ -758,11 +756,10 @@ func (w *WAL) cut() error {
 	if err = os.Rename(newTail.Name(), fpath); err != nil {
 		return err
 	}
-	start := time.Now()
+
 	if err = fileutil.Fsync(w.dirFile); err != nil {
 		return err
 	}
-	walFsyncSec.Observe(time.Since(start).Seconds())
 
 	// reopen newTail with its new path so calls to Name() match the wal filename format
 	newTail.Close()
@@ -786,6 +783,7 @@ func (w *WAL) cut() error {
 	return nil
 }
 
+// 强制wal日志刷盘
 func (w *WAL) sync() error {
 	if w.encoder != nil {
 		if err := w.encoder.flush(); err != nil {
@@ -793,23 +791,22 @@ func (w *WAL) sync() error {
 		}
 	}
 
-	if w.unsafeNoSync {
+	if w.unsafeNoSync { //  非安全存储 默认是 false
 		return nil
 	}
 
 	start := time.Now()
+	// Fdatasync类似于fsync()，但不会刷新修改后的元数据，除非为了允许正确处理后续的数据检索而需要这些元数据。
 	err := fileutil.Fdatasync(w.tail().File)
 
 	took := time.Since(start)
 	if took > warnSyncDuration {
 		w.lg.Warn(
-			"slow fdatasync",
+			"缓慢 fdatasync",
 			zap.Duration("took", took),
 			zap.Duration("expected-duration", warnSyncDuration),
 		)
 	}
-	walFsyncSec.Observe(took.Seconds())
-
 	return err
 }
 
@@ -949,11 +946,8 @@ func (w *WAL) Save(st raftpb.HardState, ents []raftpb.Entry) error {
 	return w.cut()
 }
 
+// SaveSnapshot 保存一条生成快照的日志
 func (w *WAL) SaveSnapshot(e walpb.Snapshot) error {
-	if err := walpb.ValidateSnapshotForWrite(&e); err != nil {
-		return err
-	}
-
 	b := pbutil.MustMarshal(&e)
 
 	w.mu.Lock()
@@ -963,20 +957,22 @@ func (w *WAL) SaveSnapshot(e walpb.Snapshot) error {
 	if err := w.encoder.encode(rec); err != nil {
 		return err
 	}
-	// update enti only when snapshot is ahead of last index
+	// 只有当快照领先于最后的索引时才更新enti
 	if w.enti < e.Index {
 		w.enti = e.Index
 	}
 	return w.sync()
 }
 
+// 保存
 func (w *WAL) saveCrc(prevCrc uint32) error {
 	return w.encoder.encode(&walpb.Record{Type: crcType, Crc: prevCrc})
 }
 
+// 返回最后一个锁文件
 func (w *WAL) tail() *fileutil.LockedFile {
 	if len(w.locks) > 0 {
-		return w.locks[len(w.locks)-1]
+		return w.locks[len(w.locks)-1] // 返回最后一个锁文件
 	}
 	return nil
 }

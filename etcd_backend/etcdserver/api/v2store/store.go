@@ -128,20 +128,10 @@ func (s *store) Get(nodePath string, recursive, sorted bool) (*Event, error) {
 	defer func() {
 		if err == nil {
 			s.Stats.Inc(GetSuccess)
-			if recursive {
-				reportReadSuccess(GetRecursive)
-			} else {
-				reportReadSuccess(Get)
-			}
 			return
 		}
 
 		s.Stats.Inc(GetFail)
-		if recursive {
-			reportReadFailure(GetRecursive)
-		} else {
-			reportReadFailure(Get)
-		}
 	}()
 
 	n, err := s.internalGet(nodePath)
@@ -168,12 +158,10 @@ func (s *store) Create(nodePath string, dir bool, value string, unique bool, exp
 	defer func() {
 		if err == nil {
 			s.Stats.Inc(CreateSuccess)
-			reportWriteSuccess(Create)
 			return
 		}
 
 		s.Stats.Inc(CreateFail)
-		reportWriteFailure(Create)
 	}()
 
 	e, err := s.internalCreate(nodePath, dir, value, unique, false, expireOpts.ExpireTime, Create)
@@ -197,12 +185,10 @@ func (s *store) Set(nodePath string, dir bool, value string, expireOpts TTLOptio
 	defer func() {
 		if err == nil {
 			s.Stats.Inc(SetSuccess)
-			reportWriteSuccess(Set)
 			return
 		}
 
 		s.Stats.Inc(SetFail)
-		reportWriteFailure(Set)
 	}()
 
 	// Get prevNode value
@@ -267,12 +253,10 @@ func (s *store) CompareAndSwap(nodePath string, prevValue string, prevIndex uint
 	defer func() {
 		if err == nil {
 			s.Stats.Inc(CompareAndSwapSuccess)
-			reportWriteSuccess(CompareAndSwap)
 			return
 		}
 
 		s.Stats.Inc(CompareAndSwapFail)
-		reportWriteFailure(CompareAndSwap)
 	}()
 
 	nodePath = path.Clean(path.Join("/", nodePath))
@@ -342,12 +326,10 @@ func (s *store) Delete(nodePath string, dir, recursive bool) (*Event, error) {
 	defer func() {
 		if err == nil {
 			s.Stats.Inc(DeleteSuccess)
-			reportWriteSuccess(Delete)
 			return
 		}
 
 		s.Stats.Inc(DeleteFail)
-		reportWriteFailure(Delete)
 	}()
 
 	nodePath = path.Clean(path.Join("/", nodePath))
@@ -403,12 +385,10 @@ func (s *store) CompareAndDelete(nodePath string, prevValue string, prevIndex ui
 	defer func() {
 		if err == nil {
 			s.Stats.Inc(CompareAndDeleteSuccess)
-			reportWriteSuccess(CompareAndDelete)
 			return
 		}
 
 		s.Stats.Inc(CompareAndDeleteFail)
-		reportWriteFailure(CompareAndDelete)
 	}()
 
 	nodePath = path.Clean(path.Join("/", nodePath))
@@ -500,12 +480,10 @@ func (s *store) Update(nodePath string, newValue string, expireOpts TTLOptionSet
 	defer func() {
 		if err == nil {
 			s.Stats.Inc(UpdateSuccess)
-			reportWriteSuccess(Update)
 			return
 		}
 
 		s.Stats.Inc(UpdateFail)
-		reportWriteFailure(Update)
 	}()
 
 	nodePath = path.Clean(path.Join("/", nodePath))
@@ -592,7 +570,6 @@ func (s *store) internalCreate(nodePath string, dir bool, value string, unique, 
 
 	if err != nil {
 		s.Stats.Inc(SetFail)
-		reportWriteFailure(action)
 		err.Index = currIndex
 		return nil, err
 	}
@@ -702,7 +679,6 @@ func (s *store) DeleteExpiredKeys(cutoff time.Time) {
 		s.ttlKeyHeap.pop()
 		node.Remove(true, true, callback)
 
-		reportExpiredKey()
 		s.Stats.Inc(ExpireCount)
 
 		s.WatcherHub.notify(e)

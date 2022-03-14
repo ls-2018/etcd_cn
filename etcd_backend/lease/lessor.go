@@ -307,9 +307,6 @@ func (le *lessor) Grant(id LeaseID, ttl int64) (*Lease, error) {
 	le.leaseMap[id] = l
 	l.persistTo(le.b)
 
-	leaseTotalTTLs.Observe(float64(l.ttl))
-	leaseGranted.Inc()
-
 	if le.isPrimary() {
 		item := &LeaseWithTime{id: l.ID, time: l.expiry}
 		le.leaseExpiredNotifier.RegisterOrUpdate(item)

@@ -181,14 +181,12 @@ func (cw *streamWriter) run() {
 			if err == nil {
 				flusher.Flush()
 				batched = 0
-				sentBytes.WithLabelValues(cw.peerID.String()).Add(float64(unflushed))
 				unflushed = 0
 				continue
 			}
 
 			cw.status.deactivate(failureType{source: t.String(), action: "heartbeat"}, err.Error())
 
-			sentFailures.WithLabelValues(cw.peerID.String()).Inc()
 			cw.close()
 			if cw.lg != nil {
 				cw.lg.Warn(
@@ -207,7 +205,6 @@ func (cw *streamWriter) run() {
 
 				if len(msgc) == 0 || batched > streamBufSize/2 {
 					flusher.Flush()
-					sentBytes.WithLabelValues(cw.peerID.String()).Add(float64(unflushed))
 					unflushed = 0
 					batched = 0
 				} else {
@@ -229,7 +226,6 @@ func (cw *streamWriter) run() {
 			}
 			heartbeatc, msgc = nil, nil
 			cw.r.ReportUnreachable(m.To)
-			sentFailures.WithLabelValues(cw.peerID.String()).Inc()
 
 		case conn := <-cw.connc:
 			cw.mu.Lock()
@@ -500,7 +496,6 @@ func (cr *streamReader) decodeLoop(rc io.ReadCloser, t streamType) error {
 
 		// gofail-go: var raftDropHeartbeat struct{}
 		// continue labelRaftDropHeartbeat
-		receivedBytes.WithLabelValues(types.ID(m.From).String()).Add(float64(m.Size()))
 
 		cr.mu.Lock()
 		paused := cr.paused
@@ -548,7 +543,6 @@ func (cr *streamReader) decodeLoop(rc io.ReadCloser, t streamType) error {
 					)
 				}
 			}
-			recvFailures.WithLabelValues(types.ID(m.From).String()).Inc()
 		}
 	}
 }

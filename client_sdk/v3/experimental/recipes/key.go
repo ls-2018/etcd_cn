@@ -46,19 +46,21 @@ func newKV(kv v3.KV, key, val string, leaseID v3.LeaseID) (*RemoteKV, error) {
 
 func newUniqueKV(kv v3.KV, prefix string, val string) (*RemoteKV, error) {
 	for {
+		// 创建对应的key
+
 		newKey := fmt.Sprintf("%s/%v", prefix, time.Now().UnixNano())
 		rev, err := putNewKV(kv, newKey, val, v3.NoLease)
 		if err == nil {
 			return &RemoteKV{kv, newKey, rev, val}, nil
 		}
+		// 如果之前已经创建了，就返回
 		if err != ErrKeyExists {
 			return nil, err
 		}
 	}
 }
 
-// putNewKV attempts to create the given key, only succeeding if the key did
-// not yet exist.
+// putNewKV
 // 只有在没有创建的时候才能创建成功
 func putNewKV(kv v3.KV, key, val string, leaseID v3.LeaseID) (int64, error) {
 	cmp := v3.Compare(v3.Version(key), "=", 0)

@@ -191,7 +191,6 @@ func (ws *watchServer) Watch(stream pb.Watch_WatchServer) (err error) {
 				sws.lg.Debug("failed to receive watch request from gRPC stream", zap.Error(rerr))
 			} else {
 				sws.lg.Warn("failed to receive watch request from gRPC stream", zap.Error(rerr))
-				streamFailures.WithLabelValues("receive", "watch").Inc()
 			}
 			errc <- rerr
 		}
@@ -363,15 +362,6 @@ func (sws *serverWatchStream) sendLoop() {
 
 	defer func() {
 		progressTicker.Stop()
-		// drain the chan to clean up pending events
-		for ws := range sws.watchStream.Chan() {
-			mvcc.ReportEventReceived(len(ws.Events))
-		}
-		for _, wrs := range pending {
-			for _, ws := range wrs {
-				mvcc.ReportEventReceived(len(ws.Events))
-			}
-		}
 	}()
 
 	for {
@@ -416,8 +406,6 @@ func (sws *serverWatchStream) sendLoop() {
 				continue
 			}
 
-			mvcc.ReportEventReceived(len(evs))
-
 			sws.mu.RLock()
 			fragmented, ok := sws.fragment[wresp.WatchID]
 			sws.mu.RUnlock()
@@ -434,7 +422,6 @@ func (sws *serverWatchStream) sendLoop() {
 					sws.lg.Debug("failed to send watch response to gRPC stream", zap.Error(serr))
 				} else {
 					sws.lg.Warn("failed to send watch response to gRPC stream", zap.Error(serr))
-					streamFailures.WithLabelValues("send", "watch").Inc()
 				}
 				return
 			}
@@ -456,7 +443,6 @@ func (sws *serverWatchStream) sendLoop() {
 					sws.lg.Debug("failed to send watch control response to gRPC stream", zap.Error(err))
 				} else {
 					sws.lg.Warn("failed to send watch control response to gRPC stream", zap.Error(err))
-					streamFailures.WithLabelValues("send", "watch").Inc()
 				}
 				return
 			}
@@ -471,13 +457,11 @@ func (sws *serverWatchStream) sendLoop() {
 				// flush buffered events
 				ids[wid] = struct{}{}
 				for _, v := range pending[wid] {
-					mvcc.ReportEventReceived(len(v.Events))
 					if err := sws.gRPCStream.Send(v); err != nil {
 						if isClientCtxErr(sws.gRPCStream.Context().Err(), err) {
 							sws.lg.Debug("failed to send pending watch response to gRPC stream", zap.Error(err))
 						} else {
 							sws.lg.Warn("failed to send pending watch response to gRPC stream", zap.Error(err))
-							streamFailures.WithLabelValues("send", "watch").Inc()
 						}
 						return
 					}

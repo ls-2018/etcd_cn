@@ -17,7 +17,6 @@ package etcdserver
 import (
 	"encoding/json"
 	"path"
-	"strconv"
 	"time"
 
 	"github.com/coreos/go-semver/semver"
@@ -117,11 +116,6 @@ func (a *applierV2store) Sync(r *RequestV2) Response {
 // applyV2Request interprets r as a call to v2store.X
 // and returns a Response interpreted from v2store.Event
 func (s *EtcdServer) applyV2Request(r *RequestV2, shouldApplyV3 membership.ShouldApplyV3) (resp Response) {
-	defer func(start time.Time) {
-		success := resp.Err == nil
-		applySec.WithLabelValues(v2Version, r.Method, strconv.FormatBool(success)).Observe(time.Since(start).Seconds())
-	}(time.Now())
-
 	switch r.Method {
 	case "POST":
 		return s.applyV2.Post(r)

@@ -16,13 +16,11 @@ package backend
 
 import (
 	"bytes"
+	bolt "go.etcd.io/bbolt"
+	"go.uber.org/zap"
 	"math"
 	"sync"
 	"sync/atomic"
-	"time"
-
-	bolt "go.etcd.io/bbolt"
-	"go.uber.org/zap"
 )
 
 type BucketID int
@@ -238,17 +236,10 @@ func (t *batchTx) commit(stop bool) {
 		if t.pending == 0 && !stop {
 			return
 		}
-
-		start := time.Now()
-
 		// gofail: var beforeCommit struct{}
 		err := t.tx.Commit()
 		// gofail: var afterCommit struct{}
 
-		rebalanceSec.Observe(t.tx.Stats().RebalanceTime.Seconds())
-		spillSec.Observe(t.tx.Stats().SpillTime.Seconds())
-		writeSec.Observe(t.tx.Stats().WriteTime.Seconds())
-		commitSec.Observe(time.Since(start).Seconds())
 		atomic.AddInt64(&t.backend.commits, 1)
 
 		t.pending = 0
