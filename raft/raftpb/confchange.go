@@ -16,21 +16,17 @@ package raftpb
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/gogo/protobuf/proto"
 )
 
-// ConfChangeI abstracts over ConfChangeV2 and (legacy) ConfChange to allow
-// treating them in a unified manner.
+// ConfChangeI 配置变更
 type ConfChangeI interface {
 	AsV2() ConfChangeV2
 	AsV1() (ConfChange, bool)
 }
 
-// MarshalConfChange calls Marshal on the underlying ConfChange or ConfChangeV2
-// and returns the result along with the corresponding EntryType.
 func MarshalConfChange(c ConfChangeI) (EntryType, []byte, error) {
 	var typ EntryType
 	var ccdata []byte
@@ -46,7 +42,6 @@ func MarshalConfChange(c ConfChangeI) (EntryType, []byte, error) {
 	return typ, ccdata, err
 }
 
-// AsV2 返回一个执行相同操作的V2配置变更.
 func (c ConfChange) AsV2() ConfChangeV2 {
 	return ConfChangeV2{
 		Changes: []ConfChangeSingle{{
@@ -57,15 +52,12 @@ func (c ConfChange) AsV2() ConfChangeV2 {
 	}
 }
 
-// AsV1 returns the ConfChange and true.
 func (c ConfChange) AsV1() (ConfChange, bool) {
 	return c, true
 }
 
-// AsV2 is the identity.
 func (c ConfChangeV2) AsV2() ConfChangeV2 { return c }
 
-// AsV1 returns ConfChange{} and false.
 func (c ConfChangeV2) AsV1() (ConfChange, bool) { return ConfChange{}, false }
 
 // EnterJoint returns two bools. The second bool is true if and only if this
@@ -104,45 +96,6 @@ func (c ConfChangeV2) LeaveJoint() bool {
 	// NB: c is already a copy.
 	c.Context = nil
 	return proto.Equal(&c, &ConfChangeV2{})
-}
-
-// ConfChangesFromString parses a Space-delimited sequence of operations into a
-// slice of ConfChangeSingle. The supported operations are:
-// - vn: make n a voter,
-// - ln: make n a learner,
-// - rn: remove n, and
-// - un: update n.
-func ConfChangesFromString(s string) ([]ConfChangeSingle, error) {
-	var ccs []ConfChangeSingle
-	toks := strings.Split(strings.TrimSpace(s), " ")
-	if toks[0] == "" {
-		toks = nil
-	}
-	for _, tok := range toks {
-		if len(tok) < 2 {
-			return nil, fmt.Errorf("unknown token %s", tok)
-		}
-		var cc ConfChangeSingle
-		switch tok[0] {
-		case 'v':
-			cc.Type = ConfChangeAddNode
-		case 'l':
-			cc.Type = ConfChangeAddLearnerNode
-		case 'r':
-			cc.Type = ConfChangeRemoveNode
-		case 'u':
-			cc.Type = ConfChangeUpdateNode
-		default:
-			return nil, fmt.Errorf("unknown input: %s", tok)
-		}
-		id, err := strconv.ParseUint(tok[1:], 10, 64)
-		if err != nil {
-			return nil, err
-		}
-		cc.NodeID = id
-		ccs = append(ccs, cc)
-	}
-	return ccs, nil
 }
 
 // ConfChangesToString is the inverse to ConfChangesFromString.

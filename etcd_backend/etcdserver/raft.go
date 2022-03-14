@@ -190,7 +190,6 @@ func startNode(cfg config.ServerConfig, cl *membership.RaftCluster, ids []types.
 		MaxSizePerMsg:   maxSizePerMsg,     // 每次发消息的最大size
 		MaxInflightMsgs: maxInflightMsgs,   // 512
 		CheckQuorum:     true,              // 检查是否是leader
-		// etcd_backend/embed/config.go:NewConfig 432
 		PreVote: cfg.PreVote, // true      // 是否启用PreVote扩展,建议开启
 		Logger:  NewRaftLoggerZap(cfg.Logger.Named("raft")),
 	}
@@ -440,9 +439,8 @@ func (r *raftNode) start(rh *raftReadyHandler) {
 
 		for {
 			select {
-			case <-r.ticker.C: //推进心跳或者选举计时器
+			case <-r.ticker.C: // 推进心跳或者选举计时器
 				r.tick()
-
 			//	 readyc = n.readyc    size为0
 			case rd := <-r.Ready(): // 调用Node.Ready(),从返回的channel中获取数据
 				//获取ready结构中的committedEntries,提交给Apply模块应用到后端存储中.

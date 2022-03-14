@@ -8,7 +8,7 @@ import (
 // RaftNodeInterFace raft 节点
 type RaftNodeInterFace interface {
 	Tick()                                                           // 触发一次Tick,会触发Node心跳或者选举
-	Campaign(ctx context.Context) error                              // 触发一次选举
+	Campaign(ctx context.Context) error                              // 主动触发一次选举
 	Propose(ctx context.Context, data []byte) error                  // 使用者的data通过日志广播到所有节点,返回nil,不代表成功,因为是异步的
 	ProposeConfChange(ctx context.Context, cc pb.ConfChangeI) error  // 集群配置变更
 	Step(ctx context.Context, msg pb.Message) error                  // 处理msg的函数
@@ -16,16 +16,14 @@ type RaftNodeInterFace interface {
 	Advance()                                                        // ready消息处理完后,发送一个通知消息;当处理完这些消息后,必须调用,不然raft会堵塞在这里
 	ApplyConfChange(cc pb.ConfChangeI) *pb.ConfState                 // 应用集群变化到状态机
 	TransferLeadership(ctx context.Context, lead, transferee uint64) // 将Leader转给transferee.
-	Status() Status                                                  // raft state machine当前状态.
+	Status() Status                                                  // 返回 raft state machine当前状态.
 	ReportSnapshot(id uint64, status SnapshotStatus)                 // 告诉leader状态机该id节点发送snapshot的最终处理状态
 	ReadIndex(ctx context.Context, rctx []byte) error                // follower当请求的索引不存在时,记录,当applied >= 该索引时,通过Ready()返回给使用者
 	ReportUnreachable(id uint64)                                     // 报告raft指定的节点上次发送没有成功
 	Stop()                                                           // 关闭节点
 }
 
-// Ready 封装了准备读取、保存到稳定存储、提交或发送至其他peer的entry和message
-// Ready中的所有字段都是只读的.
-// 对于这种 IO 网络密集型的应用,提高吞吐最好的手段就是批量操作,ETCD 与之相关的核心抽象就是 Ready 结构体.
+// Ready raft 准备好需要使用者处理的数据
 type Ready struct {
 	// Ready引入的第一个概念就是"软状态",主要是节点运行状态,包括Leader是谁,自己是什么角色.该参数为nil代表软状态没有变化
 	*SoftState

@@ -456,7 +456,7 @@ var xxx_messageInfo_Message proto.InternalMessageInfo
 // HardState 封装了raft协议中规定的需要实时持久化的状态属性：当前选举周期、投票和已提交的Index
 type HardState struct {
 	Term   uint64 `protobuf:"varint,1,opt,name=term" json:"term"`
-	Vote   uint64 `protobuf:"varint,2,opt,name=vote" json:"vote"`
+	Vote   uint64 `protobuf:"varint,2,opt,name=vote" json:"vote"` // 给谁投了票
 	Commit uint64 `protobuf:"varint,3,opt,name=commit" json:"commit"`
 }
 
