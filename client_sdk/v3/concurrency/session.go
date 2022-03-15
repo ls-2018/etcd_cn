@@ -16,8 +16,9 @@ package concurrency
 
 import (
 	"context"
-	v3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 	"time"
+
+	v3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 )
 
 const defaultSessionTTL = 60
@@ -70,10 +71,10 @@ func NewSession(client *v3.Client, opts ...SessionOption) (*Session, error) {
 	}()
 
 	return s, nil
-	//1、多个请求来前抢占锁，通过Revision来判断锁的先后顺序；
-	//2、如果有比当前key的Revision小的Revision存在，说明有key已经获得了锁；
-	//3、等待直到前面的key被删除，然后自己就获得了锁。
-	//通过etcd实现的锁，直接包含了锁的续租，如果使用Redis还要自己去实现，相比较使用更简单。
+	// 1、多个请求来前抢占锁，通过Revision来判断锁的先后顺序；
+	// 2、如果有比当前key的Revision小的Revision存在，说明有key已经获得了锁；
+	// 3、等待直到前面的key被删除，然后自己就获得了锁。
+	// 通过etcd实现的锁，直接包含了锁的续租，如果使用Redis还要自己去实现，相比较使用更简单。
 }
 
 // Client is the etcd client that is attached to the session.

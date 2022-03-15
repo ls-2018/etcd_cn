@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"go.uber.org/zap"
 	"net"
+
+	"go.uber.org/zap"
 )
 
 func main() {

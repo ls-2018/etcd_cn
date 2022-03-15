@@ -2,6 +2,7 @@ package raft
 
 import (
 	"fmt"
+
 	"github.com/ls-2018/etcd_cn/raft/confchange"
 	pb "github.com/ls-2018/etcd_cn/raft/raftpb"
 	"github.com/ls-2018/etcd_cn/raft/tracker"
@@ -88,7 +89,6 @@ func (r *raft) restore(s pb.Snapshot) bool {
 		Tracker:   r.prs,
 		LastIndex: r.raftLog.lastIndex(),
 	}, cs)
-
 	if err != nil {
 		// This should never happen. Either there's a bug in our config change
 		// handling or the client corrupted the conf change.

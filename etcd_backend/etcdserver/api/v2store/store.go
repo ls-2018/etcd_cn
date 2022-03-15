@@ -40,7 +40,6 @@ func init() {
 type Store interface {
 	Version() int
 	Index() uint64
-
 	Get(nodePath string, recursive, sorted bool) (*Event, error)
 	Set(nodePath string, dir bool, value string, expireOpts TTLOptionSet) (*Event, error)
 	Update(nodePath string, newValue string, expireOpts TTLOptionSet) (*Event, error)
@@ -50,18 +49,13 @@ type Store interface {
 		value string, expireOpts TTLOptionSet) (*Event, error)
 	Delete(nodePath string, dir, recursive bool) (*Event, error)
 	CompareAndDelete(nodePath string, prevValue string, prevIndex uint64) (*Event, error)
-
 	Watch(prefix string, recursive, stream bool, sinceIndex uint64) (Watcher, error)
-
 	Save() ([]byte, error)
 	Recovery(state []byte) error
-
 	Clone() Store
 	SaveNoCopy() ([]byte, error)
-
 	JsonStats() []byte
 	DeleteExpiredKeys(cutoff time.Time)
-
 	HasTTLKeys() bool
 }
 
@@ -243,8 +237,8 @@ func getCompareFailCause(n *node, which int, prevValue string, prevIndex uint64)
 }
 
 func (s *store) CompareAndSwap(nodePath string, prevValue string, prevIndex uint64,
-	value string, expireOpts TTLOptionSet) (*Event, error) {
-
+	value string, expireOpts TTLOptionSet) (*Event, error,
+) {
 	var err *v2error.Error
 
 	s.worldLock.Lock()
@@ -542,8 +536,8 @@ func (s *store) Update(nodePath string, newValue string, expireOpts TTLOptionSet
 }
 
 func (s *store) internalCreate(nodePath string, dir bool, value string, unique, replace bool,
-	expireTime time.Time, action string) (*Event, *v2error.Error) {
-
+	expireTime time.Time, action string) (*Event, *v2error.Error,
+) {
 	currIndex, nextIndex := s.CurrentIndex, s.CurrentIndex+1
 
 	if unique { // append unique item under the node path
@@ -567,7 +561,6 @@ func (s *store) internalCreate(nodePath string, dir bool, value string, unique, 
 
 	// walk through the nodePath, create dirs and get the last directory node
 	d, err := s.walk(dirName, s.checkDir)
-
 	if err != nil {
 		s.Stats.Inc(SetFail)
 		err.Index = currIndex
@@ -630,7 +623,6 @@ func (s *store) internalGet(nodePath string) (*node, *v2error.Error) {
 	nodePath = path.Clean(path.Join("/", nodePath))
 
 	walkFunc := func(parent *node, name string) (*node, *v2error.Error) {
-
 		if !parent.IsDir() {
 			err := v2error.NewError(v2error.EcodeNotDir, parent.Path, s.CurrentIndex)
 			return nil, err
@@ -645,7 +637,6 @@ func (s *store) internalGet(nodePath string) (*node, *v2error.Error) {
 	}
 
 	f, err := s.walk(nodePath, walkFunc)
-
 	if err != nil {
 		return nil, err
 	}
@@ -683,7 +674,6 @@ func (s *store) DeleteExpiredKeys(cutoff time.Time) {
 
 		s.WatcherHub.notify(e)
 	}
-
 }
 
 // checkDir will check whether the component is a directory under parent node.
@@ -752,7 +742,6 @@ func (s *store) Recovery(state []byte) error {
 	s.worldLock.Lock()
 	defer s.worldLock.Unlock()
 	err := json.Unmarshal(state, s)
-
 	if err != nil {
 		return err
 	}

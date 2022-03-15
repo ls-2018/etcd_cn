@@ -20,7 +20,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	clientv2 "github.com/ls-2018/etcd_cn/client_sdk/v2"
 	"math"
 	"net/http"
 	"net/url"
@@ -29,6 +28,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	clientv2 "github.com/ls-2018/etcd_cn/client_sdk/v2"
 
 	"github.com/jonboulle/clockwork"
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/transport"

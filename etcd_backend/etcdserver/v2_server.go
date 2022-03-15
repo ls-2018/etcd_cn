@@ -103,15 +103,12 @@ func (a *reqV2HandlerEtcdServer) processRaftRequest(ctx context.Context, r *Requ
 
 	start := time.Now()
 	a.s.r.Propose(ctx, data)
-	proposalsPending.Inc()
-	defer proposalsPending.Dec()
 
 	select {
 	case x := <-ch:
 		resp := x.(Response)
 		return resp, resp.Err
 	case <-ctx.Done():
-		proposalsFailed.Inc()
 		a.s.w.Trigger(r.ID, nil) // GC wait
 		return Response{}, a.s.parseProposeCtxErr(ctx.Err(), start)
 	case <-a.s.stopping:

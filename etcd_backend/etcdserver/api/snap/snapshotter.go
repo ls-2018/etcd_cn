@@ -17,12 +17,6 @@ package snap
 import (
 	"errors"
 	"fmt"
-	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/snap/snappb"
-	"github.com/ls-2018/etcd_cn/etcd_backend/wal/walpb"
-	pioutil "github.com/ls-2018/etcd_cn/pkg/ioutil"
-	"github.com/ls-2018/etcd_cn/pkg/pbutil"
-	"github.com/ls-2018/etcd_cn/raft"
-	"github.com/ls-2018/etcd_cn/raft/raftpb"
 	"hash/crc32"
 	"io/ioutil"
 	"os"
@@ -30,6 +24,13 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/snap/snappb"
+	"github.com/ls-2018/etcd_cn/etcd_backend/wal/walpb"
+	pioutil "github.com/ls-2018/etcd_cn/pkg/ioutil"
+	"github.com/ls-2018/etcd_cn/pkg/pbutil"
+	"github.com/ls-2018/etcd_cn/raft"
+	"github.com/ls-2018/etcd_cn/raft/raftpb"
 
 	"go.uber.org/zap"
 )
@@ -73,7 +74,6 @@ func (s *Snapshotter) SaveSnap(snapshot raftpb.Snapshot) error {
 
 // 保存一个快照
 func (s *Snapshotter) save(snapshot *raftpb.Snapshot) error {
-
 	fname := fmt.Sprintf("%016x-%016x%s", snapshot.Metadata.Term, snapshot.Metadata.Index, snapSuffix)
 	b := pbutil.MustMarshal(snapshot)
 	crc := crc32.Update(0, crcTable, b)
@@ -84,7 +84,7 @@ func (s *Snapshotter) save(snapshot *raftpb.Snapshot) error {
 	}
 
 	spath := filepath.Join(s.dir, fname)
-	err = pioutil.WriteAndSyncFile(spath, d, 0666)
+	err = pioutil.WriteAndSyncFile(spath, d, 0o666)
 
 	if err != nil {
 		s.lg.Warn("写快照文件失败", zap.String("path", spath), zap.Error(err))

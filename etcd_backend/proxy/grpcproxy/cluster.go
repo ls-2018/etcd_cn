@@ -18,9 +18,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 	"os"
 	"sync"
+
+	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 
 	"github.com/ls-2018/etcd_cn/client_sdk/v3/naming/endpoints"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"

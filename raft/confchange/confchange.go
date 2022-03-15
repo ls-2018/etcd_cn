@@ -249,7 +249,7 @@ func (c Changer) remove(cfg *tracker.Config, prs tracker.ProgressMap, id uint64)
 // ID是Peer的ID,match和next用来初始化Progress的.
 func (c Changer) initProgress(cfg *tracker.Config, prs tracker.ProgressMap, id uint64, isLearner bool) {
 	if !isLearner {
-		//等同于  cfg.Voters[0][id] = struct{}{}
+		// 等同于  cfg.Voters[0][id] = struct{}{}
 		incoming(cfg.Voters)[id] = struct{}{}
 	} else {
 		nilAwareAdd(&cfg.Learners, id)

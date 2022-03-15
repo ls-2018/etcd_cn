@@ -25,28 +25,25 @@ import (
 	"net/url"
 	"strings"
 	"sync/atomic"
-	"time"
 
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v2http/httptypes"
 
 	"go.uber.org/zap"
 )
 
-var (
-	// Hop-by-hop headers. These are removed when sent to the backend.
-	// http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html
-	// This list of headers borrowed from stdlib httputil.ReverseProxy
-	singleHopHeaders = []string{
-		"Connection",
-		"Keep-Alive",
-		"Proxy-Authenticate",
-		"Proxy-Authorization",
-		"Te", // canonicalized version of "TE"
-		"Trailers",
-		"Transfer-Encoding",
-		"Upgrade",
-	}
-)
+// Hop-by-hop headers. These are removed when sent to the backend.
+// http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html
+// This list of headers borrowed from stdlib httputil.ReverseProxy
+var singleHopHeaders = []string{
+	"Connection",
+	"Keep-Alive",
+	"Proxy-Authenticate",
+	"Proxy-Authorization",
+	"Te", // canonicalized version of "TE"
+	"Trailers",
+	"Transfer-Encoding",
+	"Upgrade",
+}
 
 func removeSingleHopHeaders(hdrs *http.Header) {
 	for _, h := range singleHopHeaders {
@@ -61,10 +58,8 @@ type reverseProxy struct {
 }
 
 func (p *reverseProxy) ServeHTTP(rw http.ResponseWriter, clientreq *http.Request) {
-	reportIncomingRequest(clientreq)
 	proxyreq := new(http.Request)
 	*proxyreq = *clientreq
-	startTime := time.Now()
 
 	var (
 		proxybody []byte
@@ -99,7 +94,6 @@ func (p *reverseProxy) ServeHTTP(rw http.ResponseWriter, clientreq *http.Request
 	endpoints := p.director.endpoints()
 	if len(endpoints) == 0 {
 		msg := "zero endpoints currently available"
-		reportRequestDropped(clientreq, zeroEndpoints)
 
 		// TODO: limit the rate of the error logging.
 		p.lg.Info(msg)
@@ -153,7 +147,6 @@ func (p *reverseProxy) ServeHTTP(rw http.ResponseWriter, clientreq *http.Request
 			return
 		}
 		if err != nil {
-			reportRequestDropped(clientreq, failedSendingRequest)
 			p.lg.Info(
 				"failed to direct request",
 				zap.String("url", ep.URL.String()),
@@ -169,7 +162,6 @@ func (p *reverseProxy) ServeHTTP(rw http.ResponseWriter, clientreq *http.Request
 	if res == nil {
 		// TODO: limit the rate of the error logging.
 		msg := fmt.Sprintf("unable to get response from %d endpoint(s)", len(endpoints))
-		reportRequestDropped(clientreq, failedGettingResponse)
 		p.lg.Info(msg)
 		e := httptypes.NewHTTPError(http.StatusBadGateway, "httpproxy: "+msg)
 		if we := e.WriteTo(rw); we != nil {
@@ -183,7 +175,6 @@ func (p *reverseProxy) ServeHTTP(rw http.ResponseWriter, clientreq *http.Request
 	}
 
 	defer res.Body.Close()
-	reportRequestHandled(clientreq, res, startTime)
 	removeSingleHopHeaders(&res.Header)
 	copyHeader(rw.Header(), res.Header)
 

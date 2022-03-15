@@ -38,25 +38,6 @@ var (
 	statusErrorInterval      = 5 * time.Second
 )
 
-func addPeerToProber(lg *zap.Logger, p probing.Prober, id string, us []string, roundTripperName string, rttSecProm *prometheus.HistogramVec) {
-	hus := make([]string, len(us))
-	for i := range us {
-		hus[i] = us[i] + ProbingPrefix
-	}
-
-	p.AddHTTP(id, proberInterval, hus)
-
-	s, err := p.Status(id)
-	if err != nil {
-		if lg != nil {
-			lg.Warn("failed to add peer into prober", zap.String("remote-peer-id", id), zap.Error(err))
-		}
-		return
-	}
-
-	go monitorProbingStatus(lg, s, id, roundTripperName, rttSecProm)
-}
-
 func monitorProbingStatus(lg *zap.Logger, s probing.Status, id string, roundTripperName string, rttSecProm *prometheus.HistogramVec) {
 	// set the first interval short to log error early.
 	interval := statusErrorInterval

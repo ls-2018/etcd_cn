@@ -101,7 +101,6 @@ func confChangeToMsg(c pb.ConfChangeI) (pb.Message, error) {
 // Ready数据通过上一次的软、硬状态,计算这两个状态的变化，其他
 // 的数据都是来源于raft。
 func newReady(r *raft, prevSoftSt *SoftState, prevHardSt pb.HardState) Ready {
-
 	rd := Ready{
 		Entries:          r.raftLog.unstableEntries(), // 还没有落盘的,需要调用方落盘
 		CommittedEntries: r.raftLog.nextEnts(),        // 已经commit待apply的日志,交给上层应用
@@ -112,27 +111,27 @@ func newReady(r *raft, prevSoftSt *SoftState, prevHardSt pb.HardState) Ready {
 		ReadStates:       []ReadState{},
 		MustSync:         false,
 	}
-	//判断softState有没有变化,有则赋值
+	// 判断softState有没有变化,有则赋值
 	if softSt := r.softState(); !softSt.equal(prevSoftSt) {
 		rd.SoftState = softSt
 	}
-	//判断hardState有没有变化,有则赋值
+	// 判断hardState有没有变化,有则赋值
 	if hardSt := r.hardState(); !isHardStateEqual(hardSt, prevHardSt) {
 		rd.HardState = hardSt
 	}
-	//判断是不是收到snapshot
+	// 判断是不是收到snapshot
 	if r.raftLog.unstable.snapshot != nil {
 		rd.Snapshot = *r.raftLog.unstable.snapshot
 	}
 	if len(r.readStates) != 0 {
 		rd.ReadStates = r.readStates
 	}
-	//处理该Ready后是否需要做fsync,将数据强制刷盘
+	// 处理该Ready后是否需要做fsync,将数据强制刷盘
 	rd.MustSync = MustSync(r.hardState(), prevHardSt, len(rd.Entries))
 	return rd
 }
 
-//包含在raftNode中,是Node接口的实现.里面包含一个协程和多个队列,是状态机消息处理的入口.
+// 包含在raftNode中,是Node接口的实现.里面包含一个协程和多个队列,是状态机消息处理的入口.
 type localNode struct {
 	rn         *RawNode
 	propc      chan msgWithResult   // Propose队列,调用raftNode的Propose即把Propose消息塞到这个队列里
@@ -189,7 +188,7 @@ func (n *localNode) run() {
 		// 这一段 主要是为了 只有只有客户端通知了了,才能继续往readyc放新的
 		if advancec != nil { // 开始时是nil
 			readyc = nil
-		} else if n.rn.HasReady() { //判断是否有Ready数据:待发送的数据
+		} else if n.rn.HasReady() { // 判断是否有Ready数据:待发送的数据
 			rd = n.rn.readyWithoutAccept() // 计算软硬状态变化；返回ready结构体
 			readyc = n.readyc              // 下边有放入数据的
 		}
@@ -214,7 +213,7 @@ func (n *localNode) run() {
 		// described in raft dissertation)
 		// Currently it is dropped in Step silently.
 
-		case pm := <-propc: //接收到提议消息;提议消息是本节点生成的
+		case pm := <-propc: // 接收到提议消息;提议消息是本节点生成的
 			_ = msgWithResult{}
 			m := pm.m
 			m.From = r.id
@@ -232,9 +231,9 @@ func (n *localNode) run() {
 			// 如果NodeID是None，就变成了获取节点信息的操作
 			_, okBefore := r.prs.Progress[r.id] // 获取本节点的信息
 			cs := r.applyConfChange(cc)
-			//如果localNode被移除，则阻止传入的提议。请注意，我们只在localNode之前在配置中时才这样做。
-			//节点可能在不知道这一点的情况下成为组的成员（当他们在追赶日志时，没有最新的配置），在这种情况下，我们不希望阻止提案通道。
-			//NB：当领导者发生变化时，propc会被重置，如果我们了解到这一点，就有点暗示我们被读取了，也许？这并不 这不是很合理，而且很可能有bug。
+			// 如果localNode被移除，则阻止传入的提议。请注意，我们只在localNode之前在配置中时才这样做。
+			// 节点可能在不知道这一点的情况下成为组的成员（当他们在追赶日志时，没有最新的配置），在这种情况下，我们不希望阻止提案通道。
+			// NB：当领导者发生变化时，propc会被重置，如果我们了解到这一点，就有点暗示我们被读取了，也许？这并不 这不是很合理，而且很可能有bug。
 			if _, okAfter := r.prs.Progress[r.id]; okBefore && !okAfter {
 				var found bool
 			outer:
@@ -254,18 +253,18 @@ func (n *localNode) run() {
 			case n.confstatec <- cs:
 			case <-n.done:
 			}
-		case <-n.tickc: //超时时间到,包括心跳超时和选举超时等
+		case <-n.tickc: // 超时时间到,包括心跳超时和选举超时等
 			n.rn.Tick()
 		case readyc <- rd: // 数据放入ready channel中
 			n.rn.acceptReady(rd)  // 告诉raft,ready数据已被接收
 			advancec = n.advancec // 赋值Advance channel等待Ready处理完成的消息
 		case <-advancec: // 使用者处理完Ready数据后，调用了Advance()
-			n.rn.Advance(rd) //上一次发送出去的
+			n.rn.Advance(rd) // 上一次发送出去的
 			rd = Ready{}     // 重置数据
 			advancec = nil
 		case c := <-n.status: // 收取了获取节点状态的信号
 			c <- getStatus(r)
-		case <-n.stop: //收到停止信号
+		case <-n.stop: // 收到停止信号
 			close(n.done)
 			return
 		}
@@ -421,6 +420,7 @@ func (n *localNode) Tick() {
 		n.rn.raft.logger.Warningf("%x 错过了开火的时间。RaftNodeInterFace 阻塞时间过长! ", n.rn.raft.id)
 	}
 }
+
 func (n *localNode) Campaign(ctx context.Context) error {
 	// 封装成pb.MsgHup消息然后再处理，step()后面会详细说明
 	// 主动触发一次选举

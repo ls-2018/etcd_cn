@@ -86,7 +86,6 @@ type Lessor interface {
 	// Lessor deletes the items in the revoked or expired lease by creating
 	// new TxnDeletes.
 	SetRangeDeleter(rd RangeDeleter)
-
 	SetCheckpointer(cp Checkpointer)
 
 	// Grant grants a lease that expires at least after TTL seconds.
@@ -352,7 +351,6 @@ func (le *lessor) Revoke(id LeaseID) error {
 
 	txn.End()
 
-	leaseRevoked.Inc()
 	return nil
 }
 
@@ -433,7 +431,6 @@ func (le *lessor) Renew(id LeaseID) (int64, error) {
 	le.leaseExpiredNotifier.RegisterOrUpdate(item)
 	le.mu.Unlock()
 
-	leaseRenewed.Inc()
 	return l.ttl, nil
 }
 

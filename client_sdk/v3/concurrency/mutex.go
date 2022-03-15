@@ -18,8 +18,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	v3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 	"sync"
+
+	v3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 )
@@ -29,12 +30,12 @@ var ErrLocked = errors.New("mutex: Locked by another session")
 var ErrSessionExpired = errors.New("mutex: session is expired")
 
 // Mutex implements the sync Locker interface with etcd
-//即前缀机制，也称目录机制，例如，一个名为 `/mylock` 的锁，两个争抢它的客户端进行写操作，
+// 即前缀机制，也称目录机制，例如，一个名为 `/mylock` 的锁，两个争抢它的客户端进行写操作，
 // 实际写入的Key分别为：`key1="/mylock/UUID1"`,`key2="/mylock/UUID2"`，
-//其中，UUID表示全局唯一的ID，确保两个Key的唯一性。很显然，写操作都会成功，但返回的Revision不一样，
-//那么，如何判断谁获得了锁呢？通过前缀`“/mylock”`查询，返回包含两个Key-Value对的Key-Value列表，
-//同时也包含它们的Revision，通过Revision大小，客户端可以判断自己是否获得锁，如果抢锁失败，则等待锁释放（对应的 Key 被删除或者租约过期），
-//然后再判断自己是否可以获得锁。
+// 其中，UUID表示全局唯一的ID，确保两个Key的唯一性。很显然，写操作都会成功，但返回的Revision不一样，
+// 那么，如何判断谁获得了锁呢？通过前缀`“/mylock”`查询，返回包含两个Key-Value对的Key-Value列表，
+// 同时也包含它们的Revision，通过Revision大小，客户端可以判断自己是否获得锁，如果抢锁失败，则等待锁释放（对应的 Key 被删除或者租约过期），
+// 然后再判断自己是否可以获得锁。
 type Mutex struct {
 	s *Session
 
@@ -173,6 +174,7 @@ func (lm *lockerMutex) Lock() {
 		panic(err)
 	}
 }
+
 func (lm *lockerMutex) Unlock() {
 	client := lm.s.Client()
 	if err := lm.Mutex.Unlock(client.Ctx()); err != nil {

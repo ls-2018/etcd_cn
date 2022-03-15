@@ -16,11 +16,12 @@ package backend
 
 import (
 	"bytes"
-	bolt "go.etcd.io/bbolt"
-	"go.uber.org/zap"
 	"math"
 	"sync"
 	"sync/atomic"
+
+	bolt "go.etcd.io/bbolt"
+	"go.uber.org/zap"
 )
 
 type BucketID int

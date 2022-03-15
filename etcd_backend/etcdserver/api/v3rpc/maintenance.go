@@ -17,10 +17,11 @@ package v3rpc
 import (
 	"context"
 	"crypto/sha256"
-	"github.com/dustin/go-humanize"
-	"github.com/ls-2018/etcd_cn/raft"
 	"io"
 	"time"
+
+	"github.com/dustin/go-humanize"
+	"github.com/ls-2018/etcd_cn/raft"
 
 	"github.com/ls-2018/etcd_cn/etcd_backend/auth"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver"

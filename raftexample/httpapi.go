@@ -42,7 +42,7 @@ func (h *httpKVAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		h.store.Propose(key, string(v)) // 👌🏻
-		//乐观——不用等待木筏上的ack。值还没有committed，因此后续的GET可以返回旧值
+		// 乐观——不用等待木筏上的ack。值还没有committed，因此后续的GET可以返回旧值
 		w.WriteHeader(http.StatusNoContent)
 	case r.Method == "GET":
 		if v, ok := h.store.Lookup(key); ok {

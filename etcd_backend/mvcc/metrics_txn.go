@@ -55,18 +55,4 @@ func (tw *metricsTxnWrite) Put(key, value []byte, lease lease.LeaseID) (rev int6
 
 func (tw *metricsTxnWrite) End() {
 	defer tw.TxnWrite.End()
-	if sum := tw.ranges + tw.puts + tw.deletes; sum > 1 {
-		txnCounter.Inc()
-	}
-
-	ranges := float64(tw.ranges)
-	rangeCounter.Add(ranges)
-	rangeCounterDebug.Add(ranges) // TODO: remove in 3.5 release
-
-	puts := float64(tw.puts)
-	putCounter.Add(puts)
-	totalPutSizeGauge.Add(float64(tw.putSize))
-
-	deletes := float64(tw.deletes)
-	deleteCounter.Add(deletes)
 }

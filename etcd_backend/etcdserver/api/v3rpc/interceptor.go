@@ -16,9 +16,10 @@ package v3rpc
 
 import (
 	"context"
-	"github.com/ls-2018/etcd_cn/raft"
 	"sync"
 	"time"
+
+	"github.com/ls-2018/etcd_cn/raft"
 
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver"
@@ -52,12 +53,6 @@ func newUnaryInterceptor(s *etcdserver.EtcdServer) grpc.UnaryServerInterceptor {
 
 		md, ok := metadata.FromIncomingContext(ctx)
 		if ok {
-			ver, vs := "unknown", md.Get(rpctypes.MetadataClientAPIVersionKey)
-			if len(vs) > 0 {
-				ver = vs[0]
-			}
-			clientRequests.WithLabelValues("unary", ver).Inc()
-
 			if ks := md[rpctypes.MetadataRequireLeaderKey]; len(ks) > 0 && ks[0] == rpctypes.MetadataHasLeader {
 				if s.Leader() == types.ID(raft.None) {
 					return nil, rpctypes.ErrGRPCNoLeader
@@ -83,12 +78,6 @@ func newStreamInterceptor(s *etcdserver.EtcdServer) grpc.StreamServerInterceptor
 
 		md, ok := metadata.FromIncomingContext(ss.Context())
 		if ok {
-			ver, vs := "unknown", md.Get(rpctypes.MetadataClientAPIVersionKey)
-			if len(vs) > 0 {
-				ver = vs[0]
-			}
-			clientRequests.WithLabelValues("stream", ver).Inc()
-
 			if ks := md[rpctypes.MetadataRequireLeaderKey]; len(ks) > 0 && ks[0] == rpctypes.MetadataHasLeader {
 				if s.Leader() == types.ID(raft.None) {
 					return rpctypes.ErrGRPCNoLeader

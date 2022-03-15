@@ -18,9 +18,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 	"os"
 	"strconv"
+
+	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 )
 
 type jsonPrinter struct {
@@ -96,5 +97,4 @@ func printMemberListWithHexJSON(r clientv3.MemberListResponse) {
 	}
 	buffer.WriteString("}")
 	fmt.Println(buffer.String())
-
 }

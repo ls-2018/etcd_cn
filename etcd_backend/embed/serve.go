@@ -47,7 +47,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-//监听一个端口,提供服务, http, rpc
+// 监听一个端口,提供服务, http, rpc
 type serveCtx struct {
 	lg       *zap.Logger
 	l        net.Listener // 单个监听本地网卡2379端口的listener
@@ -311,7 +311,7 @@ func (ac *accessController) ServeHTTP(rw http.ResponseWriter, req *http.Request)
 		req.URL.Path = strings.Replace(req.URL.Path, "/v3beta/", "/v3/", 1)
 	}
 
-	if req.TLS == nil { //如果客户端连接不安全,则检查origin
+	if req.TLS == nil { // 如果客户端连接不安全,则检查origin
 		host := httputil.GetHostname(req) // 请求的主机名、域名、IP
 		if !ac.s.AccessController.IsHostWhitelisted(host) {
 			ac.lg.Warn("拒绝HTTP请求,以防止DNS重新绑定攻击", zap.String("host", host))

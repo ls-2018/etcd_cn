@@ -21,8 +21,11 @@ import (
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
-var _ = fmt.Errorf
-var _ = math.Inf
+
+var (
+	_ = fmt.Errorf
+	_ = math.Inf
+)
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
@@ -50,9 +53,11 @@ func (*LockRequest) ProtoMessage()    {}
 func (*LockRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_52389b3e2f253201, []int{0}
 }
+
 func (m *LockRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
+
 func (m *LockRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_LockRequest.Marshal(b, m, deterministic)
@@ -65,12 +70,15 @@ func (m *LockRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) 
 		return b[:n], nil
 	}
 }
+
 func (m *LockRequest) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_LockRequest.Merge(m, src)
 }
+
 func (m *LockRequest) XXX_Size() int {
 	return m.Size()
 }
+
 func (m *LockRequest) XXX_DiscardUnknown() {
 	xxx_messageInfo_LockRequest.DiscardUnknown(m)
 }
@@ -108,9 +116,11 @@ func (*LockResponse) ProtoMessage()    {}
 func (*LockResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_52389b3e2f253201, []int{1}
 }
+
 func (m *LockResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
+
 func (m *LockResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_LockResponse.Marshal(b, m, deterministic)
@@ -123,12 +133,15 @@ func (m *LockResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error)
 		return b[:n], nil
 	}
 }
+
 func (m *LockResponse) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_LockResponse.Merge(m, src)
 }
+
 func (m *LockResponse) XXX_Size() int {
 	return m.Size()
 }
+
 func (m *LockResponse) XXX_DiscardUnknown() {
 	xxx_messageInfo_LockResponse.DiscardUnknown(m)
 }
@@ -163,9 +176,11 @@ func (*UnlockRequest) ProtoMessage()    {}
 func (*UnlockRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_52389b3e2f253201, []int{2}
 }
+
 func (m *UnlockRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
+
 func (m *UnlockRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_UnlockRequest.Marshal(b, m, deterministic)
@@ -178,12 +193,15 @@ func (m *UnlockRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error
 		return b[:n], nil
 	}
 }
+
 func (m *UnlockRequest) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_UnlockRequest.Merge(m, src)
 }
+
 func (m *UnlockRequest) XXX_Size() int {
 	return m.Size()
 }
+
 func (m *UnlockRequest) XXX_DiscardUnknown() {
 	xxx_messageInfo_UnlockRequest.DiscardUnknown(m)
 }
@@ -210,9 +228,11 @@ func (*UnlockResponse) ProtoMessage()    {}
 func (*UnlockResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_52389b3e2f253201, []int{3}
 }
+
 func (m *UnlockResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
+
 func (m *UnlockResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_UnlockResponse.Marshal(b, m, deterministic)
@@ -225,12 +245,15 @@ func (m *UnlockResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, erro
 		return b[:n], nil
 	}
 }
+
 func (m *UnlockResponse) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_UnlockResponse.Merge(m, src)
 }
+
 func (m *UnlockResponse) XXX_Size() int {
 	return m.Size()
 }
+
 func (m *UnlockResponse) XXX_DiscardUnknown() {
 	xxx_messageInfo_UnlockResponse.DiscardUnknown(m)
 }
@@ -345,12 +368,12 @@ type LockServer interface {
 }
 
 // UnimplementedLockServer can be embedded to have forward compatible implementations.
-type UnimplementedLockServer struct {
-}
+type UnimplementedLockServer struct{}
 
 func (*UnimplementedLockServer) Lock(ctx context.Context, req *LockRequest) (*LockResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Lock not implemented")
 }
+
 func (*UnimplementedLockServer) Unlock(ctx context.Context, req *UnlockRequest) (*UnlockResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Unlock not implemented")
 }
@@ -581,6 +604,7 @@ func encodeVarintV3Lock(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
+
 func (m *LockRequest) Size() (n int) {
 	if m == nil {
 		return 0
@@ -655,9 +679,11 @@ func (m *UnlockResponse) Size() (n int) {
 func sovV3Lock(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
+
 func sozV3Lock(x uint64) (n int) {
 	return sovV3Lock(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
+
 func (m *LockRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -762,6 +788,7 @@ func (m *LockRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
 func (m *LockResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -883,6 +910,7 @@ func (m *LockResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
 func (m *UnlockRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -968,6 +996,7 @@ func (m *UnlockRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
 func (m *UnlockResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1055,6 +1084,7 @@ func (m *UnlockResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
 func skipV3Lock(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0

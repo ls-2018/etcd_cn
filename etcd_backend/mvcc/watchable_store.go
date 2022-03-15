@@ -104,7 +104,6 @@ func (s *watchableStore) Close() error {
 }
 
 func (s *watchableStore) NewWatchStream() WatchStream {
-	watchStreamGauge.Inc()
 	return &watchStream{
 		watchable: s,
 		ch:        make(chan WatchResponse, chanBufLen),
@@ -133,13 +132,10 @@ func (s *watchableStore) watch(key, end []byte, startRev int64, id WatchID, ch c
 		}
 		s.synced.add(wa)
 	} else {
-		slowWatcherGauge.Inc()
 		s.unsynced.add(wa)
 	}
 	s.revMu.RUnlock()
 	s.mu.Unlock()
-
-	watcherGauge.Inc()
 
 	return wa, func() { s.cancelWatcher(wa) }
 }
@@ -149,14 +145,10 @@ func (s *watchableStore) cancelWatcher(wa *watcher) {
 	for {
 		s.mu.Lock()
 		if s.unsynced.delete(wa) {
-			slowWatcherGauge.Dec()
-			watcherGauge.Dec()
 			break
 		} else if s.synced.delete(wa) {
-			watcherGauge.Dec()
 			break
 		} else if wa.compacted {
-			watcherGauge.Dec()
 			break
 		} else if wa.ch == nil {
 			// already canceled (e.g., cancel/close race)
@@ -176,8 +168,6 @@ func (s *watchableStore) cancelWatcher(wa *watcher) {
 			}
 		}
 		if victimBatch != nil {
-			slowWatcherGauge.Dec()
-			watcherGauge.Dec()
 			delete(victimBatch, wa)
 			break
 		}
@@ -279,7 +269,6 @@ func (s *watchableStore) moveVictims() (moved int) {
 			// watcher has observed the store up to, but not including, w.minRev
 			rev := w.minRev - 1
 			if w.send(WatchResponse{WatchID: w.id, Events: eb.evs, Revision: rev}) {
-				pendingEventsGauge.Add(float64(len(eb.evs)))
 			} else {
 				if newVictim == nil {
 					newVictim = make(watcherBatch)
@@ -306,7 +295,6 @@ func (s *watchableStore) moveVictims() (moved int) {
 			if w.minRev <= curRev {
 				s.unsynced.add(w)
 			} else {
-				slowWatcherGauge.Dec()
 				s.synced.add(w)
 			}
 		}
@@ -379,7 +367,6 @@ func (s *watchableStore) syncWatchers() int {
 		}
 
 		if w.send(WatchResponse{WatchID: w.id, Events: eb.evs, Revision: curRev}) {
-			pendingEventsGauge.Add(float64(len(eb.evs)))
 		} else {
 			if victims == nil {
 				victims = make(watcherBatch)
@@ -404,8 +391,6 @@ func (s *watchableStore) syncWatchers() int {
 	for _, v := range s.victims {
 		vsz += len(v)
 	}
-	slowWatcherGauge.Set(float64(s.unsynced.size() + vsz))
-
 	return s.unsynced.size()
 }
 
@@ -444,7 +429,6 @@ func (s *watchableStore) notify(rev int64, evs []mvccpb.Event) {
 			)
 		}
 		if w.send(WatchResponse{WatchID: w.id, Events: eb.evs, Revision: rev}) {
-			pendingEventsGauge.Add(float64(len(eb.evs)))
 		} else {
 			// move slow watcher to victims
 			w.minRev = rev + 1
@@ -454,7 +438,6 @@ func (s *watchableStore) notify(rev int64, evs []mvccpb.Event) {
 			w.victim = true
 			victim[w] = eb
 			s.synced.delete(w)
-			slowWatcherGauge.Inc()
 		}
 	}
 	s.addVictim(victim)

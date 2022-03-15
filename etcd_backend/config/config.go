@@ -270,7 +270,6 @@ func (c *ServerConfig) WALDir() string {
 // SnapDir default.etcd/member/snap
 func (c *ServerConfig) SnapDir() string {
 	return datadir.ToSnapDir(c.DataDir)
-
 }
 
 func (c *ServerConfig) ShouldDiscover() bool { return c.DiscoveryURL != "" }

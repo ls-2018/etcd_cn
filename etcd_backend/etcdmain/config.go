@@ -78,7 +78,7 @@ type configProxy struct {
 // configFlags 是否有一组标志用于命令行解析配置
 type configFlags struct {
 	flagSet       *flag.FlagSet
-	clusterState  *flags.SelectiveStringValue //todo 设置new为初始静态或DNS引导期间出现的所有成员.如果将此选项设置为existing.则etcd将尝试加入现有群集.
+	clusterState  *flags.SelectiveStringValue // todo 设置new为初始静态或DNS引导期间出现的所有成员.如果将此选项设置为existing.则etcd将尝试加入现有群集.
 	fallback      *flags.SelectiveStringValue
 	proxy         *flags.SelectiveStringValue
 	v2deprecation *flags.SelectiveStringsValue
@@ -90,7 +90,7 @@ type config struct {
 	cp           configProxy // 代理配置
 	cf           configFlags // 是否有一组标志用于命令行解析配置
 	configFile   string      // 从文件加载服务器配置.
-	printVersion bool        //打印版本并退出
+	printVersion bool        // 打印版本并退出
 	ignored      []string
 }
 
@@ -335,7 +335,7 @@ func (cfg *config) configFromCmdLine() error {
 	if err != nil {
 		return err
 	}
-	err = flags.SetFlagsFromEnv(lg, "ETCD", cfg.cf.flagSet) //解析给定flagset中的所有注册标志,如果它们还没有被设置,则尝试从环境变量中设置其值.
+	err = flags.SetFlagsFromEnv(lg, "ETCD", cfg.cf.flagSet) // 解析给定flagset中的所有注册标志,如果它们还没有被设置,则尝试从环境变量中设置其值.
 	if err != nil {
 		return err
 	}
@@ -430,7 +430,7 @@ func (cfg *config) validate() error {
 	return err
 }
 
-//是否开启代理模式
+// 是否开启代理模式
 func (cfg config) isProxy() bool               { return cfg.cf.proxy.String() != proxyFlagOff }
 func (cfg config) isReadonlyProxy() bool       { return cfg.cf.proxy.String() == proxyFlagReadonly }
 func (cfg config) shouldFallbackToProxy() bool { return cfg.cf.fallback.String() == fallbackFlagProxy }

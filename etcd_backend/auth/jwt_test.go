@@ -127,14 +127,12 @@ func testJWTInfo(t *testing.T, opts map[string]string) {
 			if aerr != ErrVerifyOnly {
 				t.Fatalf("unexpected error when attempting to sign with public key: %v", aerr)
 			}
-
 		})
 	}
 }
 
 func TestJWTBad(t *testing.T) {
-
-	var badCases = map[string]map[string]string{
+	badCases := map[string]map[string]string{
 		"no options": {},
 		"invalid method": {
 			"sign-method": "invalid",

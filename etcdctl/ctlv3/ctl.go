@@ -35,17 +35,13 @@ const (
 	defaultKeepAliveTimeOut = 6 * time.Second
 )
 
-var (
-	globalFlags = command.GlobalFlags{}
-)
+var globalFlags = command.GlobalFlags{}
 
-var (
-	rootCmd = &cobra.Command{
-		Use:        cliName,
-		Short:      cliDescription,
-		SuggestFor: []string{"etcdctl"},
-	}
-)
+var rootCmd = &cobra.Command{
+	Use:        cliName,
+	Short:      cliDescription,
+	SuggestFor: []string{"etcdctl"},
+}
 
 func init() {
 	rootCmd.PersistentFlags().StringSliceVar(&globalFlags.Endpoints, "endpoints", []string{"127.0.0.1:2379"}, "gRPC端点")

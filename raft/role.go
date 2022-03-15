@@ -3,6 +3,7 @@ package raft
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/ls-2018/etcd_cn/raft/quorum"
 	pb "github.com/ls-2018/etcd_cn/raft/raftpb"
 	"github.com/ls-2018/etcd_cn/raft/tracker"
@@ -135,7 +136,7 @@ func (r *raft) Step(m pb.Message) error {
 				r.Vote = m.From // 当前节点的选票投给了谁做我Leader
 			}
 		} else {
-			//不满足上述投赞同票条件时,当前节点会返回拒绝票(响应消息中的Reject字段会设立成true)
+			// 不满足上述投赞同票条件时,当前节点会返回拒绝票(响应消息中的Reject字段会设立成true)
 			r.logger.Infof("%x [logterm: %d, index: %d, vote: %x] 拒绝来自投票请求 %s %x [logterm: %d, index: %d] 当前任期 %d",
 				r.id, r.raftLog.lastTerm(), r.raftLog.lastIndex(), r.Vote, m.Type, m.From, m.LogTerm, m.Index, r.Term)
 			r.send(pb.Message{To: m.From, Term: r.Term, Type: voteRespMsgType(m.Type), Reject: true})
@@ -191,7 +192,7 @@ func stepLeader(r *raft, m pb.Message) error {
 			return ErrProposalDropped
 		}
 
-		for i := range m.Entries { //判断是否有配置变更的日志,有的话做一些特殊处理
+		for i := range m.Entries { // 判断是否有配置变更的日志,有的话做一些特殊处理
 			e := &m.Entries[i]
 			var cc pb.ConfChangeI
 			if e.Type == pb.EntryConfChange {
@@ -229,7 +230,7 @@ func stepLeader(r *raft, m pb.Message) error {
 				}
 			}
 		}
-		//将日志追加到raft状态机中
+		// 将日志追加到raft状态机中
 		if !r.appendEntry(m.Entries...) {
 			return ErrProposalDropped
 		}
@@ -270,7 +271,7 @@ func stepLeader(r *raft, m pb.Message) error {
 
 		pr.RecentActive = true
 
-		if m.Reject { //MsgApp 消息被拒绝;如果收到的是reject消息,则根据follower反馈的index重新发送日志
+		if m.Reject { // MsgApp 消息被拒绝;如果收到的是reject消息,则根据follower反馈的index重新发送日志
 			_ = r.handleAppendEntries // 含有拒绝的逻辑
 			r.logger.Debugf("%x 收到 MsgAppResp(rejected, hint: (index %d, term %d)) from %x for index %d", r.id, m.RejectHint, m.LogTerm, m.From, m.Index)
 			// 发送的是  9 5
@@ -283,7 +284,7 @@ func stepLeader(r *raft, m pb.Message) error {
 				//   term (F)   1 1 1 1 2 2
 				nextProbeIdx = r.raftLog.findConflictByTerm(m.RejectHint, m.LogTerm) // 下一次直接发送索引为1的消息  🐂
 			}
-			//通过MsgAppResp消息携带的信息及对应的Progress状态,重新设立其Next
+			// 通过MsgAppResp消息携带的信息及对应的Progress状态,重新设立其Next
 			if pr.MaybeDecrTo(m.Index, nextProbeIdx) { // leader是否降低对该节点索引记录 ---- > 降低索引数据
 				r.logger.Debugf("%x回滚进度  节点:%x to [%s]", r.id, m.From, pr)
 				if pr.State == tracker.StateReplicate {
@@ -292,7 +293,7 @@ func stepLeader(r *raft, m pb.Message) error {
 				r.sendAppend(m.From)
 			}
 		} else {
-			//走到这说明   之前发送的MsgApp消息已经被对方的Follower节点接收（Entry记录被成功追加）
+			// 走到这说明   之前发送的MsgApp消息已经被对方的Follower节点接收（Entry记录被成功追加）
 			oldPaused := pr.IsPaused()
 			// m.Index: 对应Follower节点收到的raftLog中最后一条Entry记录的索引,
 			if pr.MaybeUpdate(m.Index) { // 更新pr的进度
@@ -309,19 +310,19 @@ func stepLeader(r *raft, m pb.Message) error {
 				case pr.State == tracker.StateReplicate:
 					pr.Inflights.FreeLE(m.Index)
 				}
-				//如果进度有更新,判断并更新commitIndex
-				//收到一个Follower节点的MsgAppResp消息之后,除了修改相应的Match和Next,还会尝试更新raftLog.committed,因为有些Entry记录可能在此次复制中被保存到了
-				//半数以上的节点中,raft.maybeCommit（）方法在前面已经分析过了
+				// 如果进度有更新,判断并更新commitIndex
+				// 收到一个Follower节点的MsgAppResp消息之后,除了修改相应的Match和Next,还会尝试更新raftLog.committed,因为有些Entry记录可能在此次复制中被保存到了
+				// 半数以上的节点中,raft.maybeCommit（）方法在前面已经分析过了
 				if r.maybeCommit() {
 					// committed index has progressed for the term, so it is safe
 					// to respond to pending read index requests
 					releasePendingReadIndexMessages(r)
-					//向所有节点发送MsgApp消息,注意,此次MsgApp消息的Commit字段与上次MsgApp消息已经不同,raft.bcastAppend()方法前面已经讲过
+					// 向所有节点发送MsgApp消息,注意,此次MsgApp消息的Commit字段与上次MsgApp消息已经不同,raft.bcastAppend()方法前面已经讲过
 
 					r.bcastAppend()
 				} else if oldPaused {
-					//之前是pause状态,现在可以任性地发消息了
-					//之前Leader节点暂停向该Follower节点发送消息,收到MsgAppResp消息后,在上述代码中已经重立了相应状态,所以可以继续发送MsgApp消息
+					// 之前是pause状态,现在可以任性地发消息了
+					// 之前Leader节点暂停向该Follower节点发送消息,收到MsgAppResp消息后,在上述代码中已经重立了相应状态,所以可以继续发送MsgApp消息
 					// If we were paused before, this localNode may be missing the
 					// latest commit index, so send it.
 					r.sendAppend(m.From)
@@ -457,7 +458,7 @@ func stepCandidate(r *raft, m pb.Message) error {
 		r.handleSnapshot(m)
 	case myVoteRespType: // ✅
 		// 投票、预投票
-		//处理收到的选举响应消息,当前示例中处理的是MsgPreVoteResp消息
+		// 处理收到的选举响应消息,当前示例中处理的是MsgPreVoteResp消息
 		gr, rj, res := r.poll(m.From, m.Type, !m.Reject) // 计算当前收到多少投票
 		r.logger.Infof("%x 收到了 %d %s 同已投票 %d 拒绝投票", r.id, gr, m.Type, rj)
 		// 投票数、拒绝数 过半判定

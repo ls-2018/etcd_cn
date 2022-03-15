@@ -16,9 +16,10 @@ package rafthttp
 
 import (
 	"context"
-	"github.com/ls-2018/etcd_cn/raft"
 	"sync"
 	"time"
+
+	"github.com/ls-2018/etcd_cn/raft"
 
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/snap"

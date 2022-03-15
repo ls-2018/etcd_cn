@@ -88,7 +88,6 @@ func (wb *watchBroadcast) bcast(wr clientv3.WatchResponse) {
 		r.send(wr)
 	}
 	if len(wb.receivers) > 0 {
-		eventsCoalescing.Add(float64(len(wb.receivers) - 1))
 	}
 }
 
@@ -122,10 +121,10 @@ func (wb *watchBroadcast) add(w *watcher) bool {
 		return false
 	}
 	wb.receivers[w] = struct{}{}
-	watchersCoalescing.Inc()
 
 	return true
 }
+
 func (wb *watchBroadcast) delete(w *watcher) {
 	wb.mu.Lock()
 	defer wb.mu.Unlock()
@@ -135,7 +134,6 @@ func (wb *watchBroadcast) delete(w *watcher) {
 	delete(wb.receivers, w)
 	if len(wb.receivers) > 0 {
 		// do not dec the only left watcher for coalescing.
-		watchersCoalescing.Dec()
 	}
 }
 
@@ -150,7 +148,6 @@ func (wb *watchBroadcast) empty() bool { return wb.size() == 0 }
 func (wb *watchBroadcast) stop() {
 	if !wb.empty() {
 		// do not dec the only left watcher for coalescing.
-		watchersCoalescing.Sub(float64(wb.size() - 1))
 	}
 
 	wb.cancel()

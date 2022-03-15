@@ -29,8 +29,6 @@ import (
 	"github.com/ls-2018/etcd_cn/pkg/traceutil"
 	"go.etcd.io/etcd/api/v3/mvccpb"
 
-	"github.com/prometheus/client_golang/prometheus"
-	dto "github.com/prometheus/client_model/go"
 	"go.uber.org/zap"
 )
 
@@ -648,15 +646,10 @@ func TestKVRestore(t *testing.T) {
 			kvss = append(kvss, r.KVs)
 		}
 
-		keysBefore := readGaugeInt(keysGauge)
 		s.Close()
 
 		// ns should recover the the previous state from backend.
 		ns := NewStore(zap.NewExample(), b, &lease.FakeLessor{}, StoreConfig{})
-
-		if keysRestore := readGaugeInt(keysGauge); keysBefore != keysRestore {
-			t.Errorf("#%d: got %d key count, expected %d", i, keysRestore, keysBefore)
-		}
 
 		// wait for possible compaction to finish
 		testutil.WaitSchedule()
@@ -671,15 +664,6 @@ func TestKVRestore(t *testing.T) {
 			t.Errorf("#%d: kvs history = %+v, want %+v", i, nkvss, kvss)
 		}
 	}
-}
-
-func readGaugeInt(g prometheus.Gauge) int {
-	ch := make(chan prometheus.Metric, 1)
-	g.Collect(ch)
-	m := <-ch
-	mm := &dto.Metric{}
-	m.Write(mm)
-	return int(mm.GetGauge().GetValue())
 }
 
 func TestKVSnapshot(t *testing.T) {
@@ -729,7 +713,8 @@ func TestWatchableKVWatch(t *testing.T) {
 	wid, _ := w.Watch(0, []byte("foo"), []byte("fop"), 0)
 
 	wev := []mvccpb.Event{
-		{Type: mvccpb.PUT,
+		{
+			Type: mvccpb.PUT,
 			Kv: &mvccpb.KeyValue{
 				Key:            []byte("foo"),
 				Value:          []byte("bar"),

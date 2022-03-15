@@ -124,21 +124,21 @@ func init() {
 	defaultHostname, defaultHostStatus = netutil.GetDefaultHost()
 	fmt.Println("defaultHostname", defaultHostname)
 	fmt.Println("defaultHostStatus", defaultHostStatus)
-	//defaultHostname 172.17.0.2
-	//defaultHostStatus <nil>
+	// defaultHostname 172.17.0.2
+	// defaultHostStatus <nil>
 }
 
 // Config 保存配置etcd的参数etcd.
 type Config struct {
 	Name string `json:"name"`     // 节点的名字
 	Dir  string `json:"data-dir"` // 数据目录
-	//独立设置wal目录.etcd会将WAL文件写入  --wal-dir而不是--data-dir. 独立的wal路径.有助于避免日志记录和其他IO操作之间的竞争.
+	// 独立设置wal目录.etcd会将WAL文件写入  --wal-dir而不是--data-dir. 独立的wal路径.有助于避免日志记录和其他IO操作之间的竞争.
 	WalDir string `json:"wal-dir"` // 专用wal目录的路径.
 
 	SnapshotCount uint64 `json:"snapshot-count"` // 触发一次磁盘快照的提交事务的次数
 
 	// SnapshotCatchUpEntries 是在压缩raft存储条目后,慢的follower要追赶的条目数.我们预计follower与leader之间有毫秒级的延迟.
-	//最大吞吐量大约为10K.保持一个5K的条目就足够帮助follower赶上了.
+	// 最大吞吐量大约为10K.保持一个5K的条目就足够帮助follower赶上了.
 	SnapshotCatchUpEntries uint64
 
 	MaxSnapFiles uint `json:"max-snapshots"` // 最大快照数
@@ -186,9 +186,9 @@ type Config struct {
 	BackendBatchLimit int `json:"backend-batch-limit"`
 
 	BackendFreelistType string `json:"backend-bbolt-freelist-type"` // BackendFreelistType指定boltdb后端使用的freelist的类型(array and map是支持的类型).
-	QuotaBackendBytes   int64  `json:"quota-backend-bytes"`         //当后端大小超过给定配额时(0默认为低空间配额).引发警报.
-	MaxTxnOps           uint   `json:"max-txn-ops"`                 //事务中允许的最大操作数.
-	MaxRequestBytes     uint   `json:"max-request-bytes"`           //服务器将接受的最大客户端请求大小(字节).
+	QuotaBackendBytes   int64  `json:"quota-backend-bytes"`         // 当后端大小超过给定配额时(0默认为低空间配额).引发警报.
+	MaxTxnOps           uint   `json:"max-txn-ops"`                 // 事务中允许的最大操作数.
+	MaxRequestBytes     uint   `json:"max-request-bytes"`           // 服务器将接受的最大客户端请求大小(字节).
 
 	LPUrls []url.URL // 和etcd  server 成员之间通信的地址.用于监听其他etcd member的url
 	LCUrls []url.URL // 这个参数是etcd服务器自己监听时用的,也就是说,监听本机上的哪个网卡,哪个端口
@@ -200,7 +200,7 @@ type Config struct {
 	ClientAutoTLS bool
 
 	PeerTLSInfo transport.TLSInfo
-	PeerAutoTLS bool //节点之间使用生成的证书通信;默认false
+	PeerAutoTLS bool // 节点之间使用生成的证书通信;默认false
 	// SelfSignedCertValidity 客户端证书和同级证书的有效期,单位为年 ;etcd自动生成的 如果指定了ClientAutoTLS and PeerAutoTLS,
 	SelfSignedCertValidity uint `json:"self-signed-cert-validity"`
 
@@ -242,9 +242,9 @@ type Config struct {
 
 	CORS map[string]struct{}
 
-	//列出可接受的来自HTTP客户端请求的主机名.客户端来源策略可以防止对不安全的etcd服务器的 "DNS重定向 "攻击.
-	//也就是说.任何网站可以简单地创建一个授权的DNS名称.并将DNS指向 "localhost"(或任何其他地址).
-	//然后.所有监听 "localhost "的etcd的HTTP端点都变得可以访问.从而容易受到DNS重定向攻击.
+	// 列出可接受的来自HTTP客户端请求的主机名.客户端来源策略可以防止对不安全的etcd服务器的 "DNS重定向 "攻击.
+	// 也就是说.任何网站可以简单地创建一个授权的DNS名称.并将DNS指向 "localhost"(或任何其他地址).
+	// 然后.所有监听 "localhost "的etcd的HTTP端点都变得可以访问.从而容易受到DNS重定向攻击.
 	HostWhitelist map[string]struct{}
 
 	// UserHandlers 是用来注册用户处理程序的,只用于将etcd嵌入到其他应用程序中.
@@ -397,7 +397,7 @@ func NewConfig() *Config {
 		SnapshotCount:          etcdserver.DefaultSnapshotCount,          // 快照数量
 		SnapshotCatchUpEntries: etcdserver.DefaultSnapshotCatchUpEntries, // 触发快照到磁盘的已提交事务数.
 
-		MaxTxnOps:                        DefaultMaxTxnOps,            //事务中允许的最大操作数. 128
+		MaxTxnOps:                        DefaultMaxTxnOps,            // 事务中允许的最大操作数. 128
 		MaxRequestBytes:                  DefaultMaxRequestBytes,      // 最大请求体, 1.5M
 		ExperimentalWarningApplyDuration: DefaultWarningApplyDuration, // 是时间长度.如果应用请求的时间超过这个值.就会产生一个警告. 100ms
 
@@ -408,7 +408,7 @@ func NewConfig() *Config {
 		SocketOpts: transport.SocketOpts{}, // 套接字配置
 
 		TickMs:                     100,  // 心跳间隔100ms
-		ElectionMs:                 1000, //选举超时 1s
+		ElectionMs:                 1000, // 选举超时 1s
 		InitialElectionTickAdvance: true,
 
 		LPUrls: []url.URL{*lpurl}, // "http://localhost:2380"
@@ -416,7 +416,7 @@ func NewConfig() *Config {
 		APUrls: []url.URL{*apurl}, // "http://localhost:2379"
 		ACUrls: []url.URL{*acurl}, // "http://localhost:2379"
 
-		//设置new为初始静态或DNS引导期间出现的所有成员.如果将此选项设置为existing.则etcd将尝试加入现有群集.
+		// 设置new为初始静态或DNS引导期间出现的所有成员.如果将此选项设置为existing.则etcd将尝试加入现有群集.
 		ClusterState:        ClusterStateFlagNew, // 状态标志、默认new
 		InitialClusterToken: "etcd-cluster",
 		StrictReconfigCheck: DefaultStrictReconfigCheck, // 拒绝可能导致仲裁丢失的重新配置请求
@@ -439,7 +439,7 @@ func NewConfig() *Config {
 		EnableLogRotation:     false,                      // 默认不允许日志旋转
 		LogRotationConfigJSON: DefaultLogRotationConfig,   // 是用于日志轮换的默认配置. 默认情况下,日志轮换是禁用的.
 		EnableGRPCGateway:     true,                       // 将http->grpc
-		//实验性
+		// 实验性
 		ExperimentalDowngradeCheckTime:           DefaultDowngradeCheckTime, // 两次降级状态检查之间的时间间隔.
 		ExperimentalMemoryMlock:                  false,                     // 内存页锁定
 		ExperimentalTxnModeWriteWithSharedBuffer: true,                      // 启用写事务在其只读检查操作中使用共享缓冲区.

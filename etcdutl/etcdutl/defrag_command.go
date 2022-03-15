@@ -25,9 +25,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	defragDataDir string
-)
+var defragDataDir string
 
 // NewDefragCommand returns the cobra command for "Defrag".
 func NewDefragCommand() *cobra.Command {

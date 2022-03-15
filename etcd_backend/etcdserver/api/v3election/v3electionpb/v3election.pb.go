@@ -21,8 +21,11 @@ import (
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
-var _ = fmt.Errorf
-var _ = math.Inf
+
+var (
+	_ = fmt.Errorf
+	_ = math.Inf
+)
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
@@ -51,9 +54,11 @@ func (*CampaignRequest) ProtoMessage()    {}
 func (*CampaignRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_c9b1f26cc432a035, []int{0}
 }
+
 func (m *CampaignRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
+
 func (m *CampaignRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_CampaignRequest.Marshal(b, m, deterministic)
@@ -66,12 +71,15 @@ func (m *CampaignRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, err
 		return b[:n], nil
 	}
 }
+
 func (m *CampaignRequest) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_CampaignRequest.Merge(m, src)
 }
+
 func (m *CampaignRequest) XXX_Size() int {
 	return m.Size()
 }
+
 func (m *CampaignRequest) XXX_DiscardUnknown() {
 	xxx_messageInfo_CampaignRequest.DiscardUnknown(m)
 }
@@ -114,9 +122,11 @@ func (*CampaignResponse) ProtoMessage()    {}
 func (*CampaignResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_c9b1f26cc432a035, []int{1}
 }
+
 func (m *CampaignResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
+
 func (m *CampaignResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_CampaignResponse.Marshal(b, m, deterministic)
@@ -129,12 +139,15 @@ func (m *CampaignResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, er
 		return b[:n], nil
 	}
 }
+
 func (m *CampaignResponse) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_CampaignResponse.Merge(m, src)
 }
+
 func (m *CampaignResponse) XXX_Size() int {
 	return m.Size()
 }
+
 func (m *CampaignResponse) XXX_DiscardUnknown() {
 	xxx_messageInfo_CampaignResponse.DiscardUnknown(m)
 }
@@ -178,9 +191,11 @@ func (*LeaderKey) ProtoMessage()    {}
 func (*LeaderKey) Descriptor() ([]byte, []int) {
 	return fileDescriptor_c9b1f26cc432a035, []int{2}
 }
+
 func (m *LeaderKey) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
+
 func (m *LeaderKey) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_LeaderKey.Marshal(b, m, deterministic)
@@ -193,12 +208,15 @@ func (m *LeaderKey) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
+
 func (m *LeaderKey) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_LeaderKey.Merge(m, src)
 }
+
 func (m *LeaderKey) XXX_Size() int {
 	return m.Size()
 }
+
 func (m *LeaderKey) XXX_DiscardUnknown() {
 	xxx_messageInfo_LeaderKey.DiscardUnknown(m)
 }
@@ -247,9 +265,11 @@ func (*LeaderRequest) ProtoMessage()    {}
 func (*LeaderRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_c9b1f26cc432a035, []int{3}
 }
+
 func (m *LeaderRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
+
 func (m *LeaderRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_LeaderRequest.Marshal(b, m, deterministic)
@@ -262,12 +282,15 @@ func (m *LeaderRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error
 		return b[:n], nil
 	}
 }
+
 func (m *LeaderRequest) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_LeaderRequest.Merge(m, src)
 }
+
 func (m *LeaderRequest) XXX_Size() int {
 	return m.Size()
 }
+
 func (m *LeaderRequest) XXX_DiscardUnknown() {
 	xxx_messageInfo_LeaderRequest.DiscardUnknown(m)
 }
@@ -296,9 +319,11 @@ func (*LeaderResponse) ProtoMessage()    {}
 func (*LeaderResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_c9b1f26cc432a035, []int{4}
 }
+
 func (m *LeaderResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
+
 func (m *LeaderResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_LeaderResponse.Marshal(b, m, deterministic)
@@ -311,12 +336,15 @@ func (m *LeaderResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, erro
 		return b[:n], nil
 	}
 }
+
 func (m *LeaderResponse) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_LeaderResponse.Merge(m, src)
 }
+
 func (m *LeaderResponse) XXX_Size() int {
 	return m.Size()
 }
+
 func (m *LeaderResponse) XXX_DiscardUnknown() {
 	xxx_messageInfo_LeaderResponse.DiscardUnknown(m)
 }
@@ -351,9 +379,11 @@ func (*ResignRequest) ProtoMessage()    {}
 func (*ResignRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_c9b1f26cc432a035, []int{5}
 }
+
 func (m *ResignRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
+
 func (m *ResignRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_ResignRequest.Marshal(b, m, deterministic)
@@ -366,12 +396,15 @@ func (m *ResignRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error
 		return b[:n], nil
 	}
 }
+
 func (m *ResignRequest) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_ResignRequest.Merge(m, src)
 }
+
 func (m *ResignRequest) XXX_Size() int {
 	return m.Size()
 }
+
 func (m *ResignRequest) XXX_DiscardUnknown() {
 	xxx_messageInfo_ResignRequest.DiscardUnknown(m)
 }
@@ -398,9 +431,11 @@ func (*ResignResponse) ProtoMessage()    {}
 func (*ResignResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_c9b1f26cc432a035, []int{6}
 }
+
 func (m *ResignResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
+
 func (m *ResignResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_ResignResponse.Marshal(b, m, deterministic)
@@ -413,12 +448,15 @@ func (m *ResignResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, erro
 		return b[:n], nil
 	}
 }
+
 func (m *ResignResponse) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_ResignResponse.Merge(m, src)
 }
+
 func (m *ResignResponse) XXX_Size() int {
 	return m.Size()
 }
+
 func (m *ResignResponse) XXX_DiscardUnknown() {
 	xxx_messageInfo_ResignResponse.DiscardUnknown(m)
 }
@@ -448,9 +486,11 @@ func (*ProclaimRequest) ProtoMessage()    {}
 func (*ProclaimRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_c9b1f26cc432a035, []int{7}
 }
+
 func (m *ProclaimRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
+
 func (m *ProclaimRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_ProclaimRequest.Marshal(b, m, deterministic)
@@ -463,12 +503,15 @@ func (m *ProclaimRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, err
 		return b[:n], nil
 	}
 }
+
 func (m *ProclaimRequest) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_ProclaimRequest.Merge(m, src)
 }
+
 func (m *ProclaimRequest) XXX_Size() int {
 	return m.Size()
 }
+
 func (m *ProclaimRequest) XXX_DiscardUnknown() {
 	xxx_messageInfo_ProclaimRequest.DiscardUnknown(m)
 }
@@ -502,9 +545,11 @@ func (*ProclaimResponse) ProtoMessage()    {}
 func (*ProclaimResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_c9b1f26cc432a035, []int{8}
 }
+
 func (m *ProclaimResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
+
 func (m *ProclaimResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_ProclaimResponse.Marshal(b, m, deterministic)
@@ -517,12 +562,15 @@ func (m *ProclaimResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, er
 		return b[:n], nil
 	}
 }
+
 func (m *ProclaimResponse) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_ProclaimResponse.Merge(m, src)
 }
+
 func (m *ProclaimResponse) XXX_Size() int {
 	return m.Size()
 }
+
 func (m *ProclaimResponse) XXX_DiscardUnknown() {
 	xxx_messageInfo_ProclaimResponse.DiscardUnknown(m)
 }
@@ -713,21 +761,24 @@ type ElectionServer interface {
 }
 
 // UnimplementedElectionServer can be embedded to have forward compatible implementations.
-type UnimplementedElectionServer struct {
-}
+type UnimplementedElectionServer struct{}
 
 func (*UnimplementedElectionServer) Campaign(ctx context.Context, req *CampaignRequest) (*CampaignResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Campaign not implemented")
 }
+
 func (*UnimplementedElectionServer) Proclaim(ctx context.Context, req *ProclaimRequest) (*ProclaimResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Proclaim not implemented")
 }
+
 func (*UnimplementedElectionServer) Leader(ctx context.Context, req *LeaderRequest) (*LeaderResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Leader not implemented")
 }
+
 func (*UnimplementedElectionServer) Observe(req *LeaderRequest, srv Election_ObserveServer) error {
 	return status.Errorf(codes.Unimplemented, "method Observe not implemented")
 }
+
 func (*UnimplementedElectionServer) Resign(ctx context.Context, req *ResignRequest) (*ResignResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Resign not implemented")
 }
@@ -1267,6 +1318,7 @@ func encodeVarintV3Election(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
+
 func (m *CampaignRequest) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1443,9 +1495,7 @@ func (m *ProclaimResponse) Size() (n int) {
 func sovV3Election(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
-func sozV3Election(x uint64) (n int) {
-	return sovV3Election(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
+
 func (m *CampaignRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1584,6 +1634,7 @@ func (m *CampaignRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
 func (m *CampaignResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1707,6 +1758,7 @@ func (m *CampaignResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
 func (m *LeaderKey) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1864,6 +1916,7 @@ func (m *LeaderKey) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
 func (m *LeaderRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1949,6 +2002,7 @@ func (m *LeaderRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
 func (m *LeaderResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2072,6 +2126,7 @@ func (m *LeaderResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
 func (m *ResignRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2159,6 +2214,7 @@ func (m *ResignRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
 func (m *ResignResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2246,6 +2302,7 @@ func (m *ResignResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
 func (m *ProclaimRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2367,6 +2424,7 @@ func (m *ProclaimRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
 func (m *ProclaimResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2454,6 +2512,7 @@ func (m *ProclaimResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
 func skipV3Election(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0

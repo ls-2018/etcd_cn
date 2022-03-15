@@ -342,7 +342,7 @@ func startProxy(cfg *config) error {
 			return clientURLs
 		}
 
-		err = pkgioutil.WriteAndSyncFile(clusterfile+".bak", b, 0600)
+		err = pkgioutil.WriteAndSyncFile(clusterfile+".bak", b, 0o600)
 		if err != nil {
 			lg.Warn("proxy failed to write cluster file", zap.Error(err))
 			return clientURLs
@@ -453,7 +453,7 @@ func checkSupportArch() {
 		runtime.GOARCH == "s390x" {
 		return
 	}
-	//不支持的架构 仅通过环境变量配置,因此在这里取消设置不通过解析标志
+	// 不支持的架构 仅通过环境变量配置,因此在这里取消设置不通过解析标志
 	defer os.Unsetenv("ETCD_UNSUPPORTED_ARCH")
 	if env, ok := os.LookupEnv("ETCD_UNSUPPORTED_ARCH"); ok && env == runtime.GOARCH {
 		fmt.Printf("在不支持的体系结构上运行etcd%q 当 ETCD_UNSUPPORTED_ARCH 设置了\n", env)

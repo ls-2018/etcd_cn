@@ -49,7 +49,6 @@ func newWatchHub(capacity int) *watcherHub {
 // If index is zero, watch will start from the current index + 1.
 func (wh *watcherHub) watch(key string, recursive, stream bool, index, storeIndex uint64) (Watcher, *v2error.Error) {
 	event, err := wh.EventHistory.scan(key, recursive, index)
-
 	if err != nil {
 		err.Index = storeIndex
 		return nil, err

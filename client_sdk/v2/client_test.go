@@ -291,7 +291,7 @@ func TestSimpleHTTPClientDoCancelContextWaitForRoundTrip(t *testing.T) {
 
 	select {
 	case <-donechan:
-		//expected behavior
+		// expected behavior
 		return
 	case <-time.After(time.Second):
 		t.Fatalf("simpleHTTPClient.Do did not exit within 1s")

@@ -68,9 +68,9 @@ func (pr *Progress) MaybeDecrTo(rejected, matchHint uint64) bool {
 		if rejected <= pr.Match {
 			return false
 		}
-		//根据前面对MsgApp消息发送过程的分析,处于ProgressStateReplicate状态时,发送MsgApp
-		//消息的同时会直接调用Progress.optimisticUpdate（）方法增加Next,这就使得Next可能会
-		//比Match大很多,这里回退Next至Match位置,并在后面重新发送MsgApp消息进行尝试
+		// 根据前面对MsgApp消息发送过程的分析,处于ProgressStateReplicate状态时,发送MsgApp
+		// 消息的同时会直接调用Progress.optimisticUpdate（）方法增加Next,这就使得Next可能会
+		// 比Match大很多,这里回退Next至Match位置,并在后面重新发送MsgApp消息进行尝试
 
 		// 在复制状态下Leader会发送多个日志信息给Peer再等待Peer的回复,例如：Match+1,Match+2,Match+3,Match+4,
 		// 此时如果Match+3丢了,那么Match+4肯定好会被拒绝,此时match应该是Match+2,Next=last+1
@@ -90,7 +90,7 @@ func (pr *Progress) MaybeDecrTo(rejected, matchHint uint64) bool {
 	// 一个日志消息如果带有多条日志,Peer拒绝的是其中一条日志.此时用什么判断拒绝索引日志就在刚刚
 	// 发送的探测消息中呢？所以探测消息一次只发送一条日志就能做到了,因为这个日志的索引肯定是Next-1.
 
-	//出现过时的MsgAppResp消息直接忽略
+	// 出现过时的MsgAppResp消息直接忽略
 	// 只有拒绝比当前大,才会重新      一般都是当前记录了A ,给follower发送了A+1,[leader会将Next设为A+2] ,被拒绝了   此时 rejected=A+1
 	if pr.Next-1 != rejected {
 		return false

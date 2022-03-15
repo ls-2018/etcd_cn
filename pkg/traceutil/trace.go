@@ -16,7 +16,6 @@
 package traceutil
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"time"
@@ -37,19 +36,6 @@ type Field struct {
 
 func (f *Field) format() string {
 	return fmt.Sprintf("%s:%v; ", f.Key, f.Value)
-}
-
-func writeFields(fields []Field) string {
-	if len(fields) == 0 {
-		return ""
-	}
-	var buf bytes.Buffer
-	buf.WriteString("{")
-	for _, f := range fields {
-		buf.WriteString(f.format())
-	}
-	buf.WriteString("}")
-	return buf.String()
 }
 
 type Trace struct {

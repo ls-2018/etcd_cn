@@ -181,8 +181,6 @@ func newSnapshotHandler(t *Transport, r Raft, snapshotter *snap.Snapshotter, cid
 	return h
 }
 
-const unknownSnapshotSender = "UNKNOWN_SNAPSHOT_SENDER"
-
 // ServeHTTP serves HTTP request to receive and process snapshot message.
 //
 // If request sender dies without closing underlying TCP connection,

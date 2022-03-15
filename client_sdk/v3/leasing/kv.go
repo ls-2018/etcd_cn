@@ -304,7 +304,7 @@ func (lkv *leasingKV) get(ctx context.Context, op v3.Op) (*v3.GetResponse, error
 	if resp, ok := lkv.leases.Get(ctx, op); resp != nil {
 		return resp, nil
 	} else if !ok || op.IsSerializable() {
-		//必须是handled by etcd or can skip linearization
+		// 必须是handled by etcd or can skip linearization
 		return do()
 	}
 

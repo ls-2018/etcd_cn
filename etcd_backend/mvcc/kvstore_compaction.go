@@ -33,8 +33,6 @@ func (s *store) scheduleCompaction(compactMainRev int64, keep map[revision]struc
 	for {
 		var rev revision
 
-		start := time.Now()
-
 		tx := s.b.BatchTx()
 		tx.Lock()
 		keys, _ := tx.UnsafeRange(buckets.Key, last, end, int64(s.cfg.CompactionBatchLimit))

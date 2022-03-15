@@ -40,7 +40,6 @@ const (
 	StateCandidate
 	StateLeader
 	StatePreCandidate
-	numStates
 )
 
 type ReadOnlyOption int
@@ -48,13 +47,13 @@ type ReadOnlyOption int
 const (
 	ReadOnlySafe ReadOnlyOption = iota
 	ReadOnlyLeaseBased
-	//1、 ReadOnlySafe
+	// 1、 ReadOnlySafe
 	//	该线性读模式,每次 Follower 进行读请求时,需要和 Leader 同步日志提交位点信息,而 Leader ,需要向过半的 Follower 发起证明自己是 Leader 的轻量的 RPC 请求,
 	//	相当于一个 Follower 读,至少需要 1 +(n/2)+ 1 次的 RPC 请求.
-	//2、ReadOnlyLeaseBased
-	//该线性读模式,每次 Follower 进行读请求时, Leader 只需要判断自己的 Leader 租约是否过期了,如果没有过期,直接可以回复 Follower 自己是 Leader ,
+	// 2、ReadOnlyLeaseBased
+	// 该线性读模式,每次 Follower 进行读请求时, Leader 只需要判断自己的 Leader 租约是否过期了,如果没有过期,直接可以回复 Follower 自己是 Leader ,
 	// 但是该机制对于机器时钟要求很严格,如果有做时钟同步的话,可以考虑使用该线性读模式.
-	//如果说对于配置的发布、修改操作比较频繁,可以将 Raft 快照的时间适当的进行调整,避免新节点加入或者节点重启时,由于 Raft 日志回放操作数太多导致节点可开始对外服务的时间过长.
+	// 如果说对于配置的发布、修改操作比较频繁,可以将 Raft 快照的时间适当的进行调整,避免新节点加入或者节点重启时,由于 Raft 日志回放操作数太多导致节点可开始对外服务的时间过长.
 
 )
 
@@ -288,11 +287,11 @@ func newRaft(c *Config) *raft {
 	}
 	assertConfStatesEquivalent(r.logger, cs, r.switchToConfig(cfg, prs)) // 判断相不相等
 	// -----------------------
-	//根据从Storage中获取的HardState,初始化raftLog.committed字段,以及raft.Term和Vote字段
+	// 根据从Storage中获取的HardState,初始化raftLog.committed字段,以及raft.Term和Vote字段
 	if !IsEmptyHardState(hs) { // 判断初始状态是不是空的
 		r.loadState(hs) // 更新状态索引信息
 	}
-	//如采Config中己置了Applied,则将raftLog.applied字段重直为指定的Applied值上层模块自己的控制正确的己应用位置时使用该配置
+	// 如采Config中己置了Applied,则将raftLog.applied字段重直为指定的Applied值上层模块自己的控制正确的己应用位置时使用该配置
 	if c.Applied > 0 {
 		raftlog.appliedTo(c.Applied) // ✅
 	}
@@ -327,18 +326,18 @@ func (r *raft) send(m pb.Message) {
 	if m.From == None {
 		m.From = r.id
 	}
-	//数据校验,选举类消息必须带term属性
+	// 数据校验,选举类消息必须带term属性
 	// 竞选投票相关的消息类型,必须设置term
 	if m.Type == pb.MsgVote || m.Type == pb.MsgVoteResp || m.Type == pb.MsgPreVote || m.Type == pb.MsgPreVoteResp {
 		if m.Term == 0 {
 			panic(fmt.Sprintf("任期应该被设置%s", m.Type))
 		}
 	} else {
-		//其它类消息不能带term属性
+		// 其它类消息不能带term属性
 		if m.Term != 0 {
 			panic(fmt.Sprintf("任期不能被设置,当 %s (was %d)", m.Type, m.Term))
 		}
-		//除了MsgProp和MsgReadIndex消息外,设置term为raft当前周期
+		// 除了MsgProp和MsgReadIndex消息外,设置term为raft当前周期
 		if m.Type != pb.MsgProp && m.Type != pb.MsgReadIndex {
 			m.Term = r.Term
 		}
@@ -361,7 +360,7 @@ func (r *raft) sendHeartbeat(to uint64, ctx []byte) {
 
 // bcastAppend 向集群中其他节点广播MsgApp消息
 func (r *raft) bcastAppend() {
-	//遍历所有节点,给除自己外的节点发送日志Append消息
+	// 遍历所有节点,给除自己外的节点发送日志Append消息
 	r.prs.Visit(func(id uint64, _ *tracker.Progress) {
 		if id == r.id {
 			return
@@ -381,14 +380,14 @@ func (r *raft) maybeSendAppend(to uint64, sendIfEmpty bool) bool {
 	// 在消息发送之前会检测当前节点的状态,然后查找待发迭的Entry记录并封装成MsgApp消息,
 	// 之后根据对应节点的Progress.State值决定发送消息之后的操作
 
-	//1. 获取对端节点当前同步进度
+	// 1. 获取对端节点当前同步进度
 	pr := r.prs.Progress[to]
 	if pr.IsPaused() {
 		return false
 	}
 	m := pb.Message{}
 	m.To = to
-	//2. 注意这里带的term是本次发送给follower的第一条日志条目的term
+	// 2. 注意这里带的term是本次发送给follower的第一条日志条目的term
 	term, errt := r.raftLog.term(pr.Next - 1)              // leader认为 follower所在的任期
 	ents, erre := r.raftLog.entries(pr.Next, r.maxMsgSize) // 要发给follower的日志
 	if len(ents) == 0 && !sendIfEmpty {
@@ -397,7 +396,7 @@ func (r *raft) maybeSendAppend(to uint64, sendIfEmpty bool) bool {
 	}
 
 	if errt != nil || erre != nil {
-		//3. 如果获取term或日志失败,说明follower落后太多,raftLog内存中日志已经做过快照后被删除了
+		// 3. 如果获取term或日志失败,说明follower落后太多,raftLog内存中日志已经做过快照后被删除了
 		// 根据日志进度去取日志条目的时候发现,follower日志落后太多,这通常出现在新节点刚加入或者网络连接出现故障的情况下.
 		// 那么在这种情况下,leader改为发送最近一次快照给Follower,从而提高同步效率
 
@@ -405,7 +404,7 @@ func (r *raft) maybeSendAppend(to uint64, sendIfEmpty bool) bool {
 			r.logger.Debugf("ignore sending snapshot to %x since it is not recently active", to)
 			return false
 		}
-		//4. 改为发送Snapshot消息
+		// 4. 改为发送Snapshot消息
 		m.Type = pb.MsgSnap
 		snapshot, err := r.raftLog.snapshot()
 		if err != nil {
@@ -425,13 +424,13 @@ func (r *raft) maybeSendAppend(to uint64, sendIfEmpty bool) bool {
 		pr.BecomeSnapshot(sindex)
 		r.logger.Debugf("%x paused sending replication messages to %x [%s]", r.id, to, pr)
 	} else {
-		//5. 发送Append消息
-		m.Type = pb.MsgApp             //设置消息类型
-		m.Index = pr.Next - 1          //设置MsgApp消息的Index字段
-		m.LogTerm = term               //设置MsgApp消息的LogTerm字段
-		m.Entries = ents               //设置消息携带的Entry记录集合
-		m.Commit = r.raftLog.committed //设置消息的Commit字段,即当前节点的raftLog中最后一条已提交的记录索引值
-		//6. 每次发送日志或心跳都会带上最新的commitIndex
+		// 5. 发送Append消息
+		m.Type = pb.MsgApp             // 设置消息类型
+		m.Index = pr.Next - 1          // 设置MsgApp消息的Index字段
+		m.LogTerm = term               // 设置MsgApp消息的LogTerm字段
+		m.Entries = ents               // 设置消息携带的Entry记录集合
+		m.Commit = r.raftLog.committed // 设置消息的Commit字段,即当前节点的raftLog中最后一条已提交的记录索引值
+		// 6. 每次发送日志或心跳都会带上最新的commitIndex
 		m.Commit = r.raftLog.committed
 		if n := len(m.Entries); n != 0 {
 			switch pr.State {
@@ -448,7 +447,7 @@ func (r *raft) maybeSendAppend(to uint64, sendIfEmpty bool) bool {
 			}
 		}
 	}
-	//7. 发送消息
+	// 7. 发送消息
 	r.send(m)
 	return true
 }
@@ -513,9 +512,9 @@ func (r *raft) advance(rd Ready) {
 
 // maybeCommit
 func (r *raft) maybeCommit() bool {
-	//获取最大的超过半数确认的index
+	// 获取最大的超过半数确认的index
 	mci := r.prs.Committed()
-	//更新commitIndex
+	// 更新commitIndex
 	return r.raftLog.maybeCommit(mci, r.Term)
 }
 
@@ -547,15 +546,14 @@ func (r *raft) reset(term uint64) {
 
 	r.pendingConfIndex = 0
 	r.uncommittedSize = 0
-	r.readOnly = newReadOnly(r.readOnly.option) //只读请求的相关摄者
-
+	r.readOnly = newReadOnly(r.readOnly.option) // 只读请求的相关摄者
 }
 
 // 日志新增
 func (r *raft) appendEntry(es ...pb.Entry) (accepted bool) {
-	//1. 获取raft节点当前最后一条日志条目的index
+	// 1. 获取raft节点当前最后一条日志条目的index
 	li := r.raftLog.lastIndex()
-	//2. 给新的日志条目设置term和index
+	// 2. 给新的日志条目设置term和index
 	for i := range es {
 		es[i].Term = r.Term
 		es[i].Index = li + 1 + uint64(i)
@@ -571,10 +569,10 @@ func (r *raft) appendEntry(es ...pb.Entry) (accepted bool) {
 		return false
 	}
 	// 4. 将日志条目追加到raftLog中
-	//将日志条目追加到raftLog内存队列中,并且返回最大一条日志的index,对于leader追加日志的情况,这里返回的li肯定等于方法第1行中获取的li
+	// 将日志条目追加到raftLog内存队列中,并且返回最大一条日志的index,对于leader追加日志的情况,这里返回的li肯定等于方法第1行中获取的li
 	li = r.raftLog.append(es...)
 	// 5. 检查并更新日志进度
-	//raft的leader节点保存了所有节点的日志同步进度,这里面也包括它自己
+	// raft的leader节点保存了所有节点的日志同步进度,这里面也包括它自己
 	r.prs.Progress[r.id].MaybeUpdate(li)
 	// 6. 判断是否做一次commit
 	r.maybeCommit()
@@ -637,7 +635,7 @@ func (r *raft) hup(t CampaignType) {
 		r.logger.Panicf("获取没有apply日志时出现错误(%v)", err)
 	}
 
-	//检测是否有未应用的EntryConfChange记录,如果有就放弃发起选举的机会
+	// 检测是否有未应用的EntryConfChange记录,如果有就放弃发起选举的机会
 	if n := numOfPendingConf(ents); n != 0 && r.raftLog.committed > r.raftLog.applied {
 		r.logger.Warningf("%x不能参与竞选在任期 %d 因为还有 %d 应用配置要更改 ", r.id, r.Term, n)
 		return
@@ -775,7 +773,7 @@ func (r *raft) handleAppendEntries(m pb.Message) {
 func (r *raft) handleHeartbeat(m pb.Message) {
 	// 把msg中的commit提交,commit是只增不减的
 	r.raftLog.commitTo(m.Commit) // leader commit 了,follower再commit
-	//发送Response给Leader   按照raft协议的要求带上自己日志的进度.
+	// 发送Response给Leader   按照raft协议的要求带上自己日志的进度.
 	r.send(pb.Message{To: m.From, Type: pb.MsgHeartbeatResp, Context: m.Context})
 }
 
@@ -794,7 +792,6 @@ func (r *raft) applyConfChange(cc pb.ConfChangeV2) pb.ConfState {
 		}
 		return changer.Simple(cc.Changes...)
 	}()
-
 	if err != nil {
 		panic(err)
 	}
@@ -997,11 +994,11 @@ func sendMsgReadIndexResponse(r *raft, m pb.Message) {
 	switch r.readOnly.option {
 	// If more than the local vote is needed, go through a full broadcast.
 	case ReadOnlySafe:
-		//记录当前节点的raftLog.committed字段值,即已提交位置
+		// 记录当前节点的raftLog.committed字段值,即已提交位置
 		r.readOnly.addRequest(r.raftLog.committed, m)
 		// The local localNode automatically acks the request.
 		r.readOnly.recvAck(r.id, m.Entries[0].Data)
-		r.bcastHeartbeatWithCtx(m.Entries[0].Data) //发送心跳
+		r.bcastHeartbeatWithCtx(m.Entries[0].Data) // 发送心跳
 	case ReadOnlyLeaseBased:
 		if resp := r.responseToReadIndexReq(m, r.raftLog.committed); resp.To != None {
 			r.send(resp)

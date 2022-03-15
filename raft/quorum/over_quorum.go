@@ -33,13 +33,6 @@ type AckedIndexer interface {
 	AckedIndex(voterID uint64) (idx Index, found bool)
 }
 
-type mapAckIndexer map[uint64]Index
-
-func (m mapAckIndexer) AckedIndex(id uint64) (Index, bool) {
-	idx, ok := m[id]
-	return idx, ok
-}
-
 //go:generate stringer -type=VoteResult
 type VoteResult uint8
 

@@ -16,8 +16,9 @@ package clientv3util_test
 
 import (
 	"context"
-	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 	"log"
+
+	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 
 	"github.com/ls-2018/etcd_cn/client_sdk/v3/clientv3util"
 )

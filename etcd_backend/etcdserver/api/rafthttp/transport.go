@@ -16,10 +16,11 @@ package rafthttp
 
 import (
 	"context"
-	"github.com/ls-2018/etcd_cn/raft"
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/ls-2018/etcd_cn/raft"
 
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/transport"
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"

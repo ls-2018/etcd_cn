@@ -16,8 +16,11 @@ import (
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
-var _ = fmt.Errorf
-var _ = math.Inf
+
+var (
+	_ = fmt.Errorf
+	_ = math.Inf
+)
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
@@ -40,9 +43,11 @@ func (*Lease) ProtoMessage()    {}
 func (*Lease) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3dd57e402472b33a, []int{0}
 }
+
 func (m *Lease) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
+
 func (m *Lease) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_Lease.Marshal(b, m, deterministic)
@@ -55,12 +60,15 @@ func (m *Lease) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
+
 func (m *Lease) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_Lease.Merge(m, src)
 }
+
 func (m *Lease) XXX_Size() int {
 	return m.Size()
 }
+
 func (m *Lease) XXX_DiscardUnknown() {
 	xxx_messageInfo_Lease.DiscardUnknown(m)
 }
@@ -80,9 +88,11 @@ func (*LeaseInternalRequest) ProtoMessage()    {}
 func (*LeaseInternalRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3dd57e402472b33a, []int{1}
 }
+
 func (m *LeaseInternalRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
+
 func (m *LeaseInternalRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_LeaseInternalRequest.Marshal(b, m, deterministic)
@@ -95,12 +105,15 @@ func (m *LeaseInternalRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte
 		return b[:n], nil
 	}
 }
+
 func (m *LeaseInternalRequest) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_LeaseInternalRequest.Merge(m, src)
 }
+
 func (m *LeaseInternalRequest) XXX_Size() int {
 	return m.Size()
 }
+
 func (m *LeaseInternalRequest) XXX_DiscardUnknown() {
 	xxx_messageInfo_LeaseInternalRequest.DiscardUnknown(m)
 }
@@ -120,9 +133,11 @@ func (*LeaseInternalResponse) ProtoMessage()    {}
 func (*LeaseInternalResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3dd57e402472b33a, []int{2}
 }
+
 func (m *LeaseInternalResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
+
 func (m *LeaseInternalResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_LeaseInternalResponse.Marshal(b, m, deterministic)
@@ -135,12 +150,15 @@ func (m *LeaseInternalResponse) XXX_Marshal(b []byte, deterministic bool) ([]byt
 		return b[:n], nil
 	}
 }
+
 func (m *LeaseInternalResponse) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_LeaseInternalResponse.Merge(m, src)
 }
+
 func (m *LeaseInternalResponse) XXX_Size() int {
 	return m.Size()
 }
+
 func (m *LeaseInternalResponse) XXX_DiscardUnknown() {
 	xxx_messageInfo_LeaseInternalResponse.DiscardUnknown(m)
 }
@@ -306,6 +324,7 @@ func encodeVarintLease(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
+
 func (m *Lease) Size() (n int) {
 	if m == nil {
 		return 0
@@ -362,9 +381,11 @@ func (m *LeaseInternalResponse) Size() (n int) {
 func sovLease(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
+
 func sozLease(x uint64) (n int) {
 	return sovLease(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
+
 func (m *Lease) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -473,6 +494,7 @@ func (m *Lease) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
 func (m *LeaseInternalRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -560,6 +582,7 @@ func (m *LeaseInternalRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
 func (m *LeaseInternalResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -647,6 +670,7 @@ func (m *LeaseInternalResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
 func skipLease(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0

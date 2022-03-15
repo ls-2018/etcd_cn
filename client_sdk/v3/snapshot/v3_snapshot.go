@@ -18,10 +18,11 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
-	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 	"io"
 	"os"
 	"time"
+
+	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 
 	"github.com/dustin/go-humanize"
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/fileutil"

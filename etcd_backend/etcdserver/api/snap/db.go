@@ -17,11 +17,12 @@ package snap
 import (
 	"errors"
 	"fmt"
-	"github.com/ls-2018/etcd_cn/client_sdk/pkg/fileutil"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/fileutil"
 
 	humanize "github.com/dustin/go-humanize"
 	"go.uber.org/zap"
@@ -32,7 +33,6 @@ var ErrNoDBSnapshot = errors.New("snap: snapshot file doesn't exist")
 // SaveDBFrom saves snapshot of the database from the given reader. It
 // guarantees the save operation is atomic.
 func (s *Snapshotter) SaveDBFrom(r io.Reader, id uint64) (int64, error) {
-
 	f, err := ioutil.TempFile(s.dir, "tmp")
 	if err != nil {
 		return 0, err

@@ -173,7 +173,6 @@ func (ws *watchStream) Close() {
 	}
 	ws.closed = true
 	close(ws.ch)
-	watchStreamGauge.Dec()
 }
 
 func (ws *watchStream) Rev() int64 {

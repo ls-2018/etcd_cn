@@ -291,6 +291,7 @@ func TestURLsEqual(t *testing.T) {
 		}
 	}
 }
+
 func TestURLStringsEqual(t *testing.T) {
 	result, err := URLStringsEqual(context.TODO(), zap.NewExample(), []string{"http://127.0.0.1:8080"}, []string{"http://127.0.0.1:8080"})
 	if !result {

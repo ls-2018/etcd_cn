@@ -1,10 +1,11 @@
 package clientv3
 
 import (
+	"testing"
+
 	"github.com/ls-2018/etcd_cn/client_sdk/v3/credentials"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
 	grpccredentials "google.golang.org/grpc/credentials"
-	"testing"
 )
 
 type dummyAuthTokenBundle struct{}

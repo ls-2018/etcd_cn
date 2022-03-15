@@ -112,7 +112,7 @@ func (c MajorityConfig) Slice() []uint64 {
 	return sl
 }
 
-//插入排序
+// 插入排序
 func insertionSort(sl []uint64) {
 	a, b := 0, len(sl)
 	for i := a + 1; i < b; i++ {

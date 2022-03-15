@@ -16,10 +16,7 @@ package etcdmain
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
 	"fmt"
-	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 	"io/ioutil"
 	"log"
 	"math"
@@ -29,6 +26,8 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/logutil"
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/transport"
@@ -211,7 +210,6 @@ func startGRPCProxy(cmd *cobra.Command, args []string) {
 	if grpcProxyAdvertiseClientURL != "" {
 		proxyClient = mustNewProxyClient(lg, tlsinfo)
 	}
-	httpClient := mustNewHTTPClient(lg)
 
 	srvhttp, httpl := mustHTTPListener(lg, m, tlsinfo, client, proxyClient)
 	errc := make(chan error, 3)
@@ -222,9 +220,7 @@ func startGRPCProxy(cmd *cobra.Command, args []string) {
 		mhttpl := mustMetricsListener(lg, tlsinfo)
 		go func() {
 			mux := http.NewServeMux()
-			grpcproxy.HandleMetrics(mux, httpClient, client.Endpoints())
 			grpcproxy.HandleHealth(lg, mux, client)
-			grpcproxy.HandleProxyMetrics(mux)
 			grpcproxy.HandleProxyHealth(lg, mux, proxyClient)
 			lg.Info("gRPC proxy etcd metrics URL serving")
 			herr := http.Serve(mhttpl, mux)
@@ -454,12 +450,9 @@ func newGRPCProxyServer(lg *zap.Logger, client *clientv3.Client) *grpc.Server {
 }
 
 func mustHTTPListener(lg *zap.Logger, m cmux.CMux, tlsinfo *transport.TLSInfo, c *clientv3.Client, proxy *clientv3.Client) (*http.Server, net.Listener) {
-	httpClient := mustNewHTTPClient(lg)
 	httpmux := http.NewServeMux()
 	httpmux.HandleFunc("/", http.NotFound)
-	grpcproxy.HandleMetrics(httpmux, httpClient, c.Endpoints())
 	grpcproxy.HandleHealth(lg, httpmux, c)
-	grpcproxy.HandleProxyMetrics(httpmux)
 	grpcproxy.HandleProxyHealth(lg, httpmux, proxy)
 	if grpcProxyEnablePprof {
 		for p, h := range debugutil.PProfHandlers() {
@@ -482,43 +475,6 @@ func mustHTTPListener(lg *zap.Logger, m cmux.CMux, tlsinfo *transport.TLSInfo, c
 	}
 	srvhttp.TLSConfig = srvTLS
 	return srvhttp, m.Match(cmux.Any())
-}
-
-func mustNewHTTPClient(lg *zap.Logger) *http.Client {
-	transport, err := newHTTPTransport(grpcProxyCA, grpcProxyCert, grpcProxyKey)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-	return &http.Client{Transport: transport}
-}
-
-func newHTTPTransport(ca, cert, key string) (*http.Transport, error) {
-	tr := &http.Transport{}
-
-	if ca != "" && cert != "" && key != "" {
-		caCert, err := ioutil.ReadFile(ca)
-		if err != nil {
-			return nil, err
-		}
-		keyPair, err := tls.LoadX509KeyPair(cert, key)
-		if err != nil {
-			return nil, err
-		}
-		caPool := x509.NewCertPool()
-		caPool.AppendCertsFromPEM(caCert)
-
-		tlsConfig := &tls.Config{
-			Certificates: []tls.Certificate{keyPair},
-			RootCAs:      caPool,
-		}
-		tlsConfig.BuildNameToCertificate()
-		tr.TLSClientConfig = tlsConfig
-	} else if grpcProxyInsecureSkipTLSVerify {
-		tlsConfig := &tls.Config{InsecureSkipVerify: grpcProxyInsecureSkipTLSVerify}
-		tr.TLSClientConfig = tlsConfig
-	}
-	return tr, nil
 }
 
 func mustMetricsListener(lg *zap.Logger, tlsinfo *transport.TLSInfo) net.Listener {

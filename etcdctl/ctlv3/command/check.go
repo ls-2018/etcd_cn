@@ -18,7 +18,6 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
-	"gopkg.in/cheggaaa/pb.v1"
 	"math"
 	"math/rand"
 	"os"
@@ -26,6 +25,8 @@ import (
 	"strconv"
 	"sync"
 	"time"
+
+	"gopkg.in/cheggaaa/pb.v1"
 
 	v3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 	"github.com/ls-2018/etcd_cn/pkg/cobrautl"
@@ -136,7 +137,7 @@ func NewCheckPerfCommand() *cobra.Command {
 
 // newCheckPerfCommand executes the "check perf" command.
 func newCheckPerfCommand(cmd *cobra.Command, args []string) {
-	var checkPerfAlias = map[string]string{
+	checkPerfAlias := map[string]string{
 		"s": "s", "small": "s",
 		"m": "m", "medium": "m",
 		"l": "l", "large": "l",
@@ -310,7 +311,7 @@ func NewCheckDatascaleCommand() *cobra.Command {
 
 // newCheckDatascaleCommand executes the "check datascale" command.
 func newCheckDatascaleCommand(cmd *cobra.Command, args []string) {
-	var checkDatascaleAlias = map[string]string{
+	checkDatascaleAlias := map[string]string{
 		"s": "s", "small": "s",
 		"m": "m", "medium": "m",
 		"l": "l", "large": "l",

@@ -17,10 +17,11 @@ package clientv3
 import (
 	"context"
 	"fmt"
-	"go.uber.org/zap"
 	"net"
 	"testing"
 	"time"
+
+	"go.uber.org/zap"
 
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/testutil"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
@@ -47,7 +48,8 @@ func TestDialCancel(t *testing.T) {
 	ep := "unix://dialcancel:12345"
 	cfg := Config{
 		Endpoints:   []string{ep},
-		DialTimeout: 30 * time.Second}
+		DialTimeout: 30 * time.Second,
+	}
 	c, err := NewClient(t, cfg)
 	if err != nil {
 		t.Fatal(err)

@@ -17,13 +17,14 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/ls-2018/etcd_cn/raft"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/ls-2018/etcd_cn/raft"
 
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/fileutil"
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
@@ -84,7 +85,7 @@ func (rc *raftNode) saveSnap(snap raftpb.Snapshot) error {
 		Term:      snap.Metadata.Term,
 		ConfState: &snap.Metadata.ConfState,
 	}
-	//在把快照写到wal之前保存快照文件。这使得快照文件有可能成为孤儿，但可以防止一个WAL快照条目没有相应的快照文件。
+	// 在把快照写到wal之前保存快照文件。这使得快照文件有可能成为孤儿，但可以防止一个WAL快照条目没有相应的快照文件。
 	if err := rc.snapshotter.SaveSnap(snap); err != nil {
 		return err
 	}
@@ -164,7 +165,7 @@ func (rc *raftNode) publishEntries(ents []raftpb.Entry) (<-chan struct{}, bool) 
 // openWAL returns a WAL ready for reading.
 func (rc *raftNode) openWAL(snapshot *raftpb.Snapshot) *wal.WAL {
 	if !wal.Exist(rc.waldir) {
-		if err := os.Mkdir(rc.waldir, 0750); err != nil {
+		if err := os.Mkdir(rc.waldir, 0o750); err != nil {
 			log.Fatalf("raftexample: cannot create dir for wal (%v)", err)
 		}
 
@@ -219,16 +220,16 @@ func (rc *raftNode) writeError(err error) {
 
 func (rc *raftNode) startRaft() {
 	if !fileutil.Exist(rc.snapdir) {
-		if err := os.Mkdir(rc.snapdir, 0750); err != nil {
+		if err := os.Mkdir(rc.snapdir, 0o750); err != nil {
 			log.Fatalf("raftexample: 无法创建快照目录 (%v)", err)
 		}
 	}
 	rc.snapshotter = snap.New(zap.NewExample(), rc.snapdir)
 	// 创建 WAL 实例,然后加载快照并回放 WAL 日志
 	oldwal := wal.Exist(rc.waldir)
-	//raftNode.replayWAL() 方法首先会读取快照数据,
-	//在快照数据中记录了该快照包含的最后一条Entry记录的 Term 值 和 索引值.
-	//然后根据 Term 值 和 索引值确定读取 WAL 日志文件的位置, 并进行日志记录的读取.
+	// raftNode.replayWAL() 方法首先会读取快照数据,
+	// 在快照数据中记录了该快照包含的最后一条Entry记录的 Term 值 和 索引值.
+	// 然后根据 Term 值 和 索引值确定读取 WAL 日志文件的位置, 并进行日志记录的读取.
 	rc.wal = rc.replayWAL()
 	rc.snapshotterReady <- rc.snapshotter
 
@@ -455,8 +456,8 @@ func (rc *raftNode) ReportSnapshot(id uint64, status raft.SnapshotStatus) {}
 // 上层的应用通过这几个channel就能和raftNode进行交互
 func newRaftNode(id int, peers []string, join bool, getSnapshot func() ([]byte, error),
 	proposeC <-chan string,
-	confChangeC <-chan raftpb.ConfChange) (<-chan *commit, <-chan error, <-chan *snap.Snapshotter) {
-
+	confChangeC <-chan raftpb.ConfChange) (<-chan *commit, <-chan error, <-chan *snap.Snapshotter,
+) {
 	// channel,主要传输Entry记录
 	// raftNode会将etcd-raft模块返回的待apply Entry封装在 Ready实例中然后 写入commitC通道,
 	// 另一方面,kvstore会从commitC通道中读取这些待应用的 Entry 记录井保存其中的键值对信息.

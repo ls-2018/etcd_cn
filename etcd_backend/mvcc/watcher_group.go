@@ -22,12 +22,10 @@ import (
 	"go.etcd.io/etcd/api/v3/mvccpb"
 )
 
-var (
-	// watchBatchMaxRevs is the maximum distinct revisions that
-	// may be sent to an unsynced watcher at a time. Declared as
-	// var instead of const for testing purposes.
-	watchBatchMaxRevs = 1000
-)
+// watchBatchMaxRevs is the maximum distinct revisions that
+// may be sent to an unsynced watcher at a time. Declared as
+// var instead of const for testing purposes.
+var watchBatchMaxRevs = 1000
 
 type eventBatch struct {
 	// evs is a batch of revision-ordered events

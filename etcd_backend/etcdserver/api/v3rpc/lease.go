@@ -42,7 +42,6 @@ func NewLeaseServer(s *etcdserver.EtcdServer) pb.LeaseServer {
 
 func (ls *LeaseServer) LeaseGrant(ctx context.Context, cr *pb.LeaseGrantRequest) (*pb.LeaseGrantResponse, error) {
 	resp, err := ls.le.LeaseGrant(ctx, cr)
-
 	if err != nil {
 		return nil, togRPCError(err)
 	}
@@ -118,7 +117,6 @@ func (ls *LeaseServer) leaseKeepAlive(stream pb.Lease_LeaseKeepAliveServer) erro
 				ls.lg.Debug("failed to receive lease keepalive request from gRPC stream", zap.Error(err))
 			} else {
 				ls.lg.Warn("failed to receive lease keepalive request from gRPC stream", zap.Error(err))
-				streamFailures.WithLabelValues("receive", "lease-keepalive").Inc()
 			}
 			return err
 		}
@@ -149,7 +147,6 @@ func (ls *LeaseServer) leaseKeepAlive(stream pb.Lease_LeaseKeepAliveServer) erro
 				ls.lg.Debug("failed to send lease keepalive response to gRPC stream", zap.Error(err))
 			} else {
 				ls.lg.Warn("failed to send lease keepalive response to gRPC stream", zap.Error(err))
-				streamFailures.WithLabelValues("send", "lease-keepalive").Inc()
 			}
 			return err
 		}

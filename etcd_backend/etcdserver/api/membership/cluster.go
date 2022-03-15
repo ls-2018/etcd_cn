@@ -22,12 +22,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/ls-2018/etcd_cn/raft"
 	"path"
 	"sort"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/ls-2018/etcd_cn/raft"
 
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v2error"
@@ -39,7 +40,6 @@ import (
 	"go.etcd.io/etcd/api/v3/version"
 
 	"github.com/coreos/go-semver/semver"
-	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 )
 

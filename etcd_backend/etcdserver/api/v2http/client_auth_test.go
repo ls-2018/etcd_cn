@@ -62,6 +62,7 @@ func (s *mockAuthStore) AllUsers() ([]string, error) {
 	sort.Strings(us)
 	return us, s.err
 }
+
 func (s *mockAuthStore) GetUser(name string) (v2auth.User, error) {
 	u, ok := s.users[name]
 	if !ok {
@@ -69,6 +70,7 @@ func (s *mockAuthStore) GetUser(name string) (v2auth.User, error) {
 	}
 	return *u, s.err
 }
+
 func (s *mockAuthStore) CreateOrUpdateUser(user v2auth.User) (out v2auth.User, created bool, err error) {
 	if s.users == nil {
 		out, err = s.CreateUser(user)
@@ -82,9 +84,11 @@ func (s *mockAuthStore) DeleteUser(name string) error                     { retu
 func (s *mockAuthStore) UpdateUser(user v2auth.User) (v2auth.User, error) {
 	return *s.users[user.User], s.err
 }
+
 func (s *mockAuthStore) AllRoles() ([]string, error) {
 	return []string{"awesome", "guest", "root"}, s.err
 }
+
 func (s *mockAuthStore) GetRole(name string) (v2auth.Role, error) {
 	r, ok := s.roles[name]
 	if ok {
@@ -111,7 +115,7 @@ func (s *mockAuthStore) HashPassword(password string) (string, error) {
 
 func TestAuthFlow(t *testing.T) {
 	api.EnableCapability(api.AuthCapability)
-	var testCases = []struct {
+	testCases := []struct {
 		req   *http.Request
 		store mockAuthStore
 
@@ -474,7 +478,7 @@ func tlsAuthedRequest(req *http.Request, certname string) *http.Request {
 }
 
 func TestPrefixAccess(t *testing.T) {
-	var table = []struct {
+	table := []struct {
 		key                string
 		req                *http.Request
 		store              *mockAuthStore
@@ -807,7 +811,7 @@ func TestUserFromClientCertificate(t *testing.T) {
 		},
 	}
 
-	var table = []struct {
+	table := []struct {
 		req        *http.Request
 		userExists bool
 		store      v2auth.Store
@@ -863,7 +867,7 @@ func TestUserFromBasicAuth(t *testing.T) {
 		},
 	}
 
-	var table = []struct {
+	table := []struct {
 		username   string
 		req        *http.Request
 		userExists bool

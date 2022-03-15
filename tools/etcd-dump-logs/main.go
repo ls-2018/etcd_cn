@@ -275,7 +275,8 @@ func evaluateEntrytypeFlag(entrytype string) []EntryFilter {
 		entrytypelist = strings.Split(entrytype, ",")
 	}
 
-	validRequest := map[string][]EntryFilter{"ConfigChange": {passConfChange},
+	validRequest := map[string][]EntryFilter{
+		"ConfigChange":        {passConfChange},
 		"Normal":              {passInternalRaftRequest, passRequest, passUnknownNormal},
 		"Request":             {passRequest},
 		"InternalRaftRequest": {passInternalRaftRequest},
@@ -307,10 +308,12 @@ IRRCompaction, IRRLeaseGrant, IRRLeaseRevoke, IRRLeaseCheckpoint`, et)
 //  listEntriesType filters and prints entries based on the entry-type flag,
 func listEntriesType(entrytype string, streamdecoder string, ents []raftpb.Entry) {
 	entryFilters := evaluateEntrytypeFlag(entrytype)
-	printerMap := map[string]EntryPrinter{"InternalRaftRequest": printInternalRaftRequest,
-		"Request":       printRequest,
-		"ConfigChange":  printConfChange,
-		"UnknownNormal": printUnknownNormal}
+	printerMap := map[string]EntryPrinter{
+		"InternalRaftRequest": printInternalRaftRequest,
+		"Request":             printRequest,
+		"ConfigChange":        printConfChange,
+		"UnknownNormal":       printUnknownNormal,
+	}
 	var stderr bytes.Buffer
 	args := strings.Split(streamdecoder, " ")
 	cmd := exec.Command(args[0], args[1:]...)

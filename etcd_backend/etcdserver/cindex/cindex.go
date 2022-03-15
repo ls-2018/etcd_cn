@@ -29,7 +29,6 @@ type Backend interface {
 
 // ConsistentIndexer 是一个接口,它封装了一致性索引的Get/Set/Save方法.
 type ConsistentIndexer interface {
-
 	// ConsistentIndex 返回当前执行条目的一致索引.
 	ConsistentIndex() uint64
 

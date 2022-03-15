@@ -19,9 +19,7 @@ import (
 	"os"
 )
 
-var (
-	ErrLocked = errors.New("fileutil: 文件已被锁定")
-)
+var ErrLocked = errors.New("fileutil: 文件已被锁定")
 
 type LockedFile struct {
 	*os.File // 文件句柄

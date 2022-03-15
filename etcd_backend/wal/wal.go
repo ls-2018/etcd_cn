@@ -18,7 +18,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/ls-2018/etcd_cn/raft"
 	"hash/crc32"
 	"io"
 	"os"
@@ -26,6 +25,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/ls-2018/etcd_cn/raft"
 
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/fileutil"
 	"github.com/ls-2018/etcd_cn/etcd_backend/wal/walpb"
@@ -911,7 +912,7 @@ func (w *WAL) saveState(s *raftpb.HardState) error {
 
 // Save 日志发送给Follower的同时,Leader会将日志落盘,即写到WAL中,
 func (w *WAL) Save(st raftpb.HardState, ents []raftpb.Entry) error {
-	//获取wal的写锁
+	// 获取wal的写锁
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	// HardState变化或者新的日志条目则需要写wal

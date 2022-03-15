@@ -19,10 +19,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 	"os"
 	"os/exec"
 	"strings"
+
+	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 
 	"github.com/ls-2018/etcd_cn/pkg/cobrautl"
 

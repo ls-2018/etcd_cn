@@ -19,7 +19,6 @@ import (
 	"encoding/json"
 	"expvar"
 	"fmt"
-	"github.com/ls-2018/etcd_cn/raft"
 	"math"
 	"math/rand"
 	"net/http"
@@ -31,6 +30,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/ls-2018/etcd_cn/raft"
 
 	"github.com/coreos/go-semver/semver"
 	humanize "github.com/dustin/go-humanize"
@@ -200,8 +201,8 @@ type Server interface {
 // EtcdServer 整个etcd节点的功能的入口,包含etcd节点运行过程中需要的大部分成员.
 type EtcdServer struct {
 	inflightSnapshots int64  // 当前正在发送的snapshot数量
-	appliedIndex      uint64 //已经apply到状态机的日志index
-	committedIndex    uint64 //已经提交的日志index,也就是leader确认多数成员已经同步了的日志index
+	appliedIndex      uint64 // 已经apply到状态机的日志index
+	committedIndex    uint64 // 已经提交的日志index,也就是leader确认多数成员已经同步了的日志index
 	term              uint64 // must use atomic operations to access; keep 64-bit aligned.
 	lead              uint64 // must use atomic operations to access; keep 64-bit aligned.
 
@@ -242,25 +243,25 @@ type EtcdServer struct {
 
 	applyV2 ApplierV2 // v2的applier,用于将commited index apply到raft状态机
 
-	applyV3         applierV3         //v3的applier,用于将commited index apply到raft状态机
-	applyV3Base     applierV3         //剥去了鉴权和配额功能的applyV3
-	applyV3Internal applierV3Internal //v3的内部applier
-	applyWait       wait.WaitTime     //apply的等待队列,等待某个index的日志apply完成
+	applyV3         applierV3         // v3的applier,用于将commited index apply到raft状态机
+	applyV3Base     applierV3         // 剥去了鉴权和配额功能的applyV3
+	applyV3Internal applierV3Internal // v3的内部applier
+	applyWait       wait.WaitTime     // apply的等待队列,等待某个index的日志apply完成
 
-	kv         mvcc.WatchableKV //v3用的kv存储
-	lessor     lease.Lessor     //v3用,作用是实现过期时间
-	bemu       sync.Mutex       //守护后端存储的锁,改变后端存储和获取后端存储是使用
-	be         backend.Backend  //后端存储
+	kv         mvcc.WatchableKV // v3用的kv存储
+	lessor     lease.Lessor     // v3用,作用是实现过期时间
+	bemu       sync.Mutex       // 守护后端存储的锁,改变后端存储和获取后端存储是使用
+	be         backend.Backend  // 后端存储
 	beHooks    *backendHooks
-	authStore  auth.AuthStore      //存储鉴权数据
-	alarmStore *v3alarm.AlarmStore //存储告警数据
+	authStore  auth.AuthStore      // 存储鉴权数据
+	alarmStore *v3alarm.AlarmStore // 存储告警数据
 
-	stats      *stats.ServerStats    //当前节点状态
-	lstats     *stats.LeaderStats    //leader状态
-	SyncTicker *time.Ticker          //v2用,实现ttl数据过期的
-	compactor  v3compactor.Compactor //压缩数据的周期任务
-	peerRt     http.RoundTripper     //用于发送远程请求
-	reqIDGen   *idutil.Generator     //用于生成请求id
+	stats      *stats.ServerStats    // 当前节点状态
+	lstats     *stats.LeaderStats    // leader状态
+	SyncTicker *time.Ticker          // v2用,实现ttl数据过期的
+	compactor  v3compactor.Compactor // 压缩数据的周期任务
+	peerRt     http.RoundTripper     // 用于发送远程请求
+	reqIDGen   *idutil.Generator     // 用于生成请求id
 
 	// wgMu blocks concurrent waitgroup mutation while etcd stopping
 	wgMu sync.RWMutex
@@ -552,7 +553,7 @@ func MySelfStartRaft(cfg config.ServerConfig) (temp *Temp, err error) {
 
 // NewServer 根据提供的配置创建一个新的EtcdServer.在EtcdServer的生命周期内,该配置被认为是静态的.
 func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
-	var temp = &Temp{}
+	temp := &Temp{}
 	temp, err = MySelfStartRaft(cfg) // 逻辑时钟初始化
 	sstats := stats.NewServerStats(cfg.Name, temp.ID.String())
 	lstats := stats.NewLeaderStats(cfg.Logger, temp.ID.String())
@@ -1936,61 +1937,6 @@ func (s *EtcdServer) sync(timeout time.Duration) {
 	})
 }
 
-// publishV3 registers etcd information into the cluster using v3 request. The
-// information is the JSON representation of this etcd's member struct, updated
-// with the static clientURLs of the etcd.
-// The function keeps attempting to register until it succeeds,
-// or its etcd is stopped.
-func (s *EtcdServer) publishV3(timeout time.Duration) {
-	req := &membershippb.ClusterMemberAttrSetRequest{
-		Member_ID: uint64(s.id),
-		MemberAttributes: &membershippb.Attributes{
-			Name:       s.attributes.Name,
-			ClientUrls: s.attributes.ClientURLs,
-		},
-	}
-	lg := s.Logger()
-	for {
-		select {
-		case <-s.stopping:
-			lg.Warn(
-				"stopped publish because etcd is stopping",
-				zap.String("local-member-id", s.ID().String()),
-				zap.String("local-member-attributes", fmt.Sprintf("%+v", s.attributes)),
-				zap.Duration("publish-timeout", timeout),
-			)
-			return
-
-		default:
-		}
-
-		ctx, cancel := context.WithTimeout(s.ctx, timeout)
-		_, err := s.raftRequest(ctx, pb.InternalRaftRequest{ClusterMemberAttrSet: req})
-		cancel()
-		switch err {
-		case nil:
-			close(s.readych)
-			lg.Info(
-				"通过raft发布本地成员群集",
-				zap.String("local-member-id", s.ID().String()),
-				zap.String("local-member-attributes", fmt.Sprintf("%+v", s.attributes)),
-				zap.String("cluster-id", s.cluster.ID().String()),
-				zap.Duration("publish-timeout", timeout),
-			)
-			return
-
-		default:
-			lg.Warn(
-				"通过raft发布本地成员群集失败",
-				zap.String("local-member-id", s.ID().String()),
-				zap.String("local-member-attributes", fmt.Sprintf("%+v", s.attributes)),
-				zap.Duration("publish-timeout", timeout),
-				zap.Error(err),
-			)
-		}
-	}
-}
-
 // publish registers etcd information into the cluster. The information
 // is the JSON representation of this etcd's member struct, updated with the
 // static clientURLs of the etcd.
@@ -2417,7 +2363,6 @@ func (s *EtcdServer) ClusterVersion() *semver.Version {
 // It updates the cluster version if all members agrees on a higher one.
 // It prints out log if there is a member with a higher version than the
 // local version.
-// TODO switch to updateClusterVersionV3 in 3.6
 func (s *EtcdServer) monitorVersions() {
 	for {
 		select {
@@ -2482,42 +2427,6 @@ func (s *EtcdServer) updateClusterVersionV2(ver string) {
 
 	ctx, cancel := context.WithTimeout(s.ctx, s.Cfg.ReqTimeout())
 	_, err := s.Do(ctx, req)
-	cancel()
-
-	switch err {
-	case nil:
-		lg.Info("cluster version is updated", zap.String("cluster-version", version.Cluster(ver)))
-		return
-
-	case ErrStopped:
-		lg.Warn("aborting cluster version update; etcd is stopped", zap.Error(err))
-		return
-
-	default:
-		lg.Warn("failed to update cluster version", zap.Error(err))
-	}
-}
-
-func (s *EtcdServer) updateClusterVersionV3(ver string) {
-	lg := s.Logger()
-
-	if s.cluster.Version() == nil {
-		lg.Info(
-			"setting up initial cluster version using v3 API",
-			zap.String("cluster-version", version.Cluster(ver)),
-		)
-	} else {
-		lg.Info(
-			"updating cluster version using v3 API",
-			zap.String("from", version.Cluster(s.cluster.Version().String())),
-			zap.String("to", version.Cluster(ver)),
-		)
-	}
-
-	req := membershippb.ClusterVersionSetRequest{Ver: ver}
-
-	ctx, cancel := context.WithTimeout(s.ctx, s.Cfg.ReqTimeout())
-	_, err := s.raftRequest(ctx, pb.InternalRaftRequest{ClusterVersionSet: &req})
 	cancel()
 
 	switch err {

@@ -15,8 +15,11 @@ import (
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
-var _ = fmt.Errorf
-var _ = math.Inf
+
+var (
+	_ = fmt.Errorf
+	_ = math.Inf
+)
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
@@ -283,9 +286,11 @@ func (*Entry) ProtoMessage()    {}
 func (*Entry) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b042552c306ae59b, []int{0}
 }
+
 func (m *Entry) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
+
 func (m *Entry) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_Entry.Marshal(b, m, deterministic)
@@ -298,12 +303,15 @@ func (m *Entry) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
+
 func (m *Entry) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_Entry.Merge(m, src)
 }
+
 func (m *Entry) XXX_Size() int {
 	return m.Size()
 }
+
 func (m *Entry) XXX_DiscardUnknown() {
 	xxx_messageInfo_Entry.DiscardUnknown(m)
 }
@@ -322,9 +330,11 @@ func (*SnapshotMetadata) ProtoMessage()    {}
 func (*SnapshotMetadata) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b042552c306ae59b, []int{1}
 }
+
 func (m *SnapshotMetadata) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
+
 func (m *SnapshotMetadata) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_SnapshotMetadata.Marshal(b, m, deterministic)
@@ -337,12 +347,15 @@ func (m *SnapshotMetadata) XXX_Marshal(b []byte, deterministic bool) ([]byte, er
 		return b[:n], nil
 	}
 }
+
 func (m *SnapshotMetadata) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_SnapshotMetadata.Merge(m, src)
 }
+
 func (m *SnapshotMetadata) XXX_Size() int {
 	return m.Size()
 }
+
 func (m *SnapshotMetadata) XXX_DiscardUnknown() {
 	xxx_messageInfo_SnapshotMetadata.DiscardUnknown(m)
 }
@@ -360,9 +373,11 @@ func (*Snapshot) ProtoMessage()    {}
 func (*Snapshot) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b042552c306ae59b, []int{2}
 }
+
 func (m *Snapshot) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
+
 func (m *Snapshot) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_Snapshot.Marshal(b, m, deterministic)
@@ -375,12 +390,15 @@ func (m *Snapshot) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
+
 func (m *Snapshot) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_Snapshot.Merge(m, src)
 }
+
 func (m *Snapshot) XXX_Size() int {
 	return m.Size()
 }
+
 func (m *Snapshot) XXX_DiscardUnknown() {
 	xxx_messageInfo_Snapshot.DiscardUnknown(m)
 }
@@ -426,9 +444,11 @@ func (*Message) ProtoMessage()    {}
 func (*Message) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b042552c306ae59b, []int{3}
 }
+
 func (m *Message) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
+
 func (m *Message) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_Message.Marshal(b, m, deterministic)
@@ -441,12 +461,15 @@ func (m *Message) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
+
 func (m *Message) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_Message.Merge(m, src)
 }
+
 func (m *Message) XXX_Size() int {
 	return m.Size()
 }
+
 func (m *Message) XXX_DiscardUnknown() {
 	xxx_messageInfo_Message.DiscardUnknown(m)
 }
@@ -466,9 +489,11 @@ func (*HardState) ProtoMessage()    {}
 func (*HardState) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b042552c306ae59b, []int{4}
 }
+
 func (m *HardState) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
+
 func (m *HardState) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_HardState.Marshal(b, m, deterministic)
@@ -481,12 +506,15 @@ func (m *HardState) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
+
 func (m *HardState) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_HardState.Merge(m, src)
 }
+
 func (m *HardState) XXX_Size() int {
 	return m.Size()
 }
+
 func (m *HardState) XXX_DiscardUnknown() {
 	xxx_messageInfo_HardState.DiscardUnknown(m)
 }
@@ -516,9 +544,11 @@ func (*ConfState) ProtoMessage()    {}
 func (*ConfState) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b042552c306ae59b, []int{5}
 }
+
 func (m *ConfState) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
+
 func (m *ConfState) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_ConfState.Marshal(b, m, deterministic)
@@ -531,12 +561,15 @@ func (m *ConfState) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
+
 func (m *ConfState) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_ConfState.Merge(m, src)
 }
+
 func (m *ConfState) XXX_Size() int {
 	return m.Size()
 }
+
 func (m *ConfState) XXX_DiscardUnknown() {
 	xxx_messageInfo_ConfState.DiscardUnknown(m)
 }
@@ -551,9 +584,9 @@ type ConfChange struct {
 	// Ideally it should really use the Context instead. No counterpart to
 	// this field exists in ConfChangeV2.
 	ID uint64 `protobuf:"varint,1,opt,name=id" json:"id"`
-	//ID: 表示节点变更的消息id,这个意义不大
-	//Type: ConfChangeAddNode或者ConfChangeRemoveNode
-	//NodeID: 变更节点的id
+	// ID: 表示节点变更的消息id,这个意义不大
+	// Type: ConfChangeAddNode或者ConfChangeRemoveNode
+	// NodeID: 变更节点的id
 }
 
 func (m *ConfChange) Reset()         { *m = ConfChange{} }
@@ -562,9 +595,11 @@ func (*ConfChange) ProtoMessage()    {}
 func (*ConfChange) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b042552c306ae59b, []int{6}
 }
+
 func (m *ConfChange) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
+
 func (m *ConfChange) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_ConfChange.Marshal(b, m, deterministic)
@@ -577,12 +612,15 @@ func (m *ConfChange) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
+
 func (m *ConfChange) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_ConfChange.Merge(m, src)
 }
+
 func (m *ConfChange) XXX_Size() int {
 	return m.Size()
 }
+
 func (m *ConfChange) XXX_DiscardUnknown() {
 	xxx_messageInfo_ConfChange.DiscardUnknown(m)
 }
@@ -602,9 +640,11 @@ func (*ConfChangeSingle) ProtoMessage()    {}
 func (*ConfChangeSingle) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b042552c306ae59b, []int{7}
 }
+
 func (m *ConfChangeSingle) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
+
 func (m *ConfChangeSingle) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_ConfChangeSingle.Marshal(b, m, deterministic)
@@ -617,12 +657,15 @@ func (m *ConfChangeSingle) XXX_Marshal(b []byte, deterministic bool) ([]byte, er
 		return b[:n], nil
 	}
 }
+
 func (m *ConfChangeSingle) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_ConfChangeSingle.Merge(m, src)
 }
+
 func (m *ConfChangeSingle) XXX_Size() int {
 	return m.Size()
 }
+
 func (m *ConfChangeSingle) XXX_DiscardUnknown() {
 	xxx_messageInfo_ConfChangeSingle.DiscardUnknown(m)
 }
@@ -673,9 +716,11 @@ func (*ConfChangeV2) ProtoMessage()    {}
 func (*ConfChangeV2) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b042552c306ae59b, []int{8}
 }
+
 func (m *ConfChangeV2) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
+
 func (m *ConfChangeV2) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_ConfChangeV2.Marshal(b, m, deterministic)
@@ -688,12 +733,15 @@ func (m *ConfChangeV2) XXX_Marshal(b []byte, deterministic bool) ([]byte, error)
 		return b[:n], nil
 	}
 }
+
 func (m *ConfChangeV2) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_ConfChangeV2.Merge(m, src)
 }
+
 func (m *ConfChangeV2) XXX_Size() int {
 	return m.Size()
 }
+
 func (m *ConfChangeV2) XXX_DiscardUnknown() {
 	xxx_messageInfo_ConfChangeV2.DiscardUnknown(m)
 }
@@ -1208,6 +1256,7 @@ func encodeVarintRaft(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
+
 func (m *Entry) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1374,9 +1423,11 @@ func (m *ConfChangeV2) Size() (n int) {
 func sovRaft(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
+
 func sozRaft(x uint64) (n int) {
 	return sovRaft(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
+
 func (m *Entry) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1518,6 +1569,7 @@ func (m *Entry) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
 func (m *SnapshotMetadata) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1639,6 +1691,7 @@ func (m *SnapshotMetadata) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
 func (m *Snapshot) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1756,6 +1809,7 @@ func (m *Snapshot) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
 func (m *Message) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2079,6 +2133,7 @@ func (m *Message) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
 func (m *HardState) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2186,6 +2241,7 @@ func (m *HardState) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
 func (m *ConfState) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2560,6 +2616,7 @@ func (m *ConfState) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
 func (m *ConfChange) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2701,6 +2758,7 @@ func (m *ConfChange) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
 func (m *ConfChangeSingle) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2789,6 +2847,7 @@ func (m *ConfChangeSingle) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
 func (m *ConfChangeV2) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2926,6 +2985,7 @@ func (m *ConfChangeV2) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
 func skipRaft(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0

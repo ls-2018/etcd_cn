@@ -55,7 +55,7 @@ func TestEtcdDumpLogEntryType(t *testing.T) {
 	defer os.RemoveAll(p)
 
 	memberdir := filepath.Join(p, "member")
-	err = os.Mkdir(memberdir, 0744)
+	err = os.Mkdir(memberdir, 0o744)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -67,7 +67,7 @@ func TestEtcdDumpLogEntryType(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = os.Mkdir(snapdir, 0744)
+	err = os.Mkdir(snapdir, 0o744)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -132,7 +132,6 @@ func TestEtcdDumpLogEntryType(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func appendConfigChangeEnts(ents *[]raftpb.Entry) {
@@ -180,11 +179,12 @@ func appendNormalIRREnts(ents *[]raftpb.Entry) {
 
 	irrdeleterange := &etcdserverpb.DeleteRangeRequest{Key: []byte("0"), RangeEnd: []byte("9"), PrevKv: true}
 
-	delInRangeReq := &etcdserverpb.RequestOp{Request: &etcdserverpb.RequestOp_RequestDeleteRange{
-		RequestDeleteRange: &etcdserverpb.DeleteRangeRequest{
-			Key: []byte("a"), RangeEnd: []byte("b"),
+	delInRangeReq := &etcdserverpb.RequestOp{
+		Request: &etcdserverpb.RequestOp_RequestDeleteRange{
+			RequestDeleteRange: &etcdserverpb.DeleteRangeRequest{
+				Key: []byte("a"), RangeEnd: []byte("b"),
+			},
 		},
-	},
 	}
 
 	irrtxn := &etcdserverpb.TxnRequest{Success: []*etcdserverpb.RequestOp{delInRangeReq}, Failure: []*etcdserverpb.RequestOp{delInRangeReq}}

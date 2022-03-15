@@ -15,12 +15,13 @@
 package wal
 
 import (
-	"github.com/ls-2018/etcd_cn/client_sdk/pkg/fileutil"
-	"github.com/ls-2018/etcd_cn/etcd_backend/wal/walpb"
-	"go.uber.org/zap"
 	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/ls-2018/etcd_cn/client_sdk/pkg/fileutil"
+	"github.com/ls-2018/etcd_cn/etcd_backend/wal/walpb"
+	"go.uber.org/zap"
 )
 
 // Repair tries to repair ErrUnexpectedEOF in the

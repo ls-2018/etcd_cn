@@ -19,9 +19,10 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/binary"
-	"github.com/ls-2018/etcd_cn/raft"
 	"strconv"
 	"time"
+
+	"github.com/ls-2018/etcd_cn/raft"
 
 	"github.com/ls-2018/etcd_cn/etcd_backend/auth"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/membership"
@@ -43,7 +44,6 @@ const (
 	// However, if the committed entries are very heavy to apply, the gap might grow.
 	// We should stop accepting new proposals if the gap growing to a certain point.
 	maxGapBetweenApplyAndCommitIndex = 5000
-	traceThreshold                   = 100 * time.Millisecond
 	readIndexRetryTime               = 500 * time.Millisecond
 )
 
@@ -631,9 +631,9 @@ func (s *EtcdServer) doSerialize(ctx context.Context, chk func(*auth.AuthInfo) e
 	return nil
 }
 
-//当客户端提交一条数据变更请求时
+// 当客户端提交一条数据变更请求时
 func (s *EtcdServer) processInternalRaftRequestOnce(ctx context.Context, r pb.InternalRaftRequest) (*applyResult, error) {
-	//判断已提交未apply的记录是否超过限制
+	// 判断已提交未apply的记录是否超过限制
 	ai := s.getAppliedIndex()
 	ci := s.getCommittedIndex()
 	if ci > ai+maxGapBetweenApplyAndCommitIndex {
@@ -641,7 +641,7 @@ func (s *EtcdServer) processInternalRaftRequestOnce(ctx context.Context, r pb.In
 	}
 
 	r.Header = &pb.RequestHeader{
-		ID: s.reqIDGen.Next(), //生成一个requestID
+		ID: s.reqIDGen.Next(), // 生成一个requestID
 	}
 
 	// check authinfo if it is not InternalAuthenticateRequest
@@ -655,7 +655,7 @@ func (s *EtcdServer) processInternalRaftRequestOnce(ctx context.Context, r pb.In
 			r.Header.AuthRevision = authInfo.Revision
 		}
 	}
-	//反序列化请求数据
+	// 反序列化请求数据
 	data, err := r.Marshal()
 	if err != nil {
 		return nil, err
@@ -669,27 +669,23 @@ func (s *EtcdServer) processInternalRaftRequestOnce(ctx context.Context, r pb.In
 	if id == 0 {
 		id = r.Header.ID
 	}
-	ch := s.w.Register(id) //注册一个channel,等待处理完成
+	ch := s.w.Register(id) // 注册一个channel,等待处理完成
 
-	cctx, cancel := context.WithTimeout(ctx, s.Cfg.ReqTimeout()) //设置请求超时
+	cctx, cancel := context.WithTimeout(ctx, s.Cfg.ReqTimeout()) // 设置请求超时
 	defer cancel()
 
 	start := time.Now()
 	err = s.r.Propose(cctx, data) // 调用raft模块的Propose处理请求
 	if err != nil {
-		proposalsFailed.Inc()
 		s.w.Trigger(id, nil) // GC wait
 		return nil, err
 	}
-	proposalsPending.Inc()
-	defer proposalsPending.Dec()
 
 	select {
 	// 等待收到apply结果返回给客户端
 	case x := <-ch:
 		return x.(*applyResult), nil
 	case <-cctx.Done():
-		proposalsFailed.Inc()
 		s.w.Trigger(id, nil) // GC wait
 		return nil, s.parseProposeCtxErr(cctx.Err(), start)
 	case <-s.done:
@@ -787,12 +783,10 @@ func (s *EtcdServer) requestCurrentIndex(leaderChangedNotifier <-chan struct{}, 
 					zap.Uint64("sent-request-id", requestId),
 					zap.Uint64("received-request-id", responseId),
 				)
-				slowReadIndex.Inc()
 				continue
 			}
 			return rs.Index, nil
 		case <-leaderChangedNotifier:
-			readIndexFailed.Inc()
 			// return a retryable error.
 			return 0, ErrLeaderChanged
 		case <-firstCommitInTermNotifier:
@@ -821,7 +815,6 @@ func (s *EtcdServer) requestCurrentIndex(leaderChangedNotifier <-chan struct{}, 
 				"timed out waiting for read index response (local node might have slow network)",
 				zap.Duration("timeout", s.Cfg.ReqTimeout()),
 			)
-			slowReadIndex.Inc()
 			return 0, ErrTimeout
 		case <-s.stopping:
 			return 0, ErrStopped
@@ -847,7 +840,6 @@ func (s *EtcdServer) sendReadIndex(requestIndex uint64) error {
 	if err != nil {
 		lg := s.Logger()
 		lg.Warn("failed to get read index from Raft", zap.Error(err))
-		readIndexFailed.Inc()
 		return err
 	}
 	return nil

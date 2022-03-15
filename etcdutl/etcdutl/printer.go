@@ -25,9 +25,7 @@ import (
 	"github.com/dustin/go-humanize"
 )
 
-var (
-	OutputFormat string
-)
+var OutputFormat string
 
 type printer interface {
 	DBStatus(snapshot.Status)

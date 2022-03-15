@@ -96,7 +96,7 @@ type peerListener struct {
 }
 
 // StartEtcd 启动 用于客户端/etcd通信的 `etcd和HTTP处理程序` .不保证返回的Etcd.Server已经加入集群.
-//等待Etcd.Server.ReadyNotify()通道,以了解它何时完成并可以使用.
+// 等待Etcd.Server.ReadyNotify()通道,以了解它何时完成并可以使用.
 func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 	if err = inCfg.Validate(); err != nil {
 		return nil, err
@@ -210,7 +210,7 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 		CompactionBatchLimit:                     cfg.ExperimentalCompactionBatchLimit,
 		WatchProgressNotifyInterval:              cfg.ExperimentalWatchProgressNotifyInterval,
 		DowngradeCheckTime:                       cfg.ExperimentalDowngradeCheckTime,   // 两次降级状态检查之间的时间间隔.
-		WarningApplyDuration:                     cfg.ExperimentalWarningApplyDuration, //是时间长度.如果应用请求的时间超过这个值.就会产生一个警告.
+		WarningApplyDuration:                     cfg.ExperimentalWarningApplyDuration, // 是时间长度.如果应用请求的时间超过这个值.就会产生一个警告.
 		ExperimentalMemoryMlock:                  cfg.ExperimentalMemoryMlock,
 		ExperimentalTxnModeWriteWithSharedBuffer: cfg.ExperimentalTxnModeWriteWithSharedBuffer,
 		ExperimentalBootstrapDefragThresholdMegabytes: cfg.ExperimentalBootstrapDefragThresholdMegabytes,
@@ -577,7 +577,7 @@ func (e *Etcd) servePeers() (err error) {
 
 // 配置与etcdctl客户端的listener选项
 func configureClientListeners(cfg *Config) (sctxs map[string]*serveCtx, err error) {
-	//更新密码套件
+	// 更新密码套件
 	if err = updateCipherSuites(&cfg.ClientTLSInfo, cfg.CipherSuites); err != nil {
 		return nil, err
 	}
@@ -681,9 +681,8 @@ func (e *Etcd) serveClients() (err error) {
 
 	var h http.Handler
 
-	mux := http.NewServeMux()                                      // ✅
-	etcdhttp.HandleBasic(e.cfg.logger, mux, e.Server)              // ✅
-	etcdhttp.HandleMetricsHealthForV3(e.cfg.logger, mux, e.Server) // ✅
+	mux := http.NewServeMux()                         // ✅
+	etcdhttp.HandleBasic(e.cfg.logger, mux, e.Server) // ✅
 	h = mux
 
 	var gopts []grpc.ServerOption
@@ -716,9 +715,6 @@ func (e *Etcd) serveMetrics() (err error) {
 	}
 	// 长度为0, 监听etcd ctl客户端请求
 	if len(e.cfg.ListenMetricsUrls) > 0 {
-		metricsMux := http.NewServeMux()
-		etcdhttp.HandleMetricsHealthForV3(e.cfg.logger, metricsMux, e.Server)
-
 		for _, murl := range e.cfg.ListenMetricsUrls {
 			tlsInfo := &e.cfg.ClientTLSInfo
 			if murl.Scheme == "http" {
@@ -737,7 +733,6 @@ func (e *Etcd) serveMetrics() (err error) {
 					"serving metrics",
 					zap.String("address", u.String()),
 				)
-				e.errHandler(http.Serve(ln, metricsMux))
 			}(murl, ml)
 		}
 	}

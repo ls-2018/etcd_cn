@@ -115,14 +115,17 @@ func (s *serverRecorder) Do(_ context.Context, r etcdserverpb.Request) (etcdserv
 	s.actions = append(s.actions, action{name: "Do", params: []interface{}{r}})
 	return etcdserver.Response{}, nil
 }
+
 func (s *serverRecorder) Process(_ context.Context, m raftpb.Message) error {
 	s.actions = append(s.actions, action{name: "Process", params: []interface{}{m}})
 	return nil
 }
+
 func (s *serverRecorder) AddMember(_ context.Context, m membership.Member) ([]*membership.Member, error) {
 	s.actions = append(s.actions, action{name: "AddMember", params: []interface{}{m}})
 	return nil, nil
 }
+
 func (s *serverRecorder) RemoveMember(_ context.Context, id uint64) ([]*membership.Member, error) {
 	s.actions = append(s.actions, action{name: "RemoveMember", params: []interface{}{id}})
 	return nil, nil
@@ -168,12 +171,15 @@ func (rs *resServer) Process(_ context.Context, _ raftpb.Message) error { return
 func (rs *resServer) AddMember(_ context.Context, _ membership.Member) ([]*membership.Member, error) {
 	return nil, nil
 }
+
 func (rs *resServer) RemoveMember(_ context.Context, _ uint64) ([]*membership.Member, error) {
 	return nil, nil
 }
+
 func (rs *resServer) UpdateMember(_ context.Context, _ membership.Member) ([]*membership.Member, error) {
 	return nil, nil
 }
+
 func (rs *resServer) PromoteMember(_ context.Context, _ uint64) ([]*membership.Member, error) {
 	return nil, nil
 }
@@ -1433,7 +1439,6 @@ func TestServeStoreStats(t *testing.T) {
 	if g := rw.Body.String(); g != w {
 		t.Errorf("body = %s, want %s", g, w)
 	}
-
 }
 
 func TestBadServeKeys(t *testing.T) {

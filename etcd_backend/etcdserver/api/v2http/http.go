@@ -66,13 +66,3 @@ func allowMethod(w http.ResponseWriter, m string, ms ...string) bool {
 	http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 	return false
 }
-
-// 打印请求日志
-func requestLogger(lg *zap.Logger, handler http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if lg != nil {
-			lg.Debug("处理http请求", zap.String("method", r.Method), zap.String("request-uri", r.RequestURI), zap.String("remote-addr", r.RemoteAddr))
-		}
-		handler.ServeHTTP(w, r)
-	})
-}

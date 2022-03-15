@@ -48,7 +48,6 @@ const (
 	keysPrefix     = "/v2/keys"
 	machinesPrefix = "/v2/machines"
 	membersPrefix  = "/v2/members"
-	statsPrefix    = "/v2/stats"
 )
 
 type keysHandler struct {
@@ -70,7 +69,6 @@ func (h *keysHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), h.timeout)
 	defer cancel()
 	clock := clockwork.NewRealClock()
-	startTime := clock.Now()
 	rr, noValueOnSuccess, err := parseKeyRequest(r, clock)
 	if err != nil {
 		writeKeyError(h.lg, w, err)
@@ -82,13 +80,11 @@ func (h *keysHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !rr.Wait {
-		reportRequestReceived(rr)
 	}
 	resp, err := h.server.Do(ctx, rr)
 	if err != nil {
 		err = trimErrorPrefix(err, etcdserver.StoreKeysPrefix)
 		writeKeyError(h.lg, w, err)
-		reportRequestFailed(rr, err)
 		return
 	}
 	switch {
@@ -97,7 +93,6 @@ func (h *keysHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			// Should never be reached
 			h.lg.Warn("failed to write key event", zap.Error(err))
 		}
-		reportRequestCompleted(rr, startTime)
 	case resp.Watcher != nil:
 		ctx, cancel := context.WithTimeout(context.Background(), defaultWatchTimeout)
 		defer cancel()

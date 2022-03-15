@@ -17,7 +17,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"io/ioutil"
 	"net/url"
 	"os"
@@ -181,5 +180,4 @@ func main() {
 	write(ep)
 
 	lg.Debug("fetching metrics", zap.String("endpoint", ep))
-	fmt.Println(getMetrics(ep))
 }

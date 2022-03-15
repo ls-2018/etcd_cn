@@ -28,8 +28,6 @@ import (
 	"go.uber.org/zap"
 )
 
-const v2Version = "v2"
-
 // ApplierV2 is the interface for processing V2 raft messages
 type ApplierV2 interface {
 	Delete(r *RequestV2) Response

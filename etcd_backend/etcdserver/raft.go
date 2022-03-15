@@ -18,6 +18,11 @@ import (
 	"encoding/json"
 	"expvar"
 	"fmt"
+	"log"
+	"sort"
+	"sync"
+	"time"
+
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
 	"github.com/ls-2018/etcd_cn/etcd_backend/config"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/membership"
@@ -26,10 +31,6 @@ import (
 	"github.com/ls-2018/etcd_cn/pkg/pbutil"
 	"github.com/ls-2018/etcd_cn/raft"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
-	"log"
-	"sort"
-	"sync"
-	"time"
 
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/logutil"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/rafthttp"
@@ -75,6 +76,7 @@ type apply struct {
 	// notifyc synchronizes etcd etcd applies with the raft node
 	notifyc chan struct{}
 }
+
 type raftNodeConfig struct {
 	lg *zap.Logger
 
@@ -233,7 +235,7 @@ func restartNode(cfg config.ServerConfig, snapshot *raftpb.Snapshot) (types.ID, 
 		ElectionTick:    cfg.ElectionTicks, // 返回选举权检查对应多少次tick触发次数
 		HeartbeatTick:   1,                 // 返回心跳检查对应多少次tick触发次数
 		Storage:         s,
-		MaxSizePerMsg:   maxSizePerMsg, //每次发消息的最大size
+		MaxSizePerMsg:   maxSizePerMsg, // 每次发消息的最大size
 		MaxInflightMsgs: maxInflightMsgs,
 		CheckQuorum:     true,
 		PreVote:         cfg.PreVote, // PreVote 是否启用PreVote
@@ -307,7 +309,7 @@ func restartAsStandaloneNode(cfg config.ServerConfig, snapshot *raftpb.Snapshot)
 		ElectionTick:    cfg.ElectionTicks, // 返回选举权检查对应多少次tick触发次数
 		HeartbeatTick:   1,                 // 返回心跳检查对应多少次tick触发次数
 		Storage:         s,
-		MaxSizePerMsg:   maxSizePerMsg, //每次发消息的最大size
+		MaxSizePerMsg:   maxSizePerMsg, // 每次发消息的最大size
 		MaxInflightMsgs: maxInflightMsgs,
 		CheckQuorum:     true,
 		PreVote:         cfg.PreVote, // PreVote 是否启用PreVote
@@ -429,7 +431,7 @@ func (r *raftNode) tick() {
 	r.tickMu.Unlock()
 }
 
-//心跳触发EtcdServer定时触发   非常重要
+// 心跳触发EtcdServer定时触发   非常重要
 func (r *raftNode) start(rh *raftReadyHandler) {
 	internalTimeout := time.Second
 
@@ -443,32 +445,18 @@ func (r *raftNode) start(rh *raftReadyHandler) {
 				r.tick()
 			//	 readyc = n.readyc    size为0
 			case rd := <-r.Ready(): // 调用Node.Ready(),从返回的channel中获取数据
-				//获取ready结构中的committedEntries,提交给Apply模块应用到后端存储中.
-				//ReadStates不为空的处理逻辑
+				// 获取ready结构中的committedEntries,提交给Apply模块应用到后端存储中.
+				// ReadStates不为空的处理逻辑
 				if rd.SoftState != nil {
 					// SoftState不为空的处理逻辑
 					newLeader := rd.SoftState.Lead != raft.None && rh.getLead() != rd.SoftState.Lead
-					if newLeader {
-						leaderChanges.Inc()
-					}
-
-					if rd.SoftState.Lead == raft.None {
-						hasLeader.Set(0)
-					} else {
-						hasLeader.Set(1)
-					}
 
 					rh.updateLead(rd.SoftState.Lead)
 					islead = rd.RaftState == raft.StateLeader
-					if islead {
-						isLeader.Set(1)
-					} else {
-						isLeader.Set(0)
-					}
 					rh.updateLeadership(newLeader)
 					r.td.Reset()
 				}
-				//ReadStates不为空的处理逻辑
+				// ReadStates不为空的处理逻辑
 				if len(rd.ReadStates) != 0 {
 					select {
 					case r.readStateC <- rd.ReadStates[len(rd.ReadStates)-1]:
@@ -499,7 +487,7 @@ func (r *raftNode) start(rh *raftReadyHandler) {
 					r.transport.Send(r.processMessages(rd.Messages))
 				}
 
-				//如果有snapshot
+				// 如果有snapshot
 				if !raft.IsEmptySnap(rd.Snapshot) {
 					// gofail: var raftBeforeSaveSnap struct{}
 					if err := r.storage.SaveSnap(rd.Snapshot); err != nil {
@@ -508,12 +496,11 @@ func (r *raftNode) start(rh *raftReadyHandler) {
 					// gofail: var raftAfterSaveSnap struct{}
 				}
 
-				//将hardState和日志条目保存到WAL中
+				// 将hardState和日志条目保存到WAL中
 				if err := r.storage.Save(rd.HardState, rd.Entries); err != nil {
 					r.lg.Fatal("failed to save Raft hard state and entries", zap.Error(err))
 				}
 				if !raft.IsEmptyHardState(rd.HardState) {
-					proposalsCommitted.Set(float64(rd.HardState.Commit))
 				}
 				// gofail: var raftAfterSave struct{}
 
@@ -579,8 +566,8 @@ func (r *raftNode) start(rh *raftReadyHandler) {
 					// leader already processed 'MsgSnap' and signaled
 					notifyc <- struct{}{}
 				}
-				//更新raft模块的applied index和将日志从unstable转到stable中
-				//这里需要注意的是,在将已提交日志条目应用到状态机的操作是异步完成的,在Apply完成后,会将结果写到客户端调用进来时注册的channel中.这样一次完整的写操作就完成了.
+				// 更新raft模块的applied index和将日志从unstable转到stable中
+				// 这里需要注意的是,在将已提交日志条目应用到状态机的操作是异步完成的,在Apply完成后,会将结果写到客户端调用进来时注册的channel中.这样一次完整的写操作就完成了.
 				r.Advance()
 			case <-r.stopped:
 				return
@@ -641,7 +628,6 @@ func (r *raftNode) processMessages(ms []raftpb.Message) []raftpb.Message {
 					zap.Duration("expected-duration", 2*r.heartbeat),
 					zap.Duration("exceeded-duration", exceed),
 				)
-				heartbeatSendFailures.Inc()
 			}
 		}
 	}
@@ -691,7 +677,7 @@ func (r *raftNode) advanceTicks(ticks int) {
 // Demo 凸(艹皿艹 )   明明没有实现这个方法啊
 func (r *raftNode) Demo() {
 	_ = r.raftNodeConfig.RaftNodeInterFace
-	//两层匿名结构体,该字段是个接口
+	// 两层匿名结构体,该字段是个接口
 	_ = r.Step
-	//var _ raft.RaftNodeInterFace = raftNode{}
+	// var _ raft.RaftNodeInterFace = raftNode{}
 }

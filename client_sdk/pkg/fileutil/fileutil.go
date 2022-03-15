@@ -26,7 +26,7 @@ import (
 
 const (
 	// PrivateFileMode 授予所有者读/写文件的权限.
-	PrivateFileMode = 0600
+	PrivateFileMode = 0o600
 )
 
 // IsDirWriteable checks if dir is writable by writing and removing a file
@@ -124,7 +124,7 @@ func CheckDirPermission(dir string, perm os.FileMode) error {
 	if !Exist(dir) {
 		return fmt.Errorf("directory %q empty, cannot check permission", dir)
 	}
-	//check the existing permission on the directory
+	// check the existing permission on the directory
 	dirInfo, err := os.Stat(dir)
 	if err != nil {
 		return err

@@ -80,7 +80,7 @@ func (in *Inflights) FreeLE(to uint64) {
 
 	idx := in.start
 	var i int
-	//从 start 开始,直到找到最大且小于 to 的元素位置
+	// 从 start 开始,直到找到最大且小于 to 的元素位置
 	for i = 0; i < in.count; i++ { // 当前有多少个条消息
 		if to < in.buffer[idx] { // found the first large inflight
 			break
@@ -94,7 +94,7 @@ func (in *Inflights) FreeLE(to uint64) {
 	in.count -= i  // 释放的日志条数
 	in.start = idx // 日志 跳转的位置
 	if in.count == 0 {
-		//如果没有fly日志了,就将start重置为0
+		// 如果没有fly日志了,就将start重置为0
 		in.start = 0
 	}
 }

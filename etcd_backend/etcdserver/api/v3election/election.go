@@ -17,6 +17,7 @@ package v3election
 import (
 	"context"
 	"errors"
+
 	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 
 	"github.com/ls-2018/etcd_cn/client_sdk/v3/concurrency"

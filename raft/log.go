@@ -24,7 +24,7 @@ import (
 // 快照 + storage + unstable
 //
 type raftLog struct {
-	//这里还是一个内存存储,用于保存自从最后一次snapshot之后提交的数据
+	// 这里还是一个内存存储,用于保存自从最后一次snapshot之后提交的数据
 	storage Storage // 最后存储数据
 
 	// 用于存储未写入Storage的快照数据及Entry记录
@@ -43,7 +43,7 @@ type raftLog struct {
 	maxNextEntsSize uint64
 }
 
-//追加日志.
+// 追加日志.
 func (l *raftLog) append(ents ...pb.Entry) uint64 {
 	if len(ents) == 0 {
 		return l.lastIndex()
@@ -173,19 +173,6 @@ func (l *raftLog) lastTerm() uint64 {
 	return t
 }
 
-// allEntries returns all entries in the log.
-func (l *raftLog) allEntries() []pb.Entry {
-	ents, err := l.entries(l.firstIndex(), noLimit)
-	if err == nil {
-		return ents
-	}
-	if err == ErrCompacted { // try again if there was a racing compaction
-		return l.allEntries()
-	}
-
-	panic(err)
-}
-
 // 更新提交索引
 func (l *raftLog) maybeCommit(maxIndex, term uint64) bool {
 	if maxIndex > l.committed && l.zeroTermOnErrCompacted(l.term(maxIndex)) == term {
@@ -241,7 +228,7 @@ func newLogWithSize(storage Storage, logger Logger, maxNextEntsSize uint64) *raf
 	return log
 }
 
-//OK
+// OK
 func (l *raftLog) String() string {
 	return fmt.Sprintf("----> 【committed=%d, applied=%d, unstable.offset=%d, len(unstable.Entries)=%d】", l.committed, l.applied, l.unstable.offset, len(l.unstable.entries))
 }
@@ -340,7 +327,6 @@ func (l *raftLog) isUpToDate(lasti, term uint64) bool {
 
 // 检测MsgApp消息的Index 字段及LogTerm字段是否合法
 func (l *raftLog) matchTerm(i, term uint64) bool {
-
 	t, err := l.term(i) // 查看索引消息对应的任期
 	if err != nil {
 		return false
@@ -382,7 +368,7 @@ func (l *raftLog) entries(i, maxsize uint64) ([]pb.Entry, error) {
 // m.Index: ents[0].Index, m.LogTerm: ents[0].Term, m.Commit:leader记录的本机点已经commit的日志索引
 // m.Entries... 真正的日志数据
 func (l *raftLog) maybeAppend(index, logTerm, committed uint64, ents ...pb.Entry) (lastnewi uint64, ok bool) {
-	if l.matchTerm(index, logTerm) { //查看 index 的 term 与 logTerm 是否匹配·
+	if l.matchTerm(index, logTerm) { // 查看 index 的 term 与 logTerm 是否匹配·
 		lastnewi = index + uint64(len(ents))
 		ci := l.findConflict(ents) // 查找ents中,index与term 冲突的位置.
 		switch {

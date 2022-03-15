@@ -838,7 +838,8 @@ func newTestKeyBytes(rev revision, tombstone bool) []byte {
 func newFakeStore() *store {
 	b := &fakeBackend{&fakeBatchTx{
 		Recorder:   &testutil.RecorderBuffered{},
-		rangeRespc: make(chan rangeResp, 5)}}
+		rangeRespc: make(chan rangeResp, 5),
+	}}
 	fi := &fakeIndex{
 		Recorder:              &testutil.RecorderBuffered{},
 		indexGetRespc:         make(chan indexGetResp, 1),
@@ -880,17 +881,21 @@ func (b *fakeBatchTx) UnsafeDeleteBucket(bucket backend.Bucket) {}
 func (b *fakeBatchTx) UnsafePut(bucket backend.Bucket, key []byte, value []byte) {
 	b.Recorder.Record(testutil.Action{Name: "put", Params: []interface{}{bucket, key, value}})
 }
+
 func (b *fakeBatchTx) UnsafeSeqPut(bucket backend.Bucket, key []byte, value []byte) {
 	b.Recorder.Record(testutil.Action{Name: "seqput", Params: []interface{}{bucket, key, value}})
 }
+
 func (b *fakeBatchTx) UnsafeRange(bucket backend.Bucket, key, endKey []byte, limit int64) (keys [][]byte, vals [][]byte) {
 	b.Recorder.Record(testutil.Action{Name: "range", Params: []interface{}{bucket, key, endKey, limit}})
 	r := <-b.rangeRespc
 	return r.keys, r.vals
 }
+
 func (b *fakeBatchTx) UnsafeDelete(bucket backend.Bucket, key []byte) {
 	b.Recorder.Record(testutil.Action{Name: "delete", Params: []interface{}{bucket, key}})
 }
+
 func (b *fakeBatchTx) UnsafeForEach(bucket backend.Bucket, visitor func(k, v []byte) error) error {
 	return nil
 }
@@ -955,27 +960,33 @@ func (i *fakeIndex) Get(key []byte, atRev int64) (rev, created revision, ver int
 	r := <-i.indexGetRespc
 	return r.rev, r.created, r.ver, r.err
 }
+
 func (i *fakeIndex) Range(key, end []byte, atRev int64) ([][]byte, []revision) {
 	i.Recorder.Record(testutil.Action{Name: "range", Params: []interface{}{key, end, atRev}})
 	r := <-i.indexRangeRespc
 	return r.keys, r.revs
 }
+
 func (i *fakeIndex) Put(key []byte, rev revision) {
 	i.Recorder.Record(testutil.Action{Name: "put", Params: []interface{}{key, rev}})
 }
+
 func (i *fakeIndex) Tombstone(key []byte, rev revision) error {
 	i.Recorder.Record(testutil.Action{Name: "tombstone", Params: []interface{}{key, rev}})
 	return nil
 }
+
 func (i *fakeIndex) RangeSince(key, end []byte, rev int64) []revision {
 	i.Recorder.Record(testutil.Action{Name: "rangeEvents", Params: []interface{}{key, end, rev}})
 	r := <-i.indexRangeEventsRespc
 	return r.revs
 }
+
 func (i *fakeIndex) Compact(rev int64) map[revision]struct{} {
 	i.Recorder.Record(testutil.Action{Name: "compact", Params: []interface{}{rev}})
 	return <-i.indexCompactRespc
 }
+
 func (i *fakeIndex) Keep(rev int64) map[revision]struct{} {
 	i.Recorder.Record(testutil.Action{Name: "keep", Params: []interface{}{rev}})
 	return <-i.indexCompactRespc

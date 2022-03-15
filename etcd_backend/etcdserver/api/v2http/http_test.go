@@ -62,18 +62,23 @@ type errServer struct {
 func (fs *errServer) Do(ctx context.Context, r etcdserverpb.Request) (etcdserver.Response, error) {
 	return etcdserver.Response{}, fs.err
 }
+
 func (fs *errServer) Process(ctx context.Context, m raftpb.Message) error {
 	return fs.err
 }
+
 func (fs *errServer) AddMember(ctx context.Context, m membership.Member) ([]*membership.Member, error) {
 	return nil, fs.err
 }
+
 func (fs *errServer) RemoveMember(ctx context.Context, id uint64) ([]*membership.Member, error) {
 	return nil, fs.err
 }
+
 func (fs *errServer) UpdateMember(ctx context.Context, m membership.Member) ([]*membership.Member, error) {
 	return nil, fs.err
 }
+
 func (fs *errServer) PromoteMember(ctx context.Context, id uint64) ([]*membership.Member, error) {
 	return nil, fs.err
 }

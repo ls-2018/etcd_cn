@@ -16,8 +16,9 @@ package grpcproxy
 
 import (
 	"context"
-	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 	"sync"
+
+	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v3rpc"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"

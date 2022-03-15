@@ -10,9 +10,10 @@ package gw
 
 import (
 	"context"
-	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v3lock/v3lockpb"
 	"io"
 	"net/http"
+
+	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v3lock/v3lockpb"
 
 	"github.com/golang/protobuf/descriptor"
 	"github.com/golang/protobuf/proto"
@@ -26,11 +27,14 @@ import (
 
 // Suppress "imported and not used" errors
 var _ codes.Code
-var _ io.Reader
-var _ status.Status
-var _ = runtime.String
-var _ = utilities.NewDoubleArray
-var _ = descriptor.ForMessage
+
+var (
+	_ io.Reader
+	_ status.Status
+	_ = runtime.String
+	_ = utilities.NewDoubleArray
+	_ = descriptor.ForMessage
+)
 
 func request_Lock_Lock_0(ctx context.Context, marshaler runtime.Marshaler, client v3lockpb.LockClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq v3lockpb.LockRequest
@@ -46,7 +50,6 @@ func request_Lock_Lock_0(ctx context.Context, marshaler runtime.Marshaler, clien
 
 	msg, err := client.Lock(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
-
 }
 
 func local_request_Lock_Lock_0(ctx context.Context, marshaler runtime.Marshaler, server v3lockpb.LockServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -63,7 +66,6 @@ func local_request_Lock_Lock_0(ctx context.Context, marshaler runtime.Marshaler,
 
 	msg, err := server.Lock(ctx, &protoReq)
 	return msg, metadata, err
-
 }
 
 func request_Lock_Unlock_0(ctx context.Context, marshaler runtime.Marshaler, client v3lockpb.LockClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -80,7 +82,6 @@ func request_Lock_Unlock_0(ctx context.Context, marshaler runtime.Marshaler, cli
 
 	msg, err := client.Unlock(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
-
 }
 
 func local_request_Lock_Unlock_0(ctx context.Context, marshaler runtime.Marshaler, server v3lockpb.LockServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -97,14 +98,12 @@ func local_request_Lock_Unlock_0(ctx context.Context, marshaler runtime.Marshale
 
 	msg, err := server.Unlock(ctx, &protoReq)
 	return msg, metadata, err
-
 }
 
 // v3lockpb.RegisterLockHandlerServer registers the http handlers for service Lock to "mux".
 // UnaryRPC     :call v3lockpb.LockServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
 func RegisterLockHandlerServer(ctx context.Context, mux *runtime.ServeMux, server v3lockpb.LockServer) error {
-
 	mux.Handle("POST", pattern_Lock_Lock_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -122,7 +121,6 @@ func RegisterLockHandlerServer(ctx context.Context, mux *runtime.ServeMux, serve
 		}
 
 		forward_Lock_Lock_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
 	})
 
 	mux.Handle("POST", pattern_Lock_Unlock_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
@@ -142,7 +140,6 @@ func RegisterLockHandlerServer(ctx context.Context, mux *runtime.ServeMux, serve
 		}
 
 		forward_Lock_Unlock_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
 	})
 
 	return nil
@@ -185,7 +182,6 @@ func RegisterLockHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
 // "LockClient" to call the correct interceptors.
 func RegisterLockHandlerClient(ctx context.Context, mux *runtime.ServeMux, client v3lockpb.LockClient) error {
-
 	mux.Handle("POST", pattern_Lock_Lock_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -203,7 +199,6 @@ func RegisterLockHandlerClient(ctx context.Context, mux *runtime.ServeMux, clien
 		}
 
 		forward_Lock_Lock_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
 	})
 
 	mux.Handle("POST", pattern_Lock_Unlock_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
@@ -223,7 +218,6 @@ func RegisterLockHandlerClient(ctx context.Context, mux *runtime.ServeMux, clien
 		}
 
 		forward_Lock_Unlock_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
 	})
 
 	return nil

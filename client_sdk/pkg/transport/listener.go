@@ -277,7 +277,7 @@ func SelfCert(lg *zap.Logger, dirpath string, hosts []string, selfSignedCertVali
 	if err != nil {
 		return
 	}
-	keyOut, err := os.OpenFile(keyPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	keyOut, err := os.OpenFile(keyPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o600)
 	if err != nil {
 		if info.Logger != nil {
 			info.Logger.Warn("无法创建私钥文件", zap.String("path", keyPath), zap.Error(err))
@@ -293,7 +293,7 @@ func SelfCert(lg *zap.Logger, dirpath string, hosts []string, selfSignedCertVali
 	return SelfCert(lg, dirpath, hosts, selfSignedCertValidity)
 }
 
-//OK
+// OK
 func (info TLSInfo) baseConfig() (*tls.Config, error) {
 	if info.KeyFile == "" || info.CertFile == "" {
 		return nil, fmt.Errorf("KeyFile和CertFile必须同时存在[key: %v, cert: %v]", info.KeyFile, info.CertFile)

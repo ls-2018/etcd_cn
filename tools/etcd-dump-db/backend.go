@@ -34,7 +34,7 @@ func snapDir(dataDir string) string {
 }
 
 func getBuckets(dbPath string) (buckets []string, err error) {
-	db, derr := bolt.Open(dbPath, 0600, &bolt.Options{Timeout: flockTimeout})
+	db, derr := bolt.Open(dbPath, 0o600, &bolt.Options{Timeout: flockTimeout})
 	if derr != nil {
 		return nil, fmt.Errorf("failed to open bolt DB %v", derr)
 	}
@@ -126,7 +126,7 @@ func authUsersDecoder(k, v []byte) {
 }
 
 func iterateBucket(dbPath, bucket string, limit uint64, decode bool) (err error) {
-	db, err := bolt.Open(dbPath, 0600, &bolt.Options{Timeout: flockTimeout})
+	db, err := bolt.Open(dbPath, 0o600, &bolt.Options{Timeout: flockTimeout})
 	if err != nil {
 		return fmt.Errorf("failed to open bolt DB %v", err)
 	}

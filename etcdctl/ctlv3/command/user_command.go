@@ -17,17 +17,16 @@ package command
 import (
 	"context"
 	"fmt"
-	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 	"strings"
+
+	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 
 	"github.com/bgentry/speakeasy"
 	"github.com/ls-2018/etcd_cn/pkg/cobrautl"
 	"github.com/spf13/cobra"
 )
 
-var (
-	userShowDetail bool
-)
+var userShowDetail bool
 
 // NewUserCommand returns the cobra command for "user".
 func NewUserCommand() *cobra.Command {

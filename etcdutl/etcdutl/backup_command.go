@@ -94,7 +94,9 @@ func newDesiredCluster() desiredCluster {
 				},
 				RaftAttributes: membership.RaftAttributes{
 					PeerURLs: []string{"http://use-flag--force-new-cluster:2080"},
-				}}},
+				},
+			},
+		},
 		confState: raftpb.ConfState{Voters: []uint64{nodeID}},
 	}
 }
@@ -266,13 +268,12 @@ func raftEntryToNoOp(entry *raftpb.Entry) {
 
 // saveDB copies the v3 backend and strips cluster information.
 func saveDB(lg *zap.Logger, destDB, srcDB string, idx uint64, term uint64, desired *desiredCluster, v3 bool) {
-
 	// open src db to safely copy db state
 	if v3 {
 		var src *bolt.DB
 		ch := make(chan *bolt.DB, 1)
 		go func() {
-			db, err := bolt.Open(srcDB, 0444, &bolt.Options{ReadOnly: true})
+			db, err := bolt.Open(srcDB, 0o444, &bolt.Options{ReadOnly: true})
 			if err != nil {
 				lg.Fatal("bolt.Open FAILED", zap.Error(err))
 			}
@@ -327,5 +328,4 @@ func saveDB(lg *zap.Logger, destDB, srcDB string, idx uint64, term uint64, desir
 		// Thanks to translateWAL not moving entries, but just replacing them with
 		// 'empty', there is no need to update the consistency index.
 	}
-
 }

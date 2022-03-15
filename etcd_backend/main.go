@@ -24,9 +24,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/ls-2018/etcd_cn/etcd_backend/etcdmain"
 	"os"
 	"runtime"
+
+	"github.com/ls-2018/etcd_cn/etcd_backend/etcdmain"
 )
 
 func main() {

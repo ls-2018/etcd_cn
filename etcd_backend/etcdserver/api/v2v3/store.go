@@ -17,11 +17,12 @@ package v2v3
 import (
 	"context"
 	"fmt"
-	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 	"path"
 	"sort"
 	"strings"
 	"time"
+
+	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 
 	"github.com/ls-2018/etcd_cn/client_sdk/v3/concurrency"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v2error"
@@ -371,7 +372,6 @@ func (s *v2v3Store) CompareAndSwap(
 		clientv3.OpGet(key),
 		clientv3.OpGet(key+"/"),
 	).Commit()
-
 	if err != nil {
 		return nil, err
 	}
@@ -500,7 +500,6 @@ func (s *v2v3Store) CompareAndDelete(nodePath, prevValue string, prevIndex uint6
 		clientv3.OpGet(key),
 		clientv3.OpGet(key+"/"),
 	).Commit()
-
 	if err != nil {
 		return nil, err
 	}

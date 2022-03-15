@@ -28,24 +28,24 @@ type ReadState struct {
 }
 
 type readIndexStatus struct {
-	req   pb.Message //记录了对应的MsgReadIndex请求
-	index uint64     //该MsgReadIndex请求到达时,对应的已提交位置
+	req   pb.Message // 记录了对应的MsgReadIndex请求
+	index uint64     // 该MsgReadIndex请求到达时,对应的已提交位置
 	// NB: this never records 'false', but it's more convenient to use this
 	// instead of a map[uint64]struct{} due to the API of quorum.VoteResult. If
 	// this becomes performance sensitive enough (doubtful), quorum.VoteResult
 	// can change to an API that is closer to that of CommittedIndex.
-	acks map[uint64]bool //记录了该MsgReadIndex相关的MsgHeartbeatResp响应的信息
+	acks map[uint64]bool // 记录了该MsgReadIndex相关的MsgHeartbeatResp响应的信息
 
 }
 
 type readOnly struct {
-	option ReadOnlyOption //当前只读请求的处理模式,ReadOnlySafe ReadOnlyOpt 和	ReadOnlyLeaseBased两种模式
+	option ReadOnlyOption // 当前只读请求的处理模式,ReadOnlySafe ReadOnlyOpt 和	ReadOnlyLeaseBased两种模式
 	/*
 		在etcd服务端收到MsgReadIndex消息时,会为其创建一个唯一的消息ID,并作为MsgReadIndex消息的第一条Entry记录.
 		在pendingReadIndex维护了消息ID与对应请求readIndexStatus实例的映射
 	*/
 	pendingReadIndex map[string]*readIndexStatus
-	readIndexQueue   []string //记录了MsgReadIndex请求对应的消息ID,这样可以保证MsgReadIndex的顺序
+	readIndexQueue   []string // 记录了MsgReadIndex请求对应的消息ID,这样可以保证MsgReadIndex的顺序
 }
 
 // OK
@@ -139,7 +139,7 @@ func (ro *readOnly) advance(m pb.Message) []*readIndexStatus {
 
 // lastPendingRequestCtx returns the context of the last pending read only
 // request in readonly struct.
-//返回记录中最后一个消息ID
+// 返回记录中最后一个消息ID
 func (ro *readOnly) lastPendingRequestCtx() string {
 	if len(ro.readIndexQueue) == 0 {
 		return ""

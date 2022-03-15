@@ -16,6 +16,7 @@ package grpcproxy
 
 import (
 	"context"
+
 	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 
 	"github.com/ls-2018/etcd_cn/etcd_backend/proxy/grpcproxy/cache"
@@ -42,14 +43,11 @@ func (p *kvProxy) Range(ctx context.Context, r *pb.RangeRequest) (*pb.RangeRespo
 		resp, err := p.cache.Get(r)
 		switch err {
 		case nil:
-			cacheHits.Inc()
 			return resp, nil
 		case cache.ErrCompacted:
-			cacheHits.Inc()
 			return nil, err
 		}
 
-		cachedMisses.Inc()
 	}
 
 	resp, err := p.kv.Do(ctx, RangeRequestToOp(r))
@@ -62,14 +60,12 @@ func (p *kvProxy) Range(ctx context.Context, r *pb.RangeRequest) (*pb.RangeRespo
 	req.Serializable = true
 	gresp := (*pb.RangeResponse)(resp.Get())
 	p.cache.Add(&req, gresp)
-	cacheKeys.Set(float64(p.cache.Size()))
 
 	return gresp, nil
 }
 
 func (p *kvProxy) Put(ctx context.Context, r *pb.PutRequest) (*pb.PutResponse, error) {
 	p.cache.Invalidate(r.Key, nil)
-	cacheKeys.Set(float64(p.cache.Size()))
 
 	resp, err := p.kv.Do(ctx, PutRequestToOp(r))
 	return (*pb.PutResponse)(resp.Put()), err
@@ -77,7 +73,6 @@ func (p *kvProxy) Put(ctx context.Context, r *pb.PutRequest) (*pb.PutResponse, e
 
 func (p *kvProxy) DeleteRange(ctx context.Context, r *pb.DeleteRangeRequest) (*pb.DeleteRangeResponse, error) {
 	p.cache.Invalidate(r.Key, r.RangeEnd)
-	cacheKeys.Set(float64(p.cache.Size()))
 
 	resp, err := p.kv.Do(ctx, DelRequestToOp(r))
 	return (*pb.DeleteRangeResponse)(resp.Del()), err
@@ -118,8 +113,6 @@ func (p *kvProxy) Txn(ctx context.Context, r *pb.TxnRequest) (*pb.TxnResponse, e
 		p.txnToCache(r.Failure, resp.Responses)
 	}
 
-	cacheKeys.Set(float64(p.cache.Size()))
-
 	return (*pb.TxnResponse)(resp), nil
 }
 
@@ -133,8 +126,6 @@ func (p *kvProxy) Compact(ctx context.Context, r *pb.CompactionRequest) (*pb.Com
 	if err == nil {
 		p.cache.Compact(r.Revision)
 	}
-
-	cacheKeys.Set(float64(p.cache.Size()))
 
 	return (*pb.CompactionResponse)(resp), err
 }

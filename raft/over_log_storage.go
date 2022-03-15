@@ -196,11 +196,11 @@ func (ms *MemoryStorage) Compact(compactIndex uint64) error {
 	}
 
 	i := compactIndex - offset
-	//创建新的切片,用来存储compactIndex之后的Entry
+	// 创建新的切片,用来存储compactIndex之后的Entry
 	ents := make([]pb.Entry, 1, 1+uint64(len(ms.ents))-i)
 	ents[0].Index = ms.ents[i].Index
 	ents[0].Term = ms.ents[i].Term
-	//将compactlndex之后的Entry拷贝到ents中,并更新MemoryStorage.ents 字段
+	// 将compactlndex之后的Entry拷贝到ents中,并更新MemoryStorage.ents 字段
 	ents = append(ents, ms.ents[i+1:]...)
 	ms.ents = ents
 	return nil
@@ -228,16 +228,16 @@ func (ms *MemoryStorage) Append(entries []pb.Entry) error {
 		entries = entries[first-entries[0].Index:]
 	}
 
-	//计算entries切片中第一条可用的Entry与first之间的差距
+	// 计算entries切片中第一条可用的Entry与first之间的差距
 	offset := entries[0].Index - ms.ents[0].Index
 	switch {
 	case uint64(len(ms.ents)) > offset:
-		//保留MemoryStorage.ents中first～offset的部分,offset之后的部分被抛弃
-		//然后将待追加的Entry追加到MemoryStorage.ents中
+		// 保留MemoryStorage.ents中first～offset的部分,offset之后的部分被抛弃
+		// 然后将待追加的Entry追加到MemoryStorage.ents中
 		ms.ents = append([]pb.Entry{}, ms.ents[:offset]...)
 		ms.ents = append(ms.ents, entries...)
 	case uint64(len(ms.ents)) == offset:
-		//直接将待追加的日志记录(entries)追加到MemoryStorage中
+		// 直接将待追加的日志记录(entries)追加到MemoryStorage中
 		ms.ents = append(ms.ents, entries...)
 	default:
 		getLogger().Panicf("丢失日志项 [last: %d, append at: %d]", ms.lastIndex(), entries[0].Index)

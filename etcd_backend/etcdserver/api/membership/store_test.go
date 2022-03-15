@@ -35,8 +35,10 @@ func TestAddRemoveMember(t *testing.T) {
 		c2 := newTestCluster(t, nil)
 		c2.SetBackend(be2)
 		c2.Recover(func(*zap.Logger, *semver.Version) {})
-		assert.Equal(t, []*Member{{ID: types.ID(18),
-			Attributes: Attributes{Name: "node18"}}}, c2.Members())
+		assert.Equal(t, []*Member{{
+			ID:         types.ID(18),
+			Attributes: Attributes{Name: "node18"},
+		}}, c2.Members())
 		assert.Equal(t, true, c2.IsIDRemoved(17))
 		assert.Equal(t, false, c2.IsIDRemoved(18))
 	}

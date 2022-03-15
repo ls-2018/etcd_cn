@@ -18,15 +18,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"hash/crc32"
+	"math"
+	"sync"
+
 	"github.com/ls-2018/etcd_cn/etcd_backend/lease"
 	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc/backend"
 	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc/buckets"
 	"github.com/ls-2018/etcd_cn/pkg/schedule"
 	"github.com/ls-2018/etcd_cn/pkg/traceutil"
 	"go.etcd.io/etcd/api/v3/mvccpb"
-	"hash/crc32"
-	"math"
-	"sync"
 
 	"go.uber.org/zap"
 )
@@ -48,8 +49,10 @@ const (
 	markTombstone     byte = 't'
 )
 
-var restoreChunkKeys = 10000 // non-const for testing
-var defaultCompactBatchLimit = 1000
+var (
+	restoreChunkKeys         = 10000 // non-const for testing
+	defaultCompactBatchLimit = 1000
+)
 
 type StoreConfig struct {
 	CompactionBatchLimit int
@@ -162,7 +165,6 @@ func (s *store) Hash() (hash uint32, revision int64, err error) {
 }
 
 func (s *store) HashByRev(rev int64) (hash uint32, currentRev int64, compactRev int64, err error) {
-
 	s.mu.RLock()
 	s.revMu.RLock()
 	compactRev, currentRev = s.compactMainRev, s.currentRev
@@ -245,7 +247,7 @@ func (s *store) updateCompactRev(rev int64) (<-chan struct{}, error) {
 
 func (s *store) compact(trace *traceutil.Trace, rev int64) (<-chan struct{}, error) {
 	ch := make(chan struct{})
-	var j = func(ctx context.Context) {
+	j := func(ctx context.Context) {
 		if ctx.Err() != nil {
 			s.compactBarrier(ctx, ch)
 			return

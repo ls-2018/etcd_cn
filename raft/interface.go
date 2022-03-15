@@ -2,6 +2,7 @@ package raft
 
 import (
 	"context"
+
 	pb "github.com/ls-2018/etcd_cn/raft/raftpb"
 )
 

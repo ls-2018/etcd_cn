@@ -17,12 +17,13 @@ package rafthttp
 import (
 	"bytes"
 	"context"
-	"github.com/dustin/go-humanize"
-	"github.com/ls-2018/etcd_cn/raft"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"time"
+
+	"github.com/dustin/go-humanize"
+	"github.com/ls-2018/etcd_cn/raft"
 
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/snap"
@@ -32,10 +33,8 @@ import (
 	"go.uber.org/zap"
 )
 
-var (
-	// timeout for reading snapshot response body
-	snapResponseReadTimeout = 5 * time.Second
-)
+// timeout for reading snapshot response body
+var snapResponseReadTimeout = 5 * time.Second
 
 type snapshotSender struct {
 	from, to types.ID
@@ -67,7 +66,6 @@ func newSnapshotSender(tr *Transport, picker *urlPicker, to types.ID, status *pe
 func (s *snapshotSender) stop() { close(s.stopc) }
 
 func (s *snapshotSender) send(merged snap.Message) {
-
 	m := merged.Message
 	to := types.ID(m.To).String()
 
@@ -130,7 +128,6 @@ func (s *snapshotSender) send(merged snap.Message) {
 			zap.String("size", snapshotSize),
 		)
 	}
-
 }
 
 // post posts the given request.

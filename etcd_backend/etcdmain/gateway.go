@@ -37,13 +37,11 @@ var (
 	gatewayCA                    string
 )
 
-var (
-	rootCmd = &cobra.Command{
-		Use:        "etcd",
-		Short:      "etcd etcd",
-		SuggestFor: []string{"etcd"},
-	}
-)
+var rootCmd = &cobra.Command{
+	Use:        "etcd",
+	Short:      "etcd etcd",
+	SuggestFor: []string{"etcd"},
+}
 
 func init() {
 	rootCmd.AddCommand(newGatewayCommand())

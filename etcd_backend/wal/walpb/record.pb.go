@@ -16,8 +16,11 @@ import (
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
-var _ = fmt.Errorf
-var _ = math.Inf
+
+var (
+	_ = fmt.Errorf
+	_ = math.Inf
+)
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
@@ -40,9 +43,11 @@ func (*Record) ProtoMessage()    {}
 func (*Record) Descriptor() ([]byte, []int) {
 	return fileDescriptor_bf94fd919e302a1d, []int{0}
 }
+
 func (m *Record) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
+
 func (m *Record) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_Record.Marshal(b, m, deterministic)
@@ -55,12 +60,15 @@ func (m *Record) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
+
 func (m *Record) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_Record.Merge(m, src)
 }
+
 func (m *Record) XXX_Size() int {
 	return m.Size()
 }
+
 func (m *Record) XXX_DiscardUnknown() {
 	xxx_messageInfo_Record.DiscardUnknown(m)
 }
@@ -84,9 +92,11 @@ func (*Snapshot) ProtoMessage()    {}
 func (*Snapshot) Descriptor() ([]byte, []int) {
 	return fileDescriptor_bf94fd919e302a1d, []int{1}
 }
+
 func (m *Snapshot) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
+
 func (m *Snapshot) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_Snapshot.Marshal(b, m, deterministic)
@@ -99,12 +109,15 @@ func (m *Snapshot) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
+
 func (m *Snapshot) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_Snapshot.Merge(m, src)
 }
+
 func (m *Snapshot) XXX_Size() int {
 	return m.Size()
 }
+
 func (m *Snapshot) XXX_DiscardUnknown() {
 	xxx_messageInfo_Snapshot.DiscardUnknown(m)
 }
@@ -233,6 +246,7 @@ func encodeVarintRecord(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
+
 func (m *Record) Size() (n int) {
 	if m == nil {
 		return 0
@@ -272,9 +286,11 @@ func (m *Snapshot) Size() (n int) {
 func sovRecord(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
+
 func sozRecord(x uint64) (n int) {
 	return sovRecord(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
+
 func (m *Record) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -398,6 +414,7 @@ func (m *Record) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
 func (m *Snapshot) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -523,6 +540,7 @@ func (m *Snapshot) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
 func skipRecord(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0

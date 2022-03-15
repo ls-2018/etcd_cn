@@ -16,10 +16,11 @@ package v2stats
 
 import (
 	"encoding/json"
-	"github.com/ls-2018/etcd_cn/raft"
 	"log"
 	"sync"
 	"time"
+
+	"github.com/ls-2018/etcd_cn/raft"
 )
 
 // ServerStats encapsulates various statistics about an EtcdServer and its

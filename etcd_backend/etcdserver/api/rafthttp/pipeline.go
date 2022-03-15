@@ -18,11 +18,12 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"github.com/ls-2018/etcd_cn/raft"
 	"io/ioutil"
 	"runtime"
 	"sync"
 	"time"
+
+	"github.com/ls-2018/etcd_cn/raft"
 
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
 	stats "github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v2stats"
