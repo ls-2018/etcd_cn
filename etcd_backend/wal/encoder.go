@@ -15,8 +15,6 @@
 package wal
 
 import (
-	"encoding/binary"
-	"fmt"
 	"hash"
 	"io"
 	"os"
@@ -59,12 +57,10 @@ func newFileEncoder(f *os.File, prevCrc uint32) (*encoder, error) {
 }
 
 func (e *encoder) encode(rec *walpb.Record) error {
-	fmt.Printf("%+v\n", rec)
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
 	e.crc.Write(rec.Data)
-	e.bw.FlushN()
 	rec.Crc = e.crc.Sum32()
 	var (
 		data []byte
@@ -73,10 +69,6 @@ func (e *encoder) encode(rec *walpb.Record) error {
 
 	data, err = rec.Marshal()
 	if err != nil {
-		return err
-	}
-	// 填充字节
-	if err = writeUint64(e.bw, uint64(len(data)), e.uint64buf); err != nil {
 		return err
 	}
 	data = append(data, '\n')
@@ -88,12 +80,5 @@ func (e *encoder) flush() error {
 	e.mu.Lock()
 	_, err := e.bw.FlushN()
 	e.mu.Unlock()
-	return err
-}
-
-func writeUint64(w io.Writer, n uint64, buf []byte) error {
-	// http://golang.org/src/encoding/binary/binary.go
-	binary.LittleEndian.PutUint64(buf, n)
-	_, err := w.Write(buf)
 	return err
 }

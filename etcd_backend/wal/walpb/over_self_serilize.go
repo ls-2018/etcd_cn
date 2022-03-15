@@ -15,8 +15,18 @@ import (
 //	return dAtA[:n], nil
 //}
 
+type Temp struct {
+	Type int64  `protobuf:"varint,1,opt,name=type" json:"type"`
+	Crc  uint32 `protobuf:"varint,2,opt,name=crc" json:"crc"`
+	Data string `protobuf:"bytes,3,opt,name=data" json:"data,omitempty"`
+}
+
 func (m *Record) Marshal() (dAtA []byte, err error) {
-	return json.Marshal(m)
+	return json.Marshal(Temp{
+		Type: m.Type,
+		Crc:  m.Crc,
+		Data: string(m.Data),
+	})
 }
 
 //
@@ -145,5 +155,13 @@ func (m *Record) Marshal() (dAtA []byte, err error) {
 //}
 
 func (m *Record) Unmarshal(dAtA []byte) error {
-	return json.Unmarshal(dAtA, m)
+	a := Temp{}
+	err := json.Unmarshal(dAtA, &a)
+	if err != nil {
+		return err
+	}
+	m.Type = a.Type
+	m.Crc = a.Crc
+	m.Data = []byte(a.Data)
+	return nil
 }

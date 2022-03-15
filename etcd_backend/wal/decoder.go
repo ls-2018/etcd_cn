@@ -16,6 +16,7 @@ package wal
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/binary"
 	"hash"
 	"io"
@@ -69,20 +70,6 @@ func (d *decoder) decodeRecord(rec *walpb.Record) error {
 		return io.EOF
 	}
 
-	l, err := readInt64(d.brs[0])
-	if err == io.EOF || (err == nil && l == 0) {
-		// hit end of file or preallocated space
-		d.brs = d.brs[1:]
-		if len(d.brs) == 0 {
-			return io.EOF
-		}
-		d.lastValidOff = 0
-		return d.decodeRecord(rec)
-	}
-	if err != nil {
-		return err
-	}
-
 	line, _, err := bufio.NewReader(d.brs[0]).ReadLine()
 	if err != nil {
 		if err == io.EOF {
@@ -90,11 +77,22 @@ func (d *decoder) decodeRecord(rec *walpb.Record) error {
 		}
 		return err
 	}
+	length := len(line)
+	var a = make([]byte, length)
+	all := 0
+	for _, item := range line {
+		if item == 0 {
+			all += 1
+		}
+	}
+	if all == length {
+		return io.EOF
+	}
+	if bytes.Equal(a, line) {
+		return io.EOF
+	}
 
 	if err := rec.Unmarshal(line); err != nil {
-		if d.isTornEntry(line) {
-			return io.ErrUnexpectedEOF
-		}
 		return err
 	}
 
@@ -102,9 +100,6 @@ func (d *decoder) decodeRecord(rec *walpb.Record) error {
 	if rec.Type != crcType {
 		d.crc.Write(rec.Data)
 		if err := rec.Validate(d.crc.Sum32()); err != nil {
-			if d.isTornEntry(line) {
-				return io.ErrUnexpectedEOF
-			}
 			return err
 		}
 	}
@@ -121,43 +116,6 @@ func decodeFrameSize(lenField int64) (recBytes int64, padBytes int64) {
 		padBytes = int64((uint64(lenField) >> 56) & 0x7)
 	}
 	return recBytes, padBytes
-}
-
-// isTornEntry determines whether the last entry of the WAL was partially written
-// and corrupted because of a torn write.
-func (d *decoder) isTornEntry(data []byte) bool {
-	if len(d.brs) != 1 {
-		return false
-	}
-
-	fileOff := d.lastValidOff + frameSizeBytes
-	curOff := 0
-	chunks := [][]byte{}
-	// split data on sector boundaries
-	for curOff < len(data) {
-		chunkLen := int(minSectorSize - (fileOff % minSectorSize))
-		if chunkLen > len(data)-curOff {
-			chunkLen = len(data) - curOff
-		}
-		chunks = append(chunks, data[curOff:curOff+chunkLen])
-		fileOff += int64(chunkLen)
-		curOff += chunkLen
-	}
-
-	// if any data for a sector chunk is all 0, it's a torn write
-	for _, sect := range chunks {
-		isZero := true
-		for _, v := range sect {
-			if v != 0 {
-				isZero = false
-				break
-			}
-		}
-		if isZero {
-			return true
-		}
-	}
-	return false
 }
 
 func (d *decoder) updateCRC(prevCrc uint32) {
