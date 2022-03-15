@@ -24,17 +24,13 @@ import (
 	"go.uber.org/zap"
 )
 
-// filePipeline pipelines allocating disk space
+// filePipeline 分配磁盘空间的管道
+//wal新建新的文件时都是先新建一个tmp文件，当所有操作都完成后再重命名这个文件。wal使用file_pipeline这个模块在后台启动一个协程时刻准备一个临时文件以供使用，从而避免临时创建文件的开销
 type filePipeline struct {
-	lg *zap.Logger
-
-	// dir to put files
-	dir string
-	// size of files to make, in bytes
-	size int64
-	// count number of files generated
+	lg    *zap.Logger
+	dir   string
+	size  int64
 	count int
-
 	filec chan *fileutil.LockedFile
 	errc  chan error
 	donec chan struct{}
@@ -47,7 +43,7 @@ func newFilePipeline(lg *zap.Logger, dir string, fileSize int64) *filePipeline {
 	fp := &filePipeline{
 		lg:    lg,
 		dir:   dir,
-		size:  fileSize,
+		size:  fileSize, //
 		filec: make(chan *fileutil.LockedFile),
 		errc:  make(chan error, 1),
 		donec: make(chan struct{}),
@@ -72,13 +68,13 @@ func (fp *filePipeline) Close() error {
 }
 
 func (fp *filePipeline) alloc() (f *fileutil.LockedFile, err error) {
-	// count % 2 so this file isn't the same as the one last published
+	// count % 2，所以这个文件和上次发布的文件不一样。
 	fpath := filepath.Join(fp.dir, fmt.Sprintf("%d.tmp", fp.count%2))
 	if f, err = fileutil.LockFile(fpath, os.O_CREATE|os.O_WRONLY, fileutil.PrivateFileMode); err != nil {
 		return nil, err
 	}
 	if err = fileutil.Preallocate(f.File, fp.size, true); err != nil {
-		fp.lg.Error("failed to preallocate space when creating a new WAL", zap.Int64("size", fp.size), zap.Error(err))
+		fp.lg.Error("在创建一个新的WAL时，未能预先分配空间", zap.Int64("size", fp.size), zap.Error(err))
 		f.Close()
 		return nil, err
 	}

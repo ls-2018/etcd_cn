@@ -16,9 +16,8 @@ package main
 
 import (
 	"flag"
-	"strings"
-
 	"github.com/ls-2018/etcd_cn/raft/raftpb"
+	"strings"
 )
 
 func main() {
@@ -30,18 +29,18 @@ func main() {
 
 	proposeC := make(chan string) // 提议通道, ---->放入raft状态机,返回错误
 	defer close(proposeC)
-	confChangeC := make(chan raftpb.ConfChange) // 配置通道
-	defer close(confChangeC)
+	triggerConfChangeC := make(chan raftpb.ConfChange) // 配置通道
+	defer close(triggerConfChangeC)
 
 	// Raft为来自HTTP API的propose提供了commitC
 	var kvs *kvstore
 	getSnapshot := func() ([]byte, error) { return kvs.genSnapshot() }
-	commitC, errorC, snapshotterReady := newRaftNode(*id, strings.Split(*cluster, ","), *join, getSnapshot, proposeC, confChangeC)
+	commitC, errorC, snapshotterReady := newRaftNode(*id, strings.Split(*cluster, ","), *join, getSnapshot, proposeC, triggerConfChangeC)
 
 	kvs = newKVStore(<-snapshotterReady, proposeC, commitC, errorC)
 
 	// kv http处理程序将propose 更新到raft上
-	serveHttpKVAPI(kvs, *kvport, confChangeC, errorC)
+	serveHttpKVAPI(kvs, *kvport, triggerConfChangeC, errorC)
 }
 
 /*

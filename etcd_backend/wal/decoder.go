@@ -34,7 +34,7 @@ const frameSizeBytes = 8
 
 type decoder struct {
 	mu  sync.Mutex
-	brs []*bufio.Reader
+	brs []*bufio.Reader// 要读取的所有wal文件
 
 	// lastValidOff file offset following the last valid decoded record
 	lastValidOff int64

@@ -35,15 +35,13 @@ func Exist(dir string) bool {
 	return len(names) != 0
 }
 
-// searchIndex returns the last array index of names whose raft index section is
-// equal to or smaller than the given index.
-// The given names必须是sorted.
+// searchIndex 返回 raft 索引部分等于或小于给定索引的名字的最后一个数组索引。
 func searchIndex(lg *zap.Logger, names []string, index uint64) (int, bool) {
 	for i := len(names) - 1; i >= 0; i-- {
 		name := names[i]
 		_, curIndex, err := parseWALName(name)
 		if err != nil {
-			lg.Panic("failed to parse WAL file name", zap.String("path", name), zap.Error(err))
+			lg.Panic("解析wal文件名字失败", zap.String("path", name), zap.Error(err))
 		}
 		if index >= curIndex {
 			return i, true
@@ -52,8 +50,7 @@ func searchIndex(lg *zap.Logger, names []string, index uint64) (int, bool) {
 	return -1, false
 }
 
-// names should have been sorted based on sequence number.
-// isValidSeq checks whether seq increases continuously.
+// isValidSeq 检查seq是否连续增加。
 func isValidSeq(lg *zap.Logger, names []string) bool {
 	var lastSeq uint64
 	for _, name := range names {
@@ -69,8 +66,9 @@ func isValidSeq(lg *zap.Logger, names []string) bool {
 	return true
 }
 
+// 返回指定目录下的所有wal文件
 func readWALNames(lg *zap.Logger, dirpath string) ([]string, error) {
-	names, err := fileutil.ReadDir(dirpath)
+	names, err := fileutil.ReadDir(dirpath) // 返回指定目录下所有经过排序的文件
 	if err != nil {
 		return nil, err
 	}
@@ -81,16 +79,13 @@ func readWALNames(lg *zap.Logger, dirpath string) ([]string, error) {
 	return wnames, nil
 }
 
+// 获取后缀是.wal的文件
 func checkWalNames(lg *zap.Logger, names []string) []string {
 	wnames := make([]string, 0)
 	for _, name := range names {
 		if _, _, err := parseWALName(name); err != nil {
-			// don't complain about left over tmp files
 			if !strings.HasSuffix(name, ".tmp") {
-				lg.Warn(
-					"ignored file in WAL directory",
-					zap.String("path", name),
-				)
+				lg.Warn("wal目录 忽略文件:%s", zap.String("path", name))
 			}
 			continue
 		}
@@ -99,6 +94,7 @@ func checkWalNames(lg *zap.Logger, names []string) []string {
 	return wnames
 }
 
+// 解析文件名
 func parseWALName(str string) (seq, index uint64, err error) {
 	if !strings.HasSuffix(str, ".wal") {
 		return 0, 0, errBadWALName

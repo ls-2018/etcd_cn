@@ -40,12 +40,10 @@ const (
 	metadataType int64 = iota + 1 // 元数据类型,元数据会保存当前的node id和cluster id.
 	entryType                     // 日志条目
 	stateType                     // 存放的是集群当前的状态HardState,如果集群的状态有变化,就会在WAL中存放一个新集群状态数据.里面包括当前Term,当前竞选者、当前已经commit的日志.
-	crcType                       // 存放crc校验字段.读取数据是,会根据这个记录里的crc字段对前面已经读出来的数据进行校验.
+	crcType                       // 存放crc校验字段.读取数据时,会根据这个记录里的crc字段对前面已经读出来的数据进行校验.
 	snapshotType                  // 存放snapshot的日志点.包括日志的Index和Term.
 
-	// warnSyncDuration is the amount of time allotted to an fsync before
-	// logging a warning
-	warnSyncDuration = time.Second
+	warnSyncDuration = time.Second // 是指在记录警告之前分配给fsync的时间量。
 )
 
 var (
@@ -75,28 +73,20 @@ var (
 // 一个新创建的WAL处于追加模式,并准备好追加记录.一个刚打开的WAL处于读模式,并准备好读取记录.
 // 在读出所有以前的记录后,WAL将准备好进行追加.
 type WAL struct {
-	lg *zap.Logger
-
-	dir string // wal文件的存储目录
-
-	// dirFile is a fd for the wal directory for syncing on Rename
-	dirFile *os.File
-
-	metadata []byte           // wal文件构建后会写的第一个metadata记录
-	state    raftpb.HardState // wal文件构建后会写的第一个state记录
-
-	start     walpb.Snapshot // wal开始的snapshot,代表读取wal时从这个snapshot的记录之后开始
-	decoder   *decoder       // wal记录的反序列化器
-	readClose func() error   // closer for decode reader
-
-	unsafeNoSync bool //  非安全存储 默认是 false
-
-	mu      sync.Mutex
-	enti    uint64   // index of the last entry saved to the wal
-	encoder *encoder // encoder to encode records
-
-	locks []*fileutil.LockedFile // 底层数据文件列表
-	fp    *filePipeline
+	lg           *zap.Logger
+	dir          string           // wal文件的存储目录
+	dirFile      *os.File         // 是一个用于重命名时同步的wal目录的fd。
+	metadata     []byte           // wal文件构建后会写的第一个metadata记录
+	state        raftpb.HardState // wal文件构建后会写的第一个state记录
+	start        walpb.Snapshot   // wal开始的snapshot,代表读取wal时从这个snapshot的记录之后开始
+	decoder      *decoder         // wal记录的反序列化器
+	readClose    func() error     // 关闭反序列化器
+	unsafeNoSync bool             //  非安全存储 默认是 false
+	mu           sync.Mutex
+	enti         uint64                 // 保存到wal的最新日志索引
+	encoder      *encoder               // encoder to encode records
+	locks        []*fileutil.LockedFile // 底层数据文件列表
+	fp           *filePipeline
 }
 
 // Create 创建一个准备用于添加记录的WAL.给定的元数据被记录在每个WAL文件的头部,并且可以在文件打开后用ReadAll检索.
@@ -180,7 +170,7 @@ func Create(lg *zap.Logger, dirpath string, metadata []byte) (*WAL, error) {
 	logDirPath := w.dir
 	if w, err = w.renameWAL(tmpdirpath); err != nil {
 		lg.Warn(
-			"failed to rename the temporary WAL directory",
+			fmt.Sprintf("重命名失败  .%s.tmp --> %s", tmpdirpath, w.dir),
 			zap.String("tmp-dir-path", tmpdirpath),
 			zap.String("dir-path", logDirPath),
 			zap.Error(err),
@@ -304,18 +294,14 @@ func (w *WAL) renameWALUnlock(tmpdirpath string) (*WAL, error) {
 	return newWAL, nil
 }
 
-// Open opens the WAL at the given snap.
-// The snap SHOULD have been previously saved to the WAL, or the following
-// ReadAll will fail.
-// The returned WAL is ready to read and the first record will be the one after
-// the given snap. The WAL cannot be appended to before reading out all of its
-// previous records.
+// Open 在给定的快照处打开WAL。这个快照应该是先前保存在WAL中的，否则下面的ReadAll会失败。
+// 返回的WAL已经准备好读取，第一条记录将是给定sap之后的那条。在读出所有之前的记录之前，不能对WAL进行追加。
 func Open(lg *zap.Logger, dirpath string, snap walpb.Snapshot) (*WAL, error) {
 	w, err := openAtIndex(lg, dirpath, snap, true)
 	if err != nil {
 		return nil, err
 	}
-	if w.dirFile, err = fileutil.OpenDir(w.dir); err != nil {
+	if w.dirFile, err = fileutil.OpenDir(w.dir); err != nil { // ./raftexample/db/raftexample-1
 		return nil, err
 	}
 	return w, nil
@@ -327,21 +313,22 @@ func OpenForRead(lg *zap.Logger, dirpath string, snap walpb.Snapshot) (*WAL, err
 	return openAtIndex(lg, dirpath, snap, false)
 }
 
+// 在指定位置打开wal
 func openAtIndex(lg *zap.Logger, dirpath string, snap walpb.Snapshot, write bool) (*WAL, error) {
 	if lg == nil {
 		lg = zap.NewNop()
 	}
-	names, nameIndex, err := selectWALFiles(lg, dirpath, snap)
+	names, nameIndex, err := selectWALFiles(lg, dirpath, snap) // 选择合适的wal文件
 	if err != nil {
 		return nil, err
 	}
 
-	rs, ls, closer, err := openWALFiles(lg, dirpath, names, nameIndex, write)
+	rs, ls, closer, err := openWALFiles(lg, dirpath, names, nameIndex, write) //打开所有wal文件
 	if err != nil {
 		return nil, err
 	}
 
-	// create a WAL ready for reading
+	// 创建一个WAL准备读取
 	w := &WAL{
 		lg:        lg,
 		dir:       dirpath,
@@ -351,9 +338,8 @@ func openAtIndex(lg *zap.Logger, dirpath string, snap walpb.Snapshot, write bool
 		locks:     ls,
 	}
 
-	if write {
-		// write reuses the file descriptors from read; don't close so
-		// WAL can append without dropping the file lock
+	if write { // true
+		//写入重用读出的文件描述符；不要关闭，以便
 		w.readClose = nil
 		if _, _, err := parseWALName(filepath.Base(w.tail().Name())); err != nil {
 			closer()
@@ -365,14 +351,15 @@ func openAtIndex(lg *zap.Logger, dirpath string, snap walpb.Snapshot, write bool
 	return w, nil
 }
 
+// 选择合适的wal文件
 func selectWALFiles(lg *zap.Logger, dirpath string, snap walpb.Snapshot) ([]string, int, error) {
-	names, err := readWALNames(lg, dirpath)
+	names, err := readWALNames(lg, dirpath) // 返回指定目录下的所有wal文件
 	if err != nil {
 		return nil, -1, err
 	}
 
-	nameIndex, ok := searchIndex(lg, names, snap.Index)
-	if !ok || !isValidSeq(lg, names[nameIndex:]) {
+	nameIndex, ok := searchIndex(lg, names, snap.Index) // 查找小于快照的第一个wal日志
+	if !ok || !isValidSeq(lg, names[nameIndex:]) {      // 校验wal索引是否是增序
 		err = ErrFileNotFound
 		return nil, -1, err
 	}
@@ -380,6 +367,7 @@ func selectWALFiles(lg *zap.Logger, dirpath string, snap walpb.Snapshot) ([]stri
 	return names, nameIndex, nil
 }
 
+// ok
 func openWALFiles(lg *zap.Logger, dirpath string, names []string, nameIndex int, write bool) ([]io.Reader, []*fileutil.LockedFile, func() error, error) {
 	rcs := make([]io.ReadCloser, 0)
 	rs := make([]io.Reader, 0)
@@ -411,34 +399,15 @@ func openWALFiles(lg *zap.Logger, dirpath string, names []string, nameIndex int,
 	return rs, ls, closer, nil
 }
 
-// ReadAll reads out records of the current WAL.
-// If opened in write mode, it must read out all records until EOF. Or an error
-// will be returned.
-// If opened in read mode, it will try to read all records if possible.
-// If it cannot read out the expected snap, it will return ErrSnapshotNotFound.
-// If loaded snap doesn't match with the expected one, it will return
-// all the records and error ErrSnapshotMismatch.
-// TODO: detect not-last-snap error.
-// TODO: maybe loose the checking of match.
-// After ReadAll, the WAL will be ready for appending new records.
-//
-// ReadAll suppresses WAL entries that got overridden (i.e. a newer entry with the same index
-// exists in the log). Such a situation can happen in cases described in figure 7. of the
-// RAFT paper (http://web.stanford.edu/~ouster/cgi-bin/papers/raft-atc14.pdf).
-//
-// ReadAll may return uncommitted yet entries, that are subject to be overriden.
-// Do not apply entries that have index > state.commit, as they are subject to change.
+// ReadAll 读取所有的wal里的日志
 func (w *WAL) ReadAll() (metadata []byte, state raftpb.HardState, ents []raftpb.Entry, err error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
-
 	rec := &walpb.Record{}
-
 	if w.decoder == nil {
 		return nil, state, nil, ErrDecoderNotFound
 	}
 	decoder := w.decoder
-
 	var match bool
 	for err = decoder.decode(rec); err == nil; err = decoder.decode(rec) {
 		switch rec.Type {
@@ -446,18 +415,19 @@ func (w *WAL) ReadAll() (metadata []byte, state raftpb.HardState, ents []raftpb.
 			e := mustUnmarshalEntry(rec.Data)
 			// 0 <= e.Index-w.start.Index - 1 < len(ents)
 			if e.Index > w.start.Index {
-				// prevent "panic: runtime error: slice bounds out of range [:13038096702221461992] with capacity 0"
-				up := e.Index - w.start.Index - 1
+				// 防止 "panic：运行时错误：切片边界超出范围[：13038096702221461992]，容量为0"
+				up := e.Index - w.start.Index - 1 //
 				if up > uint64(len(ents)) {
-					// return error before append call causes runtime panic
+					// 在调用append前返回错误导致运行时恐慌
 					return nil, state, nil, ErrSliceOutOfRange
 				}
-				// The line below is potentially overriding some 'uncommitted' entries.
+				// 下面这一行有可能覆盖一些 "未提交 "的条目。
+				// wal只关注写入日志，不会校验日志的index是否重复，
 				ents = append(ents[:up], e)
 			}
-			w.enti = e.Index
+			w.enti = e.Index // 保存到wal的最新日志索引
 
-		case stateType:
+		case stateType: // 集群状态变化
 			state = mustUnmarshalState(rec.Data)
 
 		case metadataType:
@@ -467,7 +437,7 @@ func (w *WAL) ReadAll() (metadata []byte, state raftpb.HardState, ents []raftpb.
 			}
 			metadata = rec.Data
 
-		case crcType:
+		case crcType: // 4
 			crc := decoder.crc.Sum32()
 			// current crc of decoder must match the crc of the record.
 			// do no need to match 0 crc, since the decoder is a new one at this case.
@@ -496,39 +466,31 @@ func (w *WAL) ReadAll() (metadata []byte, state raftpb.HardState, ents []raftpb.
 
 	switch w.tail() {
 	case nil:
-		// We do not have to read out all entries in read mode.
-		// The last record maybe a partial written one, so
-		// ErrunexpectedEOF might be returned.
 		if err != io.EOF && err != io.ErrUnexpectedEOF {
 			state.Reset()
 			return nil, state, nil, err
 		}
 	default:
-		// We must read all of the entries if WAL is opened in write mode.
+		// 如果WAL是以写模式打开的，我们必须读取所有的条目。
 		if err != io.EOF {
 			state.Reset()
 			return nil, state, nil, err
 		}
-		// decodeRecord() will return io.EOF if it detects a zero record,
-		// but this zero record may be followed by non-zero records from
-		// a torn write. Overwriting some of these non-zero records, but
-		// not all, will cause CRC errors on WAL open. Since the records
-		// were never fully synced to disk in the first place, it's safe
-		// to zero them out to avoid any CRC errors from new writes.
-		if _, err = w.tail().Seek(w.decoder.lastOffset(), io.SeekStart); err != nil {
+
+		if _, err = w.tail().Seek(w.decoder.lastOffset(), io.SeekStart); err != nil { // 跳到末尾
 			return nil, state, nil, err
 		}
-		if err = fileutil.ZeroToEnd(w.tail().File); err != nil {
+		if err = fileutil.ZeroToEnd(w.tail().File); err != nil { // 清空wal文件当前之后的数据,并固定分配文件空间
 			return nil, state, nil, err
 		}
 	}
 
 	err = nil
-	if !match {
+	if !match { // wal 中没有发现当前的快照记录
 		err = ErrSnapshotNotFound
 	}
 
-	// close decoder, disable reading
+	// 关闭decoder,禁止读取
 	if w.readClose != nil {
 		w.readClose()
 		w.readClose = nil
@@ -537,8 +499,8 @@ func (w *WAL) ReadAll() (metadata []byte, state raftpb.HardState, ents []raftpb.
 
 	w.metadata = metadata
 
-	if w.tail() != nil {
-		// create encoder (chain crc with the decoder), enable appending
+	if w.tail() != nil { // wal文件
+		// 创建编码器（与解码器连锁crc），启用追加功能
 		w.encoder, err = newFileEncoder(w.tail().File, w.decoder.lastCRC())
 		if err != nil {
 			return
@@ -549,21 +511,19 @@ func (w *WAL) ReadAll() (metadata []byte, state raftpb.HardState, ents []raftpb.
 	return metadata, state, ents, err
 }
 
-// ValidSnapshotEntries returns all the valid snapshot entries in the wal logs in the given directory.
-// Snapshot entries are valid if their index is less than or equal to the most recent committed hardstate.
+// ValidSnapshotEntries 返回给定目录下wal日志中的所有有效快照条目。如果快照条目的索引小于或等于最近提交的hardstate，则为有效。
 func ValidSnapshotEntries(lg *zap.Logger, walDir string) ([]walpb.Snapshot, error) {
 	var snaps []walpb.Snapshot
 	var state raftpb.HardState
 	var err error
 
 	rec := &walpb.Record{}
-	names, err := readWALNames(lg, walDir)
+	names, err := readWALNames(lg, walDir) // 获取wal目录下的所有wal文件
 	if err != nil {
 		return nil, err
 	}
 
-	// open wal files in read mode, so that there is no conflict
-	// when the same WAL is opened elsewhere in write mode
+	// 在读模式下打开WAL文件，这样，当在其他地方以写模式打开同样的WAL时，就不会有冲突。
 	rs, _, closer, err := openWALFiles(lg, walDir, names, 0, false)
 	if err != nil {
 		return nil, err
@@ -574,34 +534,31 @@ func ValidSnapshotEntries(lg *zap.Logger, walDir string) ([]walpb.Snapshot, erro
 		}
 	}()
 
-	// create a new decoder from the readers on the WAL files
+	// 从WAL文件的读者中创建一个新的解码器
 	decoder := newDecoder(rs...)
 
 	for err = decoder.decode(rec); err == nil; err = decoder.decode(rec) {
 		switch rec.Type {
-		case snapshotType:
+		case snapshotType: // 5
 			var loadedSnap walpb.Snapshot
 			pbutil.MustUnmarshal(&loadedSnap, rec.Data)
 			snaps = append(snaps, loadedSnap)
-		case stateType:
+		case stateType: // 3
 			state = mustUnmarshalState(rec.Data)
-		case crcType:
+		case crcType: // 4
 			crc := decoder.crc.Sum32()
-			// current crc of decoder must match the crc of the record.
-			// do no need to match 0 crc, since the decoder is a new one at this case.
+			// 解码器的当前crc必须与记录的crc相匹配
 			if crc != 0 && rec.Validate(crc) != nil {
 				return nil, ErrCRCMismatch
 			}
 			decoder.updateCRC(rec.Crc)
 		}
 	}
-	// We do not have to read out all the WAL entries
-	// as the decoder is opened in read mode.
 	if err != io.EOF && err != io.ErrUnexpectedEOF {
 		return nil, err
 	}
 
-	// filter out any snaps that are newer than the committed hardstate
+	// 过滤任何打快照的行为
 	n := 0
 	for _, s := range snaps {
 		if s.Index <= state.Commit {
@@ -698,9 +655,7 @@ func Verify(lg *zap.Logger, walDir string, snap walpb.Snapshot) (*raftpb.HardSta
 	return &state, nil
 }
 
-// cut closes current file written and creates a new one ready to append.
-// cut first creates a temp wal file and writes necessary headers into it.
-// Then cut atomically rename temp wal file to a wal file.
+// cut 当日志数据大于默认的64M时就会生成新的文件写入日志,新文件的第一条记录就是上一个wal文件最后的crc
 func (w *WAL) cut() error {
 	// close old wal file; truncate to avoid wasting space if an early cut
 	off, serr := w.tail().Seek(0, io.SeekCurrent)
@@ -802,11 +757,7 @@ func (w *WAL) sync() error {
 
 	took := time.Since(start)
 	if took > warnSyncDuration {
-		w.lg.Warn(
-			"缓慢 fdatasync",
-			zap.Duration("took", took),
-			zap.Duration("expected-duration", warnSyncDuration),
-		)
+		w.lg.Warn("缓慢 fdatasync", zap.Duration("took", took), zap.Duration("expected-duration", warnSyncDuration))
 	}
 	return err
 }
@@ -888,9 +839,8 @@ func (w *WAL) Close() error {
 
 	return w.dirFile.Close()
 }
-
+// 将日志保存到wal,更新wal写入的最新索引
 func (w *WAL) saveEntry(e *raftpb.Entry) error {
-	// TODO: add MustMarshalTo to reduce one allocation.
 	b := pbutil.MustMarshal(e)
 	rec := &walpb.Record{Type: entryType, Data: b}
 	if err := w.encoder.encode(rec); err != nil {
@@ -899,7 +849,7 @@ func (w *WAL) saveEntry(e *raftpb.Entry) error {
 	w.enti = e.Index
 	return nil
 }
-
+// 写当前的存储状态
 func (w *WAL) saveState(s *raftpb.HardState) error {
 	if raft.IsEmptyHardState(*s) {
 		return nil
@@ -911,6 +861,7 @@ func (w *WAL) saveState(s *raftpb.HardState) error {
 }
 
 // Save 日志发送给Follower的同时,Leader会将日志落盘,即写到WAL中,
+// 将raft交给上层应用的一些commit信息保存到wal
 func (w *WAL) Save(st raftpb.HardState, ents []raftpb.Entry) error {
 	// 获取wal的写锁
 	w.mu.Lock()
@@ -922,7 +873,7 @@ func (w *WAL) Save(st raftpb.HardState, ents []raftpb.Entry) error {
 
 	mustSync := raft.MustSync(st, w.state, len(ents))
 
-	// 写日志条目
+	// 将日志保存到wal,更新wal写入的最新索引
 	for i := range ents {
 		if err := w.saveEntry(&ents[i]); err != nil {
 			return err

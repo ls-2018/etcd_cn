@@ -23,7 +23,6 @@ import (
 )
 
 func preallocExtend(f *os.File, sizeInBytes int64) error {
-	// use mode = 0 to change size
 	err := syscall.Fallocate(int(f.Fd()), 0, 0, sizeInBytes)
 	if err != nil {
 		errno, ok := err.(syscall.Errno)

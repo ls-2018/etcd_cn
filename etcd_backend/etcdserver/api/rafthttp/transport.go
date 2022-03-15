@@ -107,7 +107,7 @@ type Transport struct {
 
 	ID          types.ID   // local member ID
 	URLs        types.URLs // local peer URLs
-	ClusterID   types.ID   // raft cluster ID for request validation
+	ClusterID   types.ID   // 集群标识符
 	Raft        Raft       // raft state machine, to which the Transport forwards received messages and reports status
 	Snapshotter *snap.Snapshotter
 	ServerStats *stats.ServerStats // used to record general transportation statistics
@@ -124,7 +124,7 @@ type Transport struct {
 	pipelineRt http.RoundTripper // roundTripper used by pipelines
 
 	mu      sync.RWMutex         // protect the remote and peer map
-	remotes map[types.ID]*remote // remotes map that helps newly joined member to catch up
+	remotes map[types.ID]*remote // 帮助新加入的成员赶上
 	peers   map[types.ID]Peer    // peers map
 
 	pipelineProber probing.Prober
@@ -173,10 +173,11 @@ func (t *Transport) Get(id types.ID) Peer {
 	return t.peers[id]
 }
 
+// Send ok
 func (t *Transport) Send(msgs []raftpb.Message) {
 	for _, m := range msgs {
 		if m.To == 0 {
-			// ignore intentionally dropped message
+			// 忽略故意丢弃的消息
 			continue
 		}
 		to := types.ID(m.To)
@@ -193,15 +194,13 @@ func (t *Transport) Send(msgs []raftpb.Message) {
 			p.send(m)
 			continue
 		}
-
 		if rok {
 			g.send(m)
 			continue
 		}
-
 		if t.Logger != nil {
 			t.Logger.Debug(
-				"ignored message send request; unknown remote peer target",
+				"忽略消息发送请求;未知远程对等目标",
 				zap.String("type", m.Type.String()),
 				zap.String("unknown-target-peer-id", to.String()),
 			)

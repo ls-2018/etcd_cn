@@ -69,7 +69,7 @@ func (h *httpKVAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			NodeID:  nodeId,
 			Context: url,
 		}
-		h.confChangeC <- cc
+		h.confChangeC <- cc // 新增节点
 
 		// As above, optimistic that raft will apply the conf change
 		w.WriteHeader(http.StatusNoContent)
@@ -85,7 +85,7 @@ func (h *httpKVAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			Type:   raftpb.ConfChangeRemoveNode,
 			NodeID: nodeId,
 		}
-		h.confChangeC <- cc
+		h.confChangeC <- cc // 删除节点
 
 		// As above, optimistic that raft will apply the conf change
 		w.WriteHeader(http.StatusNoContent)
@@ -104,7 +104,7 @@ func serveHttpKVAPI(kv *kvstore, port int, confChangeC chan<- raftpb.ConfChange,
 		Addr: ":" + strconv.Itoa(port),
 		Handler: &httpKVAPI{
 			store:       kv,
-			confChangeC: confChangeC,
+			confChangeC: confChangeC, // 主动触发的配置变更
 		},
 	}
 	go func() {

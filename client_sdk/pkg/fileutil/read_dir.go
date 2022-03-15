@@ -40,7 +40,7 @@ func (op *ReadDirOp) applyOpts(opts []ReadDirOption) {
 	}
 }
 
-// ReadDir returns the filenames in the given directory in sorted order.
+// ReadDir 返回指定目录下所有经过排序的文件
 func ReadDir(d string, opts ...ReadDirOption) ([]string, error) {
 	op := &ReadDirOp{}
 	op.applyOpts(opts)

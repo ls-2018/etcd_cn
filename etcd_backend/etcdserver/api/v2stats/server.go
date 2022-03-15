@@ -23,8 +23,7 @@ import (
 	"github.com/ls-2018/etcd_cn/raft"
 )
 
-// ServerStats encapsulates various statistics about an EtcdServer and its
-// communication with other members of the cluster
+// ServerStats 封装了关于EtcdServer及其与集群其他成员通信的各种统计信息
 type ServerStats struct {
 	serverStats
 	sync.Mutex

@@ -26,17 +26,14 @@ import (
 	"github.com/ls-2018/etcd_cn/pkg/ioutil"
 )
 
-// walPageBytes is the alignment for flushing records to the backing Writer.
-// It should be a multiple of the minimum sector size so that WAL can safely
-// distinguish between torn writes and ordinary data corruption.
-const walPageBytes = 8 * minSectorSize
-
+// walPageBytes
+const walPageBytes = 8 * minSectorSize // 8字节对齐
+// encoder模块把会增量的计算crc和数据一起写入到wal文件中。 下面为encoder数据结构undefined
 type encoder struct {
-	mu sync.Mutex
-	bw *ioutil.PageWriter
-
+	mu        sync.Mutex
+	bw        *ioutil.PageWriter
 	crc       hash.Hash32
-	buf       []byte
+	buf       []byte //缓存空间，默认为1M，降低数据分配的压力undefined
 	uint64buf []byte
 }
 
@@ -50,8 +47,9 @@ func newEncoder(w io.Writer, prevCrc uint32, pageOffset int) *encoder {
 	}
 }
 
-// newFileEncoder creates a new encoder with current file offset for the page writer.
+// newFileEncoder 使用当前文件偏移,创建一个encoder用于写数据
 func newFileEncoder(f *os.File, prevCrc uint32) (*encoder, error) {
+	// prevCrc之前的crc码
 	offset, err := f.Seek(0, io.SeekCurrent)
 	if err != nil {
 		return nil, err

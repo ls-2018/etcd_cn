@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	math_bits "math/bits"
 	"net"
 	"strconv"
 )
@@ -20,5 +21,9 @@ func main() {
 	default:
 
 	}
+	var x uint64
+	x = 1
+	fmt.Println((math_bits.Len64(x|1) + 6) / 7)
 	fmt.Println("over")
+
 }

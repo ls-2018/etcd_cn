@@ -43,7 +43,7 @@ var (
 	ErrCRCMismatch   = errors.New("snap: crc mismatch")
 	crcTable         = crc32.MakeTable(crc32.Castagnoli)
 
-	// A map of valid files that can be present in the snap folder.
+	// 一个可以出现在snap文件夹中的有效文件的映射。
 	validFiles = map[string]bool{
 		"db": true,
 	}
@@ -107,6 +107,8 @@ func (s *Snapshotter) Load() (*raftpb.Snapshot, error) {
 func (s *Snapshotter) LoadNewestAvailable(walSnaps []walpb.Snapshot) (*raftpb.Snapshot, error) {
 	return s.loadMatching(func(snapshot *raftpb.Snapshot) bool {
 		m := snapshot.Metadata
+		// 倒着匹配
+		//存在的、wal记录的，寻找最新的快照
 		for i := len(walSnaps) - 1; i >= 0; i-- {
 			if m.Term == walSnaps[i].Term && m.Index == walSnaps[i].Index {
 				return true
@@ -116,9 +118,9 @@ func (s *Snapshotter) LoadNewestAvailable(walSnaps []walpb.Snapshot) (*raftpb.Sn
 	})
 }
 
-// loadMatching returns the newest snapshot where matchFn returns true.
+// loadMatching 返回最新的快照
 func (s *Snapshotter) loadMatching(matchFn func(*raftpb.Snapshot) bool) (*raftpb.Snapshot, error) {
-	names, err := s.snapNames()
+	names, err := s.snapNames()// 加载快照目录下的快照
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +132,7 @@ func (s *Snapshotter) loadMatching(matchFn func(*raftpb.Snapshot) bool) (*raftpb
 	}
 	return nil, ErrNoSnapshot
 }
-
+// 判断该文件能不能读取
 func loadSnap(lg *zap.Logger, dir, name string) (*raftpb.Snapshot, error) {
 	fpath := filepath.Join(dir, name)
 	snap, err := Read(lg, fpath)
@@ -206,10 +208,9 @@ func Read(lg *zap.Logger, snapname string) (*raftpb.Snapshot, error) {
 	return &snap, nil
 }
 
-// snapNames returns the filename of the snapshots in logical time order (from newest to oldest).
-// If there is no available snapshots, an ErrNoSnapshot will be returned.
+// snapNames 返回快照的文件名，按逻辑时间顺序（从最新到最旧）。如果没有可用的快照，将返回ErrNoSnapshot。
 func (s *Snapshotter) snapNames() ([]string, error) {
-	dir, err := os.Open(s.dir)
+	dir, err := os.Open(s.dir)// ./raftexample/db/raftexample-1-snap
 	if err != nil {
 		return nil, err
 	}
@@ -218,7 +219,7 @@ func (s *Snapshotter) snapNames() ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	filenames, err := s.cleanupSnapdir(names)
+	filenames, err := s.cleanupSnapdir(names)// 清除临时快照
 	if err != nil {
 		return nil, err
 	}
@@ -229,18 +230,17 @@ func (s *Snapshotter) snapNames() ([]string, error) {
 	sort.Sort(sort.Reverse(sort.StringSlice(snaps)))
 	return snaps, nil
 }
-
+// 检查文件名
 func checkSuffix(lg *zap.Logger, names []string) []string {
 	snaps := []string{}
 	for i := range names {
-		if strings.HasSuffix(names[i], snapSuffix) {
+		if strings.HasSuffix(names[i], snapSuffix) {//  ".snap"
 			snaps = append(snaps, names[i])
 		} else {
-			// If we find a file which is not a snapshot then check if it's
-			// a vaild file. If not throw out a warning.
+			// 一个可以出现在snap文件夹中的有效文件的映射。
 			if _, ok := validFiles[names[i]]; !ok {
 				if lg != nil {
-					lg.Warn("found unexpected non-snap file; skipping", zap.String("path", names[i]))
+					lg.Warn("发现了未期待的文件在快照目录下; 跳过", zap.String("path", names[i]))
 				}
 			}
 		}
@@ -248,8 +248,7 @@ func checkSuffix(lg *zap.Logger, names []string) []string {
 	return snaps
 }
 
-// cleanupSnapdir removes any files that should not be in the snapshot directory:
-// - db.tmp prefixed files that can be orphaned by defragmentation
+// cleanupSnapdir 清除临时快照
 func (s *Snapshotter) cleanupSnapdir(filenames []string) (names []string, err error) {
 	names = make([]string, 0, len(filenames))
 	for _, filename := range filenames {

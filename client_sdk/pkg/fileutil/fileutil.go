@@ -83,38 +83,37 @@ func CreateDirAll(dir string) error {
 	return err
 }
 
-// Exist returns true if a file or directory exists.
+// Exist 返回文件或目录是否存在
 func Exist(name string) bool {
 	_, err := os.Stat(name)
 	return err == nil
 }
 
-// DirEmpty returns true if a directory empty and can access.
+// DirEmpty 返回文件是否创建,以及是一个空目录
 func DirEmpty(name string) bool {
 	ns, err := ReadDir(name)
 	return len(ns) == 0 && err == nil
 }
 
-// ZeroToEnd zeros a file starting from SEEK_CUR to its SEEK_END. May temporarily
-// shorten the length of the file.
+// ZeroToEnd 清空当前之后的数据,并固定分配文件空间
 func ZeroToEnd(f *os.File) error {
-	// TODO: support FALLOC_FL_ZERO_RANGE
-	off, err := f.Seek(0, io.SeekCurrent)
+	// offset是从0开始的, 可以比当前的文件内容长度大，多出的部分会用空(0)来代替
+	off, err := f.Seek(0, io.SeekCurrent) // 返回当前的偏移量（相对开头）
 	if err != nil {
 		return err
 	}
-	lenf, lerr := f.Seek(0, io.SeekEnd)
+	lenf, lerr := f.Seek(0, io.SeekEnd) // 返回 文件大小
 	if lerr != nil {
 		return lerr
 	}
+	// 删除后面的内容，不管当前的偏移量在哪儿，都是从头开始截取 ，不会影响当前的偏移量;改变文件的大小
 	if err = f.Truncate(off); err != nil {
 		return err
 	}
-	// make sure blocks remain allocated
 	if err = Preallocate(f, lenf, true); err != nil {
 		return err
-	}
-	_, err = f.Seek(off, io.SeekStart)
+	} // 预分配空间
+	_, err = f.Seek(off, io.SeekStart) // 跳转到 要接着写的地方
 	return err
 }
 

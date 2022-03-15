@@ -30,7 +30,7 @@ type failureType struct {
 	action string
 }
 
-type peerStatus struct {
+type peerStatus struct { // 节点状态
 	lg     *zap.Logger
 	local  types.ID
 	id     types.ID

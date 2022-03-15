@@ -20,3 +20,4 @@ hack/tls-setup/certs
 *.bak
 .gobincache/
 default.etcd
+raftexample/db/*

@@ -90,6 +90,7 @@ type msgWithResult struct {
 	result chan error // 返回的结果
 }
 
+// OK
 func confChangeToMsg(c pb.ConfChangeI) (pb.Message, error) {
 	typ, data, err := pb.MarshalConfChange(c)
 	if err != nil {
@@ -136,8 +137,8 @@ type localNode struct {
 	rn         *RawNode
 	propc      chan msgWithResult   // Propose队列,调用raftNode的Propose即把Propose消息塞到这个队列里
 	recvc      chan pb.Message      // Message队列,除Propose消息以外其他消息塞到这个队列里
-	confc      chan pb.ConfChangeV2 // 接受配置的管道
-	confstatec chan pb.ConfState    //
+	confc      chan pb.ConfChangeV2 // 接受配置变更的管道
+	confstatec chan pb.ConfState    // 将配置变更后的管道
 	readyc     chan Ready           // 已经准备好apply的信息队列,通知使用者
 	advancec   chan struct{}        // 每次apply好了以后往这个队列里塞个空对象.通知raft可以继续准备Ready消息.
 	tickc      chan struct{}        // tick信息队列,用于调用心跳
@@ -231,7 +232,7 @@ func (n *localNode) run() {
 			// 如果NodeID是None，就变成了获取节点信息的操作
 			_, okBefore := r.prs.Progress[r.id] // 获取本节点的信息
 			cs := r.applyConfChange(cc)
-			// 如果localNode被移除，则阻止传入的提议。请注意，我们只在localNode之前在配置中时才这样做。
+			// 如果localNode被移除，则阻止传入的变化。请注意，我们只在localNode之前在配置中时才这样做。
 			// 节点可能在不知道这一点的情况下成为组的成员（当他们在追赶日志时，没有最新的配置），在这种情况下，我们不希望阻止提案通道。
 			// NB：当领导者发生变化时，propc会被重置，如果我们了解到这一点，就有点暗示我们被读取了，也许？这并不 这不是很合理，而且很可能有bug。
 			if _, okAfter := r.prs.Progress[r.id]; okBefore && !okAfter {
@@ -271,6 +272,7 @@ func (n *localNode) run() {
 	}
 }
 
+// ProposeConfChange OK
 func (n *localNode) ProposeConfChange(ctx context.Context, cc pb.ConfChangeI) error {
 	msg, err := confChangeToMsg(cc)
 	if err != nil {
