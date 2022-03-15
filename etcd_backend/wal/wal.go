@@ -42,7 +42,6 @@ const (
 	stateType                     // 存放的是集群当前的状态HardState,如果集群的状态有变化,就会在WAL中存放一个新集群状态数据.里面包括当前Term,当前竞选者、当前已经commit的日志.
 	crcType                       // 存放crc校验字段.读取数据时,会根据这个记录里的crc字段对前面已经读出来的数据进行校验.
 	snapshotType                  // 存放snapshot的日志点.包括日志的Index和Term.
-
 	warnSyncDuration = time.Second // 是指在记录警告之前分配给fsync的时间量。
 )
 

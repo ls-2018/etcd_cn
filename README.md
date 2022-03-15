@@ -341,8 +341,12 @@ type Record struct {
     Crc                  uint32  
     Data                 []byte   
 }
-
-- entryType :日志条目
+- metadataType  :1  元数据类型,元数据会保存当前的node id和cluster id.
+    type Metadata struct {
+        NodeID    uint64
+        ClusterID uint64
+    }
+- entryType     :2  日志条目
     type Entry struct {
         Term  uint64
         Index uint64
@@ -353,22 +357,12 @@ type Record struct {
         Data  []byte 
               msg 👆🏻
     }
-- stateType
-  - 当前Term,当前竞选者、当前已经commit的日志.
-- metadataType :元数据类型,元数据会保存当前的node id和cluster id.
-    type Metadata struct {
-        NodeID    uint64
-        ClusterID uint64
-    }
-- crcType :存放crc校验字段 Data为nil
-- snapshotType :快照的、日志的Index和Term
+- stateType     :3  当前Term,当前竞选者、当前已经commit的日志.
+- crcType       :4  存放crc校验字段 Data为nil
+- snapshotType  :5  快照的、日志的Index和Term
     type Snapshot struct {
         Index     uint64
         Term      uint64
         ConfState *raftpb.ConfState
     }
-
-
-
-
 ```

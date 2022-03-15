@@ -16,6 +16,7 @@ package wal
 
 import (
 	"encoding/binary"
+	"fmt"
 	"hash"
 	"io"
 	"os"
@@ -33,8 +34,8 @@ type encoder struct {
 	mu        sync.Mutex
 	bw        *ioutil.PageWriter
 	crc       hash.Hash32
-	buf       []byte //缓存空间，默认为1M，降低数据分配的压力undefined
-	uint64buf []byte
+	buf       []byte //缓存空间，默认为1M，降低数据分配的压力undefined,序列化时使用
+	uint64buf []byte // 将数据变成特定格式的数据,大端、小端
 }
 
 func newEncoder(w io.Writer, prevCrc uint32, pageOffset int) *encoder {
@@ -58,50 +59,29 @@ func newFileEncoder(f *os.File, prevCrc uint32) (*encoder, error) {
 }
 
 func (e *encoder) encode(rec *walpb.Record) error {
+	fmt.Printf("%+v\n", rec)
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
 	e.crc.Write(rec.Data)
+	e.bw.FlushN()
 	rec.Crc = e.crc.Sum32()
 	var (
 		data []byte
 		err  error
-		n    int
 	)
 
-	if rec.Size() > len(e.buf) {
-		data, err = rec.Marshal()
-		if err != nil {
-			return err
-		}
-	} else {
-		n, err = rec.MarshalTo(e.buf)
-		if err != nil {
-			return err
-		}
-		data = e.buf[:n]
-	}
-
-	lenField, padBytes := encodeFrameSize(len(data))
-	if err = writeUint64(e.bw, lenField, e.uint64buf); err != nil {
+	data, err = rec.Marshal()
+	if err != nil {
 		return err
 	}
-
-	if padBytes != 0 {
-		data = append(data, make([]byte, padBytes)...)
+	// 填充字节
+	if err = writeUint64(e.bw, uint64(len(data)), e.uint64buf); err != nil {
+		return err
 	}
-	n, err = e.bw.Write(data)
+	data = append(data, '\n')
+	_, err = e.bw.Write(data)
 	return err
-}
-
-func encodeFrameSize(dataBytes int) (lenField uint64, padBytes int) {
-	lenField = uint64(dataBytes)
-	// force 8 byte alignment so length never gets a torn write
-	padBytes = (8 - (dataBytes % 8)) % 8
-	if padBytes != 0 {
-		lenField |= uint64(0x80|padBytes) << 56
-	}
-	return lenField, padBytes
 }
 
 func (e *encoder) flush() error {

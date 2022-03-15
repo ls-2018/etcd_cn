@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/md5"
 	"fmt"
 	math_bits "math/bits"
 	"net"
@@ -25,5 +26,8 @@ func main() {
 	x = 1
 	fmt.Println((math_bits.Len64(x|1) + 6) / 7)
 	fmt.Println("over")
+	hash := md5.New()
+	hash.Write([]byte("hello"))
+	fmt.Println(fmt.Sprintf("%x", hash.Sum(nil)))
 
 }

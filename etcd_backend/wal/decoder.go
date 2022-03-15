@@ -34,7 +34,7 @@ const frameSizeBytes = 8
 
 type decoder struct {
 	mu  sync.Mutex
-	brs []*bufio.Reader// 要读取的所有wal文件
+	brs []*bufio.Reader // 要读取的所有wal文件
 
 	// lastValidOff file offset following the last valid decoded record
 	lastValidOff int64
@@ -83,22 +83,16 @@ func (d *decoder) decodeRecord(rec *walpb.Record) error {
 		return err
 	}
 
-	recBytes, padBytes := decodeFrameSize(l)
-	if recBytes >= maxWALEntrySizeLimit-padBytes {
-		return ErrMaxWALEntrySizeLimitExceeded
-	}
-
-	data := make([]byte, recBytes+padBytes)
-	if _, err = io.ReadFull(d.brs[0], data); err != nil {
-		// ReadFull returns io.EOF only if no bytes were read
-		// the decoder should treat this as an ErrUnexpectedEOF instead.
+	line, _, err := bufio.NewReader(d.brs[0]).ReadLine()
+	if err != nil {
 		if err == io.EOF {
 			err = io.ErrUnexpectedEOF
 		}
 		return err
 	}
-	if err := rec.Unmarshal(data[:recBytes]); err != nil {
-		if d.isTornEntry(data) {
+
+	if err := rec.Unmarshal(line); err != nil {
+		if d.isTornEntry(line) {
 			return io.ErrUnexpectedEOF
 		}
 		return err
@@ -108,14 +102,13 @@ func (d *decoder) decodeRecord(rec *walpb.Record) error {
 	if rec.Type != crcType {
 		d.crc.Write(rec.Data)
 		if err := rec.Validate(d.crc.Sum32()); err != nil {
-			if d.isTornEntry(data) {
+			if d.isTornEntry(line) {
 				return io.ErrUnexpectedEOF
 			}
 			return err
 		}
 	}
-	// record decoded as valid; point last valid offset to end of record
-	d.lastValidOff += frameSizeBytes + recBytes + padBytes
+	d.lastValidOff += frameSizeBytes + 1
 	return nil
 }
 
