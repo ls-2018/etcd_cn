@@ -90,8 +90,6 @@ func (rc *raftNode) saveSnap(snap raftpb.Snapshot) error {
 
 var snapshotCatchUpEntriesN uint64 = 10000
 
-// -----------------------------------------------------------------------------------------------------------------
-
 // 判断是否应该创建快照,每次apply就会调用
 func (rc *raftNode) maybeTriggerSnapshot(applyDoneC <-chan struct{}) {
 	if rc.appliedIndex-rc.snapshotIndex <= rc.snapCount {
@@ -215,23 +213,23 @@ func (rc *raftNode) serveChannels() {
 		}
 	}
 }
-
+// OK
 func (rc *raftNode) serveRaft() {
 	url, err := url.Parse(rc.peers[rc.id-1])
 	if err != nil {
-		log.Fatalf("raftexample: Failed parsing URL (%v)", err)
+		log.Fatalf("raftexample: 剖析URL失败 (%v)", err)
 	}
 
-	ln, err := newStoppableListener(url.Host, rc.httpstopc)
+	ln, err := newStoppableListener(url.Host, rc.httpstopc)  //   etcd 的通信节点
 	if err != nil {
-		log.Fatalf("raftexample: Failed to listen rafthttp (%v)", err)
+		log.Fatalf("raftexample:监听rafthttp失败 (%v)", err)
 	}
 
 	err = (&http.Server{Handler: rc.transport.Handler()}).Serve(ln)
 	select {
 	case <-rc.httpstopc:
 	default:
-		log.Fatalf("raftexample: Failed to serve rafthttp (%v)", err)
+		log.Fatalf("raftexample: 启动失败rafthttp (%v)", err)
 	}
 	close(rc.httpdonec)
 }
