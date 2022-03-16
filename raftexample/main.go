@@ -16,8 +16,9 @@ package main
 
 import (
 	"flag"
-	"github.com/ls-2018/etcd_cn/raft/raftpb"
 	"strings"
+
+	"github.com/ls-2018/etcd_cn/raft/raftpb"
 )
 
 func main() {

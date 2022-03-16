@@ -37,8 +37,8 @@ import (
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v2error"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v2http/httptypes"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v2store"
+	"github.com/ls-2018/etcd_cn/offical/etcdserverpb"
 	"github.com/ls-2018/etcd_cn/raft/raftpb"
-	"go.etcd.io/etcd/api/v3/etcdserverpb"
 
 	"github.com/coreos/go-semver/semver"
 	"github.com/jonboulle/clockwork"

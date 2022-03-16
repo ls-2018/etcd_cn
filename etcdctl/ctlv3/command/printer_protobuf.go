@@ -19,8 +19,8 @@ import (
 	"os"
 
 	v3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
+	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
 	"github.com/ls-2018/etcd_cn/pkg/cobrautl"
-	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 	mvccpb "go.etcd.io/etcd/api/v3/mvccpb"
 )
 

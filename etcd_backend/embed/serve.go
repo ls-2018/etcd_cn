@@ -35,9 +35,9 @@ import (
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v3lock/v3lockpb"
 	v3lockgw "github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v3lock/v3lockpb/gw"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v3rpc"
+	etcdservergw "github.com/ls-2018/etcd_cn/offical/etcdserverpb/gw"
 	"github.com/ls-2018/etcd_cn/pkg/debugutil"
 	"github.com/ls-2018/etcd_cn/pkg/httputil"
-	etcdservergw "go.etcd.io/etcd/api/v3/etcdserverpb/gw"
 
 	gw "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/soheilhy/cmux"

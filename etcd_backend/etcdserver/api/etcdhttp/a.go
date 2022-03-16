@@ -23,10 +23,10 @@ import (
 
 	"github.com/ls-2018/etcd_cn/etcd_backend/auth"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver"
+	"github.com/ls-2018/etcd_cn/offical/etcdserverpb"
 	"github.com/ls-2018/etcd_cn/raft"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"go.etcd.io/etcd/api/v3/etcdserverpb"
 	"go.uber.org/zap"
 )
 

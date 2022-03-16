@@ -18,7 +18,7 @@ import (
 	"reflect"
 	"testing"
 
-	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
+	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
 )
 
 // TestOpWithSort tests if WithSort(ASCEND, KEY) and WithLimit are specified,

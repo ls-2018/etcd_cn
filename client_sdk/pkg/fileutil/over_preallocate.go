@@ -29,6 +29,7 @@ func Preallocate(f *os.File, sizeInBytes int64, extendFile bool) error {
 	}
 	return preallocFixed(f, sizeInBytes)
 }
+
 // 清除多余的空间
 func preallocExtendTrunc(f *os.File, sizeInBytes int64) error {
 	curOff, err := f.Seek(0, io.SeekCurrent)

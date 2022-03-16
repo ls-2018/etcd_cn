@@ -21,8 +21,8 @@ import (
 	"sync"
 
 	"github.com/golang/groupcache/lru"
+	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
 	"github.com/ls-2018/etcd_cn/pkg/adt"
-	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
 )
 

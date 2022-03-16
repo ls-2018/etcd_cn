@@ -831,7 +831,6 @@ var fileDescriptor_b042552c306ae59b = []byte{
 	0x00, 0x00,
 }
 
-
 func (m *Entry) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
@@ -860,7 +859,6 @@ func (m *Entry) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	dAtA[i] = 0x8
 	return len(dAtA) - i, nil
 }
-
 
 func (m *SnapshotMetadata) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
@@ -891,7 +889,6 @@ func (m *SnapshotMetadata) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-
 func (m *Snapshot) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
@@ -921,7 +918,6 @@ func (m *Snapshot) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	return len(dAtA) - i, nil
 }
-
 
 func (m *Message) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
@@ -999,7 +995,6 @@ func (m *Message) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-
 func (m *HardState) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
@@ -1021,7 +1016,6 @@ func (m *HardState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	dAtA[i] = 0x8
 	return len(dAtA) - i, nil
 }
-
 
 func (m *ConfState) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
@@ -1072,7 +1066,6 @@ func (m *ConfState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-
 func (m *ConfChange) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
@@ -1120,7 +1113,6 @@ func (m *ConfChangeSingle) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	dAtA[i] = 0x8
 	return len(dAtA) - i, nil
 }
-
 
 func (m *ConfChangeV2) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
@@ -1341,7 +1333,6 @@ func sovRaft(x uint64) (n int) {
 func sozRaft(x uint64) (n int) {
 	return sovRaft(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-
 
 func skipRaft(dAtA []byte) (n int, err error) {
 	l := len(dAtA)

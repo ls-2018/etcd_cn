@@ -20,7 +20,7 @@ import (
 
 	"github.com/ls-2018/etcd_cn/client_sdk/v3/credentials"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver"
-	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
+	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"

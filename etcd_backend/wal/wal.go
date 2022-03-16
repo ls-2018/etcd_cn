@@ -249,7 +249,7 @@ func (w *WAL) renameWAL(tmpdirpath string) (*WAL, error) {
 		return nil, err
 	}
 	// 在非Windows平台上，重命名时要按住锁。释放锁并试图快速重新获得它可能是不稳定的，因为在此过程中，进程可能会分叉产生一个进程。
-	//Go运行时将fds设置为执行时关闭，但在分叉和执行之间存在一个窗口，另一个进程持有锁。
+	// Go运行时将fds设置为执行时关闭，但在分叉和执行之间存在一个窗口，另一个进程持有锁。
 	if err := os.Rename(tmpdirpath, w.dir); err != nil { // raftexample/db/raftexample-1.tmp ---> raftexample/db/raftexample-1
 		if _, ok := err.(*os.LinkError); ok {
 			return w.renameWALUnlock(tmpdirpath)
@@ -317,7 +317,7 @@ func openAtIndex(lg *zap.Logger, dirpath string, snap walpb.Snapshot, write bool
 		return nil, err
 	}
 
-	rs, ls, closer, err := openWALFiles(lg, dirpath, names, nameIndex, write) //打开所有wal文件
+	rs, ls, closer, err := openWALFiles(lg, dirpath, names, nameIndex, write) // 打开所有wal文件
 	if err != nil {
 		return nil, err
 	}
@@ -333,7 +333,7 @@ func openAtIndex(lg *zap.Logger, dirpath string, snap walpb.Snapshot, write bool
 	}
 
 	if write { // true
-		//写入重用读出的文件描述符；不要关闭，以便
+		// 写入重用读出的文件描述符；不要关闭，以便
 		w.readClose = nil
 		if _, _, err := parseWALName(filepath.Base(w.tail().Name())); err != nil {
 			closer()

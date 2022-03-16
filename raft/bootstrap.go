@@ -20,7 +20,7 @@ import (
 	pb "github.com/ls-2018/etcd_cn/raft/raftpb"
 )
 
-// Bootstrap 引导集群
+// Bootstrap 引导集群, 将集群信息加载到 memoryStorage
 func (rn *RawNode) Bootstrap(peers []Peer) error {
 	//  [{"id":10276657743932975437,"peerURLs":["http://localhost:2380"],"name":"default"}]
 	if len(peers) == 0 {

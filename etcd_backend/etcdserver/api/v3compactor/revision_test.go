@@ -20,7 +20,7 @@ import (
 	"time"
 
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/testutil"
-	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
+	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
 
 	"github.com/jonboulle/clockwork"
 	"go.uber.org/zap"

@@ -152,7 +152,7 @@ func (rc *raftNode) serveChannels() {
 		for rc.proposeC != nil && rc.triggerConfChangeC != nil { // 必须设置
 			select {
 			case prop, ok := <-rc.proposeC:
-				if !ok { //关闭了
+				if !ok { // 关闭了
 					rc.proposeC = nil // 发生异常将proposeC置空
 				} else {
 					rc.node.Propose(context.TODO(), []byte(prop)) // 阻塞直到消息被处理
@@ -213,6 +213,7 @@ func (rc *raftNode) serveChannels() {
 		}
 	}
 }
+
 // OK
 func (rc *raftNode) serveRaft() {
 	url, err := url.Parse(rc.peers[rc.id-1])
@@ -220,7 +221,7 @@ func (rc *raftNode) serveRaft() {
 		log.Fatalf("raftexample: 剖析URL失败 (%v)", err)
 	}
 
-	ln, err := newStoppableListener(url.Host, rc.httpstopc)  //   etcd 的通信节点
+	ln, err := newStoppableListener(url.Host, rc.httpstopc) //   etcd 的通信节点
 	if err != nil {
 		log.Fatalf("raftexample:监听rafthttp失败 (%v)", err)
 	}

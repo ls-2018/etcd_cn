@@ -21,9 +21,9 @@ import (
 	"time"
 
 	v3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
+	"github.com/ls-2018/etcd_cn/offical/etcdserverpb"
 	"github.com/ls-2018/etcd_cn/pkg/cobrautl"
 	"github.com/ls-2018/etcd_cn/pkg/flags"
-	"go.etcd.io/etcd/api/v3/etcdserverpb"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
 
 	"github.com/spf13/cobra"

@@ -29,8 +29,8 @@ import (
 	"github.com/ls-2018/etcd_cn/etcd_backend/lease"
 	"github.com/ls-2018/etcd_cn/etcd_backend/lease/leasehttp"
 	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc"
+	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
 	"github.com/ls-2018/etcd_cn/pkg/traceutil"
-	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 	"go.etcd.io/etcd/api/v3/membershippb"
 
 	"github.com/gogo/protobuf/proto"

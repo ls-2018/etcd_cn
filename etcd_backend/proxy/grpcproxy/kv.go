@@ -20,7 +20,7 @@ import (
 	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 
 	"github.com/ls-2018/etcd_cn/etcd_backend/proxy/grpcproxy/cache"
-	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
+	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
 )
 
 type kvProxy struct {

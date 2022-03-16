@@ -165,3 +165,11 @@ func (m *Record) Unmarshal(dAtA []byte) error {
 	m.Data = []byte(a.Data)
 	return nil
 }
+
+func (m *Snapshot) Unmarshal(dAtA []byte) error {
+	return json.Unmarshal(dAtA, m)
+}
+
+func (m *Snapshot) Marshal() (dAtA []byte, err error) {
+	return json.Marshal(m)
+}

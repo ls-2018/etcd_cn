@@ -37,7 +37,7 @@ import (
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v2http/httptypes"
 	stats "github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v2stats"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v2store"
-	"go.etcd.io/etcd/api/v3/etcdserverpb"
+	"github.com/ls-2018/etcd_cn/offical/etcdserverpb"
 
 	"github.com/jonboulle/clockwork"
 	"go.uber.org/zap"

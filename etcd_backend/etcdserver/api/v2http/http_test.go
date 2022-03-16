@@ -26,8 +26,8 @@ import (
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/membership"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v2error"
+	"github.com/ls-2018/etcd_cn/offical/etcdserverpb"
 	"github.com/ls-2018/etcd_cn/raft/raftpb"
-	"go.etcd.io/etcd/api/v3/etcdserverpb"
 
 	"github.com/coreos/go-semver/semver"
 	"go.uber.org/zap"

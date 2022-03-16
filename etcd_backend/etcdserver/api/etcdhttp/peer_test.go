@@ -34,7 +34,7 @@ import (
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/membership"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/rafthttp"
-	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
+	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
 )
 
 type fakeCluster struct {

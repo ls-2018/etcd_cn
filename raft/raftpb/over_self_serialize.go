@@ -89,14 +89,16 @@ import (
 func (m *ConfChange) Marshal() (dAtA []byte, err error) {
 	return json.Marshal(m)
 }
+
 func (m *ConfState) Marshal() (dAtA []byte, err error) {
 	return json.Marshal(m)
 }
+
 func (m *HardState) Marshal() (dAtA []byte, err error) {
 	return json.Marshal(m)
 }
-func (m *Message) Marshal() (dAtA []byte, err error) {
 
+func (m *Message) Marshal() (dAtA []byte, err error) {
 	return json.Marshal(m)
 }
 
@@ -112,15 +114,19 @@ func (m *Snapshot) Marshal() (dAtA []byte, err error) {
 	}
 	return json.Marshal(t)
 }
+
 func (m *SnapshotMetadata) Marshal() (dAtA []byte, err error) {
 	return json.Marshal(m)
 }
+
 func (m *Entry) Marshal() (dAtA []byte, err error) {
 	return json.Marshal(m)
 }
+
 func (m *ConfChangeSingle) Marshal() (dAtA []byte, err error) {
 	return json.Marshal(m)
 }
+
 func (m *ConfChangeV2) Marshal() (dAtA []byte, err error) {
 	return json.Marshal(m)
 }

@@ -25,8 +25,8 @@ import (
 
 	"github.com/ls-2018/etcd_cn/etcd_backend/lease"
 	"github.com/ls-2018/etcd_cn/etcd_backend/lease/leasepb"
+	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
 	"github.com/ls-2018/etcd_cn/pkg/httputil"
-	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 )
 
 var (

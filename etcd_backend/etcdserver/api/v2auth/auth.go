@@ -29,7 +29,7 @@ import (
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v2error"
-	"go.etcd.io/etcd/api/v3/etcdserverpb"
+	"github.com/ls-2018/etcd_cn/offical/etcdserverpb"
 
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"

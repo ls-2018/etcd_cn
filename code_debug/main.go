@@ -29,5 +29,4 @@ func main() {
 	hash := md5.New()
 	hash.Write([]byte("hello"))
 	fmt.Println(fmt.Sprintf("%x", hash.Sum(nil)))
-
 }

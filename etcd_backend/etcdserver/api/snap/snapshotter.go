@@ -108,7 +108,7 @@ func (s *Snapshotter) LoadNewestAvailable(walSnaps []walpb.Snapshot) (*raftpb.Sn
 	return s.loadMatching(func(snapshot *raftpb.Snapshot) bool {
 		m := snapshot.Metadata
 		// 倒着匹配
-		//存在的、wal记录的，寻找最新的快照
+		// 存在的、wal记录的，寻找最新的快照
 		for i := len(walSnaps) - 1; i >= 0; i-- {
 			if m.Term == walSnaps[i].Term && m.Index == walSnaps[i].Index {
 				return true
@@ -120,7 +120,7 @@ func (s *Snapshotter) LoadNewestAvailable(walSnaps []walpb.Snapshot) (*raftpb.Sn
 
 // loadMatching 返回最新的快照
 func (s *Snapshotter) loadMatching(matchFn func(*raftpb.Snapshot) bool) (*raftpb.Snapshot, error) {
-	names, err := s.snapNames()// 加载快照目录下的快照
+	names, err := s.snapNames() // 加载快照目录下的快照
 	if err != nil {
 		return nil, err
 	}
@@ -132,6 +132,7 @@ func (s *Snapshotter) loadMatching(matchFn func(*raftpb.Snapshot) bool) (*raftpb
 	}
 	return nil, ErrNoSnapshot
 }
+
 // 判断该文件能不能读取
 func loadSnap(lg *zap.Logger, dir, name string) (*raftpb.Snapshot, error) {
 	fpath := filepath.Join(dir, name)
@@ -210,7 +211,7 @@ func Read(lg *zap.Logger, snapname string) (*raftpb.Snapshot, error) {
 
 // snapNames 返回快照的文件名，按逻辑时间顺序（从最新到最旧）。如果没有可用的快照，将返回ErrNoSnapshot。
 func (s *Snapshotter) snapNames() ([]string, error) {
-	dir, err := os.Open(s.dir)// ./raftexample/db/raftexample-1-snap
+	dir, err := os.Open(s.dir) // ./raftexample/db/raftexample-1-snap
 	if err != nil {
 		return nil, err
 	}
@@ -219,7 +220,7 @@ func (s *Snapshotter) snapNames() ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	filenames, err := s.cleanupSnapdir(names)// 清除临时快照
+	filenames, err := s.cleanupSnapdir(names) // 清除临时快照
 	if err != nil {
 		return nil, err
 	}
@@ -230,11 +231,12 @@ func (s *Snapshotter) snapNames() ([]string, error) {
 	sort.Sort(sort.Reverse(sort.StringSlice(snaps)))
 	return snaps, nil
 }
+
 // 检查文件名
 func checkSuffix(lg *zap.Logger, names []string) []string {
 	snaps := []string{}
 	for i := range names {
-		if strings.HasSuffix(names[i], snapSuffix) {//  ".snap"
+		if strings.HasSuffix(names[i], snapSuffix) { //  ".snap"
 			snaps = append(snaps, names[i])
 		} else {
 			// 一个可以出现在snap文件夹中的有效文件的映射。

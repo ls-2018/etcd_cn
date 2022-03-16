@@ -23,6 +23,8 @@ import (
 	"sync"
 	"time"
 
+	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
+
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
 	"github.com/ls-2018/etcd_cn/etcd_backend/config"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/membership"
@@ -30,7 +32,6 @@ import (
 	"github.com/ls-2018/etcd_cn/etcd_backend/wal/walpb"
 	"github.com/ls-2018/etcd_cn/pkg/pbutil"
 	"github.com/ls-2018/etcd_cn/raft"
-	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/logutil"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/rafthttp"

@@ -38,8 +38,8 @@ import (
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v3election/v3electionpb"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v3lock/v3lockpb"
 	"github.com/ls-2018/etcd_cn/etcd_backend/proxy/grpcproxy"
+	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
 	"github.com/ls-2018/etcd_cn/pkg/debugutil"
-	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 	"go.uber.org/zap/zapgrpc"
 
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"

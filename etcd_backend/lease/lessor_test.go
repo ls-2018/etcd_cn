@@ -29,7 +29,7 @@ import (
 	"github.com/coreos/go-semver/semver"
 	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc/backend"
 	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc/buckets"
-	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
+	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
 	"go.etcd.io/etcd/api/v3/version"
 	"go.uber.org/zap"
 )

@@ -18,7 +18,7 @@ import (
 	"context"
 
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver"
-	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
+	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
 )
 
 type AuthServer struct {

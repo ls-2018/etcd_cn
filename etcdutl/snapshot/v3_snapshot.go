@@ -42,9 +42,9 @@ import (
 	"github.com/ls-2018/etcd_cn/etcd_backend/verify"
 	"github.com/ls-2018/etcd_cn/etcd_backend/wal"
 	"github.com/ls-2018/etcd_cn/etcd_backend/wal/walpb"
+	"github.com/ls-2018/etcd_cn/offical/etcdserverpb"
 	"github.com/ls-2018/etcd_cn/raft/raftpb"
 	bolt "go.etcd.io/bbolt"
-	"go.etcd.io/etcd/api/v3/etcdserverpb"
 	"go.uber.org/zap"
 )
 

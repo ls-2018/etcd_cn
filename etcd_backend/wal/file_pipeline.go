@@ -25,7 +25,7 @@ import (
 )
 
 // filePipeline 分配磁盘空间的管道
-//wal新建新的文件时都是先新建一个tmp文件，当所有操作都完成后再重命名这个文件。wal使用file_pipeline这个模块在后台启动一个协程时刻准备一个临时文件以供使用，从而避免临时创建文件的开销
+// wal新建新的文件时都是先新建一个tmp文件，当所有操作都完成后再重命名这个文件。wal使用file_pipeline这个模块在后台启动一个协程时刻准备一个临时文件以供使用，从而避免临时创建文件的开销
 type filePipeline struct {
 	lg    *zap.Logger
 	dir   string
@@ -48,7 +48,7 @@ func newFilePipeline(lg *zap.Logger, dir string, fileSize int64) *filePipeline {
 		errc:  make(chan error, 1),
 		donec: make(chan struct{}),
 	}
-	go fp.run()// 建立一个tmp文件
+	go fp.run() // 建立一个tmp文件
 	return fp
 }
 

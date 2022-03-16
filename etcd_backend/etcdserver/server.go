@@ -57,6 +57,7 @@ import (
 	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc"
 	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc/backend"
 	"github.com/ls-2018/etcd_cn/etcd_backend/wal"
+	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
 	"github.com/ls-2018/etcd_cn/pkg/idutil"
 	"github.com/ls-2018/etcd_cn/pkg/pbutil"
 	"github.com/ls-2018/etcd_cn/pkg/runtime"
@@ -64,7 +65,6 @@ import (
 	"github.com/ls-2018/etcd_cn/pkg/traceutil"
 	"github.com/ls-2018/etcd_cn/pkg/wait"
 	"github.com/ls-2018/etcd_cn/raft/raftpb"
-	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
 	"go.etcd.io/etcd/api/v3/version"
 )
 
