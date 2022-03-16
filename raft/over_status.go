@@ -21,8 +21,7 @@ import (
 	"github.com/ls-2018/etcd_cn/raft/tracker"
 )
 
-// Status contains information about this Raft peer and its view of the system.
-// The Progress is only populated on the leader.
+// Status 包含关于这个Raft对等体的信息和它对系统的看法。"Progress "只在领导者上被填充。
 type Status struct {
 	BasicStatus
 	Config   tracker.Config
@@ -60,7 +59,7 @@ func getBasicStatus(r *raft) BasicStatus {
 	return s
 }
 
-// getStatus gets a copy of the current raft status.
+// getStatus 得到一份当前raft状态的副本。
 func getStatus(r *raft) Status {
 	var s Status
 	s.BasicStatus = getBasicStatus(r)
@@ -71,8 +70,7 @@ func getStatus(r *raft) Status {
 	return s
 }
 
-// MarshalJSON translates the raft status into JSON.
-// TODO: try to simplify this by introducing ID type into raft
+// MarshalJSON 将raft的状态翻译成JSON格式。试图通过在raft中引入ID类型来简化这个过程。
 func (s Status) MarshalJSON() ([]byte, error) {
 	j := fmt.Sprintf(`{"id":"%x","term":%d,"vote":"%x","commit":%d,"lead":"%x","raftState":%q,"applied":%d,"progress":{`,
 		s.ID, s.Term, s.Vote, s.Commit, s.Lead, s.RaftState, s.Applied)

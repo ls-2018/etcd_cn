@@ -149,10 +149,23 @@ func (p *ProgressTracker) ConfState() pb.ConfState {
 	}
 }
 
-// IsSingleton returns true if (and only if) there is only one voting member
-// (i.e. the leader) in the current configuration.
+// IsSingleton 集群中只有一个投票成员（领导者）。
 func (p *ProgressTracker) IsSingleton() bool {
 	return len(p.Voters[0]) == 1 && len(p.Voters[1]) == 0
+}
+
+// QuorumActive returns true if the quorum is active from the view of the local
+// raft state machine. Otherwise, it returns false.
+func (p *ProgressTracker) QuorumActive() bool {
+	votes := map[uint64]bool{}
+	p.Visit(func(id uint64, pr *Progress) {
+		if pr.IsLearner {
+			return
+		}
+		votes[id] = pr.RecentActive
+	})
+
+	return p.Voters.VoteResult(votes) == quorum.VoteWon
 }
 
 type matchAckIndexer map[uint64]*Progress
@@ -182,12 +195,9 @@ func insertionSort(sl []uint64) {
 	}
 }
 
-// Visit invokes the supplied closure for all tracked progresses in stable order.
+// Visit 对所有跟踪的进度按稳定的顺序调用所提供的闭包。
 func (p *ProgressTracker) Visit(f func(id uint64, pr *Progress)) {
 	n := len(p.Progress)
-	// We need to sort the IDs and don't want to allocate since this is hot code.
-	// The optimization here mirrors that in `(MajorityConfig).CommittedIndex`,
-	// see there for details.
 	var sl [7]uint64
 	var ids []uint64
 	if len(sl) >= n {
@@ -205,20 +215,6 @@ func (p *ProgressTracker) Visit(f func(id uint64, pr *Progress)) {
 	}
 }
 
-// QuorumActive returns true if the quorum is active from the view of the local
-// raft state machine. Otherwise, it returns false.
-func (p *ProgressTracker) QuorumActive() bool {
-	votes := map[uint64]bool{}
-	p.Visit(func(id uint64, pr *Progress) {
-		if pr.IsLearner {
-			return
-		}
-		votes[id] = pr.RecentActive
-	})
-
-	return p.Voters.VoteResult(votes) == quorum.VoteWon
-}
-
 // VoterNodes 返回一个经过排序的选民
 func (p *ProgressTracker) VoterNodes() []uint64 {
 	m := p.Voters.IDs()
@@ -230,7 +226,7 @@ func (p *ProgressTracker) VoterNodes() []uint64 {
 	return nodes
 }
 
-// LearnerNodes returns a sorted slice of learners.
+// LearnerNodes 返回所有的learners
 func (p *ProgressTracker) LearnerNodes() []uint64 {
 	if len(p.Learners) == 0 {
 		return nil

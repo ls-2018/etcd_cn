@@ -17,6 +17,7 @@ package quorum
 // JointConfig JointConfig和MajorityConfig功能是一样的,只是JointConfig的做法是
 // 根据两个MajorityConfig的结果做一次融合性操作
 // MakeProgressTracker 初始化
+// case   [map[id]=true,map] 集群中只有一个投票成员（领导者）。
 type JointConfig [2]MajorityConfig
 
 func (c JointConfig) String() string {

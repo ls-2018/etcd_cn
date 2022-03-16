@@ -17,7 +17,6 @@ package wal
 import (
 	"bufio"
 	"bytes"
-	"encoding/binary"
 	"hash"
 	"io"
 	"sync"
@@ -29,9 +28,6 @@ import (
 )
 
 const minSectorSize = 512
-
-// frameSizeBytes is frame size in bytes, including record size and padding size.
-const frameSizeBytes = 8
 
 type decoder struct {
 	mu  sync.Mutex
@@ -63,7 +59,6 @@ func (d *decoder) decode(rec *walpb.Record) error {
 // raft max message size is set to 1 MB in etcd etcd
 // assume projects set reasonable message size limit,
 // thus entry size should never exceed 10 MB
-const maxWALEntrySizeLimit = int64(10 * 1024 * 1024)
 
 func (d *decoder) decodeRecord(rec *walpb.Record) error {
 	if len(d.brs) == 0 {
@@ -107,17 +102,6 @@ func (d *decoder) decodeRecord(rec *walpb.Record) error {
 	return nil
 }
 
-func decodeFrameSize(lenField int64) (recBytes int64, padBytes int64) {
-	// the record size is stored in the lower 56 bits of the 64-bit length
-	recBytes = int64(uint64(lenField) & ^(uint64(0xff) << 56))
-	// non-zero padding is indicated by set MSb / a negative length
-	if lenField < 0 {
-		// padding is stored in lower 3 bits of length MSB
-		padBytes = int64((uint64(lenField) >> 56) & 0x7)
-	}
-	return recBytes, padBytes
-}
-
 func (d *decoder) updateCRC(prevCrc uint32) {
 	d.crc = crc.New(prevCrc, crcTable)
 }
@@ -140,8 +124,3 @@ func mustUnmarshalState(d []byte) raftpb.HardState {
 	return s
 }
 
-func readInt64(r io.Reader) (int64, error) {
-	var n int64
-	err := binary.Read(r, binary.LittleEndian, &n)
-	return n, err
-}

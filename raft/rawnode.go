@@ -21,7 +21,7 @@ import (
 	"github.com/ls-2018/etcd_cn/raft/tracker"
 )
 
-// ErrStepLocalMsg is returned when try to step a local raft message
+// ErrStepLocalMsg 当尝试步入一个本地raft信息时，会返回
 var ErrStepLocalMsg = errors.New("raft: cannot step raft local message")
 
 // ErrStepPeerNotFound is returned when try to step a response message
@@ -163,8 +163,7 @@ func (rn *RawNode) HasReady() bool {
 	return false
 }
 
-// Advance notifies the RawNode that the application has applied and saved progress in the
-// last Ready results.
+// Advance 通知RawNode应用程序已经应用并保存了最后一个Ready结果的进度。
 func (rn *RawNode) Advance(rd Ready) {
 	if !IsEmptyHardState(rd.HardState) {
 		rn.prevHardSt = rd.HardState

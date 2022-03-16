@@ -89,370 +89,43 @@ var globalRand = &lockedRand{
 // CampaignType 竞选类型
 type CampaignType string
 
-// StateType 节点在集群中的状态
-type StateType uint64
-
-var stmap = [...]string{
-	"StateFollower",
-	"StateCandidate",
-	"StateLeader",
-	"StatePreCandidate",
-}
-
-func (st StateType) String() string {
-	return stmap[uint64(st)]
-}
-
-// Config 启动raft的配置参数
-type Config struct {
-	// ID 是本节点raft的身份.ID不能为0.
-	ID uint64
-
-	ElectionTick int // 返回选举权检查对应多少次tick触发次数
-
-	HeartbeatTick int // 返回心跳检查对应多少次tick触发次数
-
-	// Storage 存储 日志项、状态
-	Storage Storage //
-	// Applied 提交到用户状态机的索引
-	Applied uint64 // 起始为0
-
-	// 每条消息的最大大小:math.MaxUint64表示无限制,0表示每条消息最多一个条目.
-	MaxSizePerMsg uint64 // 1m
-	// MaxCommittedSizePerReady 限制  commited --> apply 之间的数量
-	MaxCommittedSizePerReady uint64 // MaxSizePerMsg 它们之前是同一个参数
-	// MaxUncommittedEntriesSize 未提交的日志项上限
-	MaxUncommittedEntriesSize uint64
-
-	// 最大的处理中的消息数量
-	MaxInflightMsgs int
-
-	// CheckQuorum 检查需要维持的选票数,一旦小于,就会丢失leader
-	CheckQuorum bool
-
-	// PreVote 防止分区服务器[term会很大]重新加入集群时出现中断
-	PreVote bool // PreVote 是否启用PreVote
-
-	// CheckQuorum必须是enabled if ReadOnlyOption is ReadOnlyLeaseBased.
-	ReadOnlyOption ReadOnlyOption
-
-	// Logger is the logger used for raft log. For multinode which can host
-	// multiple raft group, each raft group can have its own logger
-	Logger Logger
-
-	DisableProposalForwarding bool // 禁止将请求转发到leader,默认FALSE
-}
-
-// OK
-func (c *Config) validate() error {
-	if c.ID == None {
-		return errors.New("补鞥呢使用None作为ID")
-	}
-	// 返回心跳检查对应多少次tick触发次数
-	if c.HeartbeatTick <= 0 { //
-		return errors.New("心跳间隔必须是>0")
-	}
-
-	if c.ElectionTick <= c.HeartbeatTick {
-		return errors.New("选举超时必须是大于心跳间隔")
-	}
-
-	if c.Storage == nil {
-		return errors.New("不能没有存储")
-	}
-
-	if c.MaxUncommittedEntriesSize == 0 {
-		c.MaxUncommittedEntriesSize = noLimit
-	}
-
-	//  它们之前是同一个参数.
-	if c.MaxCommittedSizePerReady == 0 {
-		c.MaxCommittedSizePerReady = c.MaxSizePerMsg
-	}
-
-	if c.MaxInflightMsgs <= 0 {
-		return errors.New("max inflight messages必须是>0")
-	}
-
-	if c.Logger == nil {
-		c.Logger = getLogger()
-	}
-	// 作为leader时的检查
-	if c.ReadOnlyOption == ReadOnlyLeaseBased && !c.CheckQuorum {
-		return errors.New("如果ReadOnlyOption 是 ReadOnlyLeaseBased 的时候必须开启CheckQuorum.")
-	}
-
-	return nil
-}
-
 // 封装了当前节点所有的核心数据.
 type raft struct {
-	id uint64 // 是本节点raft的身份
-
-	Term uint64 // 任期.如果Message的Term字段为0,则表示该消息是本地消息,例如,MsgHup、 MsgProp、 MsgReadlndex 等消息,都属于本地消息.
-	Vote uint64 // 当前任期中当前节点将选票投给了哪个节点
-
-	readStates []ReadState
-
-	raftLog *raftLog // 当前节点的log状态信息
-
-	maxMsgSize         uint64 // 每条消息的最大大小
-	maxUncommittedSize uint64 // 每条日志最大消息体
-
-	prs tracker.ProgressTracker // 跟踪Follower节点的状态,比如日志复制的matchIndex
-
-	state StateType // 当前节点的状态 ,可选值分为StateFollower、StateCandidate、 StateLeader和StatePreCandidat巳四种状态.
-
-	// isLearner 本节点是不是learner角色
-	isLearner bool
-
-	msgs []pb.Message // 缓存了当前节点等待发送的消息.
-
-	lead uint64 // 当前leaderID
-	// leader转移到的节点ID
-	leadTransferee uint64
-	// Only one conf change may be pending (in the log, but not yet
-	// applied) at a time. This is enforced via pendingConfIndex, which
-	// is set to a value >= the log index of the latest pending
-	// configuration change (if any). Config changes are only allowed to
-	// be proposed if the leader's applied index is greater than this
-	// value.
-	pendingConfIndex uint64
-
-	uncommittedSize uint64 // 还未提交的日志条数,非准确值
-
-	readOnly *readOnly
-
-	checkQuorum      bool // 检查需要维持的选票数,一旦小于,就会丢失leader
-	preVote          bool // PreVote 是否启用PreVote
-	electionElapsed  int  // 选举计时器的指针,其单位是逻辑时钟的刻度,逻辑时钟每推进一次,该字段值就会增加1.
-	heartbeatElapsed int  // 心跳计时器的指针,其单位也是逻辑时钟的刻度,逻辑时钟每推进一次,该字段值就会增加1 .
-
-	heartbeatTimeout int // 心跳间隔    ,上限     heartbeatTimeout是当前距离上次心跳的时间
-	electionTimeout  int // 选举超时时间,当electionE!apsed 宇段值到达该值时,就会触发新一轮的选举.
-
-	randomizedElectionTimeout int  // 随机选举超时
-	disableProposalForwarding bool // 禁止将请求转发到leader,默认FALSE
-	// 由 r.ticker = time.NewTicker(r.heartbeat) ;触发该函数的执行  r.start
-
-	tick func() // 逻辑计数器推进函数, 当 Leader状态时 为 tickHeartbeat.其他状态为 tickElection.
-
-	step stepFunc // 阶段函数、在那个角色就执行那个角色的函数、处理接收到的消息
-
-	logger Logger
-
+	id                        uint64                  // 是本节点raft的身份
+	Term                      uint64                  // 任期.如果Message的Term字段为0,则表示该消息是本地消息,例如,MsgHup、 MsgProp、 MsgReadlndex 等消息,都属于本地消息.
+	Vote                      uint64                  // 当前任期中当前节点将选票投给了哪个节点
+	raftLog                   *raftLog                // 当前节点的log状态信息
+	maxMsgSize                uint64                  // 每次发送消息的最大大小[多条日志]
+	maxUncommittedSize        uint64                  // 每条日志最大消息体
+	prs                       tracker.ProgressTracker // 跟踪Follower节点的状态,比如日志复制的matchIndex
+	state                     StateType               // 当前节点的状态 ,可选值分为StateFollower、StateCandidate、 StateLeader和StatePreCandidat巳四种状态.
+	isLearner                 bool                    // 本节点是不是learner角色
+	msgs                      []pb.Message            // 缓存了当前节点等待发送的消息.
+	lead                      uint64                  // 当前leaderID
+	leadTransferee            uint64                  // leader转移到的节点ID
+	pendingConfIndex          uint64                  // 该值被设置为 >= 最新待定配置变更的日志索引（如果有）。只有当领导者的应用索引大于此值时，才允许提出配置变更。
+	uncommittedSize           uint64                  // 还未提交的日志条数,非准确值
+	checkQuorum               bool                    // 检查需要维持的选票数,一旦小于,就会丢失leader
+	preVote                   bool                    // PreVote 是否启用PreVote
+	electionElapsed           int                     // 选举计时器的指针,其单位是逻辑时钟的刻度,逻辑时钟每推进一次,该字段值就会增加1.
+	heartbeatElapsed          int                     // 心跳计时器的指针,其单位也是逻辑时钟的刻度,逻辑时钟每推进一次,该字段值就会增加1 .
+	heartbeatTimeout          int                     // 心跳间隔    ,上限     heartbeatTimeout是当前距离上次心跳的时间
+	electionTimeout           int                     // 选举超时时间,当electionE!apsed 宇段值到达该值时,就会触发新一轮的选举.
+	randomizedElectionTimeout int                     // 随机选举超时
+	disableProposalForwarding bool                    // 禁止将请求转发到leader,默认FALSE
+	tick                      func()                  // 逻辑计数器推进函数, 由 r.ticker = time.NewTicker(r.heartbeat) ;触发该函数的执行  r.start
+	step                      stepFunc                // 阶段函数、在那个角色就执行那个角色的函数、处理接收到的消息
+	logger                    Logger
 	// pendingReadIndexMessages is used to store messages of type MsgReadIndex
 	// that can't be answered as new leader didn't committed any log in
 	// current term. Those will be handled as fast as first log is committed in
 	// current term.
 	pendingReadIndexMessages []pb.Message
+	readStates               []ReadState //
+	readOnly                 *readOnly
 }
 
-// ok
-func newRaft(c *Config) *raft {
-	if err := c.validate(); err != nil {
-		panic(err.Error())
-	}
-	raftlog := newLogWithSize(c.Storage, c.Logger, c.MaxCommittedSizePerReady) // ✅
-	// 搜 s = raft.NewMemoryStorage()
-	hs, cs, err := c.Storage.InitialState()
-	if err != nil {
-		panic(err)
-	}
-
-	r := &raft{
-		id:                        c.ID,                        // 是本节点raft的身份
-		lead:                      None,                        // 当前leaderID
-		isLearner:                 false,                       // 本节点是不是learner角色
-		raftLog:                   raftlog,                     // 当前节点的log状态信息
-		maxMsgSize:                c.MaxSizePerMsg,             // 每条消息的最大大小
-		maxUncommittedSize:        c.MaxUncommittedEntriesSize, // 每条日志最大消息体
-		prs:                       tracker.MakeProgressTracker(c.MaxInflightMsgs),
-		electionTimeout:           c.ElectionTick,  // 返回选举权检查对应多少次tick触发次数
-		heartbeatTimeout:          c.HeartbeatTick, // 返回心跳检查对应多少次tick触发次数
-		logger:                    c.Logger,
-		checkQuorum:               c.CheckQuorum,                 // 检查需要维持的选票数,一旦小于,就会丢失leader
-		preVote:                   c.PreVote,                     // PreVote 是否启用PreVote
-		readOnly:                  newReadOnly(c.ReadOnlyOption), // etcd_backend/etcdserver/raft.go:469    默认值0 ReadOnlySafe
-		disableProposalForwarding: c.DisableProposalForwarding,   // 禁止将请求转发到leader,默认FALSE
-	}
-	// todo 没看懂
-	// -----------------------
-	cfg, prs, err := confchange.Restore(confchange.Changer{
-		Tracker:   r.prs,
-		LastIndex: raftlog.lastIndex(),
-	}, cs)
-	if err != nil {
-		panic(err)
-	}
-	assertConfStatesEquivalent(r.logger, cs, r.switchToConfig(cfg, prs)) // 判断相不相等
-	// -----------------------
-	// 根据从Storage中获取的HardState,初始化raftLog.committed字段,以及raft.Term和Vote字段
-	if !IsEmptyHardState(hs) { // 判断初始状态是不是空的
-		r.loadState(hs) // 更新状态索引信息
-	}
-	// 如采Config中己置了Applied,则将raftLog.applied字段重直为指定的Applied值上层模块自己的控制正确的己应用位置时使用该配置
-	if c.Applied > 0 {
-		raftlog.appliedTo(c.Applied) // ✅
-	}
-	r.becomeFollower(r.Term, None) // ✅ start
-
-	var nodesStrs []string
-	for _, n := range r.prs.VoterNodes() { // 一开始没有
-		nodesStrs = append(nodesStrs, fmt.Sprintf("%x", n))
-	}
-
-	r.logger.Infof("【newRaft %x [peers: [%s], term: %d, commit: %d, applied: %d, lastindex: %d, lastterm: %d]】",
-		r.id, strings.Join(nodesStrs, ","), r.Term, r.raftLog.committed, r.raftLog.applied, r.raftLog.lastIndex(), r.raftLog.lastTerm())
-	return r
-}
-
-func (r *raft) hasLeader() bool { return r.lead != None }
-
-// OK
-func (r *raft) softState() *SoftState { return &SoftState{Lead: r.lead, RaftState: r.state} }
-
-// OK
-func (r *raft) hardState() pb.HardState {
-	return pb.HardState{
-		Term:   r.Term,
-		Vote:   r.Vote, // 当前节点的选票投给了谁做我Leader
-		Commit: r.raftLog.committed,
-	}
-}
-
-// send 将状态持久化到一个稳定的存储中,之后再发送消息
-func (r *raft) send(m pb.Message) {
-	if m.From == None {
-		m.From = r.id
-	}
-	// 数据校验,选举类消息必须带term属性
-	// 竞选投票相关的消息类型,必须设置term
-	if m.Type == pb.MsgVote || m.Type == pb.MsgVoteResp || m.Type == pb.MsgPreVote || m.Type == pb.MsgPreVoteResp {
-		if m.Term == 0 {
-			panic(fmt.Sprintf("任期应该被设置%s", m.Type))
-		}
-	} else {
-		// 其它类消息不能带term属性
-		if m.Term != 0 {
-			panic(fmt.Sprintf("任期不能被设置,当 %s (was %d)", m.Type, m.Term))
-		}
-		// 除了MsgProp和MsgReadIndex消息外,设置term为raft当前周期
-		if m.Type != pb.MsgProp && m.Type != pb.MsgReadIndex {
-			m.Term = r.Term
-		}
-	}
-
-	r.msgs = append(r.msgs, m) // 将消息放入队列 写
-}
-
-// 向指定的节点发送信息
-func (r *raft) sendHeartbeat(to uint64, ctx []byte) {
-	commit := min(r.prs.Progress[to].Match, r.raftLog.committed)
-	m := pb.Message{
-		To:      to,
-		Type:    pb.MsgHeartbeat,
-		Commit:  commit, // leader会为每个Follower都维护一个leaderCommit,表示leader认为Follower已经提交的日志条目索引值
-		Context: ctx,
-	}
-	r.send(m)
-}
-
-// bcastAppend 向集群中其他节点广播MsgApp消息
-func (r *raft) bcastAppend() {
-	// 遍历所有节点,给除自己外的节点发送日志Append消息
-	r.prs.Visit(func(id uint64, _ *tracker.Progress) {
-		if id == r.id {
-			return
-		}
-		r.sendAppend(id)
-	})
-}
-
-// OK 向集群中特定节点发送MsgApp消息
-func (r *raft) sendAppend(to uint64) {
-	r.maybeSendAppend(to, true)
-}
-
-// maybeSendAppend 向给定的peer发送一个带有新条目的追加RPC.如果有消息被发送,返回true.
-// sendIfEmpty参数控制是否发送没有条目的消息("空 "消息对于传达更新的Commit索引很有用,但当我们批量发送多条消息时就不可取).
-func (r *raft) maybeSendAppend(to uint64, sendIfEmpty bool) bool {
-	// 在消息发送之前会检测当前节点的状态,然后查找待发迭的Entry记录并封装成MsgApp消息,
-	// 之后根据对应节点的Progress.State值决定发送消息之后的操作
-
-	// 1. 获取对端节点当前同步进度
-	pr := r.prs.Progress[to]
-	if pr.IsPaused() {
-		return false
-	}
-	m := pb.Message{}
-	m.To = to
-	// 2. 注意这里带的term是本次发送给follower的第一条日志条目的term
-	term, errt := r.raftLog.term(pr.Next - 1)              // leader认为 follower所在的任期
-	ents, erre := r.raftLog.entries(pr.Next, r.maxMsgSize) // 要发给follower的日志
-	if len(ents) == 0 && !sendIfEmpty {
-		// 这种情况就不发了
-		return false
-	}
-
-	if errt != nil || erre != nil {
-		// 3. 如果获取term或日志失败,说明follower落后太多,raftLog内存中日志已经做过快照后被删除了
-		// 根据日志进度去取日志条目的时候发现,follower日志落后太多,这通常出现在新节点刚加入或者网络连接出现故障的情况下.
-		// 那么在这种情况下,leader改为发送最近一次快照给Follower,从而提高同步效率
-
-		if !pr.RecentActive {
-			r.logger.Debugf("ignore sending snapshot to %x since it is not recently active", to)
-			return false
-		}
-		// 4. 改为发送Snapshot消息
-		m.Type = pb.MsgSnap
-		snapshot, err := r.raftLog.snapshot()
-		if err != nil {
-			if err == ErrSnapshotTemporarilyUnavailable {
-				r.logger.Debugf("%x failed to send snapshot to %x because snapshot is temporarily unavailable", r.id, to)
-				return false
-			}
-			panic(err) // TODO(bdarnell)
-		}
-		if IsEmptySnap(snapshot) {
-			panic("need non-empty snapshot")
-		}
-		m.Snapshot = snapshot
-		sindex, sterm := snapshot.Metadata.Index, snapshot.Metadata.Term
-		r.logger.Debugf("%x [firstindex: %d, commit: %d] sent snapshot[index: %d, term: %d] to %x [%s]",
-			r.id, r.raftLog.firstIndex(), r.raftLog.committed, sindex, sterm, to, pr)
-		pr.BecomeSnapshot(sindex)
-		r.logger.Debugf("%x paused sending replication messages to %x [%s]", r.id, to, pr)
-	} else {
-		// 5. 发送Append消息
-		m.Type = pb.MsgApp             // 设置消息类型
-		m.Index = pr.Next - 1          // 设置MsgApp消息的Index字段
-		m.LogTerm = term               // 设置MsgApp消息的LogTerm字段
-		m.Entries = ents               // 设置消息携带的Entry记录集合
-		m.Commit = r.raftLog.committed // 设置消息的Commit字段,即当前节点的raftLog中最后一条已提交的记录索引值
-		// 6. 每次发送日志或心跳都会带上最新的commitIndex
-		m.Commit = r.raftLog.committed
-		if n := len(m.Entries); n != 0 {
-			switch pr.State {
-			// 在StateReplicate中,乐观地增加
-			case tracker.StateReplicate:
-				last := m.Entries[n-1].Index
-				pr.OptimisticUpdate(last) // 新目标节点对应的Next值（这里不会更新Match）
-				pr.Inflights.Add(last)    // 记录已发送但是未收到响应的消息
-			case tracker.StateProbe:
-				// 消息发送后,就将Progress.Paused字段设置成true,暂停后续消息的发送
-				pr.ProbeSent = true
-			default:
-				r.logger.Panicf("%x 在未知的状态下发送%s", r.id, pr.State)
-			}
-		}
-	}
-	// 7. 发送消息
-	r.send(m)
-	return true
-}
-
-// bcastHeartbeat sends RPC, without entries to all the peers.
+// bcastHeartbeat 发送RPC，没有日志给所有对等体。
 func (r *raft) bcastHeartbeat() {
 	lastCtx := r.readOnly.lastPendingRequestCtx()
 	if len(lastCtx) == 0 {
@@ -471,13 +144,13 @@ func (r *raft) bcastHeartbeatWithCtx(ctx []byte) {
 	})
 }
 
-func (r *raft) advance(rd Ready) {
-	r.reduceUncommittedSize(rd.CommittedEntries)
 
-	// If entries were applied (or a snapshot), update our cursor for
-	// the next Ready. Note that if the current HardState contains a
-	// new Commit index, this does not mean that we're also applying
-	// all of the new entries due to commit pagination by size.
+// 通知RawNode 应用程序已经应用并保存了最后一个Ready结果的进度。
+func (r *raft) advance(rd Ready) {
+	// 此时这些数据,应用到了wal,与应用程序状态机
+	r.reduceUncommittedSize(rd.CommittedEntries)
+	// 如果应用了条目(或快照)，则将游标更新为下一个Ready。请注意，如果当前的HardState包含一个新的Commit索引，
+	// 这并不意味着我们也应用了所有由于按大小提交分页而产生的新条目。
 	if newApplied := rd.appliedCursor(); newApplied > 0 {
 		oldApplied := r.raftLog.applied
 		r.raftLog.appliedTo(newApplied)
@@ -862,21 +535,6 @@ func (r *raft) loadState(state pb.HardState) {
 	r.Vote = state.Vote // 当前节点的选票投给了谁做我Leader
 }
 
-// 判断本节点是不是重新选举,因为丢失了leader
-func (r *raft) pastElectionTimeout() bool {
-	// 选举过期计数(electionElapsed)：主要用于follower来判断leader是不是正常工作,
-	// 当follower接受到leader的心跳的时候会把electionElapsed的时候就会置为0,electionElapsed的相加是通过外部调用实现的,
-	// node对外提供一个tick的接口,需要外部定时去调用,调用的周期由外部决定,每次调用就++,
-	// 然后检查是否会超时,上方的tickElection就是为follower状态的定时调用函数,leader状态的定时调用函数就是向follower发送心跳.
-	// 计时次数 超过了 限定的 选举次数,   规定：在randomizedElectionTimeout次数内必须收到来自leader的消息
-	return r.electionElapsed >= r.randomizedElectionTimeout
-}
-
-// 设置随机选举超时
-func (r *raft) resetRandomizedElectionTimeout() {
-	r.randomizedElectionTimeout = r.electionTimeout + globalRand.Intn(r.electionTimeout) // 随机选举超时
-}
-
 func (r *raft) sendTimeoutNow(to uint64) {
 	r.send(pb.Message{To: to, Type: pb.MsgTimeoutNow})
 }
@@ -1004,4 +662,298 @@ func sendMsgReadIndexResponse(r *raft, m pb.Message) {
 			r.send(resp)
 		}
 	}
+}
+
+// --------------------------------------------- OVER ------------------------------------------------------
+
+// 判断本节点是不是重新选举,因为丢失了leader
+func (r *raft) pastElectionTimeout() bool {
+	// 选举过期计数(electionElapsed)：主要用于follower来判断leader是不是正常工作,
+	// 当follower接受到leader的心跳的时候会把electionElapsed的时候就会置为0,electionElapsed的相加是通过外部调用实现的,
+	// node对外提供一个tick的接口,需要外部定时去调用,调用的周期由外部决定,每次调用就++,
+	// 然后检查是否会超时,上方的tickElection就是为follower状态的定时调用函数,leader状态的定时调用函数就是向follower发送心跳.
+	// 计时次数 超过了 限定的 选举次数,   规定：在randomizedElectionTimeout次数内必须收到来自leader的消息
+	return r.electionElapsed >= r.randomizedElectionTimeout
+}
+
+// 设置随机选举超时
+func (r *raft) resetRandomizedElectionTimeout() {
+	r.randomizedElectionTimeout = r.electionTimeout + globalRand.Intn(r.electionTimeout) // 随机选举超时
+}
+
+// OK
+func (r *raft) softState() *SoftState { return &SoftState{Lead: r.lead, RaftState: r.state} }
+
+// OK
+func (r *raft) hardState() pb.HardState {
+	return pb.HardState{
+		Term:   r.Term,
+		Vote:   r.Vote, // 给谁投了票
+		Commit: r.raftLog.committed,
+	}
+}
+
+// send 将状态持久化到一个稳定的存储中,之后再发送消息
+func (r *raft) send(m pb.Message) {
+	if m.From == None {
+		m.From = r.id
+	}
+	// 数据校验,选举类消息必须带term属性
+	// 竞选投票相关的消息类型,必须设置term
+	if m.Type == pb.MsgVote || m.Type == pb.MsgVoteResp || m.Type == pb.MsgPreVote || m.Type == pb.MsgPreVoteResp {
+		if m.Term == 0 {
+			panic(fmt.Sprintf("任期应该被设置%s", m.Type))
+		}
+	} else {
+		// 其它类消息不能带term属性
+		if m.Term != 0 {
+			panic(fmt.Sprintf("任期不能被设置,当 %s (was %d)", m.Type, m.Term))
+		}
+		// 除了MsgProp和MsgReadIndex消息外,设置term为raft当前周期
+		if m.Type != pb.MsgProp && m.Type != pb.MsgReadIndex {
+			m.Term = r.Term
+		}
+	}
+
+	r.msgs = append(r.msgs, m) // 将消息放入队列 写
+}
+
+// StateType 节点在集群中的状态
+type StateType uint64
+
+var stmap = [...]string{
+	"StateFollower",
+	"StateCandidate",
+	"StateLeader",
+	"StatePreCandidate",
+}
+
+func (st StateType) String() string {
+	return stmap[uint64(st)]
+}
+
+// Config 启动raft的配置参数
+type Config struct {
+	ID                        uint64         // ID 是本节点raft的身份.ID不能为0.
+	ElectionTick              int            // 返回选举权检查对应多少次tick触发次数
+	HeartbeatTick             int            // 返回心跳检查对应多少次tick触发次数
+	Storage                   Storage        // Storage 存储 日志项、状态
+	Applied                   uint64         // 提交到用户状态机的索引,起始为0
+	MaxSizePerMsg             uint64         // 每条消息的最大大小:math.MaxUint64表示无限制,0表示每条消息最多一个条目.  1M
+	MaxCommittedSizePerReady  uint64         // 限制  commited --> apply 之间的数量 MaxSizePerMsg 它们之前是同一个参数
+	MaxUncommittedEntriesSize uint64         // 未提交的日志项上限
+	MaxInflightMsgs           int            // 最大的处理中的消息数量
+	CheckQuorum               bool           // CheckQuorum 检查需要维持的选票数,一旦小于,就会丢失leader
+	PreVote                   bool           // PreVote 防止分区服务器[term会很大]重新加入集群时出现中断   是否启用PreVote
+	ReadOnlyOption            ReadOnlyOption // 必须是enabled if ReadOnlyOption is ReadOnlyLeaseBased.
+	DisableProposalForwarding bool           // 禁止将请求转发到leader,默认FALSE
+	Logger                    Logger
+}
+
+// OK
+func (c *Config) validate() error {
+	if c.ID == None {
+		return errors.New("补鞥呢使用None作为ID")
+	}
+	// 返回心跳检查对应多少次tick触发次数
+	if c.HeartbeatTick <= 0 { //
+		return errors.New("心跳间隔必须是>0")
+	}
+
+	if c.ElectionTick <= c.HeartbeatTick {
+		return errors.New("选举超时必须是大于心跳间隔")
+	}
+
+	if c.Storage == nil {
+		return errors.New("不能没有存储")
+	}
+
+	if c.MaxUncommittedEntriesSize == 0 {
+		c.MaxUncommittedEntriesSize = noLimit
+	}
+
+	//  它们之前是同一个参数.
+	if c.MaxCommittedSizePerReady == 0 {
+		c.MaxCommittedSizePerReady = c.MaxSizePerMsg
+	}
+
+	if c.MaxInflightMsgs <= 0 {
+		return errors.New("max inflight messages必须是>0")
+	}
+
+	if c.Logger == nil {
+		c.Logger = getLogger()
+	}
+	// 作为leader时的检查
+	if c.ReadOnlyOption == ReadOnlyLeaseBased && !c.CheckQuorum {
+		return errors.New("如果ReadOnlyOption 是 ReadOnlyLeaseBased 的时候必须开启CheckQuorum.")
+	}
+
+	return nil
+}
+
+// ok
+func newRaft(c *Config) *raft {
+	if err := c.validate(); err != nil {
+		panic(err.Error())
+	}
+	raftlog := newLogWithSize(c.Storage, c.Logger, c.MaxCommittedSizePerReady) // ✅
+	// 搜 s = raft.NewMemoryStorage()
+	hs, cs, err := c.Storage.InitialState()
+	if err != nil {
+		panic(err)
+	}
+
+	r := &raft{
+		id:                        c.ID,                        // 是本节点raft的身份
+		lead:                      None,                        // 当前leaderID
+		isLearner:                 false,                       // 本节点是不是learner角色
+		raftLog:                   raftlog,                     // 当前节点的log状态信息
+		maxMsgSize:                c.MaxSizePerMsg,             // 每条消息的最大大小
+		maxUncommittedSize:        c.MaxUncommittedEntriesSize, // 每条日志最大消息体
+		prs:                       tracker.MakeProgressTracker(c.MaxInflightMsgs),
+		electionTimeout:           c.ElectionTick,  // 返回选举权检查对应多少次tick触发次数
+		heartbeatTimeout:          c.HeartbeatTick, // 返回心跳检查对应多少次tick触发次数
+		logger:                    c.Logger,
+		checkQuorum:               c.CheckQuorum,                 // 检查需要维持的选票数,一旦小于,就会丢失leader
+		preVote:                   c.PreVote,                     // PreVote 是否启用PreVote
+		readOnly:                  newReadOnly(c.ReadOnlyOption), // etcd_backend/etcdserver/raft.go:469    默认值0 ReadOnlySafe
+		disableProposalForwarding: c.DisableProposalForwarding,   // 禁止将请求转发到leader,默认FALSE
+	}
+	// todo 没看懂
+	// -----------------------
+	cfg, prs, err := confchange.Restore(confchange.Changer{
+		Tracker:   r.prs,
+		LastIndex: raftlog.lastIndex(),
+	}, cs)
+	if err != nil {
+		panic(err)
+	}
+	assertConfStatesEquivalent(r.logger, cs, r.switchToConfig(cfg, prs)) // 判断相不相等
+	// -----------------------
+	// 根据从Storage中获取的HardState,初始化raftLog.committed字段,以及raft.Term和Vote字段
+	if !IsEmptyHardState(hs) { // 判断初始状态是不是空的
+		r.loadState(hs) // 更新状态索引信息
+	}
+	// 如采Config中己置了Applied,则将raftLog.applied字段重直为指定的Applied值上层模块自己的控制正确的己应用位置时使用该配置
+	if c.Applied > 0 {
+		raftlog.appliedTo(c.Applied) // ✅
+	}
+	r.becomeFollower(r.Term, None) // ✅ start
+
+	var nodesStrs []string
+	for _, n := range r.prs.VoterNodes() { // 一开始没有
+		nodesStrs = append(nodesStrs, fmt.Sprintf("%x", n))
+	}
+
+	r.logger.Infof("【newRaft %x [peers: [%s], term: %d, commit: %d, applied: %d, lastindex: %d, lastterm: %d]】",
+		r.id, strings.Join(nodesStrs, ","), r.Term, r.raftLog.committed, r.raftLog.applied, r.raftLog.lastIndex(), r.raftLog.lastTerm())
+	return r
+}
+
+func (r *raft) hasLeader() bool { return r.lead != None }
+
+// 向指定的节点发送信息
+func (r *raft) sendHeartbeat(to uint64, ctx []byte) {
+	commit := min(r.prs.Progress[to].Match, r.raftLog.committed)
+	m := pb.Message{
+		To:      to,
+		Type:    pb.MsgHeartbeat,
+		Commit:  commit, // leader会为每个Follower都维护一个leaderCommit,表示leader认为Follower已经提交的日志条目索引值
+		Context: ctx,
+	}
+	r.send(m)
+}
+
+// bcastAppend 向集群中其他节点广播MsgApp消息
+func (r *raft) bcastAppend() {
+	// 遍历所有节点,给除自己外的节点发送日志Append消息
+	r.prs.Visit(func(id uint64, _ *tracker.Progress) {
+		if id == r.id {
+			return
+		}
+		r.sendAppend(id)
+	})
+}
+
+// OK 向集群中特定节点发送MsgApp消息
+func (r *raft) sendAppend(to uint64) {
+	r.maybeSendAppend(to, true)
+}
+
+// maybeSendAppend 向给定的peer发送一个带有新条目的追加RPC.如果有消息被发送,返回true.
+// sendIfEmpty参数控制是否发送没有条目的消息("空 "消息对于传达更新的Commit索引很有用,但当我们批量发送多条消息时就不可取).
+func (r *raft) maybeSendAppend(to uint64, sendIfEmpty bool) bool {
+	// 在消息发送之前会检测当前节点的状态,然后查找待发迭的Entry记录并封装成MsgApp消息,
+	// 之后根据对应节点的Progress.State值决定发送消息之后的操作
+
+	// 1. 获取对端节点当前同步进度
+	pr := r.prs.Progress[to]
+	if pr.IsPaused() {
+		return false
+	}
+	m := pb.Message{}
+	m.To = to
+	// 2. 注意这里带的term是本次发送给follower的第一条日志条目的term
+	term, errt := r.raftLog.term(pr.Next - 1)              // leader认为 follower所在的任期
+	ents, erre := r.raftLog.entries(pr.Next, r.maxMsgSize) // 要发给follower的日志
+	if len(ents) == 0 && !sendIfEmpty {
+		// 这种情况就不发了
+		return false
+	}
+
+	if errt != nil || erre != nil {
+		// 3. 如果获取term或日志失败,说明follower落后太多,raftLog内存中日志已经做过快照后被删除了
+		// 根据日志进度去取日志条目的时候发现,follower日志落后太多,这通常出现在新节点刚加入或者网络连接出现故障的情况下.
+		// 那么在这种情况下,leader改为发送最近一次快照给Follower,从而提高同步效率
+
+		if !pr.RecentActive {
+			r.logger.Debugf("忽略向%x发送快照，因为它最近没有活动。", to)
+			return false
+		}
+		// 4. 改为发送Snapshot消息
+		m.Type = pb.MsgSnap
+		snapshot, err := r.raftLog.snapshot()
+		if err != nil {
+			if err == ErrSnapshotTemporarilyUnavailable {
+				r.logger.Debugf("%x 由于快照暂时不可用，未能向%x发送快照。", r.id, to)
+				return false
+			}
+			panic(err)
+		}
+		if IsEmptySnap(snapshot) {
+			panic("需要一个非空快照")
+		}
+		m.Snapshot = snapshot
+		sindex, sterm := snapshot.Metadata.Index, snapshot.Metadata.Term
+		r.logger.Debugf("%x [firstindex: %d, commit: %d] 发送快照[index: %d, term: %d] to %x [%s]", r.id, r.raftLog.firstIndex(), r.raftLog.committed, sindex, sterm, to, pr)
+		pr.BecomeSnapshot(sindex) // 变成发送快照的状态
+		r.logger.Debugf("%x 暂停发送复制信息到 %x [%s]", r.id, to, pr)
+	} else {
+		// 5. 发送Append消息
+		m.Type = pb.MsgApp             // 设置消息类型
+		m.Index = pr.Next - 1          // 设置MsgApp消息的Index字段
+		m.LogTerm = term               // 设置MsgApp消息的LogTerm字段
+		m.Entries = ents               // 设置消息携带的Entry记录集合
+		m.Commit = r.raftLog.committed // 设置消息的Commit字段,即当前节点的raftLog中最后一条已提交的记录索引值
+		// 6. 每次发送日志或心跳都会带上最新的commitIndex
+		m.Commit = r.raftLog.committed
+		if n := len(m.Entries); n != 0 {
+			switch pr.State {
+			// 在StateReplicate中,乐观地增加
+			case tracker.StateReplicate:
+				last := m.Entries[n-1].Index
+				pr.OptimisticUpdate(last) // 新目标节点对应的Next值（这里不会更新Match）
+				pr.Inflights.Add(last)    // 记录已发送但是未收到响应的消息
+			case tracker.StateProbe:
+				// 消息发送后,就将Progress.Paused字段设置成true,暂停后续消息的发送
+				pr.ProbeSent = true
+			default:
+				r.logger.Panicf("%x 在未知的状态下发送%s", r.id, pr.State)
+			}
+		}
+	}
+	// 7. 发送消息
+	r.send(m)
+	return true
 }

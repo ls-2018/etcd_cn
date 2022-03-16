@@ -260,7 +260,7 @@ func (n *localNode) run() {
 			n.rn.acceptReady(rd)  // 告诉raft,ready数据已被接收
 			advancec = n.advancec // 赋值Advance channel等待Ready处理完成的消息
 		case <-advancec: // 使用者处理完Ready数据后，调用了Advance()
-			n.rn.Advance(rd) // 上一次发送出去的
+			n.rn.Advance(rd) // 通知RawNode  应用程序已经应用并保存了最后一个Ready结果的进度。
 			rd = Ready{}     // 重置数据
 			advancec = nil
 		case c := <-n.status: // 收取了获取节点状态的信号
