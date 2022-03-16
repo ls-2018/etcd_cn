@@ -761,14 +761,13 @@ func (w *WAL) sync() error {
 	return err
 }
 
+// Sync 强制wal日志刷盘
 func (w *WAL) Sync() error {
 	return w.sync()
 }
 
-// ReleaseLockTo releases the locks, which has smaller index than the given index
-// except the largest one among them.
-// For example, if WAL is holding lock 1,2,3,4,5,6, ReleaseLockTo(4) will release
-// lock 1,2 but keep 3. ReleaseLockTo(5) will release 1,2,3 but keep 4.
+// ReleaseLockTo 释放锁，这些锁的索引比给定的索引小，但其中最大的一个除外。
+// 例如，如果WAL持有锁1,2,3,4,5,6，ReleaseLockTo(4)将释放 锁1,2，但保留3。ReleaseLockTo(5)将释放1,2,3，但保留4。
 func (w *WAL) ReleaseLockTo(index uint64) error {
 	w.mu.Lock()
 	defer w.mu.Unlock()
@@ -935,7 +934,7 @@ func (w *WAL) seq() uint64 {
 	}
 	seq, _, err := parseWALName(filepath.Base(t.Name()))
 	if err != nil {
-		w.lg.Fatal("failed to parse WAL name", zap.String("name", t.Name()), zap.Error(err))
+		w.lg.Fatal("解析WAL名称失败", zap.String("name", t.Name()), zap.Error(err))
 	}
 	return seq
 }

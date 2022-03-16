@@ -15,6 +15,7 @@
 package wal
 
 import (
+	"fmt"
 	"hash"
 	"io"
 	"os"
@@ -59,7 +60,6 @@ func newFileEncoder(f *os.File, prevCrc uint32) (*encoder, error) {
 func (e *encoder) encode(rec *walpb.Record) error {
 	e.mu.Lock()
 	defer e.mu.Unlock()
-
 	e.crc.Write(rec.Data)
 	rec.Crc = e.crc.Sum32()
 	var (
@@ -72,6 +72,7 @@ func (e *encoder) encode(rec *walpb.Record) error {
 		return err
 	}
 	data = append(data, '\n')
+	fmt.Println(string(data))
 	_, err = e.bw.Write(data)
 	return err
 }

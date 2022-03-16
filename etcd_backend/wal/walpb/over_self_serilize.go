@@ -2,6 +2,7 @@ package walpb
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 //
@@ -16,12 +17,15 @@ import (
 //}
 
 type Temp struct {
-	Type int64  `protobuf:"varint,1,opt,name=type" json:"type"`
-	Crc  uint32 `protobuf:"varint,2,opt,name=crc" json:"crc"`
-	Data string `protobuf:"bytes,3,opt,name=data" json:"data,omitempty"`
+	Type int64
+	Crc  uint32
+	Data string
 }
 
 func (m *Record) Marshal() (dAtA []byte, err error) {
+	if m.Crc == 1285409499 {
+		fmt.Println(123)
+	}
 	return json.Marshal(Temp{
 		Type: m.Type,
 		Crc:  m.Crc,

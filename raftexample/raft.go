@@ -61,7 +61,7 @@ type raftNode struct {
 	appliedIndex       uint64
 	node               raft.RaftNodeInterFace // 用于提交/错误通道的raft
 	raftStorage        *raft.MemoryStorage
-	wal                *wal.WAL
+	wal                *wal.WAL               // wal 日志管理
 	snapshotter        *snap.Snapshotter      // 快照管理者
 	snapshotterReady   chan *snap.Snapshotter // 快照管理者就绪的信号
 	snapCount          uint64
@@ -82,7 +82,7 @@ func (rc *raftNode) saveSnap(snap raftpb.Snapshot) error {
 	if err := rc.snapshotter.SaveSnap(snap); err != nil {
 		return err
 	}
-	if err := rc.wal.SaveSnapshot(walSnap); err != nil {
+	if err := rc.wal.SaveSnapshot(walSnap); err != nil { // 写一条快照记录【 索引、任期、配置】
 		return err
 	}
 	return rc.wal.ReleaseLockTo(snap.Metadata.Index)
@@ -98,7 +98,6 @@ func (rc *raftNode) maybeTriggerSnapshot(applyDoneC <-chan struct{}) {
 		// 日志条数 阈值
 		return
 	}
-
 	if applyDoneC != nil {
 		select {
 		case <-applyDoneC: // 等待所有提交的条目被应用
@@ -106,7 +105,6 @@ func (rc *raftNode) maybeTriggerSnapshot(applyDoneC <-chan struct{}) {
 			return
 		}
 	}
-
 	log.Printf("开始打快照 [applied index: %d | last snapshot index: %d]", rc.appliedIndex, rc.snapshotIndex)
 	data, err := rc.getSnapshot()
 	if err != nil {
@@ -132,7 +130,7 @@ func (rc *raftNode) maybeTriggerSnapshot(applyDoneC <-chan struct{}) {
 	rc.snapshotIndex = rc.appliedIndex
 }
 
-// 会单独启动一个后台 goroutine来负责上层模块 传递给 etcd-ra企 模块的数据,
+// 会单独启动一个后台 goroutine来负责上层模块 传递给 etcd-raft 模块的数据,
 func (rc *raftNode) serveChannels() {
 	// 这里是获取快照数据和快照的元数据
 	snap, err := rc.raftStorage.Snapshot()
@@ -302,7 +300,7 @@ func (rc *raftNode) loadSnapshot() *raftpb.Snapshot {
 	if wal.Exist(rc.waldir) {
 		walSnaps, err := wal.ValidSnapshotEntries(rc.logger, rc.waldir) // wal 记录过的快照信息
 		if err != nil {
-			log.Fatalf("raftexample: error listing snapshots (%v)", err)
+			log.Fatalf("raftexample: list快照失败 (%v)", err)
 		}
 		snapshot, err := rc.snapshotter.LoadNewestAvailable(walSnaps) // 获取任期、索引一致的快照
 		if err != nil && err != snap.ErrNoSnapshot {

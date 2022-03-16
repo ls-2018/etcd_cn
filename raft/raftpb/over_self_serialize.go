@@ -99,8 +99,18 @@ func (m *Message) Marshal() (dAtA []byte, err error) {
 
 	return json.Marshal(m)
 }
+
+type temp struct {
+	Data     string
+	Metadata SnapshotMetadata
+}
+
 func (m *Snapshot) Marshal() (dAtA []byte, err error) {
-	return json.Marshal(m)
+	t := temp{
+		Data:     string(m.Data),
+		Metadata: m.Metadata,
+	}
+	return json.Marshal(t)
 }
 func (m *SnapshotMetadata) Marshal() (dAtA []byte, err error) {
 	return json.Marshal(m)
@@ -1682,7 +1692,13 @@ func (m *SnapshotMetadata) Unmarshal(dAtA []byte) error {
 }
 
 func (m *Snapshot) Unmarshal(dAtA []byte) error {
-	return json.Unmarshal(dAtA, m)
+	t := temp{}
+	err := json.Unmarshal(dAtA, &t)
+	if err == nil {
+		m.Data = []byte(t.Data)
+		m.Metadata = t.Metadata
+	}
+	return err
 }
 
 func (m *Message) Unmarshal(dAtA []byte) error {
