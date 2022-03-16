@@ -175,7 +175,6 @@ func Create(lg *zap.Logger, dirpath string, metadata []byte) (*WAL, error) {
 		)
 		return nil, err
 	}
-	fmt.Println("w.Sync() ----->", w.Sync())
 	var perr error
 	defer func() {
 		if perr != nil {
