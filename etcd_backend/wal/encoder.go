@@ -15,7 +15,6 @@
 package wal
 
 import (
-	"fmt"
 	"hash"
 	"io"
 	"os"
@@ -72,7 +71,6 @@ func (e *encoder) encode(rec *walpb.Record) error {
 		return err
 	}
 	data = append(data, '\n')
-	fmt.Println(string(data))
 	_, err = e.bw.Write(data)
 	return err
 }

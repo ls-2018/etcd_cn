@@ -48,12 +48,11 @@ func newFilePipeline(lg *zap.Logger, dir string, fileSize int64) *filePipeline {
 		errc:  make(chan error, 1),
 		donec: make(chan struct{}),
 	}
-	go fp.run()
+	go fp.run()// 建立一个tmp文件
 	return fp
 }
 
-// Open returns a fresh file for writing. Rename the file before calling
-// Open again or there will be file collisions.
+// Open 返回一个新的文件供写入。在再次调用Open之前，请重命名该文件，否则会出现文件碰撞的情况。
 func (fp *filePipeline) Open() (f *fileutil.LockedFile, err error) {
 	select {
 	case f = <-fp.filec:

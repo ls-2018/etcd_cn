@@ -184,11 +184,11 @@ func Create(lg *zap.Logger, dirpath string, metadata []byte) (*WAL, error) {
 		}
 	}()
 
-	// directory was renamed; sync parent dir to persist rename
-	pdir, perr := fileutil.OpenDir(filepath.Dir(w.dir))
+	// 目录被重新命名；同步父目录以保持重命名。
+	pdir, perr := fileutil.OpenDir(filepath.Dir(w.dir)) // ./raftexample/db
 	if perr != nil {
 		lg.Warn(
-			"failed to open the parent data directory",
+			"未能打开父数据目录",
 			zap.String("parent-dir-path", filepath.Dir(w.dir)),
 			zap.String("dir-path", w.dir),
 			zap.Error(perr),
@@ -210,7 +210,7 @@ func Create(lg *zap.Logger, dirpath string, metadata []byte) (*WAL, error) {
 	if perr = fileutil.Fsync(pdir); perr != nil {
 		dirCloser()
 		lg.Warn(
-			"failed to fsync the parent data directory file",
+			"未能同步父数据目录文件",
 			zap.String("parent-dir-path", filepath.Dir(w.dir)),
 			zap.String("dir-path", w.dir),
 			zap.Error(perr),
@@ -244,18 +244,14 @@ func (w *WAL) cleanupWAL(lg *zap.Logger) {
 		)
 	}
 }
-
+// raftexample/db/raftexample-1.tmp ---> raftexample/db/raftexample-1
 func (w *WAL) renameWAL(tmpdirpath string) (*WAL, error) {
-	if err := os.RemoveAll(w.dir); err != nil {
+	if err := os.RemoveAll(w.dir); err != nil { // 删除 raftexample/db/raftexample-1
 		return nil, err
 	}
-	// On non-Windows platforms, hold the lock while renaming. Releasing
-	// the lock and trying to reacquire it quickly can be flaky because
-	// it's possible the process will fork to spawn a process while this is
-	// happening. The fds are set up as close-on-exec by the Go runtime,
-	// but there is a window between the fork and the exec where another
-	// process holds the lock.
-	if err := os.Rename(tmpdirpath, w.dir); err != nil {
+	// 在非Windows平台上，重命名时要按住锁。释放锁并试图快速重新获得它可能是不稳定的，因为在此过程中，进程可能会分叉产生一个进程。
+	//Go运行时将fds设置为执行时关闭，但在分叉和执行之间存在一个窗口，另一个进程持有锁。
+	if err := os.Rename(tmpdirpath, w.dir); err != nil { // raftexample/db/raftexample-1.tmp ---> raftexample/db/raftexample-1
 		if _, ok := err.(*os.LinkError); ok {
 			return w.renameWALUnlock(tmpdirpath)
 		}
