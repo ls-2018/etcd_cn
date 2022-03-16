@@ -123,4 +123,3 @@ func mustUnmarshalState(d []byte) raftpb.HardState {
 	pbutil.MustUnmarshal(&s, d)
 	return s
 }
-

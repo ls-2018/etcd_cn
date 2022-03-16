@@ -22,7 +22,7 @@ func (r *raft) handleSnapshot(m pb.Message) {
 
 // restore 从一个快照中恢复状态机。它恢复了日志和状态机的配置。如果这个方法返回false，说明快照被忽略了，因为它已经过时了，或者是由于一个错误。
 func (r *raft) restore(s pb.Snapshot) bool {
-	//snapshot的index比自身committed要小，说明已有这些数据，返回false
+	// snapshot的index比自身committed要小，说明已有这些数据，返回false
 	if s.Metadata.Index <= r.raftLog.committed {
 		return false
 	}
@@ -36,7 +36,7 @@ func (r *raft) restore(s pb.Snapshot) bool {
 	}
 
 	// 更多的深度防御：如果收件人不在配置中，就扔掉快照。
-	//这不应该发生（在写这篇文章的时候），但这里和那里的很多代码都假定r.id在进度跟踪器中。
+	// 这不应该发生（在写这篇文章的时候），但这里和那里的很多代码都假定r.id在进度跟踪器中。
 	found := false
 	cs := s.Metadata.ConfState
 	for _, set := range [][]uint64{

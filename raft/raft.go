@@ -144,7 +144,6 @@ func (r *raft) bcastHeartbeatWithCtx(ctx []byte) {
 	})
 }
 
-
 // 通知RawNode 应用程序已经应用并保存了最后一个Ready结果的进度。
 func (r *raft) advance(rd Ready) {
 	// 此时这些数据,应用到了wal,与应用程序状态机
