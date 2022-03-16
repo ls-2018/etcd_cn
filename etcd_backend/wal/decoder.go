@@ -38,7 +38,7 @@ type decoder struct {
 	brs []*bufio.Reader // 要读取的所有wal文件
 
 	// lastValidOff file offset following the last valid decoded record
-	lastValidOff int64
+	lastValidOff int64// 下一次decode的偏移量
 	crc          hash.Hash32
 }
 
@@ -103,7 +103,7 @@ func (d *decoder) decodeRecord(rec *walpb.Record) error {
 			return err
 		}
 	}
-	d.lastValidOff += frameSizeBytes + 1
+	d.lastValidOff += int64(len(line)) + 1
 	return nil
 }
 

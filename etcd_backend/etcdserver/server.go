@@ -65,7 +65,6 @@ import (
 	"github.com/ls-2018/etcd_cn/pkg/wait"
 	"github.com/ls-2018/etcd_cn/raft/raftpb"
 	pb "go.etcd.io/etcd/api/v3/etcdserverpb"
-	"go.etcd.io/etcd/api/v3/membershippb"
 	"go.etcd.io/etcd/api/v3/version"
 )
 

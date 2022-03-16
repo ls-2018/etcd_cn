@@ -37,12 +37,12 @@ import (
 )
 
 const (
-	metadataType int64 = iota + 1 // 元数据类型,元数据会保存当前的node id和cluster id.
-	entryType                     // 日志条目
-	stateType                     // 存放的是集群当前的状态HardState,如果集群的状态有变化,就会在WAL中存放一个新集群状态数据.里面包括当前Term,当前竞选者、当前已经commit的日志.
-	crcType                       // 存放crc校验字段.读取数据时,会根据这个记录里的crc字段对前面已经读出来的数据进行校验.
-	snapshotType                  // 存放snapshot的日志点.包括日志的Index和Term.
-	warnSyncDuration = time.Second // 是指在记录警告之前分配给fsync的时间量。
+	metadataType     int64         = iota + 1 // 元数据类型,元数据会保存当前的node id和cluster id.
+	entryType                                 // 日志条目
+	stateType                                 // 存放的是集群当前的状态HardState,如果集群的状态有变化,就会在WAL中存放一个新集群状态数据.里面包括当前Term,当前竞选者、当前已经commit的日志.
+	crcType                                   // 存放crc校验字段.读取数据时,会根据这个记录里的crc字段对前面已经读出来的数据进行校验.
+	snapshotType                              // 存放snapshot的日志点.包括日志的Index和Term.
+	warnSyncDuration = time.Second            // 是指在记录警告之前分配给fsync的时间量。
 )
 
 var (
@@ -165,7 +165,6 @@ func Create(lg *zap.Logger, dirpath string, metadata []byte) (*WAL, error) {
 	if err = w.SaveSnapshot(walpb.Snapshot{}); err != nil {
 		return nil, err
 	}
-
 	logDirPath := w.dir
 	if w, err = w.renameWAL(tmpdirpath); err != nil {
 		lg.Warn(
@@ -176,7 +175,7 @@ func Create(lg *zap.Logger, dirpath string, metadata []byte) (*WAL, error) {
 		)
 		return nil, err
 	}
-
+	fmt.Println("w.Sync() ----->", w.Sync())
 	var perr error
 	defer func() {
 		if perr != nil {
@@ -244,6 +243,7 @@ func (w *WAL) cleanupWAL(lg *zap.Logger) {
 		)
 	}
 }
+
 // raftexample/db/raftexample-1.tmp ---> raftexample/db/raftexample-1
 func (w *WAL) renameWAL(tmpdirpath string) (*WAL, error) {
 	if err := os.RemoveAll(w.dir); err != nil { // 删除 raftexample/db/raftexample-1
@@ -833,6 +833,7 @@ func (w *WAL) Close() error {
 
 	return w.dirFile.Close()
 }
+
 // 将日志保存到wal,更新wal写入的最新索引
 func (w *WAL) saveEntry(e *raftpb.Entry) error {
 	b := pbutil.MustMarshal(e)
@@ -843,6 +844,7 @@ func (w *WAL) saveEntry(e *raftpb.Entry) error {
 	w.enti = e.Index
 	return nil
 }
+
 // 写当前的存储状态
 func (w *WAL) saveState(s *raftpb.HardState) error {
 	if raft.IsEmptyHardState(*s) {
