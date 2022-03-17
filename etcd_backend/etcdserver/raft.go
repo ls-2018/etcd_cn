@@ -396,7 +396,7 @@ func createConfigChangeEnts(lg *zap.Logger, ids []uint64, self uint64, term, ind
 		}
 		e := raftpb.Entry{
 			Type:  raftpb.EntryConfChange,
-			Data:  pbutil.MustMarshal(cc),
+			Data:  pbutil.MustMarshal(cc), // ok
 			Term:  term,
 			Index: next,
 		}
@@ -412,9 +412,10 @@ func createConfigChangeEnts(lg *zap.Logger, ids []uint64, self uint64, term, ind
 			Type:   raftpb.ConfChangeRemoveNode,
 			NodeID: id,
 		}
+		_ = cc.Marshal
 		e := raftpb.Entry{
 			Type:  raftpb.EntryConfChange,
-			Data:  pbutil.MustMarshal(cc),
+			Data:  pbutil.MustMarshal(cc), // ok
 			Term:  term,
 			Index: next,
 		}

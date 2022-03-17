@@ -439,7 +439,7 @@ func (s *v3Manager) saveWALAndSnap() (*raftpb.HardState, error) {
 			Type:  raftpb.EntryConfChange,
 			Term:  1,
 			Index: uint64(i + 1),
-			Data:  d,
+			Data:  d, // ok
 		}
 	}
 

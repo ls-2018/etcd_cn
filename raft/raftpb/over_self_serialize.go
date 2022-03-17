@@ -4,8 +4,21 @@ import (
 	"encoding/json"
 )
 
+type A struct {
+	Type    ConfChangeType
+	NodeID  uint64
+	Context string
+	ID      uint64
+}
+
 func (m *ConfChange) Marshal() (dAtA []byte, err error) {
-	return json.Marshal(m)
+	a := A{
+		Type:    m.Type,
+		NodeID:  m.NodeID,
+		Context: string(m.Context),
+		ID:      m.ID,
+	}
+	return json.Marshal(a)
 }
 
 func (m *ConfState) Marshal() (dAtA []byte, err error) {
@@ -37,8 +50,21 @@ func (m *SnapshotMetadata) Marshal() (dAtA []byte, err error) {
 	return json.Marshal(m)
 }
 
+type B struct {
+	Term  uint64
+	Index uint64
+	Type  EntryType
+	Data  string
+}
+
 func (m *Entry) Marshal() (dAtA []byte, err error) {
-	return json.Marshal(m)
+	b := B{
+		Term:  m.Term,
+		Index: m.Index,
+		Type:  m.Type,
+		Data:  string(m.Data),
+	}
+	return json.Marshal(b)
 }
 
 func (m *ConfChangeSingle) Marshal() (dAtA []byte, err error) {
@@ -50,7 +76,18 @@ func (m *ConfChangeV2) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *Entry) Unmarshal(dAtA []byte) error {
-	return json.Unmarshal(dAtA, m)
+	b := B{
+		Term:  m.Term,
+		Index: m.Index,
+		Type:  m.Type,
+		Data:  string(m.Data),
+	}
+	err := json.Unmarshal(dAtA, &b)
+	m.Index = b.Index
+	m.Type = b.Type
+	m.Term = b.Term
+	m.Data = []byte(b.Data) // ok
+	return err
 }
 
 func (m *SnapshotMetadata) Unmarshal(dAtA []byte) error {
@@ -80,7 +117,14 @@ func (m *ConfState) Unmarshal(dAtA []byte) error {
 }
 
 func (m *ConfChange) Unmarshal(dAtA []byte) error {
-	return json.Unmarshal(dAtA, m)
+	a := A{}
+
+	err := json.Unmarshal(dAtA, &a)
+	m.Context = []byte(a.Context)
+	m.Type = a.Type
+	m.ID = a.ID
+	m.NodeID = a.NodeID
+	return err
 }
 
 func (m *ConfChangeSingle) Unmarshal(dAtA []byte) error {

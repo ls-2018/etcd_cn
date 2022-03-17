@@ -96,7 +96,7 @@ func confChangeToMsg(c pb.ConfChangeI) (pb.Message, error) {
 	if err != nil {
 		return pb.Message{}, err
 	}
-	return pb.Message{Type: pb.MsgProp, Entries: []pb.Entry{{Type: typ, Data: data}}}, nil
+	return pb.Message{Type: pb.MsgProp, Entries: []pb.Entry{{Type: typ, Data: data}}}, nil // ok
 }
 
 // Ready数据通过上一次的软、硬状态,计算这两个状态的变化，其他
@@ -304,7 +304,7 @@ func (n *localNode) TransferLeadership(ctx context.Context, lead, transferee uin
 }
 
 func (n *localNode) ReadIndex(ctx context.Context, rctx []byte) error {
-	return n.step(ctx, pb.Message{Type: pb.MsgReadIndex, Entries: []pb.Entry{{Data: rctx}}})
+	return n.step(ctx, pb.Message{Type: pb.MsgReadIndex, Entries: []pb.Entry{{Data: rctx}}}) // ok
 }
 
 // ------------------------------------------	over --------------------------------------------------------------
@@ -350,7 +350,7 @@ func (n *localNode) ReportSnapshot(id uint64, status SnapshotStatus) {
 
 func (n *localNode) Propose(ctx context.Context, data []byte) error {
 	// 发起提议，要等到得到大多数响应
-	return n.stepWait(ctx, pb.Message{Type: pb.MsgProp, Entries: []pb.Entry{{Data: data}}})
+	return n.stepWait(ctx, pb.Message{Type: pb.MsgProp, Entries: []pb.Entry{{Data: data}}}) // ok
 }
 
 func (n *localNode) Step(ctx context.Context, m pb.Message) error {

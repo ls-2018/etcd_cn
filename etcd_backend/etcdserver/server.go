@@ -1113,7 +1113,9 @@ func (s *EtcdServer) run() {
 		select {
 		case ap := <-s.r.apply():
 			// 读取 放入applyc的消息
-			f := func(context.Context) { s.applyAll(&ep, &ap) }
+			f := func(context.Context) {
+				s.applyAll(&ep, &ap)
+			}
 			sched.Schedule(f)
 		case leases := <-expiredLeaseC:
 			s.GoAttach(func() {
@@ -2119,7 +2121,8 @@ func (s *EtcdServer) applyEntryNormal(e *raftpb.Entry) {
 	}
 
 	var raftReq pb.InternalRaftRequest
-	if !pbutil.MaybeUnmarshal(&raftReq, e.Data) { // backward compatible
+	if !pbutil.MaybeUnmarshal(&raftReq, e.Data) { // 向后兼容
+		// {"ID":7587861231285799684,"Method":"PUT","Path":"/0/version","Val":"3.5.0","Dir":false,"PrevValue":"","PrevIndex":0,"Expiration":0,"Wait":false,"Since":0,"Recursive":false,"Sorted":false,"Quorum":false,"Time":0,"Stream":false}
 		var r pb.Request
 		rp := &r
 		pbutil.MustUnmarshal(rp, e.Data)
@@ -2127,6 +2130,7 @@ func (s *EtcdServer) applyEntryNormal(e *raftpb.Entry) {
 		s.w.Trigger(r.ID, s.applyV2Request((*RequestV2)(rp), shouldApplyV3))
 		return
 	}
+	//{"header":{"ID":7587861231285799685},"put":{"key":"YQ==","value":"Yg=="}}
 	s.lg.Debug("applyEntryNormal", zap.Stringer("raftReq", &raftReq))
 
 	if raftReq.V2 != nil {

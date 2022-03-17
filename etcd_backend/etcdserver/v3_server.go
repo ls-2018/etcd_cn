@@ -656,6 +656,7 @@ func (s *EtcdServer) processInternalRaftRequestOnce(ctx context.Context, r pb.In
 		}
 	}
 	// 反序列化请求数据
+
 	data, err := r.Marshal()
 	if err != nil {
 		return nil, err
@@ -672,6 +673,7 @@ func (s *EtcdServer) processInternalRaftRequestOnce(ctx context.Context, r pb.In
 	ch := s.w.Register(id) // 注册一个channel,等待处理完成
 
 	cctx, cancel := context.WithTimeout(ctx, s.Cfg.ReqTimeout()) // 设置请求超时
+	// cctx, cancel := context.WithTimeout(ctx, time.Second*1000) // 设置请求超时
 	defer cancel()
 
 	start := time.Now()

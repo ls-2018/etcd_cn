@@ -45,7 +45,7 @@ func (rn *RawNode) Bootstrap(peers []Peer) error {
 			return err
 		}
 
-		ents[i] = pb.Entry{Type: pb.EntryConfChange, Term: 1, Index: uint64(i + 1), Data: data}
+		ents[i] = pb.Entry{Type: pb.EntryConfChange, Term: 1, Index: uint64(i + 1), Data: data} // ok
 	}
 	rn.raft.raftLog.append(ents...) // 有多少个节点就记录多少个日志项
 	rn.raft.raftLog.committed = uint64(len(ents))
