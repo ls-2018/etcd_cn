@@ -243,7 +243,7 @@ func printUnknownNormal(entry raftpb.Entry) {
 func printConfChange(entry raftpb.Entry) {
 	fmt.Printf("%4d\t%10d", entry.Term, entry.Index)
 	fmt.Printf("\tconf")
-	var r raftpb.ConfChange
+	var r raftpb.ConfChangeV1
 	if err := r.Unmarshal(entry.Data); err != nil {
 		fmt.Printf("\t???")
 	} else {

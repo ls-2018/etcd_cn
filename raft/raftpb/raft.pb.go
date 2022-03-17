@@ -539,6 +539,22 @@ type ConfState struct {
 	AutoLeave bool `protobuf:"varint,5,opt,name=auto_leave,json=autoLeave" json:"auto_leave"`
 }
 
+// ConfChangeV1 只能传递一个节点变更
+type ConfChangeV1 struct {
+	Type    ConfChangeType `protobuf:"varint,2,opt,name=type,enum=raftpb.ConfChangeType" json:"type"`
+	NodeID  uint64         `protobuf:"varint,3,opt,name=node_id,json=nodeId" json:"node_id"` // NodeID: 变更节点的id
+	Context []byte         `protobuf:"bytes,4,opt,name=context" json:"context,omitempty"`
+	// 这个字段只被etcd用来传播一个唯一的标识符。理想情况下，它应该真正使用Context来代替。在ConfChangeV2中没有对应的字段存在。
+	ID uint64 `protobuf:"varint,1,opt,name=id" json:"id"` // 节点变更的次数
+}
+
+// ConfChangeV2 可以传递多个
+type ConfChangeV2 struct {
+	Transition ConfChangeTransition `protobuf:"varint,1,opt,name=transition,enum=raftpb.ConfChangeTransition" json:"transition"`
+	Changes    []ConfChangeSingle   `protobuf:"bytes,2,rep,name=changes" json:"changes"`
+	Context    []byte               `protobuf:"bytes,3,opt,name=context" json:"context,omitempty"`
+}
+
 func (m *ConfState) Reset()         { *m = ConfState{} }
 func (m *ConfState) String() string { return proto.CompactTextString(m) }
 func (*ConfState) ProtoMessage()    {}
@@ -577,26 +593,18 @@ func (m *ConfState) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ConfState proto.InternalMessageInfo
 
-type ConfChange struct {
-	Type    ConfChangeType `protobuf:"varint,2,opt,name=type,enum=raftpb.ConfChangeType" json:"type"`
-	NodeID  uint64         `protobuf:"varint,3,opt,name=node_id,json=nodeId" json:"node_id"` // NodeID: 变更节点的id
-	Context []byte         `protobuf:"bytes,4,opt,name=context" json:"context,omitempty"`
-	// 这个字段只被etcd用来传播一个唯一的标识符。理想情况下，它应该真正使用Context来代替。在ConfChangeV2中没有对应的字段存在。
-	ID uint64 `protobuf:"varint,1,opt,name=id" json:"id"` // 节点变更的次数
-}
-
-func (m *ConfChange) Reset()         { *m = ConfChange{} }
-func (m *ConfChange) String() string { return proto.CompactTextString(m) }
-func (*ConfChange) ProtoMessage()    {}
-func (*ConfChange) Descriptor() ([]byte, []int) {
+func (m *ConfChangeV1) Reset()         { *m = ConfChangeV1{} }
+func (m *ConfChangeV1) String() string { return proto.CompactTextString(m) }
+func (*ConfChangeV1) ProtoMessage()    {}
+func (*ConfChangeV1) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b042552c306ae59b, []int{6}
 }
 
-func (m *ConfChange) XXX_Unmarshal(b []byte) error {
+func (m *ConfChangeV1) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
 
-func (m *ConfChange) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *ConfChangeV1) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_ConfChange.Marshal(b, m, deterministic)
 	} else {
@@ -609,15 +617,15 @@ func (m *ConfChange) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	}
 }
 
-func (m *ConfChange) XXX_Merge(src proto.Message) {
+func (m *ConfChangeV1) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_ConfChange.Merge(m, src)
 }
 
-func (m *ConfChange) XXX_Size() int {
+func (m *ConfChangeV1) XXX_Size() int {
 	return m.Size()
 }
 
-func (m *ConfChange) XXX_DiscardUnknown() {
+func (m *ConfChangeV1) XXX_DiscardUnknown() {
 	xxx_messageInfo_ConfChange.DiscardUnknown(m)
 }
 
@@ -700,11 +708,6 @@ var xxx_messageInfo_ConfChangeSingle proto.InternalMessageInfo
 // For details on Raft membership changes, see:
 //
 // [1]: https://github.com/ongardie/dissertation/blob/master/online-trim.pdf
-type ConfChangeV2 struct {
-	Transition ConfChangeTransition `protobuf:"varint,1,opt,name=transition,enum=raftpb.ConfChangeTransition" json:"transition"`
-	Changes    []ConfChangeSingle   `protobuf:"bytes,2,rep,name=changes" json:"changes"`
-	Context    []byte               `protobuf:"bytes,3,opt,name=context" json:"context,omitempty"`
-}
 
 func (m *ConfChangeV2) Reset()         { *m = ConfChangeV2{} }
 func (m *ConfChangeV2) String() string { return proto.CompactTextString(m) }
@@ -755,7 +758,7 @@ func init() {
 	proto.RegisterType((*Message)(nil), "raftpb.Message")
 	proto.RegisterType((*HardState)(nil), "raftpb.HardState")
 	proto.RegisterType((*ConfState)(nil), "raftpb.ConfState")
-	proto.RegisterType((*ConfChange)(nil), "raftpb.ConfChange")
+	proto.RegisterType((*ConfChangeV1)(nil), "raftpb.ConfChange")
 	proto.RegisterType((*ConfChangeSingle)(nil), "raftpb.ConfChangeSingle")
 	proto.RegisterType((*ConfChangeV2)(nil), "raftpb.ConfChangeV2")
 }
@@ -1066,12 +1069,12 @@ func (m *ConfState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *ConfChange) MarshalTo(dAtA []byte) (int, error) {
+func (m *ConfChangeV1) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *ConfChange) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *ConfChangeV1) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1279,7 +1282,7 @@ func (m *ConfState) Size() (n int) {
 	return n
 }
 
-func (m *ConfChange) Size() (n int) {
+func (m *ConfChangeV1) Size() (n int) {
 	if m == nil {
 		return 0
 	}

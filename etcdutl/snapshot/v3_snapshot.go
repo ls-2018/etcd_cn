@@ -426,7 +426,7 @@ func (s *v3Manager) saveWALAndSnap() (*raftpb.HardState, error) {
 	nodeIDs := make([]uint64, len(peers))
 	for i, p := range peers {
 		nodeIDs[i] = p.ID
-		cc := raftpb.ConfChange{
+		cc := raftpb.ConfChangeV1{
 			Type:    raftpb.ConfChangeAddNode,
 			NodeID:  p.ID,
 			Context: p.Context,

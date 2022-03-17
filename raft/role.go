@@ -196,7 +196,7 @@ func stepLeader(r *raft, m pb.Message) error {
 			e := &m.Entries[i]
 			var cc pb.ConfChangeI
 			if e.Type == pb.EntryConfChange {
-				var ccc pb.ConfChange
+				var ccc pb.ConfChangeV1
 				if err := ccc.Unmarshal(e.Data); err != nil {
 					panic(err)
 				}
@@ -209,28 +209,30 @@ func stepLeader(r *raft, m pb.Message) error {
 				cc = ccc
 			}
 			if cc != nil {
-				alreadyPending := r.pendingConfIndex > r.raftLog.applied
-				alreadyJoint := len(r.prs.Config.Voters[1]) > 0
-				wantsLeaveJoint := len(cc.AsV2().Changes) == 0
-
+				alreadyPending := r.pendingConfIndex > r.raftLog.applied// 是否已经apply了该配置变更
+				alreadyJoint := len(r.prs.Config.Voters[1]) > 0// 判断第二个MajorityConfig:map[uint64]struct{} 有没有数据
+				wantsLeaveJoint := len(cc.AsV2().Changes) == 0 // 节点个数
+				// 首先切换到过渡形态，我们称之为联合共识;
+				// 一旦提交了联合共识，系统就会过渡到新的配置。联合共识结合了新旧配置。
 				var refused string
 				if alreadyPending {
-					refused = fmt.Sprintf("possible unapplied conf change at index %d (applied to %d)", r.pendingConfIndex, r.raftLog.applied)
+					refused = fmt.Sprintf("在索引%d处可能有未应用的conf变更（应用于%d）。", r.pendingConfIndex, r.raftLog.applied)
 				} else if alreadyJoint && !wantsLeaveJoint {
-					refused = "must transition out of joint config first"
+					refused = "必须先从联合配置中过渡出去"
 				} else if !alreadyJoint && wantsLeaveJoint {
-					refused = "not in joint state; refusing empty conf change"
+					refused = "不处于联合状态；拒绝空洞的改变"
 				}
-
-				if refused != "" {
-					r.logger.Infof("%x ignoring conf change %v at config %s: %s", r.id, cc, r.prs.Config, refused)
+				// true, true
+				// false false
+				if refused != "" {// 忽略配置变更
+					r.logger.Infof("%x 忽略配置变更 %v  %s: %s", r.id, cc, r.prs.Config, refused)
 					m.Entries[i] = pb.Entry{Type: pb.EntryNormal}
 				} else {
 					r.pendingConfIndex = r.raftLog.lastIndex() + uint64(i) + 1
 				}
 			}
 		}
-		// 将日志追加到raft状态机中
+		// 将日志追加到raft unstable 中
 		if !r.appendEntry(m.Entries...) {
 			return ErrProposalDropped
 		}
@@ -258,7 +260,6 @@ func stepLeader(r *raft, m pb.Message) error {
 		return nil
 	}
 	// 根据消息的From字段获取对应的Progress实例,为后面的消息处理做准备
-
 	pr := r.prs.Progress[m.From]
 	if pr == nil {
 		r.logger.Debugf("%x no progress available for %x", r.id, m.From)
@@ -484,19 +485,19 @@ func stepFollower(r *raft, m pb.Message) error {
 	switch m.Type {
 	case pb.MsgProp: // leader、Candidate、follower专属
 		if r.lead == None {
-			r.logger.Infof("%x no leader at term %d; dropping proposal", r.id, r.Term)
+			r.logger.Infof("%x 由于当前没有leader   term %d; 拒绝提议", r.id, r.Term)
 			return ErrProposalDropped
 		} else if r.disableProposalForwarding {
-			r.logger.Infof("%x not forwarding to leader %x at term %d; dropping proposal", r.id, r.lead, r.Term)
+			r.logger.Infof("%x 禁止转发回leader %x at term %d; 拒绝提议", r.id, r.lead, r.Term)
 			return ErrProposalDropped
 		}
 		m.To = r.lead
 		r.send(m)
 	case pb.MsgApp:
+		// 配置信息也会走到这里
 		// Leader节点处理完命令后,发送日志和持久化操作都是异步进行的,但是这不代表leader已经收到回复.
 		// Raft协议要求在返回leader成功的时候,日志一定已经提交了,所以Leader需要等待超过半数的Follower节点处理完日志并反馈,下面先看一下Follower的日志处理.
 		// 日志消息到达Follower后,也是由EtcdServer.Process()方法来处理,最终会进到Raft模块的stepFollower()函数中.
-
 		// 重置心跳计数
 		r.electionElapsed = 0
 		// 设置Leader

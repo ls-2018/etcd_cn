@@ -23,13 +23,10 @@ import (
 	pb "github.com/ls-2018/etcd_cn/raft/raftpb"
 )
 
-// Config reflects the configuration tracked in a ProgressTracker.
 type Config struct {
 	Voters quorum.JointConfig
-	// AutoLeave is true if the configuration is joint and a transition to the
-	// incoming configuration should be carried out automatically by Raft when
-	// this is possible. If false, the configuration will be joint until the
-	// application initiates the transition manually.
+	// AutoLeave 如果配置是joint的，并且在可能的情况下，应该由Raft自动进行到传递配置的过渡，则为true。
+	// 如果为false，则该配置将被连接，直到应用程序手动启动转换。
 	AutoLeave bool
 	// Learners is a set of IDs corresponding to the learners active in the
 	// current configuration.

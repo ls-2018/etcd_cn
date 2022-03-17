@@ -27,7 +27,7 @@ import (
 // 基于http的基于raft的键值存储的处理程序
 type httpKVAPI struct {
 	store       *kvstore
-	confChangeC chan<- raftpb.ConfChange
+	confChangeC chan<- raftpb.ConfChangeV1
 }
 
 func (h *httpKVAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -64,7 +64,7 @@ func (h *httpKVAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		cc := raftpb.ConfChange{
+		cc := raftpb.ConfChangeV1{
 			Type:    raftpb.ConfChangeAddNode,
 			NodeID:  nodeId,
 			Context: url,
@@ -81,7 +81,7 @@ func (h *httpKVAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		cc := raftpb.ConfChange{
+		cc := raftpb.ConfChangeV1{
 			Type:   raftpb.ConfChangeRemoveNode,
 			NodeID: nodeId,
 		}
@@ -99,7 +99,7 @@ func (h *httpKVAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // serveHttpKVAPI 启动一个带有GET/PUT API的键值etcd并监听。
-func serveHttpKVAPI(kv *kvstore, port int, confChangeC chan<- raftpb.ConfChange, errorC <-chan error) {
+func serveHttpKVAPI(kv *kvstore, port int, confChangeC chan<- raftpb.ConfChangeV1, errorC <-chan error) {
 	srv := http.Server{
 		Addr: ":" + strconv.Itoa(port),
 		Handler: &httpKVAPI{

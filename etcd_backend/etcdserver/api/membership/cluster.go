@@ -296,7 +296,7 @@ func (c *RaftCluster) Recover(onSet func(*zap.Logger, *semver.Version)) {
 
 // ValidateConfigurationChange takes a proposed ConfChange and
 // ensures that it is still valid.
-func (c *RaftCluster) ValidateConfigurationChange(cc raftpb.ConfChange) error {
+func (c *RaftCluster) ValidateConfigurationChange(cc raftpb.ConfChangeV1) error {
 	// TODO: this必须是switched to backend as well.
 	members, removed := membersFromStore(c.lg, c.v2store)
 	id := types.ID(cc.NodeID)

@@ -1553,7 +1553,7 @@ func (s *EtcdServer) AddMember(ctx context.Context, memb membership.Member) ([]*
 		return nil, err
 	}
 
-	cc := raftpb.ConfChange{
+	cc := raftpb.ConfChangeV1{
 		Type:    raftpb.ConfChangeAddNode,
 		NodeID:  uint64(memb.ID),
 		Context: b,
@@ -1606,7 +1606,7 @@ func (s *EtcdServer) RemoveMember(ctx context.Context, id uint64) ([]*membership
 		return nil, err
 	}
 
-	cc := raftpb.ConfChange{
+	cc := raftpb.ConfChangeV1{
 		Type:   raftpb.ConfChangeRemoveNode,
 		NodeID: id,
 	}
@@ -1681,7 +1681,7 @@ func (s *EtcdServer) promoteMember(ctx context.Context, id uint64) ([]*membershi
 		return nil, err
 	}
 
-	cc := raftpb.ConfChange{
+	cc := raftpb.ConfChangeV1{
 		Type:    raftpb.ConfChangeAddNode,
 		NodeID:  id,
 		Context: b,
@@ -1800,7 +1800,7 @@ func (s *EtcdServer) UpdateMember(ctx context.Context, memb membership.Member) (
 	if err := s.checkMembershipOperationPermission(ctx); err != nil {
 		return nil, err
 	}
-	cc := raftpb.ConfChange{
+	cc := raftpb.ConfChangeV1{
 		Type:    raftpb.ConfChangeUpdateNode,
 		NodeID:  uint64(memb.ID),
 		Context: b,
@@ -1885,7 +1885,7 @@ type confChangeResponse struct {
 // configure sends a configuration change through consensus and
 // then waits for it to be applied to the etcd. It
 // will block until the change is performed or there is an error.
-func (s *EtcdServer) configure(ctx context.Context, cc raftpb.ConfChange) ([]*membership.Member, error) {
+func (s *EtcdServer) configure(ctx context.Context, cc raftpb.ConfChangeV1) ([]*membership.Member, error) {
 	lg := s.Logger()
 	cc.ID = s.reqIDGen.Next()
 	ch := s.w.Register(cc.ID)
@@ -2063,17 +2063,14 @@ func (s *EtcdServer) apply(
 			s.setTerm(e.Term)
 
 		case raftpb.EntryConfChange:
-			// We need to apply all WAL entries on top of v2store
-			// and only 'unapplied' (e.Index>backend.ConsistentIndex) on the backend.
 			shouldApplyV3 := membership.ApplyV2storeOnly
-
-			// set the consistent index of current executing entry
 			if e.Index > s.consistIndex.ConsistentIndex() {
 				s.consistIndex.SetConsistentIndex(e.Index, e.Term)
 				shouldApplyV3 = membership.ApplyBoth
 			}
 
-			var cc raftpb.ConfChange
+			var cc raftpb.ConfChangeV1
+			_ = cc.Unmarshal
 			pbutil.MustUnmarshal(&cc, e.Data)
 			removedSelf, err := s.applyConfChange(cc, confState, shouldApplyV3)
 			s.setAppliedIndex(e.Index)
@@ -2197,7 +2194,7 @@ func (s *EtcdServer) notifyAboutFirstCommitInTerm() {
 
 // applyConfChange applies a ConfChange to the etcd. It is only
 // invoked with a ConfChange that has already passed through Raft
-func (s *EtcdServer) applyConfChange(cc raftpb.ConfChange, confState *raftpb.ConfState, shouldApplyV3 membership.ShouldApplyV3) (bool, error) {
+func (s *EtcdServer) applyConfChange(cc raftpb.ConfChangeV1, confState *raftpb.ConfState, shouldApplyV3 membership.ShouldApplyV3) (bool, error) {
 	if err := s.cluster.ValidateConfigurationChange(cc); err != nil {
 		cc.NodeID = raft.None
 		s.r.ApplyConfChange(cc)

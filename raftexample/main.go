@@ -30,7 +30,7 @@ func main() {
 
 	proposeC := make(chan string) // 提议通道, ---->放入raft状态机,返回错误
 	defer close(proposeC)
-	triggerConfChangeC := make(chan raftpb.ConfChange) // 配置通道
+	triggerConfChangeC := make(chan raftpb.ConfChangeV1) // 配置通道
 	defer close(triggerConfChangeC)
 
 	// Raft为来自HTTP API的propose提供了commitC

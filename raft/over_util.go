@@ -156,8 +156,7 @@ func DescribeMessage(m pb.Message, f EntryFormatter) string {
 	return buf.String()
 }
 
-// PayloadSize is the size of the payload of this Entry. Notably, it does not
-// depend on its Index or Term.
+// PayloadSize 返回数据长度
 func PayloadSize(e pb.Entry) int {
 	return len(e.Data)
 }
@@ -180,7 +179,7 @@ func DescribeEntry(e pb.Entry, f EntryFormatter) string {
 	case pb.EntryNormal:
 		formatted = f(e.Data)
 	case pb.EntryConfChange:
-		var cc pb.ConfChange
+		var cc pb.ConfChangeV1
 		if err := cc.Unmarshal(e.Data); err != nil {
 			formatted = err.Error()
 		} else {

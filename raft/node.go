@@ -84,21 +84,6 @@ func RestartNode(c *Config) RaftNodeInterFace {
 	return &n
 }
 
-// 消息、结果包装
-type msgWithResult struct {
-	m      pb.Message // 发送出去的信息
-	result chan error // 返回的结果
-}
-
-// OK
-func confChangeToMsg(c pb.ConfChangeI) (pb.Message, error) {
-	typ, data, err := pb.MarshalConfChange(c)
-	if err != nil {
-		return pb.Message{}, err
-	}
-	return pb.Message{Type: pb.MsgProp, Entries: []pb.Entry{{Type: typ, Data: data}}}, nil // ok
-}
-
 // Ready数据通过上一次的软、硬状态,计算这两个状态的变化，其他
 // 的数据都是来源于raft。
 func newReady(r *raft, prevSoftSt *SoftState, prevHardSt pb.HardState) Ready {
@@ -214,7 +199,7 @@ func (n *localNode) run() {
 		// described in raft dissertation)
 		// Currently it is dropped in Step silently.
 
-		case pm := <-propc: // 接收到提议消息;提议消息是本节点生成的
+		case pm := <-propc: // 接收到提议消息;提议消息是本节点生成的;		版本变更消息
 			_ = msgWithResult{}
 			m := pm.m
 			m.From = r.id
@@ -270,15 +255,6 @@ func (n *localNode) run() {
 			return
 		}
 	}
-}
-
-// ProposeConfChange OK
-func (n *localNode) ProposeConfChange(ctx context.Context, cc pb.ConfChangeI) error {
-	msg, err := confChangeToMsg(cc)
-	if err != nil {
-		return err
-	}
-	return n.Step(ctx, msg)
 }
 
 func (n *localNode) ApplyConfChange(cc pb.ConfChangeI) *pb.ConfState {
@@ -436,4 +412,28 @@ func MustSync(st, prevst pb.HardState, entsnum int) bool {
 	// 这些状态是全局性的，需要leader统计超过半数可靠可靠以后确认为可靠的数据。如果此时采用
 	// 异步实现，就会出现不一致的可能性。
 	return entsnum != 0 || st.Vote != prevst.Vote || st.Term != prevst.Term
+}
+
+// ProposeConfChange 集群配置变更,[新增、删除节点]
+func (n *localNode) ProposeConfChange(ctx context.Context, cc pb.ConfChangeI) error {
+	msg, err := confChangeToMsg(cc)
+	if err != nil {
+		return err
+	}
+	return n.Step(ctx, msg)
+}
+
+// 消息、结果包装
+type msgWithResult struct {
+	m      pb.Message // 发送出去的信息
+	result chan error // 返回的结果
+}
+
+// 将raftpb.ConfChangeV1变成用于用于发送的pb.Message
+func confChangeToMsg(c pb.ConfChangeI) (pb.Message, error) {
+	typ, data, err := pb.MarshalConfChange(c)
+	if err != nil {
+		return pb.Message{}, err
+	}
+	return pb.Message{Type: pb.MsgProp, Entries: []pb.Entry{{Type: typ, Data: data}}}, nil // ok
 }

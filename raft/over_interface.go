@@ -11,7 +11,7 @@ type RaftNodeInterFace interface {
 	Tick()                                                           // 触发一次Tick,会触发Node心跳或者选举
 	Campaign(ctx context.Context) error                              // 主动触发一次选举
 	Propose(ctx context.Context, data []byte) error                  // 使用者的data通过日志广播到所有节点,返回nil,不代表成功,因为是异步的
-	ProposeConfChange(ctx context.Context, cc pb.ConfChangeI) error  // 集群配置变更
+	ProposeConfChange(ctx context.Context, cc pb.ConfChangeI) error  // 集群配置变更,[新增、删除节点]
 	Step(ctx context.Context, msg pb.Message) error                  // 处理msg的函数
 	Ready() <-chan Ready                                             // 已经commit,准备apply的数据通过这里通知
 	Advance()                                                        // ready消息处理完后,发送一个通知消息;当处理完这些消息后,必须调用,不然raft会堵塞在这里
@@ -59,15 +59,7 @@ type Ready struct {
 	MustSync bool
 }
 
-func (rd Ready) containsUpdates() bool {
-	return rd.SoftState != nil || !IsEmptyHardState(rd.HardState) ||
-		!IsEmptySnap(rd.Snapshot) || len(rd.Entries) > 0 ||
-		len(rd.CommittedEntries) > 0 || len(rd.Messages) > 0 || len(rd.ReadStates) != 0
-}
-
-// appliedCursor extracts from the Ready the highest index the client has
-// applied (once the Ready is confirmed via Advance). If no information is
-// contained in the Ready, returns zero.
+// appliedCursor 从Ready中提取客户端apply的最高索引 (一旦通过Advance确认Ready) 。
 func (rd Ready) appliedCursor() uint64 {
 	if n := len(rd.CommittedEntries); n > 0 {
 		return rd.CommittedEntries[n-1].Index

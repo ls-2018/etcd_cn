@@ -39,16 +39,15 @@ ETCDCTL_API=3 etcdctl alarm disarm
 //--auto-compaction-mode=periodic --auto-compaction-retention=12h 每1小时自动压缩并保留12小时窗口.
 👁etcd_backend/embed/config_test.go:TestAutoCompactionModeParse
 
-- 只保存一个小时的历史版本```etcd --auto-compaction-retention=1```
-- 只保留最近的3个版本```etcdctl compact 3```
-- 碎片整理```etcdctl defrag```
+- 只保存一个小时的历史版本`etcd --auto-compaction-retention=1`
+- 只保留最近的3个版本`etcdctl compact 3`
+- 碎片整理`etcdctl defrag`
 ```
 
 ### URL
 
 ```
 http://127.0.0.1:2379/members
-
 
 ```
 
@@ -206,7 +205,7 @@ http://127.0.0.1:2379/members
 -【Raft协议原理详解】https://zhuanlan.zhihu.com/p/91288179  
 -【Raft算法详解】https://zhuanlan.zhihu.com/p/32052223
 -【etcd技术内幕】一本关于etcd不错的书籍  
--【高可用分布式存储 etcd 的实现原理】https://draveness.me/etcd-introduction/  ```
+-【高可用分布式存储 etcd 的实现原理】https://draveness.me/etcd-introduction/  
 -【Raft 在 etcd 中的实现】https://blog.betacat.io/post/raft-implementation-in-etcd/  tickHeartbeart 会同时推进两个计数器  heartbeatElapsed 和 electionElapsed .
 -【etcd Raft库解析】https://www.codedump.info/post/20180922-etcd-raft/  
 -【etcd raft 设计与实现《一》】https://zhuanlan.zhihu.com/p/51063866    (1) heartbeatElapsed
@@ -226,12 +225,17 @@ http://127.0.0.1:2379/members
 -【etcd watch机制】http://liangjf.top/2019/12/31/110.etcd-watch%E6%9C%BA%E5%88%B6%E5%88%86%E6%9E%90/   
 -【ETCD 源码学习--Watch(server)】https://www.codeleading.com/article/15455457381/   
 -【etcdV3—watcher服务端源码解析】https://blog.csdn.net/stayfoolish_yj/article/details/104497233
+- https://www.jianshu.com/p/f0a63762ac13
+- https://www.zhihu.com/question/63995014/answer/2251115833
+- https://blog.csdn.net/weixin_42017400/article/details/123174473
+
+
+
 
 (2) electionElapsed
 
 当 electionElapsed 超时,发送 MsgCheckQuorum 给当前节点,当前节点收到消息之后,进行自我检查,判断是否能继续维持 Leader 状态,如果不能切换为Follower.同时如果节点正在进行 Leader 切换(切换其他节点为Leader),当 electionElapsed 超时,说明 Leader 节点转移超时,会终止切换.
 
-```
 
 ```
 curl    --------http--------->    gateway ------------> etcd grpc server 2379
@@ -249,8 +253,6 @@ curl    --------http--------->    gateway ------------> etcd grpc server 2379
 
 - github.com/soheilhy/cmux 可以在同一个listener上监听不同协议的请求
 -
-
-```
 
 
 ```
@@ -324,6 +326,7 @@ StartEtcd
     
 ```
 
+```
 快照 + storage + unstable 的区别
 compacted <--- compacted <--- applied <--- committed <--- stable <--- unstable
 WAL 日志 
@@ -377,3 +380,22 @@ type Record struct {
         ConfState *raftpb.ConfState
     }
 ```
+
+```
+raft commit->apply  的数据 封装在ready结构体里   <-r.Ready()
+    raftNode拿到该ready做一些处理,过滤出操作日志   publishEntries
+        上层应用拿到过滤后的,将其应用到kvstore
+```
+
+
+集群节点变更：
+1、先检查是否有待应用的变更
+2、将变更信息放入raft unstable 等待发送----->发送,等到apply
+3、apply 该变更
+- ap := <-s.r.apply()
+  - s.applyAll(&ep, &ap)
+    - s.applyEntries(ep, apply)
+      - s.apply(ents, &ep.confState)
+        - case raftpb.EntryConfChange:
+
+ 

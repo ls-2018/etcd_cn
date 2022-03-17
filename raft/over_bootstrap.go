@@ -39,7 +39,7 @@ func (rn *RawNode) Bootstrap(peers []Peer) error {
 	rn.raft.becomeFollower(1, None)
 	ents := make([]pb.Entry, len(peers))
 	for i, peer := range peers {
-		cc := pb.ConfChange{Type: pb.ConfChangeAddNode, NodeID: peer.ID, Context: peer.Context}
+		cc := pb.ConfChangeV1{Type: pb.ConfChangeAddNode, NodeID: peer.ID, Context: peer.Context}
 		data, err := cc.Marshal()
 		if err != nil {
 			return err
@@ -50,7 +50,7 @@ func (rn *RawNode) Bootstrap(peers []Peer) error {
 	rn.raft.raftLog.append(ents...) // 有多少个节点就记录多少个日志项
 	rn.raft.raftLog.committed = uint64(len(ents))
 	for _, peer := range peers {
-		rn.raft.applyConfChange(pb.ConfChange{NodeID: peer.ID, Type: pb.ConfChangeAddNode}.AsV2())
+		rn.raft.applyConfChange(pb.ConfChangeV1{NodeID: peer.ID, Type: pb.ConfChangeAddNode}.AsV2())
 	}
 	return nil
 }

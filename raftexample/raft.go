@@ -46,15 +46,15 @@ type commit struct {
 
 // 基于raft的k,v存储
 type raftNode struct {
-	proposeC           <-chan string            // 发送提议消息
-	triggerConfChangeC <-chan raftpb.ConfChange // 集群的配置变更 ,主动触发的
-	commitC            chan<- *commit           // 提交到上层应用的条目log (k,v)
-	errorC             chan<- error             // 返回raft回话的错误
-	id                 int                      // 本机ID
-	peers              []string                 // 每个节点的通信地址
-	join               bool                     // 是否加入一个存在的集群
-	waldir             string                   // wal存储路径
-	snapdir            string                   // 存储快照的路径
+	proposeC           <-chan string              // 发送提议消息
+	triggerConfChangeC <-chan raftpb.ConfChangeV1 // 集群的配置变更 ,主动触发的
+	commitC            chan<- *commit             // 提交到上层应用的条目log (k,v)
+	errorC             chan<- error               // 返回raft回话的错误
+	id                 int                        // 本机ID
+	peers              []string                   // 每个节点的通信地址
+	join               bool                       // 是否加入一个存在的集群
+	waldir             string                     // wal存储路径
+	snapdir            string                     // 存储快照的路径
 	getSnapshot        func() ([]byte, error)
 	confState          raftpb.ConfState
 	snapshotIndex      uint64
@@ -248,7 +248,7 @@ func (rc *raftNode) ReportSnapshot(id uint64, status raft.SnapshotStatus) {}
 // 上层的应用通过这几个channel就能和raftNode进行交互
 func newRaftNode(id int, peers []string, join bool, getSnapshot func() ([]byte, error),
 	proposeC <-chan string,
-	triggerConfChangeC <-chan raftpb.ConfChange) (<-chan *commit, <-chan error, <-chan *snap.Snapshotter,
+	triggerConfChangeC <-chan raftpb.ConfChangeV1) (<-chan *commit, <-chan error, <-chan *snap.Snapshotter,
 ) {
 	// channel,主要传输Entry记录
 	// raftNode会将etcd-raft模块返回的待apply Entry封装在 Ready实例中然后 写入commitC通道,
@@ -472,7 +472,7 @@ func (rc *raftNode) publishEntries(ents []raftpb.Entry) (<-chan struct{}, bool) 
 			s := string(ents[i].Data)
 			data = append(data, s)
 		case raftpb.EntryConfChange:
-			var cc raftpb.ConfChange
+			var cc raftpb.ConfChangeV1
 			cc.Unmarshal(ents[i].Data)
 			rc.confState = *rc.node.ApplyConfChange(cc) // 变更后的
 			switch cc.Type {

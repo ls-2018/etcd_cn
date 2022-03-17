@@ -14,7 +14,10 @@
 
 package raft
 
-import pb "github.com/ls-2018/etcd_cn/raft/raftpb"
+import (
+	pb "github.com/ls-2018/etcd_cn/raft/raftpb"
+	"github.com/ls-2018/etcd_cn/raft/tracker"
+)
 
 // ReadState provides state for read only query.
 // It's caller's responsibility to call ReadIndex first before getting
@@ -145,4 +148,23 @@ func (ro *readOnly) lastPendingRequestCtx() string {
 		return ""
 	}
 	return ro.readIndexQueue[len(ro.readIndexQueue)-1]
+}
+
+// bcastHeartbeat 发送RPC，没有日志给所有对等体。
+func (r *raft) bcastHeartbeat() {
+	lastCtx := r.readOnly.lastPendingRequestCtx()
+	if len(lastCtx) == 0 {
+		r.bcastHeartbeatWithCtx(nil)
+	} else {
+		r.bcastHeartbeatWithCtx([]byte(lastCtx))
+	}
+}
+
+func (r *raft) bcastHeartbeatWithCtx(ctx []byte) {
+	r.prs.Visit(func(id uint64, _ *tracker.Progress) {
+		if id == r.id {
+			return
+		}
+		r.sendHeartbeat(id, ctx)
+	})
 }

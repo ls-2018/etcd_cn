@@ -11,7 +11,7 @@ type A struct {
 	ID      uint64
 }
 
-func (m *ConfChange) Marshal() (dAtA []byte, err error) {
+func (m *ConfChangeV1) Marshal() (dAtA []byte, err error) {
 	a := A{
 		Type:    m.Type,
 		NodeID:  m.NodeID,
@@ -116,9 +116,8 @@ func (m *ConfState) Unmarshal(dAtA []byte) error {
 	return json.Unmarshal(dAtA, m)
 }
 
-func (m *ConfChange) Unmarshal(dAtA []byte) error {
+func (m *ConfChangeV1) Unmarshal(dAtA []byte) error {
 	a := A{}
-
 	err := json.Unmarshal(dAtA, &a)
 	m.Context = []byte(a.Context)
 	m.Type = a.Type

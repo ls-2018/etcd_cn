@@ -330,32 +330,32 @@ func TestClusterValidateConfigurationChange(t *testing.T) {
 	}
 
 	tests := []struct {
-		cc   raftpb.ConfChange
+		cc   raftpb.ConfChangeV1
 		werr error
 	}{
 		{
-			raftpb.ConfChange{
+			raftpb.ConfChangeV1{
 				Type:   raftpb.ConfChangeRemoveNode,
 				NodeID: 3,
 			},
 			nil,
 		},
 		{
-			raftpb.ConfChange{
+			raftpb.ConfChangeV1{
 				Type:   raftpb.ConfChangeAddNode,
 				NodeID: 4,
 			},
 			ErrIDRemoved,
 		},
 		{
-			raftpb.ConfChange{
+			raftpb.ConfChangeV1{
 				Type:   raftpb.ConfChangeRemoveNode,
 				NodeID: 4,
 			},
 			ErrIDRemoved,
 		},
 		{
-			raftpb.ConfChange{
+			raftpb.ConfChangeV1{
 				Type:    raftpb.ConfChangeAddNode,
 				NodeID:  1,
 				Context: ctx1,
@@ -363,7 +363,7 @@ func TestClusterValidateConfigurationChange(t *testing.T) {
 			ErrIDExists,
 		},
 		{
-			raftpb.ConfChange{
+			raftpb.ConfChangeV1{
 				Type:    raftpb.ConfChangeAddNode,
 				NodeID:  5,
 				Context: ctx,
@@ -371,14 +371,14 @@ func TestClusterValidateConfigurationChange(t *testing.T) {
 			ErrPeerURLexists,
 		},
 		{
-			raftpb.ConfChange{
+			raftpb.ConfChangeV1{
 				Type:   raftpb.ConfChangeRemoveNode,
 				NodeID: 5,
 			},
 			ErrIDNotFound,
 		},
 		{
-			raftpb.ConfChange{
+			raftpb.ConfChangeV1{
 				Type:    raftpb.ConfChangeAddNode,
 				NodeID:  5,
 				Context: ctx5,
@@ -386,7 +386,7 @@ func TestClusterValidateConfigurationChange(t *testing.T) {
 			nil,
 		},
 		{
-			raftpb.ConfChange{
+			raftpb.ConfChangeV1{
 				Type:    raftpb.ConfChangeUpdateNode,
 				NodeID:  5,
 				Context: ctx,
@@ -395,7 +395,7 @@ func TestClusterValidateConfigurationChange(t *testing.T) {
 		},
 		// try to change the peer url of 2 to the peer url of 3
 		{
-			raftpb.ConfChange{
+			raftpb.ConfChangeV1{
 				Type:    raftpb.ConfChangeUpdateNode,
 				NodeID:  2,
 				Context: ctx2to3,
@@ -403,7 +403,7 @@ func TestClusterValidateConfigurationChange(t *testing.T) {
 			ErrPeerURLexists,
 		},
 		{
-			raftpb.ConfChange{
+			raftpb.ConfChangeV1{
 				Type:    raftpb.ConfChangeUpdateNode,
 				NodeID:  2,
 				Context: ctx2to5,
@@ -411,7 +411,7 @@ func TestClusterValidateConfigurationChange(t *testing.T) {
 			nil,
 		},
 		{
-			raftpb.ConfChange{
+			raftpb.ConfChangeV1{
 				Type:    raftpb.ConfChangeAddNode,
 				NodeID:  3,
 				Context: ctx3,
@@ -419,7 +419,7 @@ func TestClusterValidateConfigurationChange(t *testing.T) {
 			ErrMemberNotLearner,
 		},
 		{
-			raftpb.ConfChange{
+			raftpb.ConfChangeV1{
 				Type:    raftpb.ConfChangeAddNode,
 				NodeID:  6,
 				Context: ctx6,

@@ -339,7 +339,7 @@ func getIDs(lg *zap.Logger, snap *raftpb.Snapshot, ents []raftpb.Entry) []uint64
 		if e.Type != raftpb.EntryConfChange {
 			continue
 		}
-		var cc raftpb.ConfChange
+		var cc raftpb.ConfChangeV1
 		pbutil.MustUnmarshal(&cc, e.Data)
 		switch cc.Type {
 		case raftpb.ConfChangeAddLearnerNode:
@@ -389,7 +389,7 @@ func createConfigChangeEnts(lg *zap.Logger, ids []uint64, self uint64, term, ind
 		if err != nil {
 			lg.Panic("failed to marshal member", zap.Error(err))
 		}
-		cc := &raftpb.ConfChange{
+		cc := &raftpb.ConfChangeV1{
 			Type:    raftpb.ConfChangeAddNode,
 			NodeID:  self,
 			Context: ctx,
@@ -408,7 +408,7 @@ func createConfigChangeEnts(lg *zap.Logger, ids []uint64, self uint64, term, ind
 		if id == self {
 			continue
 		}
-		cc := &raftpb.ConfChange{
+		cc := &raftpb.ConfChangeV1{
 			Type:   raftpb.ConfChangeRemoveNode,
 			NodeID: id,
 		}

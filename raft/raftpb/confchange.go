@@ -16,49 +16,18 @@ package raftpb
 
 import (
 	"fmt"
-	"strings"
-
 	"github.com/gogo/protobuf/proto"
+	"strings"
 )
 
 // ConfChangeI 配置变更
 type ConfChangeI interface {
 	AsV2() ConfChangeV2
-	AsV1() (ConfChange, bool)
+	AsV1() (ConfChangeV1, bool)
 }
 
-func MarshalConfChange(c ConfChangeI) (EntryType, []byte, error) {
-	var typ EntryType
-	var ccdata []byte
-	var err error
-	if ccv1, ok := c.AsV1(); ok {
-		typ = EntryConfChange
-		ccdata, err = ccv1.Marshal()
-	} else {
-		ccv2 := c.AsV2()
-		typ = EntryConfChangeV2
-		ccdata, err = ccv2.Marshal()
-	}
-	return typ, ccdata, err
-}
-
-func (c ConfChange) AsV2() ConfChangeV2 {
-	return ConfChangeV2{
-		Changes: []ConfChangeSingle{{
-			Type:   c.Type,
-			NodeID: c.NodeID,
-		}},
-		Context: c.Context,
-	}
-}
-
-func (c ConfChange) AsV1() (ConfChange, bool) {
-	return c, true
-}
-
-func (c ConfChangeV2) AsV2() ConfChangeV2 { return c }
-
-func (c ConfChangeV2) AsV1() (ConfChange, bool) { return ConfChange{}, false }
+var _ ConfChangeI = ConfChangeV1{}
+var _ ConfChangeI = ConfChangeV2{}
 
 // EnterJoint returns two bools. The second bool is true if and only if this
 // config change will use Joint Consensus, which is the case if it contains more
@@ -98,7 +67,42 @@ func (c ConfChangeV2) LeaveJoint() bool {
 	return proto.Equal(&c, &ConfChangeV2{})
 }
 
-// ConfChangesToString is the inverse to ConfChangesFromString.
+// ------------------------------ over ----------------------------------------
+
+func MarshalConfChange(c ConfChangeI) (EntryType, []byte, error) {
+	var typ EntryType
+	var ccdata []byte
+	var err error
+	if ccv1, ok := c.AsV1(); ok {
+		typ = EntryConfChange
+		ccdata, err = ccv1.Marshal()
+	} else {
+		ccv2 := c.AsV2()
+		typ = EntryConfChangeV2
+		ccdata, err = ccv2.Marshal()
+	}
+	return typ, ccdata, err
+}
+
+func (c ConfChangeV1) AsV2() ConfChangeV2 {
+	return ConfChangeV2{
+		Changes: []ConfChangeSingle{{
+			Type:   c.Type,
+			NodeID: c.NodeID,
+		}},
+		Context: c.Context,
+	}
+}
+
+func (c ConfChangeV1) AsV1() (ConfChangeV1, bool) {
+	return c, true
+}
+
+func (c ConfChangeV2) AsV2() ConfChangeV2 { return c }
+
+func (c ConfChangeV2) AsV1() (ConfChangeV1, bool) { return ConfChangeV1{}, false }
+
+// ConfChangesToString 与ConfChangesFromString正好相反。
 func ConfChangesToString(ccs []ConfChangeSingle) string {
 	var buf strings.Builder
 	for i, cc := range ccs {
@@ -107,13 +111,13 @@ func ConfChangesToString(ccs []ConfChangeSingle) string {
 		}
 		switch cc.Type {
 		case ConfChangeAddNode:
-			buf.WriteByte('v')
+			buf.WriteString("add")
 		case ConfChangeAddLearnerNode:
-			buf.WriteByte('l')
+			buf.WriteString("learner")
 		case ConfChangeRemoveNode:
-			buf.WriteByte('r')
+			buf.WriteString("remove")
 		case ConfChangeUpdateNode:
-			buf.WriteByte('u')
+			buf.WriteString("update")
 		default:
 			buf.WriteString("unknown")
 		}
