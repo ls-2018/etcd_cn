@@ -16,8 +16,9 @@ package raftpb
 
 import (
 	"fmt"
-	"github.com/gogo/protobuf/proto"
 	"strings"
+
+	"github.com/gogo/protobuf/proto"
 )
 
 // ConfChangeI 配置变更
@@ -26,8 +27,10 @@ type ConfChangeI interface {
 	AsV1() (ConfChangeV1, bool)
 }
 
-var _ ConfChangeI = ConfChangeV1{}
-var _ ConfChangeI = ConfChangeV2{}
+var (
+	_ ConfChangeI = ConfChangeV1{}
+	_ ConfChangeI = ConfChangeV2{}
+)
 
 // EnterJoint returns two bools. The second bool is true if and only if this
 // config change will use Joint Consensus, which is the case if it contains more

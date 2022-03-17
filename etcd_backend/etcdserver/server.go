@@ -2016,7 +2016,7 @@ func (s *EtcdServer) sendMergedSnap(merged snap.Message) {
 
 // apply 从raft 获取到committed ---> applying
 func (s *EtcdServer) apply(es []raftpb.Entry, confState *raftpb.ConfState) (appliedt uint64, appliedi uint64, shouldStop bool) {
-	//confState 当前快照中的 集群配置
+	// confState 当前快照中的 集群配置
 	s.lg.Debug("开始应用日志", zap.Int("num-entries", len(es)))
 	for i := range es {
 		e := es[i]

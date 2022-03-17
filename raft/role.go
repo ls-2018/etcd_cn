@@ -209,9 +209,9 @@ func stepLeader(r *raft, m pb.Message) error {
 				cc = ccc
 			}
 			if cc != nil {
-				alreadyPending := r.pendingConfIndex > r.raftLog.applied// 是否已经apply了该配置变更
-				alreadyJoint := len(r.prs.Config.Voters[1]) > 0// 判断第二个MajorityConfig:map[uint64]struct{} 有没有数据
-				wantsLeaveJoint := len(cc.AsV2().Changes) == 0 // 节点个数
+				alreadyPending := r.pendingConfIndex > r.raftLog.applied // 是否已经apply了该配置变更
+				alreadyJoint := len(r.prs.Config.Voters[1]) > 0          // 判断第二个MajorityConfig:map[uint64]struct{} 有没有数据
+				wantsLeaveJoint := len(cc.AsV2().Changes) == 0           // 节点个数
 				// 首先切换到过渡形态，我们称之为联合共识;
 				// 一旦提交了联合共识，系统就会过渡到新的配置。联合共识结合了新旧配置。
 				var refused string
@@ -224,7 +224,7 @@ func stepLeader(r *raft, m pb.Message) error {
 				}
 				// true, true
 				// false false
-				if refused != "" {// 忽略配置变更
+				if refused != "" { // 忽略配置变更
 					r.logger.Infof("%x 忽略配置变更 %v  %s: %s", r.id, cc, r.prs.Config, refused)
 					m.Entries[i] = pb.Entry{Type: pb.EntryNormal}
 				} else {

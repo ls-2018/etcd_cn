@@ -277,10 +277,12 @@ func (c *RaftCluster) Recover(onSet func(*zap.Logger, *semver.Version)) {
 // ValidateConfigurationChange TODO 验证接受 提议的ConfChange 并确保它仍然有效。
 func (c *RaftCluster) ValidateConfigurationChange(cc raftpb.ConfChangeV1) error {
 	members, removed := membersFromStore(c.lg, c.v2store) // 从v2store中获取所有成员
+	// members 包括leader、follower、learner、候选者
 	id := types.ID(cc.NodeID)
 	if removed[id] { // 不能在移除的节点中
 		return ErrIDRemoved
 	}
+	_ = cc.Context // ConfigChangeContext Member 的序列化数据
 	switch cc.Type {
 	case raftpb.ConfChangeAddNode, raftpb.ConfChangeAddLearnerNode:
 		confChangeContext := new(ConfigChangeContext)
@@ -288,14 +290,14 @@ func (c *RaftCluster) ValidateConfigurationChange(cc raftpb.ConfChangeV1) error 
 			c.lg.Panic("发序列化失败confChangeContext", zap.Error(err))
 		}
 
-		if confChangeContext.IsPromote { // promoting a learner member to voting member
+		if confChangeContext.IsPromote { // 将一个learner提升为投票节点, 那他应该是learner
 			if members[id] == nil {
 				return ErrIDNotFound
 			}
 			if !members[id].IsLearner {
 				return ErrMemberNotLearner
 			}
-		} else { // adding a new member
+		} else { // 添加新节点
 			if members[id] != nil {
 				return ErrIDExists
 			}
@@ -306,13 +308,14 @@ func (c *RaftCluster) ValidateConfigurationChange(cc raftpb.ConfChangeV1) error 
 					urls[u] = true
 				}
 			}
+			// 检查peer
 			for _, u := range confChangeContext.Member.PeerURLs {
 				if urls[u] {
 					return ErrPeerURLexists
 				}
 			}
 
-			if confChangeContext.Member.IsLearner { // the new member is a learner
+			if confChangeContext.Member.IsLearner { // 新加入的节点时learner
 				numLearners := 0
 				for _, m := range members {
 					if m.IsLearner {

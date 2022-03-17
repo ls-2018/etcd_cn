@@ -17,13 +17,14 @@ package raft
 import (
 	"errors"
 	"fmt"
-	"github.com/ls-2018/etcd_cn/raft/quorum"
 	"math"
 	"math/rand"
 	"sort"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/ls-2018/etcd_cn/raft/quorum"
 
 	"github.com/ls-2018/etcd_cn/raft/confchange"
 	pb "github.com/ls-2018/etcd_cn/raft/raftpb"
@@ -566,7 +567,7 @@ func (r *raft) reduceUncommittedSize(ents []pb.Entry) {
 	}
 }
 
-//判断未提交的日志条目是不是超过限制,是的话拒绝并返回失败
+// 判断未提交的日志条目是不是超过限制,是的话拒绝并返回失败
 func (r *raft) increaseUncommittedSize(ents []pb.Entry) bool {
 	var s uint64
 	for _, e := range ents {

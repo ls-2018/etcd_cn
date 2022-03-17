@@ -619,7 +619,7 @@ func (s *store) internalCreate(nodePath string, dir bool, value string, unique, 
 
 // InternalGet 获取给定nodePath的节点。
 func (s *store) internalGet(nodePath string) (*node, *v2error.Error) {
-	nodePath = path.Clean(path.Join("/", nodePath))// /0/members
+	nodePath = path.Clean(path.Join("/", nodePath)) // /0/members
 
 	walkFunc := func(parent *node, name string) (*node, *v2error.Error) {
 		if !parent.IsDir() {
