@@ -42,10 +42,8 @@ func MustUnmarshal(um Unmarshaler, data []byte) {
 
 func MaybeUnmarshal(um Unmarshaler, data []byte) bool {
 	if err := um.Unmarshal(data); err != nil {
-		fmt.Println(false, string(data))
 		return false
 	}
-	fmt.Println(true, string(data))
 	return true
 }
 

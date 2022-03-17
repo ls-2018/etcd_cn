@@ -28,10 +28,8 @@ import (
 
 // RaftAttributes  与raft相关的etcd成员属性
 type RaftAttributes struct {
-	// PeerURLs是raft集群中的对等体列表.
-	PeerURLs []string `json:"peerURLs"`
-	// IsLearner表示该成员是否是raft Learner.
-	IsLearner bool `json:"isLearner,omitempty"`
+	PeerURLs  []string `json:"peerURLs"`            // 是raft集群中的对等体列表.
+	IsLearner bool     `json:"isLearner,omitempty"` // 表示该成员是否是raft Learner.
 }
 
 // Attributes 代表一个etcd成员的所有非raft的相关属性.

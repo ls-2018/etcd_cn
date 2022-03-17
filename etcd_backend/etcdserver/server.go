@@ -199,86 +199,63 @@ type Server interface {
 
 // EtcdServer 整个etcd节点的功能的入口,包含etcd节点运行过程中需要的大部分成员.
 type EtcdServer struct {
-	inflightSnapshots int64  // 当前正在发送的snapshot数量
-	appliedIndex      uint64 // 已经apply到状态机的日志index
-	committedIndex    uint64 // 已经提交的日志index,也就是leader确认多数成员已经同步了的日志index
-	term              uint64 // must use atomic operations to access; keep 64-bit aligned.
-	lead              uint64 // must use atomic operations to access; keep 64-bit aligned.
-
-	consistIndex cindex.ConsistentIndexer // 已经持久化到kvstore的index
-	r            raftNode                 // 重要的数据结果,存储了raft的状态机信息.
-
-	readych chan struct{}       // 启动成功并注册了自己到cluster,关闭这个通道.
-	Cfg     config.ServerConfig // 配置项
-
-	lgMu *sync.RWMutex
-	lg   *zap.Logger
-
-	w wait.Wait // 为了同步调用情况下让调用者阻塞等待调用结果的.
-
-	readMu sync.RWMutex // 下面3个结果都是为了实现linearizable 读使用的
-
-	readwaitc    chan struct{}
-	readNotifier *notifier
-
-	stop chan struct{} // 停止通道
-
-	stopping chan struct{} // 停止时关闭这个通道
-
-	done chan struct{} // etcd的start函数中的循环退出,会关闭这个通道
-
-	leaderChanged   chan struct{} // leader变换后 通知linearizable read loop   drop掉旧的读请求
-	leaderChangedMu sync.RWMutex
-
-	errorc chan error // 错误通道,用以传入不可恢复的错误,关闭raft状态机.
-
-	id         types.ID              // etcd实例id
-	attributes membership.Attributes // etcd实例属性
-
-	cluster *membership.RaftCluster // 集群信息
-
-	v2store     v2store.Store     // v2的kv存储
-	snapshotter *snap.Snapshotter // 用以snapshot
-
-	applyV2 ApplierV2 // v2的applier,用于将commited index apply到raft状态机
-
-	applyV3         applierV3         // v3的applier,用于将commited index apply到raft状态机
-	applyV3Base     applierV3         // 剥去了鉴权和配额功能的applyV3
-	applyV3Internal applierV3Internal // v3的内部applier
-	applyWait       wait.WaitTime     // apply的等待队列,等待某个index的日志apply完成
-
-	kv         mvcc.WatchableKV // v3用的kv存储
-	lessor     lease.Lessor     // v3用,作用是实现过期时间
-	bemu       sync.Mutex       // 守护后端存储的锁,改变后端存储和获取后端存储是使用
-	be         backend.Backend  // 后端存储
-	beHooks    *backendHooks
-	authStore  auth.AuthStore      // 存储鉴权数据
-	alarmStore *v3alarm.AlarmStore // 存储告警数据
-
-	stats      *stats.ServerStats    // 当前节点状态
-	lstats     *stats.LeaderStats    // leader状态
-	SyncTicker *time.Ticker          // v2用,实现ttl数据过期的
-	compactor  v3compactor.Compactor // 压缩数据的周期任务
-	peerRt     http.RoundTripper     // 用于发送远程请求
-	reqIDGen   *idutil.Generator     // 用于生成请求id
-
+	inflightSnapshots int64                    // 当前正在发送的snapshot数量
+	appliedIndex      uint64                   // 已经apply到状态机的日志index
+	committedIndex    uint64                   // 已经提交的日志index,也就是leader确认多数成员已经同步了的日志index
+	term              uint64                   // must use atomic operations to access; keep 64-bit aligned.
+	lead              uint64                   // must use atomic operations to access; keep 64-bit aligned.
+	consistIndex      cindex.ConsistentIndexer // 已经持久化到kvstore的index
+	r                 raftNode                 // 重要的数据结果,存储了raft的状态机信息.
+	readych           chan struct{}            // 启动成功并注册了自己到cluster,关闭这个通道.
+	Cfg               config.ServerConfig      // 配置项
+	lgMu              *sync.RWMutex
+	lg                *zap.Logger
+	w                 wait.Wait    // 为了同步调用情况下让调用者阻塞等待调用结果的.
+	readMu            sync.RWMutex // 下面3个结果都是为了实现linearizable 读使用的
+	readwaitc         chan struct{}
+	readNotifier      *notifier
+	stop              chan struct{} // 停止通道
+	stopping          chan struct{} // 停止时关闭这个通道
+	done              chan struct{} // etcd的start函数中的循环退出,会关闭这个通道
+	leaderChanged     chan struct{} // leader变换后 通知linearizable read loop   drop掉旧的读请求
+	leaderChangedMu   sync.RWMutex
+	errorc            chan error              // 错误通道,用以传入不可恢复的错误,关闭raft状态机.
+	id                types.ID                // etcd实例id
+	attributes        membership.Attributes   // etcd实例属性
+	cluster           *membership.RaftCluster // 集群信息
+	v2store           v2store.Store           // v2的kv存储
+	snapshotter       *snap.Snapshotter       // 用以snapshot
+	applyV2           ApplierV2               // v2的applier,用于将commited index apply到raft状态机
+	applyV3           applierV3               // v3的applier,用于将commited index apply到raft状态机
+	applyV3Base       applierV3               // 剥去了鉴权和配额功能的applyV3
+	applyV3Internal   applierV3Internal       // v3的内部applier
+	applyWait         wait.WaitTime           // apply的等待队列,等待某个index的日志apply完成
+	kv                mvcc.WatchableKV        // v3用的kv存储
+	lessor            lease.Lessor            // v3用,作用是实现过期时间
+	bemu              sync.Mutex              // 守护后端存储的锁,改变后端存储和获取后端存储是使用
+	be                backend.Backend         // 后端存储
+	beHooks           *backendHooks
+	authStore         auth.AuthStore        // 存储鉴权数据
+	alarmStore        *v3alarm.AlarmStore   // 存储告警数据
+	stats             *stats.ServerStats    // 当前节点状态
+	lstats            *stats.LeaderStats    // leader状态
+	SyncTicker        *time.Ticker          // v2用,实现ttl数据过期的
+	compactor         v3compactor.Compactor // 压缩数据的周期任务
+	peerRt            http.RoundTripper     // 用于发送远程请求
+	reqIDGen          *idutil.Generator     // 用于生成请求id
 	// wgMu blocks concurrent waitgroup mutation while etcd stopping
 	wgMu sync.RWMutex
 	// wg is used to wait for the goroutines that depends on the etcd state
 	// to exit when stopping the etcd.
 	wg sync.WaitGroup
-
 	// ctx is used for etcd-initiated requests that may need to be canceled
 	// on etcd etcd shutdown.
-	ctx    context.Context
-	cancel context.CancelFunc
-
-	leadTimeMu      sync.RWMutex
-	leadElectedTime time.Time
-
+	ctx                 context.Context
+	cancel              context.CancelFunc
+	leadTimeMu          sync.RWMutex
+	leadElectedTime     time.Time
 	firstCommitInTermMu sync.RWMutex
 	firstCommitInTermC  chan struct{}
-
 	*AccessController
 }
 
@@ -1207,16 +1184,14 @@ func (s *EtcdServer) applySnapshot(ep *etcdProgress, apply *apply) {
 	}
 
 	lg := s.Logger()
-	lg.Info(
-		"applying snapshot",
+	lg.Info("开始应用快照",
 		zap.Uint64("current-snapshot-index", ep.snapi),
 		zap.Uint64("current-applied-index", ep.appliedi),
 		zap.Uint64("incoming-leader-snapshot-index", apply.snapshot.Metadata.Index),
 		zap.Uint64("incoming-leader-snapshot-term", apply.snapshot.Metadata.Term),
 	)
 	defer func() {
-		lg.Info(
-			"applied snapshot",
+		lg.Info("已应用快照",
 			zap.Uint64("current-snapshot-index", ep.snapi),
 			zap.Uint64("current-applied-index", ep.appliedi),
 			zap.Uint64("incoming-leader-snapshot-index", apply.snapshot.Metadata.Index),
@@ -1225,8 +1200,7 @@ func (s *EtcdServer) applySnapshot(ep *etcdProgress, apply *apply) {
 	}()
 
 	if apply.snapshot.Metadata.Index <= ep.appliedi {
-		lg.Panic(
-			"unexpected leader snapshot from outdated index",
+		lg.Panic("意外得到 来自过时索引的领导者快照",
 			zap.Uint64("current-snapshot-index", ep.snapi),
 			zap.Uint64("current-applied-index", ep.appliedi),
 			zap.Uint64("incoming-leader-snapshot-index", apply.snapshot.Metadata.Index),
@@ -1234,7 +1208,7 @@ func (s *EtcdServer) applySnapshot(ep *etcdProgress, apply *apply) {
 		)
 	}
 
-	// wait for raftNode to persist snapshot onto the disk
+	// 等待raftnode持久化快找到硬盘上
 	<-apply.notifyc
 
 	newbe, err := openSnapshotBackend(s.Cfg, s.snapshotter, apply.snapshot, s.beHooks)
@@ -1343,8 +1317,7 @@ func (s *EtcdServer) applyEntries(ep *etcdProgress, apply *apply) {
 	firsti := apply.entries[0].Index
 	if firsti > ep.appliedi+1 {
 		lg := s.Logger()
-		lg.Panic(
-			"unexpected committed entry index",
+		lg.Panic("意外的 已提交索引",
 			zap.Uint64("current-applied-index", ep.appliedi),
 			zap.Uint64("first-committed-entry-index", firsti),
 		)
@@ -1368,8 +1341,7 @@ func (s *EtcdServer) triggerSnapshot(ep *etcdProgress) {
 	}
 
 	lg := s.Logger()
-	lg.Info(
-		"triggering snapshot",
+	lg.Info("触发打快照",
 		zap.String("local-member-id", s.ID().String()),
 		zap.Uint64("local-member-applied-index", ep.appliedi),
 		zap.Uint64("local-member-snapshot-index", ep.snapi),
@@ -2042,20 +2014,13 @@ func (s *EtcdServer) sendMergedSnap(merged snap.Message) {
 	})
 }
 
-// apply takes entries received from Raft (after it has been committed) and
-// applies them to the current state of the EtcdServer.
-// The given entries should not be empty.
-func (s *EtcdServer) apply(
-	es []raftpb.Entry,
-	confState *raftpb.ConfState,
-) (appliedt uint64, appliedi uint64, shouldStop bool) {
-	s.lg.Debug("Applying entries", zap.Int("num-entries", len(es)))
+// apply 从raft 获取到committed ---> applying
+func (s *EtcdServer) apply(es []raftpb.Entry, confState *raftpb.ConfState) (appliedt uint64, appliedi uint64, shouldStop bool) {
+	//confState 当前快照中的 集群配置
+	s.lg.Debug("开始应用日志", zap.Int("num-entries", len(es)))
 	for i := range es {
 		e := es[i]
-		s.lg.Debug("Applying entry",
-			zap.Uint64("index", e.Index),
-			zap.Uint64("term", e.Term),
-			zap.Stringer("type", e.Type))
+		s.lg.Debug("开始应用日志", zap.Uint64("index", e.Index), zap.Uint64("term", e.Term), zap.Stringer("type", e.Type))
 		switch e.Type {
 		case raftpb.EntryNormal:
 			s.applyEntryNormal(&e)
@@ -2081,7 +2046,7 @@ func (s *EtcdServer) apply(
 		default:
 			lg := s.Logger()
 			lg.Panic(
-				"unknown entry type;必须是either EntryNormal or EntryConfChange",
+				"未知的日志类型;必须是 EntryNormal 或 EntryConfChange",
 				zap.String("type", e.Type.String()),
 			)
 		}
@@ -2192,8 +2157,7 @@ func (s *EtcdServer) notifyAboutFirstCommitInTerm() {
 	close(notifierToClose)
 }
 
-// applyConfChange applies a ConfChange to the etcd. It is only
-// invoked with a ConfChange that has already passed through Raft
+// applyConfChange 将一个confChange作用到当前raft,它必须已经committed
 func (s *EtcdServer) applyConfChange(cc raftpb.ConfChangeV1, confState *raftpb.ConfState, shouldApplyV3 membership.ShouldApplyV3) (bool, error) {
 	if err := s.cluster.ValidateConfigurationChange(cc); err != nil {
 		cc.NodeID = raft.None
@@ -2208,7 +2172,7 @@ func (s *EtcdServer) applyConfChange(cc raftpb.ConfChangeV1, confState *raftpb.C
 	case raftpb.ConfChangeAddNode, raftpb.ConfChangeAddLearnerNode:
 		confChangeContext := new(membership.ConfigChangeContext)
 		if err := json.Unmarshal(cc.Context, confChangeContext); err != nil {
-			lg.Panic("failed to unmarshal member", zap.Error(err))
+			lg.Panic("发序列化成员失败", zap.Error(err))
 		}
 		if cc.NodeID != uint64(confChangeContext.Member.ID) {
 			lg.Panic(

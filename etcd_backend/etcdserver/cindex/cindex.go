@@ -27,20 +27,16 @@ type Backend interface {
 	BatchTx() backend.BatchTx
 }
 
-// ConsistentIndexer 是一个接口,它封装了一致性索引的Get/Set/Save方法.
+// ConsistentIndexer 用于处理boltdb和raftlog之间的幂等性。
 type ConsistentIndexer interface {
-	// ConsistentIndex 返回当前执行条目的一致索引.
-	ConsistentIndex() uint64
-
-	// SetConsistentIndex 设置当前执行条目的一致索引.
-	SetConsistentIndex(v uint64, term uint64)
-
-	// UnsafeSave 必须在持有tx上的锁的情况下被调用. 它将一致索引保存到底层稳定存储中.
-	UnsafeSave(tx backend.BatchTx)
-
-	// SetBackend 为ConsistentIndexer设置可用的backend.BatchTx.
-	SetBackend(be Backend)
+	ConsistentIndex() uint64                  //返回当前执行条目的一致索引
+	SetConsistentIndex(v uint64, term uint64) // 设置当前执行条目的一致索引
+	UnsafeSave(tx backend.BatchTx)            // 必须在持有tx上的锁的情况下被调用. 它将一致索引保存到底层稳定存储中.
+	SetBackend(be Backend)                    //为ConsistentIndexer设置可用的backend.BatchTx.
 }
+// 当blotdb用作状态机的时候，wal和blotdb作为两个不同的实体，很有可能存在不一致的情况。
+// 所以etcd在blotdb中存储一条记录consistent-index，来代表已经apply到blot-db上成功的log index，
+// 这样当根据wal恢复blot-db的时候，就可以判断log index是不是已经被apply过。
 
 // consistentIndex implements the ConsistentIndexer interface.
 type consistentIndex struct {

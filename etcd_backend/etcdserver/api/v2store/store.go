@@ -110,10 +110,9 @@ func (s *store) Index() uint64 {
 	return s.CurrentIndex
 }
 
-// Get returns a get event.
-// If recursive is true, it will return all the content under the node path.
-// If sorted is true, it will sort the content by keys.
+// Get 返回一个get事件。如果递归为真，它将返回节点路径下的所有内容。如果sorted为真，它将按键对内容进行排序。
 func (s *store) Get(nodePath string, recursive, sorted bool) (*Event, error) {
+	// /0/members
 	var err *v2error.Error
 
 	s.worldLock.RLock()
@@ -441,7 +440,7 @@ func (s *store) Watch(key string, recursive, stream bool, sinceIndex uint64) (Wa
 	return w, nil
 }
 
-// walk walks all the nodePath and apply the walkFunc on each directory
+// walk 遍历所有nodePath并在每个目录上应用walkFunc
 func (s *store) walk(nodePath string, walkFunc func(prev *node, component string) (*node, *v2error.Error)) (*node, *v2error.Error) {
 	components := strings.Split(nodePath, "/")
 
@@ -449,7 +448,7 @@ func (s *store) walk(nodePath string, walkFunc func(prev *node, component string
 	var err *v2error.Error
 
 	for i := 1; i < len(components); i++ {
-		if len(components[i]) == 0 { // ignore empty string
+		if len(components[i]) == 0 { // 忽略空字符
 			return curr, nil
 		}
 
@@ -618,9 +617,9 @@ func (s *store) internalCreate(nodePath string, dir bool, value string, unique, 
 	return e, nil
 }
 
-// InternalGet gets the node of the given nodePath.
+// InternalGet 获取给定nodePath的节点。
 func (s *store) internalGet(nodePath string) (*node, *v2error.Error) {
-	nodePath = path.Clean(path.Join("/", nodePath))
+	nodePath = path.Clean(path.Join("/", nodePath))// /0/members
 
 	walkFunc := func(parent *node, name string) (*node, *v2error.Error) {
 		if !parent.IsDir() {

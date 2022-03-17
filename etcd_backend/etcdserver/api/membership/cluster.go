@@ -118,26 +118,6 @@ func NewCluster(lg *zap.Logger) *RaftCluster {
 	}
 }
 
-func (c *RaftCluster) ID() types.ID { return c.cid }
-
-func (c *RaftCluster) Members() []*Member {
-	c.Lock()
-	defer c.Unlock()
-	var ms MembersByID
-	for _, m := range c.members {
-		ms = append(ms, m.Clone())
-	}
-	sort.Sort(ms)
-	return []*Member(ms)
-}
-
-// Member ok
-func (c *RaftCluster) Member(id types.ID) *Member {
-	c.Lock()
-	defer c.Unlock()
-	return c.members[id].Clone()
-}
-
 func (c *RaftCluster) VotingMembers() []*Member {
 	c.Lock()
 	defer c.Unlock()
@@ -294,20 +274,18 @@ func (c *RaftCluster) Recover(onSet func(*zap.Logger, *semver.Version)) {
 	}
 }
 
-// ValidateConfigurationChange takes a proposed ConfChange and
-// ensures that it is still valid.
+// ValidateConfigurationChange TODO 验证接受 提议的ConfChange 并确保它仍然有效。
 func (c *RaftCluster) ValidateConfigurationChange(cc raftpb.ConfChangeV1) error {
-	// TODO: this必须是switched to backend as well.
-	members, removed := membersFromStore(c.lg, c.v2store)
+	members, removed := membersFromStore(c.lg, c.v2store) // 从v2store中获取所有成员
 	id := types.ID(cc.NodeID)
-	if removed[id] {
+	if removed[id] { // 不能在移除的节点中
 		return ErrIDRemoved
 	}
 	switch cc.Type {
 	case raftpb.ConfChangeAddNode, raftpb.ConfChangeAddLearnerNode:
 		confChangeContext := new(ConfigChangeContext)
 		if err := json.Unmarshal(cc.Context, confChangeContext); err != nil {
-			c.lg.Panic("failed to unmarshal confChangeContext", zap.Error(err))
+			c.lg.Panic("发序列化失败confChangeContext", zap.Error(err))
 		}
 
 		if confChangeContext.IsPromote { // promoting a learner member to voting member
@@ -346,12 +324,14 @@ func (c *RaftCluster) ValidateConfigurationChange(cc raftpb.ConfChangeV1) error 
 				}
 			}
 		}
+
 	case raftpb.ConfChangeRemoveNode:
 		if members[id] == nil {
 			return ErrIDNotFound
 		}
 
 	case raftpb.ConfChangeUpdateNode:
+		// 有这个成员，且peer地址不存在
 		if members[id] == nil {
 			return ErrIDNotFound
 		}
@@ -366,7 +346,7 @@ func (c *RaftCluster) ValidateConfigurationChange(cc raftpb.ConfChangeV1) error 
 		}
 		m := new(Member)
 		if err := json.Unmarshal(cc.Context, m); err != nil {
-			c.lg.Panic("failed to unmarshal member", zap.Error(err))
+			c.lg.Panic("反序列化成员失败", zap.Error(err))
 		}
 		for _, u := range m.PeerURLs {
 			if urls[u] {
@@ -375,7 +355,7 @@ func (c *RaftCluster) ValidateConfigurationChange(cc raftpb.ConfChangeV1) error 
 		}
 
 	default:
-		c.lg.Panic("unknown ConfChange type", zap.String("type", cc.Type.String()))
+		c.lg.Panic("未知的 ConfChange type", zap.String("type", cc.Type.String()))
 	}
 	return nil
 }
@@ -699,7 +679,7 @@ func membersFromStore(lg *zap.Logger, st v2store.Store) (map[types.ID]*Member, m
 		if isKeyNotFound(err) {
 			return members, removed
 		}
-		lg.Panic("failed to get members from store", zap.String("path", StoreMembersPrefix), zap.Error(err))
+		lg.Panic("从store获取成员失败", zap.String("path", StoreMembersPrefix), zap.Error(err))
 	}
 	for _, n := range e.Node.Nodes {
 		var m *Member
@@ -930,4 +910,26 @@ func (c *RaftCluster) PushMembershipToStorage() {
 			mustSaveMemberToStore(c.lg, c.v2store, m)
 		}
 	}
+}
+
+// --------------------------------------   OVER  --------------------------------------------------
+
+func (c *RaftCluster) ID() types.ID { return c.cid }
+
+func (c *RaftCluster) Members() []*Member {
+	c.Lock()
+	defer c.Unlock()
+	var ms MembersByID
+	for _, m := range c.members {
+		ms = append(ms, m.Clone())
+	}
+	sort.Sort(ms)
+	return []*Member(ms)
+}
+
+// Member ok
+func (c *RaftCluster) Member(id types.ID) *Member {
+	c.Lock()
+	defer c.Unlock()
+	return c.members[id].Clone()
 }

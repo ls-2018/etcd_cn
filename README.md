@@ -51,7 +51,7 @@ http://127.0.0.1:2379/members
 
 ```
 
-### msg
+### msgType
 
 | 消息类型 | 处理方 | 描述 |
 | :--- | :--- | :--: |
@@ -228,7 +228,7 @@ http://127.0.0.1:2379/members
 - https://www.jianshu.com/p/f0a63762ac13
 - https://www.zhihu.com/question/63995014/answer/2251115833
 - https://blog.csdn.net/weixin_42017400/article/details/123174473
-
+- https://www.jianshu.com/p/1621360b0b8e
 
 
 
@@ -366,6 +366,7 @@ type Record struct {
         Index uint64
         Type  EntryType  
                 EntryNormal
+                  # msgType
                 EntryConfChange   
                 EntryConfChangeV2 
         Data  []byte 
@@ -397,5 +398,4 @@ raft commit->apply  的数据 封装在ready结构体里   <-r.Ready()
     - s.applyEntries(ep, apply)
       - s.apply(ents, &ep.confState)
         - case raftpb.EntryConfChange:
-
- 
+          - s.applyConfChange(cc, confState, shouldApplyV3)

@@ -213,7 +213,7 @@ func (n *localNode) run() {
 			if pr := r.prs.Progress[m.From]; pr != nil || !IsResponseMsg(m.Type) {
 				r.Step(m)
 			}
-		case cc := <-n.confc: // TODO 配置变更
+		case cc := <-n.confc: // 配置变更
 			// 如果NodeID是None，就变成了获取节点信息的操作
 			_, okBefore := r.prs.Progress[r.id] // 获取本节点的信息
 			cs := r.applyConfChange(cc)
