@@ -109,7 +109,7 @@ func (wh *watcherHub) add(e *Event) {
 func (wh *watcherHub) notify(e *Event) {
 	e = wh.EventHistory.addEvent(e) // add event into the eventHistory
 
-	segments := strings.Split(e.Node.Key, "/")
+	segments := strings.Split(e.NodeExtern.Key, "/")
 
 	currPath := "/"
 
@@ -137,8 +137,8 @@ func (wh *watcherHub) notifyWatchers(e *Event, nodePath string, deleted bool) {
 
 			w, _ := curr.Value.(*watcher)
 
-			originalPath := e.Node.Key == nodePath
-			if (originalPath || !isHidden(nodePath, e.Node.Key)) && w.notify(e, originalPath, deleted) {
+			originalPath := e.NodeExtern.Key == nodePath
+			if (originalPath || !isHidden(nodePath, e.NodeExtern.Key)) && w.notify(e, originalPath, deleted) {
 				if !w.stream { // do not remove the stream watcher
 					// if we successfully notify a watcher
 					// we need to remove the watcher from the list

@@ -53,9 +53,7 @@ func writeError(lg *zap.Logger, w http.ResponseWriter, r *http.Request, err erro
 	etcdhttp.WriteError(lg, w, r, err)
 }
 
-// allowMethod verifies that the given method is one of the allowed methods,
-// and if not, it writes an error to w.  A boolean is returned indicating
-// whether or not the method is allowed.
+// allowMethod 验证请求方式 是否允许
 func allowMethod(w http.ResponseWriter, m string, ms ...string) bool {
 	for _, meth := range ms {
 		if m == meth {

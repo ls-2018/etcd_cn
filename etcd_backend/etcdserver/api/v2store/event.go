@@ -26,13 +26,14 @@ const (
 )
 
 type Event struct {
-	Action    string      `json:"action"`
-	Node      *NodeExtern `json:"node,omitempty"`
-	PrevNode  *NodeExtern `json:"prevNode,omitempty"`
-	EtcdIndex uint64      `json:"-"`
-	Refresh   bool        `json:"refresh,omitempty"`
+	Action     string      `json:"action"`
+	NodeExtern *NodeExtern `json:"node,omitempty"`
+	PrevNode   *NodeExtern `json:"prevNode,omitempty"`
+	EtcdIndex  uint64      `json:"-"`
+	Refresh    bool        `json:"refresh,omitempty"`
 }
 
+// 节点变更事件、包括节点的创建、删除...
 func newEvent(action string, key string, modifiedIndex, createdIndex uint64) *Event {
 	n := &NodeExtern{
 		Key:           key,
@@ -41,8 +42,8 @@ func newEvent(action string, key string, modifiedIndex, createdIndex uint64) *Ev
 	}
 
 	return &Event{
-		Action: action,
-		Node:   n,
+		Action:     action,
+		NodeExtern: n,
 	}
 }
 
@@ -54,15 +55,15 @@ func (e *Event) IsCreated() bool {
 }
 
 func (e *Event) Index() uint64 {
-	return e.Node.ModifiedIndex
+	return e.NodeExtern.ModifiedIndex
 }
 
 func (e *Event) Clone() *Event {
 	return &Event{
-		Action:    e.Action,
-		EtcdIndex: e.EtcdIndex,
-		Node:      e.Node.Clone(),
-		PrevNode:  e.PrevNode.Clone(),
+		Action:     e.Action,
+		EtcdIndex:  e.EtcdIndex,
+		NodeExtern: e.NodeExtern.Clone(),
+		PrevNode:   e.PrevNode.Clone(),
 	}
 }
 

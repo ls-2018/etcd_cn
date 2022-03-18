@@ -99,6 +99,7 @@ func (a *reqV2HandlerEtcdServer) processRaftRequest(ctx context.Context, r *Requ
 	if err != nil {
 		return Response{}, err
 	}
+	/* 注册并且创建一个channel, 此处ID每次请求都会重新生成*/
 	ch := a.s.w.Register(r.ID)
 
 	start := time.Now()

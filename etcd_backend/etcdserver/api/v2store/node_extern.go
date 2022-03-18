@@ -21,10 +21,9 @@ import (
 	"github.com/jonboulle/clockwork"
 )
 
-// NodeExtern is the external representation of the
-// internal node with additional fields
-// PrevValue is the previous value of the node
-// TTL is time to live in second
+var _ node
+
+// NodeExtern 是内部节点的外部表示，带有附加字段 PrevValue是节点的前一个值 TTL是生存时间，以秒为单位
 type NodeExtern struct {
 	Key           string      `json:"key,omitempty"`
 	Value         *string     `json:"value,omitempty"`
@@ -36,39 +35,31 @@ type NodeExtern struct {
 	CreatedIndex  uint64      `json:"createdIndex,omitempty"`
 }
 
+// 加载node，主要是获取node中数据   n: /0/members
 func (eNode *NodeExtern) loadInternalNode(n *node, recursive, sorted bool, clock clockwork.Clock) {
-	if n.IsDir() { // node is a directory
+	if n.IsDir() {
 		eNode.Dir = true
-
 		children, _ := n.List()
 		eNode.Nodes = make(NodeExterns, len(children))
-
-		// we do not use the index in the children slice directly
-		// we need to skip the hidden one
+		// 我们不直接使用子片中的索引，我们需要跳过隐藏的node。
 		i := 0
-
 		for _, child := range children {
-			if child.IsHidden() { // get will not return hidden nodes
+			if child.IsHidden() {
 				continue
 			}
-
 			eNode.Nodes[i] = child.Repr(recursive, sorted, clock)
 			i++
 		}
-
-		// eliminate hidden nodes
+		// 消除隐藏节点
 		eNode.Nodes = eNode.Nodes[:i]
-
 		if sorted {
 			sort.Sort(eNode.Nodes)
 		}
-
-	} else { // node is a file
+	} else {
 		value, _ := n.Read()
 		eNode.Value = &value
 	}
-
-	eNode.Expiration, eNode.TTL = n.expirationAndTTL(clock)
+	eNode.Expiration, eNode.TTL = n.expirationAndTTL(clock) // 过期时间和 剩余时间 TTL
 }
 
 func (eNode *NodeExtern) Clone() *NodeExtern {

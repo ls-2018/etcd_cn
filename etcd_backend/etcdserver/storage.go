@@ -42,6 +42,7 @@ type Storage interface {
 	Sync() error
 }
 
+// 静态存储实际上是保存到磁盘中，Storage是对WAL和Snapshot的封装
 type storage struct {
 	*wal.WAL
 	*snap.Snapshotter

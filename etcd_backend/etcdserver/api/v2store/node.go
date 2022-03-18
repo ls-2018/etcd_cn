@@ -15,6 +15,7 @@
 package v2store
 
 import (
+	"fmt"
 	"path"
 	"sort"
 	"time"
@@ -39,19 +40,14 @@ var Permanent time.Time
 // A key-value pair will have a string value
 // A directory will have a children map
 type node struct {
-	Path string
-
+	Path          string
 	CreatedIndex  uint64
 	ModifiedIndex uint64
-
-	Parent *node `json:"-"` // should not encode this field! avoid circular dependency.
-
-	ExpireTime time.Time
-	Value      string           // for key-value pair
-	Children   map[string]*node // for directory
-
-	// A reference to the store this node is attached to.
-	store *store
+	Parent        *node `json:"-"` // 不应该对这个字段进行编码！避免循环依赖。
+	ExpireTime    time.Time
+	Value         string           // 键值对
+	Children      map[string]*node // 目录
+	store         *store           // 对该节点所连接的商店的引用。
 }
 
 // newKV creates a Key-Value pair
@@ -67,55 +63,6 @@ func newKV(store *store, nodePath string, value string, createdIndex uint64, par
 	}
 }
 
-// newDir 创建一个目录
-func newDir(store *store, nodePath string, createdIndex uint64, parent *node, expireTime time.Time) *node {
-	return &node{
-		Path:          nodePath,
-		CreatedIndex:  createdIndex,
-		ModifiedIndex: createdIndex,
-		Parent:        parent,
-		ExpireTime:    expireTime,
-		Children:      make(map[string]*node),
-		store:         store,
-	}
-}
-
-// IsHidden function checks if the node is a hidden node. A hidden node
-// will begin with '_'
-// A hidden node will not be shown via get command under a directory
-// For example if we have /foo/_hidden and /foo/notHidden, get "/foo"
-// will only return /foo/notHidden
-func (n *node) IsHidden() bool {
-	_, name := path.Split(n.Path)
-
-	return name[0] == '_'
-}
-
-// IsPermanent function checks if the node is a permanent one.
-func (n *node) IsPermanent() bool {
-	// we use a uninitialized time.Time to indicate the node is a
-	// permanent one.
-	// the uninitialized time.Time should equal zero.
-	return n.ExpireTime.IsZero()
-}
-
-// IsDir function checks whether the node is a directory.
-// If the node is a directory, the function will return true.
-// Otherwise the function will return false.
-func (n *node) IsDir() bool {
-	return n.Children != nil
-}
-
-// Read function gets the value of the node.
-// If the receiver node is not a key-value pair, a "Not A File" error will be returned.
-func (n *node) Read() (string, *v2error.Error) {
-	if n.IsDir() {
-		return "", v2error.NewError(v2error.EcodeNotFile, "", n.store.CurrentIndex)
-	}
-
-	return n.Value, nil
-}
-
 // Write function set the value of the node to the given value.
 // If the receiver node is a directory, a "Not A File" error will be returned.
 func (n *node) Write(value string, index uint64) *v2error.Error {
@@ -129,81 +76,6 @@ func (n *node) Write(value string, index uint64) *v2error.Error {
 	return nil
 }
 
-func (n *node) expirationAndTTL(clock clockwork.Clock) (*time.Time, int64) {
-	if !n.IsPermanent() {
-		/* compute ttl as:
-		   ceiling( (expireTime - timeNow) / nanosecondsPerSecond )
-		   which ranges from 1..n
-		   rather than as:
-		   ( (expireTime - timeNow) / nanosecondsPerSecond ) + 1
-		   which ranges 1..n+1
-		*/
-		ttlN := n.ExpireTime.Sub(clock.Now())
-		ttl := ttlN / time.Second
-		if (ttlN % time.Second) > 0 {
-			ttl++
-		}
-		t := n.ExpireTime.UTC()
-		return &t, int64(ttl)
-	}
-	return nil, 0
-}
-
-// List function return a slice of nodes under the receiver node.
-// If the receiver node is not a directory, a "Not A Directory" error will be returned.
-func (n *node) List() ([]*node, *v2error.Error) {
-	if !n.IsDir() {
-		return nil, v2error.NewError(v2error.EcodeNotDir, "", n.store.CurrentIndex)
-	}
-
-	nodes := make([]*node, len(n.Children))
-
-	i := 0
-	for _, node := range n.Children {
-		nodes[i] = node
-		i++
-	}
-
-	return nodes, nil
-}
-
-// GetChild function returns the child node under the directory node.
-// On success, it returns the file node
-func (n *node) GetChild(name string) (*node, *v2error.Error) {
-	if !n.IsDir() {
-		return nil, v2error.NewError(v2error.EcodeNotDir, n.Path, n.store.CurrentIndex)
-	}
-
-	child, ok := n.Children[name]
-
-	if ok {
-		return child, nil
-	}
-
-	return nil, nil
-}
-
-// Add function adds a node to the receiver node.
-// If the receiver is not a directory, a "Not A Directory" error will be returned.
-// If there is an existing node with the same name under the directory, a "Already Exist"
-// error will be returned
-func (n *node) Add(child *node) *v2error.Error {
-	if !n.IsDir() {
-		return v2error.NewError(v2error.EcodeNotDir, "", n.store.CurrentIndex)
-	}
-
-	_, name := path.Split(child.Path)
-
-	if _, ok := n.Children[name]; ok {
-		return v2error.NewError(v2error.EcodeNodeExist, "", n.store.CurrentIndex)
-	}
-
-	n.Children[name] = child
-
-	return nil
-}
-
-// Remove function remove the node.
 func (n *node) Remove(dir, recursive bool, callback func(path string)) *v2error.Error {
 	if !n.IsDir() { // key-value pair
 		_, name := path.Split(n.Path)
@@ -254,59 +126,6 @@ func (n *node) Remove(dir, recursive bool, callback func(path string)) *v2error.
 	}
 
 	return nil
-}
-
-func (n *node) Repr(recursive, sorted bool, clock clockwork.Clock) *NodeExtern {
-	if n.IsDir() {
-		node := &NodeExtern{
-			Key:           n.Path,
-			Dir:           true,
-			ModifiedIndex: n.ModifiedIndex,
-			CreatedIndex:  n.CreatedIndex,
-		}
-		node.Expiration, node.TTL = n.expirationAndTTL(clock)
-
-		if !recursive {
-			return node
-		}
-
-		children, _ := n.List()
-		node.Nodes = make(NodeExterns, len(children))
-
-		// we do not use the index in the children slice directly
-		// we need to skip the hidden one
-		i := 0
-
-		for _, child := range children {
-
-			if child.IsHidden() { // get will not list hidden node
-				continue
-			}
-
-			node.Nodes[i] = child.Repr(recursive, sorted, clock)
-
-			i++
-		}
-
-		// eliminate hidden nodes
-		node.Nodes = node.Nodes[:i]
-		if sorted {
-			sort.Sort(node.Nodes)
-		}
-
-		return node
-	}
-
-	// since n.Value could be changed later, so we need to copy the value out
-	value := n.Value
-	node := &NodeExtern{
-		Key:           n.Path,
-		Value:         &value,
-		ModifiedIndex: n.ModifiedIndex,
-		CreatedIndex:  n.CreatedIndex,
-	}
-	node.Expiration, node.TTL = n.expirationAndTTL(clock)
-	return node
 }
 
 func (n *node) UpdateTTL(expireTime time.Time) {
@@ -394,4 +213,149 @@ func (n *node) recoverAndclean() {
 	if !n.ExpireTime.IsZero() {
 		n.store.ttlKeyHeap.push(n)
 	}
+}
+
+// --------------------------------------  OVER  -----------------------------------------------
+
+// List 返回当前节点下的所有节点
+func (n *node) List() ([]*node, *v2error.Error) {
+	if !n.IsDir() {
+		return nil, v2error.NewError(v2error.EcodeNotDir, "", n.store.CurrentIndex)
+	}
+
+	nodes := make([]*node, len(n.Children))
+
+	i := 0
+	for _, node := range n.Children {
+		nodes[i] = node
+		i++
+	}
+
+	return nodes, nil
+}
+
+// GetChild 返回目录节点
+func (n *node) GetChild(name string) (*node, *v2error.Error) {
+	if !n.IsDir() {
+		return nil, v2error.NewError(v2error.EcodeNotDir, n.Path, n.store.CurrentIndex)
+	}
+
+	child, ok := n.Children[name]
+
+	if ok {
+		return child, nil
+	}
+
+	return nil, nil
+}
+
+// Add 添加一个子节点
+func (n *node) Add(child *node) *v2error.Error {
+	fmt.Println("add node")
+	if !n.IsDir() { // /0/members/8e9e05c52164694d
+		return v2error.NewError(v2error.EcodeNotDir, "", n.store.CurrentIndex)
+	}
+
+	_, name := path.Split(child.Path)
+
+	if _, ok := n.Children[name]; ok {
+		return v2error.NewError(v2error.EcodeNodeExist, "", n.store.CurrentIndex)
+	}
+
+	n.Children[name] = child
+
+	return nil
+}
+
+// Repr 递归的 封信过期时间、剩余时间，跳过隐藏节点
+func (n *node) Repr(recursive, sorted bool, clock clockwork.Clock) *NodeExtern {
+	if n.IsDir() {
+		node := &NodeExtern{
+			Key:           n.Path,
+			Dir:           true,
+			ModifiedIndex: n.ModifiedIndex,
+			CreatedIndex:  n.CreatedIndex,
+		}
+		node.Expiration, node.TTL = n.expirationAndTTL(clock) // 过期时间和 剩余时间 TTL
+		if !recursive {
+			return node
+		}
+		children, _ := n.List()
+		node.Nodes = make(NodeExterns, len(children))
+		i := 0
+		for _, child := range children {
+			if child.IsHidden() { // 跳过隐藏节点
+				continue
+			}
+			node.Nodes[i] = child.Repr(recursive, sorted, clock)
+			i++
+		}
+		node.Nodes = node.Nodes[:i]
+		if sorted {
+			sort.Sort(node.Nodes)
+		}
+		return node
+	}
+
+	// since n.Value could be changed later, so we need to copy the value out
+	value := n.Value
+	node := &NodeExtern{
+		Key:           n.Path,
+		Value:         &value,
+		ModifiedIndex: n.ModifiedIndex,
+		CreatedIndex:  n.CreatedIndex,
+	}
+	node.Expiration, node.TTL = n.expirationAndTTL(clock) // 过期时间和 剩余时间 TTL
+	return node
+}
+
+// 过期时间和 剩余时间 TTL
+func (n *node) expirationAndTTL(clock clockwork.Clock) (*time.Time, int64) {
+	if !n.IsPermanent() {
+		ttlN := n.ExpireTime.Sub(clock.Now()) // 还有多长时间过期
+		ttl := ttlN / time.Second
+		if (ttlN % time.Second) > 0 {
+			ttl++ // 整除+1
+		}
+		t := n.ExpireTime.UTC()
+		return &t, int64(ttl)
+	}
+	return nil, 0
+}
+
+// newDir 创建一个目录
+func newDir(store *store, nodePath string, createdIndex uint64, parent *node, expireTime time.Time) *node {
+	return &node{
+		Path:          nodePath,
+		CreatedIndex:  createdIndex,
+		ModifiedIndex: createdIndex,
+		Parent:        parent,
+		ExpireTime:    expireTime,
+		Children:      make(map[string]*node),
+		store:         store,
+	}
+}
+
+// IsHidden 判断节点名字是不是以 _ 开头   /0/members/_hidden
+func (n *node) IsHidden() bool {
+	_, name := path.Split(n.Path)
+	return name[0] == '_'
+}
+
+// IsPermanent 函数检查该节点是否为永久节点。
+func (n *node) IsPermanent() bool {
+	// 我们使用一个未初始化的time.Time来表示该节点是一个永久的节点。 未初始化的time.Time应该等于0。
+	return n.ExpireTime.IsZero()
+}
+
+func (n *node) IsDir() bool {
+	return n.Children != nil
+}
+
+func (n *node) Read() (string, *v2error.Error) {
+	if n.IsDir() {
+		return "", v2error.NewError(v2error.EcodeNotFile, "", n.store.CurrentIndex)
+	}
+
+	return n.Value, nil
 }

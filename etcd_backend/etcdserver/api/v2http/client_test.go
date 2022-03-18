@@ -1204,9 +1204,9 @@ func TestWriteEvent(t *testing.T) {
 		// standard case, standard 200 response
 		{
 			&v2store.Event{
-				Action:   v2store.Get,
-				Node:     &v2store.NodeExtern{},
-				PrevNode: &v2store.NodeExtern{},
+				Action:     v2store.Get,
+				NodeExtern: &v2store.NodeExtern{},
+				PrevNode:   &v2store.NodeExtern{},
 			},
 			false,
 			"0",
@@ -1216,9 +1216,9 @@ func TestWriteEvent(t *testing.T) {
 		// check new nodes return StatusCreated
 		{
 			&v2store.Event{
-				Action:   v2store.Create,
-				Node:     &v2store.NodeExtern{},
-				PrevNode: &v2store.NodeExtern{},
+				Action:     v2store.Create,
+				NodeExtern: &v2store.NodeExtern{},
+				PrevNode:   &v2store.NodeExtern{},
 			},
 			false,
 			"0",
@@ -1565,8 +1565,8 @@ func TestServeKeysGood(t *testing.T) {
 	server := &resServer{
 		res: etcdserver.Response{
 			Event: &v2store.Event{
-				Action: v2store.Get,
-				Node:   &v2store.NodeExtern{},
+				Action:     v2store.Get,
+				NodeExtern: &v2store.NodeExtern{},
 			},
 		},
 	}
@@ -1596,14 +1596,14 @@ func TestServeKeysEvent(t *testing.T) {
 			mustNewRequest(t, "foo"),
 			etcdserver.Response{
 				Event: &v2store.Event{
-					Action: v2store.Get,
-					Node:   &v2store.NodeExtern{},
+					Action:     v2store.Get,
+					NodeExtern: &v2store.NodeExtern{},
 				},
 			},
 			http.StatusOK,
 			&v2store.Event{
-				Action: v2store.Get,
-				Node:   &v2store.NodeExtern{},
+				Action:     v2store.Get,
+				NodeExtern: &v2store.NodeExtern{},
 			},
 		},
 		{
@@ -1614,14 +1614,14 @@ func TestServeKeysEvent(t *testing.T) {
 			),
 			etcdserver.Response{
 				Event: &v2store.Event{
-					Action: v2store.CompareAndSwap,
-					Node:   &v2store.NodeExtern{},
+					Action:     v2store.CompareAndSwap,
+					NodeExtern: &v2store.NodeExtern{},
 				},
 			},
 			http.StatusOK,
 			&v2store.Event{
-				Action: v2store.CompareAndSwap,
-				Node:   nil,
+				Action:     v2store.CompareAndSwap,
+				NodeExtern: nil,
 			},
 		},
 	}
@@ -1678,8 +1678,8 @@ func TestServeKeysWatch(t *testing.T) {
 	}
 	go func() {
 		ec <- &v2store.Event{
-			Action: v2store.Get,
-			Node:   &v2store.NodeExtern{},
+			Action:     v2store.Get,
+			NodeExtern: &v2store.NodeExtern{},
 		}
 	}()
 	rw := httptest.NewRecorder()
@@ -1690,8 +1690,8 @@ func TestServeKeysWatch(t *testing.T) {
 	wbody := mustMarshalEvent(
 		t,
 		&v2store.Event{
-			Action: v2store.Get,
-			Node:   &v2store.NodeExtern{},
+			Action:     v2store.Get,
+			NodeExtern: &v2store.NodeExtern{},
 		},
 	)
 
@@ -1738,16 +1738,16 @@ func TestHandleWatch(t *testing.T) {
 			defaultRwRr,
 			func(ch chan *v2store.Event) {
 				ch <- &v2store.Event{
-					Action: v2store.Get,
-					Node:   &v2store.NodeExtern{},
+					Action:     v2store.Get,
+					NodeExtern: &v2store.NodeExtern{},
 				}
 			},
 
 			mustMarshalEvent(
 				t,
 				&v2store.Event{
-					Action: v2store.Get,
-					Node:   &v2store.NodeExtern{},
+					Action:     v2store.Get,
+					NodeExtern: &v2store.NodeExtern{},
 				},
 			),
 		},
@@ -1875,8 +1875,8 @@ func TestHandleWatchStreaming(t *testing.T) {
 	// Now send the first event
 	select {
 	case wa.echan <- &v2store.Event{
-		Action: v2store.Get,
-		Node:   &v2store.NodeExtern{},
+		Action:     v2store.Get,
+		NodeExtern: &v2store.NodeExtern{},
 	}:
 	case <-time.After(time.Second):
 		t.Fatal("timed out waiting for send")
@@ -1893,8 +1893,8 @@ func TestHandleWatchStreaming(t *testing.T) {
 	wbody = mustMarshalEvent(
 		t,
 		&v2store.Event{
-			Action: v2store.Get,
-			Node:   &v2store.NodeExtern{},
+			Action:     v2store.Get,
+			NodeExtern: &v2store.NodeExtern{},
 		},
 	)
 	g = rw.Body.String()
@@ -1905,8 +1905,8 @@ func TestHandleWatchStreaming(t *testing.T) {
 	// Rinse and repeat
 	select {
 	case wa.echan <- &v2store.Event{
-		Action: v2store.Get,
-		Node:   &v2store.NodeExtern{},
+		Action:     v2store.Get,
+		NodeExtern: &v2store.NodeExtern{},
 	}:
 	case <-time.After(time.Second):
 		t.Fatal("timed out waiting for send")
@@ -1950,8 +1950,8 @@ func TestTrimEventPrefix(t *testing.T) {
 			&v2store.Event{},
 		},
 		{
-			&v2store.Event{Node: &v2store.NodeExtern{Key: "/abc/def"}},
-			&v2store.Event{Node: &v2store.NodeExtern{Key: "/def"}},
+			&v2store.Event{NodeExtern: &v2store.NodeExtern{Key: "/abc/def"}},
+			&v2store.Event{NodeExtern: &v2store.NodeExtern{Key: "/def"}},
 		},
 		{
 			&v2store.Event{PrevNode: &v2store.NodeExtern{Key: "/abc/ghi"}},
@@ -1959,12 +1959,12 @@ func TestTrimEventPrefix(t *testing.T) {
 		},
 		{
 			&v2store.Event{
-				Node:     &v2store.NodeExtern{Key: "/abc/def"},
-				PrevNode: &v2store.NodeExtern{Key: "/abc/ghi"},
+				NodeExtern: &v2store.NodeExtern{Key: "/abc/def"},
+				PrevNode:   &v2store.NodeExtern{Key: "/abc/ghi"},
 			},
 			&v2store.Event{
-				Node:     &v2store.NodeExtern{Key: "/def"},
-				PrevNode: &v2store.NodeExtern{Key: "/ghi"},
+				NodeExtern: &v2store.NodeExtern{Key: "/def"},
+				PrevNode:   &v2store.NodeExtern{Key: "/ghi"},
 			},
 		},
 	}

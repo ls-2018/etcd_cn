@@ -55,7 +55,7 @@ func main() {
 		// print common key info
 		log.Printf("Get is done. Metadata is %q\n", resp)
 		// print value
-		log.Printf("%q key has %q value\n", resp.Node.Key, resp.Node.Value)
+		log.Printf("%q key has %q value\n", resp.NodeExtern.Key, resp.NodeExtern.Value)
 	}
 }
 ```

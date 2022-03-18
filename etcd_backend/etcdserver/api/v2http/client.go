@@ -484,7 +484,7 @@ func writeKeyEvent(w http.ResponseWriter, resp etcdserver.Response, noValueOnSuc
 	if noValueOnSuccess &&
 		(ev.Action == v2store.Set || ev.Action == v2store.CompareAndSwap ||
 			ev.Action == v2store.Create || ev.Action == v2store.Update) {
-		ev.Node = nil
+		ev.NodeExtern = nil
 		ev.PrevNode = nil
 	}
 	return json.NewEncoder(w).Encode(ev)
@@ -580,7 +580,7 @@ func trimEventPrefix(ev *v2store.Event, prefix string) *v2store.Event {
 	// Since the *Event may reference one in the store history
 	// history, we must copy it before modifying
 	e := ev.Clone()
-	trimNodeExternPrefix(e.Node, prefix)
+	trimNodeExternPrefix(e.NodeExtern, prefix)
 	trimNodeExternPrefix(e.PrevNode, prefix)
 	return e
 }

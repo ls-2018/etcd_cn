@@ -48,7 +48,7 @@ func (s *v2v3Store) Watch(prefix string, recursive, stream bool, sinceIndex uint
 		}()
 		for resp := range wch {
 			for _, ev := range s.mkV2Events(resp) {
-				k := ev.Node.Key
+				k := ev.NodeExtern.Key
 				if recursive {
 					if !strings.HasPrefix(k, prefix) {
 						continue
@@ -100,10 +100,10 @@ func (s *v2v3Store) mkV2Events(wr clientv3.WatchResponse) (evs []*v2store.Event)
 		}
 		if act != nil && act.Kv != nil && key != nil {
 			v2ev := &v2store.Event{
-				Action:    string(act.Kv.Value),
-				Node:      s.mkV2Node(key.Kv),
-				PrevNode:  s.mkV2Node(key.PrevKv),
-				EtcdIndex: mkV2Rev(wr.Header.Revision),
+				Action:     string(act.Kv.Value),
+				NodeExtern: s.mkV2Node(key.Kv),
+				PrevNode:   s.mkV2Node(key.PrevKv),
+				EtcdIndex:  mkV2Rev(wr.Header.Revision),
 			}
 			evs = append(evs, v2ev)
 		}

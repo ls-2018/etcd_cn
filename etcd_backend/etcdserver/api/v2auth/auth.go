@@ -179,7 +179,7 @@ func (s *store) AllUsers() ([]string, error) {
 		return nil, err
 	}
 	var nodes []string
-	for _, n := range resp.Event.Node.Nodes {
+	for _, n := range resp.Event.NodeExtern.Nodes {
 		_, user := path.Split(n.Key)
 		nodes = append(nodes, user)
 	}
@@ -288,7 +288,7 @@ func (s *store) AllRoles() ([]string, error) {
 		}
 		return nil, err
 	}
-	for _, n := range resp.Event.Node.Nodes {
+	for _, n := range resp.Event.NodeExtern.Nodes {
 		_, role := path.Split(n.Key)
 		nodes = append(nodes, role)
 	}
@@ -640,7 +640,7 @@ func (s *store) getUser(name string, quorum bool) (User, error) {
 		return User{}, err
 	}
 	var u User
-	err = json.Unmarshal([]byte(*resp.Event.Node.Value), &u)
+	err = json.Unmarshal([]byte(*resp.Event.NodeExtern.Value), &u)
 	if err != nil {
 		return u, err
 	}
@@ -665,6 +665,6 @@ func (s *store) getRole(name string, quorum bool) (Role, error) {
 		return Role{}, err
 	}
 	var r Role
-	err = json.Unmarshal([]byte(*resp.Event.Node.Value), &r)
+	err = json.Unmarshal([]byte(*resp.Event.NodeExtern.Value), &r)
 	return r, err
 }

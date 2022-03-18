@@ -80,7 +80,7 @@ func (eh *EventHistory) scan(key string, recursive bool, index uint64) (*Event, 
 		e := eh.Queue.Events[i]
 
 		if !e.Refresh {
-			ok := e.Node.Key == key
+			ok := e.NodeExtern.Key == key
 
 			if recursive {
 				// add tailing slash
@@ -89,7 +89,7 @@ func (eh *EventHistory) scan(key string, recursive bool, index uint64) (*Event, 
 					nkey = nkey + "/"
 				}
 
-				ok = ok || strings.HasPrefix(e.Node.Key, nkey)
+				ok = ok || strings.HasPrefix(e.NodeExtern.Key, nkey)
 			}
 
 			if (e.Action == Delete || e.Action == Expire) && e.PrevNode != nil && e.PrevNode.Dir {

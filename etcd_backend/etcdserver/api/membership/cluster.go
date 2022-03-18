@@ -677,14 +677,14 @@ func (c *RaftCluster) IsReadyToPromoteMember(id uint64) bool {
 func membersFromStore(lg *zap.Logger, st v2store.Store) (map[types.ID]*Member, map[types.ID]bool) {
 	members := make(map[types.ID]*Member)
 	removed := make(map[types.ID]bool)
-	e, err := st.Get(StoreMembersPrefix, true, true)
+	e, err := st.Get(StoreMembersPrefix, true, true) // 获取事件
 	if err != nil {
-		if isKeyNotFound(err) {
+		if isKeyNotFound(err) { // 不存在 /0/members节点
 			return members, removed
 		}
 		lg.Panic("从store获取成员失败", zap.String("path", StoreMembersPrefix), zap.Error(err))
 	}
-	for _, n := range e.Node.Nodes {
+	for _, n := range e.NodeExtern.Nodes {
 		var m *Member
 		m, err = nodeToMember(lg, n)
 		if err != nil {
@@ -704,7 +704,7 @@ func membersFromStore(lg *zap.Logger, st v2store.Store) (map[types.ID]*Member, m
 			zap.Error(err),
 		)
 	}
-	for _, n := range e.Node.Nodes {
+	for _, n := range e.NodeExtern.Nodes {
 		removed[MustParseMemberIDFromKey(lg, n.Key)] = true
 	}
 	return members, removed
@@ -726,7 +726,7 @@ func clusterVersionFromStore(lg *zap.Logger, st v2store.Store) *semver.Version {
 			zap.Error(err),
 		)
 	}
-	return semver.Must(semver.NewVersion(*e.Node.Value))
+	return semver.Must(semver.NewVersion(*e.NodeExtern.Value))
 }
 
 // The field is populated since etcd v3.5.

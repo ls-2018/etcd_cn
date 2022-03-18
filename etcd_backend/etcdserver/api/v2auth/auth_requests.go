@@ -106,7 +106,7 @@ func (s *store) detectAuth() bool {
 	}
 
 	var u bool
-	err = json.Unmarshal([]byte(*value.Event.Node.Value), &u)
+	err = json.Unmarshal([]byte(*value.Event.NodeExtern.Value), &u)
 	if err != nil {
 		s.lg.Warn(
 			"internal bookkeeping value for enabled isn't valid JSON",

@@ -7,6 +7,7 @@ import (
 	math_bits "math/bits"
 	"net"
 	"strconv"
+	"time"
 
 	"github.com/ls-2018/etcd_cn/offical/etcdserverpb"
 )
@@ -37,4 +38,6 @@ func main() {
 	b := `{"ID":7587861231285799684,"Method":"PUT","Path":"/0/version","Val":"3.5.0","Dir":false,"PrevValue":"","PrevIndex":0,"Expiration":0,"Wait":false,"Since":0,"Recursive":false,"Sorted":false,"Quorum":false,"Time":0,"Stream":false}`
 	fmt.Println(json.Unmarshal([]byte(a), &etcdserverpb.InternalRaftRequest{}))
 	fmt.Println(json.Unmarshal([]byte(b), &etcdserverpb.InternalRaftRequest{}))
+	var c time.Time
+	fmt.Println(c.IsZero())
 }

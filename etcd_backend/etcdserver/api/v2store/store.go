@@ -28,7 +28,7 @@ import (
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v2error"
 )
 
-// The default version to set when the store is first initialized.
+// The 当store第一次被初始化时，要设置的默认版本。
 const defaultVersion = 2
 
 var minExpireTime time.Time
@@ -37,16 +37,21 @@ func init() {
 	minExpireTime, _ = time.Parse(time.RFC3339, "2000-01-01T00:00:00Z")
 }
 
+// Store Etcd是存储有如下特点：
+// 1、采用kv型数据存储，一般情况下比关系型数据库快。
+// 2、支持动态存储(内存)以及静态存储(磁盘)。
+// 3、分布式存储，可集成为多节点集群。
+// 4、存储方式，采用类似目录结构。
+// 1)只有叶子节点才能真正存储数据，相当于文件。
+// 2)叶子节点的父节点一定是目录，目录不能存储数据。
 type Store interface {
 	Version() int
 	Index() uint64
 	Get(nodePath string, recursive, sorted bool) (*Event, error)
 	Set(nodePath string, dir bool, value string, expireOpts TTLOptionSet) (*Event, error)
 	Update(nodePath string, newValue string, expireOpts TTLOptionSet) (*Event, error)
-	Create(nodePath string, dir bool, value string, unique bool,
-		expireOpts TTLOptionSet) (*Event, error)
-	CompareAndSwap(nodePath string, prevValue string, prevIndex uint64,
-		value string, expireOpts TTLOptionSet) (*Event, error)
+	Create(nodePath string, dir bool, value string, unique bool, expireOpts TTLOptionSet) (*Event, error)
+	CompareAndSwap(nodePath string, prevValue string, prevIndex uint64, value string, expireOpts TTLOptionSet) (*Event, error)
 	Delete(nodePath string, dir, recursive bool) (*Event, error)
 	CompareAndDelete(nodePath string, prevValue string, prevIndex uint64) (*Event, error)
 	Watch(prefix string, recursive, stream bool, sinceIndex uint64) (Watcher, error)
@@ -67,7 +72,7 @@ type TTLOptionSet struct {
 type store struct {
 	Root           *node
 	WatcherHub     *watcherHub
-	CurrentIndex   uint64
+	CurrentIndex   uint64 // 记录当前要分配出去的索引
 	Stats          *Stats
 	CurrentVersion int
 	ttlKeyHeap     *ttlKeyHeap  // 需要手动恢复     过期时间的最小堆
@@ -87,7 +92,7 @@ func New(namespaces ...string) Store {
 func newStore(namespaces ...string) *store {
 	s := new(store)
 	s.CurrentVersion = defaultVersion                       // 2
-	s.Root = newDir(s, "/", s.CurrentIndex, nil, Permanent) // 0
+	s.Root = newDir(s, "/", s.CurrentIndex, nil, Permanent) // 0  永久性
 	for _, namespace := range namespaces {
 		s.Root.Add(newDir(s, namespace, s.CurrentIndex, s.Root, Permanent))
 	}
@@ -127,14 +132,14 @@ func (s *store) Get(nodePath string, recursive, sorted bool) (*Event, error) {
 		s.Stats.Inc(GetFail)
 	}()
 
-	n, err := s.internalGet(nodePath)
+	n, err := s.internalGet(nodePath) // 没有 /0/members 这个node
 	if err != nil {
 		return nil, err
 	}
 
 	e := newEvent(Get, nodePath, n.ModifiedIndex, n.CreatedIndex)
-	e.EtcdIndex = s.CurrentIndex
-	e.Node.loadInternalNode(n, recursive, sorted, s.clock)
+	e.EtcdIndex = s.CurrentIndex                                 // 给事件分配索引
+	e.NodeExtern.loadInternalNode(n, recursive, sorted, s.clock) // 加载node，主要是获取node中数据
 
 	return e, nil
 }
@@ -209,8 +214,8 @@ func (s *store) Set(nodePath string, dir bool, value string, expireOpts TTLOptio
 	// Put prevNode into event
 	if getErr == nil {
 		prev := newEvent(Get, nodePath, n.ModifiedIndex, n.CreatedIndex)
-		prev.Node.loadInternalNode(n, false, false, s.clock)
-		e.PrevNode = prev.Node
+		prev.NodeExtern.loadInternalNode(n, false, false, s.clock)
+		e.PrevNode = prev.NodeExtern
 	}
 
 	if !expireOpts.Refresh {
@@ -285,7 +290,7 @@ func (s *store) CompareAndSwap(nodePath string, prevValue string, prevIndex uint
 	e := newEvent(CompareAndSwap, nodePath, s.CurrentIndex, n.CreatedIndex)
 	e.EtcdIndex = s.CurrentIndex
 	e.PrevNode = n.Repr(false, false, s.clock)
-	eNode := e.Node
+	eNode := e.NodeExtern
 
 	// if test succeed, write the value
 	if err := n.Write(value, s.CurrentIndex); err != nil {
@@ -296,7 +301,7 @@ func (s *store) CompareAndSwap(nodePath string, prevValue string, prevIndex uint
 	// copy the value for safety
 	valueCopy := value
 	eNode.Value = &valueCopy
-	eNode.Expiration, eNode.TTL = n.expirationAndTTL(s.clock)
+	eNode.Expiration, eNode.TTL = n.expirationAndTTL(s.clock) // 过期时间和 剩余时间 TTL
 
 	if !expireOpts.Refresh {
 		s.WatcherHub.notify(e)
@@ -345,7 +350,7 @@ func (s *store) Delete(nodePath string, dir, recursive bool) (*Event, error) {
 	e := newEvent(Delete, nodePath, nextIndex, n.CreatedIndex)
 	e.EtcdIndex = nextIndex
 	e.PrevNode = n.Repr(false, false, s.clock)
-	eNode := e.Node
+	eNode := e.NodeExtern
 
 	if n.IsDir() {
 		eNode.Dir = true
@@ -503,7 +508,7 @@ func (s *store) Update(nodePath string, newValue string, expireOpts TTLOptionSet
 	e := newEvent(Update, nodePath, nextIndex, n.CreatedIndex)
 	e.EtcdIndex = nextIndex
 	e.PrevNode = n.Repr(false, false, s.clock)
-	eNode := e.Node
+	eNode := e.NodeExtern
 
 	if err := n.Write(newValue, nextIndex); err != nil {
 		return nil, fmt.Errorf("nodePath %v : %v", nodePath, err)
@@ -520,7 +525,7 @@ func (s *store) Update(nodePath string, newValue string, expireOpts TTLOptionSet
 	// update ttl
 	n.UpdateTTL(expireOpts.ExpireTime)
 
-	eNode.Expiration, eNode.TTL = n.expirationAndTTL(s.clock)
+	eNode.Expiration, eNode.TTL = n.expirationAndTTL(s.clock) // 过期时间和 剩余时间 TTL
 
 	if !expireOpts.Refresh {
 		s.WatcherHub.notify(e)
@@ -567,7 +572,7 @@ func (s *store) internalCreate(nodePath string, dir bool, value string, unique, 
 	}
 
 	e := newEvent(action, nodePath, nextIndex, nextIndex)
-	eNode := e.Node
+	eNode := e.NodeExtern
 
 	n, _ := d.GetChild(nodeName)
 
@@ -592,6 +597,7 @@ func (s *store) internalCreate(nodePath string, dir bool, value string, unique, 
 		valueCopy := value
 		eNode.Value = &valueCopy
 
+		// 生成新的树节点node，作为叶子节点
 		n = newKV(s, nodePath, value, nextIndex, d, expireTime)
 
 	} else { // create directory
@@ -601,7 +607,7 @@ func (s *store) internalCreate(nodePath string, dir bool, value string, unique, 
 	}
 
 	// we are sure d is a directory and does not have the children with name n.Name
-	if err := d.Add(n); err != nil {
+	if err := d.Add(n); err != nil { // 添加父节点中，即挂到map中
 		return nil, err
 	}
 
@@ -609,7 +615,7 @@ func (s *store) internalCreate(nodePath string, dir bool, value string, unique, 
 	if !n.IsPermanent() {
 		s.ttlKeyHeap.push(n)
 
-		eNode.Expiration, eNode.TTL = n.expirationAndTTL(s.clock)
+		eNode.Expiration, eNode.TTL = n.expirationAndTTL(s.clock) // 过期时间和 剩余时间 TTL
 	}
 
 	s.CurrentIndex = nextIndex
@@ -635,11 +641,11 @@ func (s *store) internalGet(nodePath string) (*node, *v2error.Error) {
 		return nil, v2error.NewError(v2error.EcodeKeyNotFound, path.Join(parent.Path, name), s.CurrentIndex)
 	}
 
-	f, err := s.walk(nodePath, walkFunc)
+	n, err := s.walk(nodePath, walkFunc)
 	if err != nil {
 		return nil, err
 	}
-	return f, nil
+	return n, nil
 }
 
 // DeleteExpiredKeys will delete all expired keys
@@ -658,7 +664,7 @@ func (s *store) DeleteExpiredKeys(cutoff time.Time) {
 		e.EtcdIndex = s.CurrentIndex
 		e.PrevNode = node.Repr(false, false, s.clock)
 		if node.IsDir() {
-			e.Node.Dir = true
+			e.NodeExtern.Dir = true
 		}
 
 		callback := func(path string) { // notify function

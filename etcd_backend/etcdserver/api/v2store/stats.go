@@ -37,45 +37,24 @@ const (
 	CompareAndDeleteFail
 )
 
+// 请求状态记录
 type Stats struct {
-	// 获取请求的数量
-
-	GetSuccess uint64 `json:"getsSuccess"`
-	GetFail    uint64 `json:"getsFail"`
-
-	// set 请求数
-
-	SetSuccess uint64 `json:"setsSuccess"`
-	SetFail    uint64 `json:"setsFail"`
-
-	// delete 请求数
-
-	DeleteSuccess uint64 `json:"deleteSuccess"`
-	DeleteFail    uint64 `json:"deleteFail"`
-
-	// update请求数
-
-	UpdateSuccess uint64 `json:"updateSuccess"`
-	UpdateFail    uint64 `json:"updateFail"`
-
-	// create请求数
-
-	CreateSuccess uint64 `json:"createSuccess"`
-	CreateFail    uint64 `json:"createFail"`
-
-	// testAndSet 请求数
-
-	CompareAndSwapSuccess uint64 `json:"compareAndSwapSuccess"`
-	CompareAndSwapFail    uint64 `json:"compareAndSwapFail"`
-
-	// compareAndDelete请求数
-
-	CompareAndDeleteSuccess uint64 `json:"compareAndDeleteSuccess"`
+	GetSuccess              uint64 `json:"getsSuccess"` // 获取请求的数量
+	GetFail                 uint64 `json:"getsFail"`
+	SetSuccess              uint64 `json:"setsSuccess"` // set 请求数
+	SetFail                 uint64 `json:"setsFail"`
+	DeleteSuccess           uint64 `json:"deleteSuccess"` // delete 请求数
+	DeleteFail              uint64 `json:"deleteFail"`
+	UpdateSuccess           uint64 `json:"updateSuccess"` // update请求数
+	UpdateFail              uint64 `json:"updateFail"`
+	CreateSuccess           uint64 `json:"createSuccess"` // create请求数
+	CreateFail              uint64 `json:"createFail"`
+	CompareAndSwapSuccess   uint64 `json:"compareAndSwapSuccess"` // testAndSet 请求数
+	CompareAndSwapFail      uint64 `json:"compareAndSwapFail"`
+	CompareAndDeleteSuccess uint64 `json:"compareAndDeleteSuccess"` // compareAndDelete请求数
 	CompareAndDeleteFail    uint64 `json:"compareAndDeleteFail"`
-
-	ExpireCount uint64 `json:"expireCount"`
-
-	Watchers uint64 `json:"watchers"`
+	ExpireCount             uint64 `json:"expireCount"`
+	Watchers                uint64 `json:"watchers"`
 }
 
 func newStats() *Stats {

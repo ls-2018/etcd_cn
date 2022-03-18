@@ -309,7 +309,7 @@ type Temp struct {
 
 func MySelfStartRaft(cfg config.ServerConfig) (temp *Temp, err error) {
 	temp = &Temp{}
-	temp.ST = v2store.New(StoreClusterPrefix, StoreKeysPrefix) // 创建了一个store结构体
+	temp.ST = v2store.New(StoreClusterPrefix, StoreKeysPrefix) // 创建了一个store结构体   /0 /1
 
 	if cfg.MaxRequestBytes > recommendedMaxRequestBytes { // 10M
 		cfg.Logger.Warn(
@@ -2184,7 +2184,7 @@ func (s *EtcdServer) applyConfChange(cc raftpb.ConfChangeV1, confState *raftpb.C
 		if confChangeContext.IsPromote {
 			s.cluster.PromoteMember(confChangeContext.Member.ID, shouldApplyV3)
 		} else {
-			s.cluster.AddMember(&confChangeContext.Member, shouldApplyV3)
+			s.cluster.AddMember(&confChangeContext.Member, shouldApplyV3) // 添加节点  /0/members/8e9e05c52164694d
 
 			if confChangeContext.Member.ID != s.id {
 				s.r.transport.AddPeer(confChangeContext.Member.ID, confChangeContext.PeerURLs)

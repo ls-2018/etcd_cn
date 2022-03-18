@@ -70,7 +70,7 @@ func (s *v2v3Store) Get(nodePath string, recursive, sorted bool) (*v2store.Event
 		}
 		return &v2store.Event{
 			Action: v2store.Get,
-			Node: &v2store.NodeExtern{
+			NodeExtern: &v2store.NodeExtern{
 				Key:           nodePath,
 				Dir:           true,
 				Nodes:         nodes,
@@ -87,9 +87,9 @@ func (s *v2v3Store) Get(nodePath string, recursive, sorted bool) (*v2store.Event
 	}
 
 	return &v2store.Event{
-		Action:    v2store.Get,
-		Node:      s.mkV2Node(kvs[0]),
-		EtcdIndex: mkV2Rev(resp.Header.Revision),
+		Action:     v2store.Get,
+		NodeExtern: s.mkV2Node(kvs[0]),
+		EtcdIndex:  mkV2Rev(resp.Header.Revision),
 	}, nil
 }
 
@@ -206,7 +206,7 @@ func (s *v2v3Store) Set(
 	}
 	return &v2store.Event{
 		Action: v2store.Set,
-		Node: &v2store.NodeExtern{
+		NodeExtern: &v2store.NodeExtern{
 			Key:           nodePath,
 			Value:         vp,
 			Dir:           dir,
@@ -254,7 +254,7 @@ func (s *v2v3Store) Update(nodePath, newValue string, expireOpts v2store.TTLOpti
 	pkv := prevKeyFromPuts(resp)
 	return &v2store.Event{
 		Action: v2store.Update,
-		Node: &v2store.NodeExtern{
+		NodeExtern: &v2store.NodeExtern{
 			Key:           nodePath,
 			Value:         &newValue,
 			ModifiedIndex: mkV2Rev(resp.Header.Revision),
@@ -337,7 +337,7 @@ func (s *v2v3Store) Create(
 
 	return &v2store.Event{
 		Action: v2store.Create,
-		Node: &v2store.NodeExtern{
+		NodeExtern: &v2store.NodeExtern{
 			Key:           nodePath,
 			Value:         v,
 			Dir:           dir,
@@ -382,7 +382,7 @@ func (s *v2v3Store) CompareAndSwap(
 	pkv := resp.Responses[0].GetResponsePut().PrevKv
 	return &v2store.Event{
 		Action: v2store.CompareAndSwap,
-		Node: &v2store.NodeExtern{
+		NodeExtern: &v2store.NodeExtern{
 			Key:           nodePath,
 			Value:         &value,
 			CreatedIndex:  mkV2Rev(pkv.CreateRevision),
@@ -475,7 +475,7 @@ func (s *v2v3Store) deleteNode(nodePath string) (*v2store.Event, error) {
 	pkv := pkvs[0]
 	return &v2store.Event{
 		Action: v2store.Delete,
-		Node: &v2store.NodeExtern{
+		NodeExtern: &v2store.NodeExtern{
 			Key:           nodePath,
 			CreatedIndex:  mkV2Rev(pkv.CreateRevision),
 			ModifiedIndex: mkV2Rev(resp.Header.Revision),
@@ -511,7 +511,7 @@ func (s *v2v3Store) CompareAndDelete(nodePath, prevValue string, prevIndex uint6
 	pkv := resp.Responses[0].GetResponseDeleteRange().PrevKvs[0]
 	return &v2store.Event{
 		Action: v2store.CompareAndDelete,
-		Node: &v2store.NodeExtern{
+		NodeExtern: &v2store.NodeExtern{
 			Key:           nodePath,
 			CreatedIndex:  mkV2Rev(pkv.CreateRevision),
 			ModifiedIndex: mkV2Rev(resp.Header.Revision),

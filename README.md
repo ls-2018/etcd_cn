@@ -399,3 +399,4 @@ raft commit->apply  的数据 封装在ready结构体里   <-r.Ready()
       - s.apply(ents, &ep.confState)
         - case raftpb.EntryConfChange:
           - s.applyConfChange(cc, confState, shouldApplyV3)
+

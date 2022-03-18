@@ -111,7 +111,7 @@ We can remove a node using a DELETE request:
 curl -L http://127.0.0.1:12380/3 -XDELETE
 ```
 
-Node 3 should shut itself down once the cluster has processed this request.
+NodeExtern 3 should shut itself down once the cluster has processed this request.
 
 ## Design
 
