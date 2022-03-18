@@ -158,7 +158,6 @@ func (r *raft) advance(rd Ready) {
 	}
 }
 
-
 // 检测是否有未应用的EntryConfChange记录
 func numOfPendingConf(ents []pb.Entry) int {
 	n := 0

@@ -95,8 +95,6 @@ func (f *fakeConsistentIndex) SetConsistentIndex(index uint64, term uint64) {
 func (f *fakeConsistentIndex) UnsafeSave(_ backend.BatchTx) {}
 func (f *fakeConsistentIndex) SetBackend(_ Backend)         {}
 
-
-
 func UnsafeUpdateConsistentIndex(tx backend.BatchTx, index uint64, term uint64, onlyGrow bool) {
 	if index == 0 {
 		// Never save 0 as it means that we didn't loaded the real index yet.
@@ -125,8 +123,6 @@ func UnsafeUpdateConsistentIndex(tx backend.BatchTx, index uint64, term uint64, 
 	}
 }
 
-
-
 // ----------------------------------------- OVER -----------------------------------------------
 
 func (ci *consistentIndex) ConsistentIndex() uint64 {
@@ -145,9 +141,11 @@ func (ci *consistentIndex) SetConsistentIndex(v uint64, term uint64) {
 	atomic.StoreUint64(&ci.consistentIndex, v)
 	atomic.StoreUint64(&ci.term, term)
 }
+
 func UnsafeCreateMetaBucket(tx backend.BatchTx) {
 	tx.UnsafeCreateBucket(buckets.Meta)
 }
+
 // CreateMetaBucket 创建meta bucket,如果不存在
 func CreateMetaBucket(tx backend.BatchTx) {
 	tx.Lock()

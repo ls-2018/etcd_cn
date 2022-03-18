@@ -344,7 +344,7 @@ func mustParseMemberIDFromBytes(lg *zap.Logger, key []byte) types.ID {
 
 // MustParseMemberIDFromKey ok
 func MustParseMemberIDFromKey(lg *zap.Logger, key string) types.ID {
-	id, err := types.IDFromString(path.Base(key))// /0/members/8e9e05c52164694d
+	id, err := types.IDFromString(path.Base(key)) // /0/members/8e9e05c52164694d
 	if err != nil {
 		lg.Panic("从key解析member ID 失败", zap.Error(err))
 	}

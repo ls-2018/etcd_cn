@@ -2028,10 +2028,10 @@ func (s *EtcdServer) apply(es []raftpb.Entry, confState *raftpb.ConfState) (appl
 			s.setTerm(e.Term)
 
 		case raftpb.EntryConfChange:
-			shouldApplyV3 := membership.ApplyV2storeOnly  // false
-			if e.Index > s.consistIndex.ConsistentIndex() {// 查找 blot.db meta 库里的 	consistent_index、term
-				s.consistIndex.SetConsistentIndex(e.Index, e.Term)// 更新内存里的
-				shouldApplyV3 = membership.ApplyBoth // true
+			shouldApplyV3 := membership.ApplyV2storeOnly    // false
+			if e.Index > s.consistIndex.ConsistentIndex() { // 查找 blot.db meta 库里的 	consistent_index、term
+				s.consistIndex.SetConsistentIndex(e.Index, e.Term) // 更新内存里的
+				shouldApplyV3 = membership.ApplyBoth               // true
 			}
 
 			var cc raftpb.ConfChangeV1
@@ -2161,13 +2161,13 @@ func (s *EtcdServer) notifyAboutFirstCommitInTerm() {
 // applyConfChange 将一个confChange作用到当前raft,它必须已经committed
 func (s *EtcdServer) applyConfChange(cc raftpb.ConfChangeV1, confState *raftpb.ConfState, shouldApplyV3 membership.ShouldApplyV3) (bool, error) {
 	if err := s.cluster.ValidateConfigurationChange(cc); err != nil {
-		cc.NodeID = raft.None  // 这种，不会处理的
+		cc.NodeID = raft.None // 这种，不会处理的
 		s.r.ApplyConfChange(cc)
 		return false, err
 	}
 
 	lg := s.Logger()
-	*confState = *s.r.ApplyConfChange(cc)// 生效之后的配置
+	*confState = *s.r.ApplyConfChange(cc) // 生效之后的配置
 	s.beHooks.SetConfState(confState)
 	switch cc.Type {
 	case raftpb.ConfChangeAddNode, raftpb.ConfChangeAddLearnerNode:

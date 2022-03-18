@@ -314,9 +314,9 @@ func joint(cfg tracker.Config) bool {
 	return len(outgoing(cfg.Voters)) > 0
 }
 
-//节点未发生变更时，节点信息存储在JointConfig[0] ，即incoming的指向的集合中。
-//当EnterJoint时，将老节点拷贝至outgoing中，变更节点拷贝至incoming中。
-//LeaveJoint时，删除下线的节点，合并在线的节点并合并至incoming中，完成节点变更过程。
+// 节点未发生变更时，节点信息存储在JointConfig[0] ，即incoming的指向的集合中。
+// 当EnterJoint时，将老节点拷贝至outgoing中，变更节点拷贝至incoming中。
+// LeaveJoint时，删除下线的节点，合并在线的节点并合并至incoming中，完成节点变更过程。
 func incoming(voters quorum.JointConfig) quorum.MajorityConfig      { return voters[0] }
 func outgoing(voters quorum.JointConfig) quorum.MajorityConfig      { return voters[1] }
 func outgoingPtr(voters *quorum.JointConfig) *quorum.MajorityConfig { return &voters[1] }
