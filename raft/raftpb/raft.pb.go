@@ -166,7 +166,7 @@ func (MessageType) EnumDescriptor() ([]byte, []int) {
 // ConfChangeTransition specifies the behavior of a configuration change with
 // respect to joint consensus.
 type ConfChangeTransition int32
-
+//指定关于联合共识的配置更改的行为。自动、显式、隐式
 const (
 	// Automatically use the simple protocol if possible, otherwise fall back
 	// to ConfChangeJointImplicit. Most applications will want to use this.

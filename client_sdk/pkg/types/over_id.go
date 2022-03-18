@@ -23,6 +23,7 @@ func (i ID) String() string {
 	return strconv.FormatUint(uint64(i), 16)
 }
 
+// IDFromString 8e9e05c52164694d
 func IDFromString(s string) (ID, error) {
 	i, err := strconv.ParseUint(s, 16, 64)
 	return ID(i), err

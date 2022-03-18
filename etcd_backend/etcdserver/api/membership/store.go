@@ -274,8 +274,7 @@ func mustSaveClusterVersionToStore(lg *zap.Logger, s v2store.Store, ver *semver.
 	}
 }
 
-// nodeToMember builds member from a key value node.
-// the child nodes of the given node必须是sorted by key.
+// nodeToMember 从node构建一个member
 func nodeToMember(lg *zap.Logger, n *v2store.NodeExtern) (*Member, error) {
 	m := &Member{ID: MustParseMemberIDFromKey(lg, n.Key)}
 	attrs := make(map[string][]byte)
@@ -343,10 +342,11 @@ func mustParseMemberIDFromBytes(lg *zap.Logger, key []byte) types.ID {
 	return id
 }
 
+// MustParseMemberIDFromKey ok
 func MustParseMemberIDFromKey(lg *zap.Logger, key string) types.ID {
-	id, err := types.IDFromString(path.Base(key))
+	id, err := types.IDFromString(path.Base(key))// /0/members/8e9e05c52164694d
 	if err != nil {
-		lg.Panic("failed to parse member id from key", zap.Error(err))
+		lg.Panic("从key解析member ID 失败", zap.Error(err))
 	}
 	return id
 }

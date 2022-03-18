@@ -122,39 +122,35 @@ func (c Changer) LeaveJoint() (tracker.Config, tracker.ProgressMap, error) {
 	return checkAndReturn(cfg, prs)
 }
 
-// Simple carries out a series of configuration changes that (in aggregate)
-// mutates the incoming majority config Voters[0] by at most one. This method
-// will return an error if that is not the case, if the resulting quorum is
-// zero, or if the configuration is in a joint state (i.e. if there is an
-// outgoing configuration).
+// Simple 进行一系列的配置改变，（总的来说）使传入的多数配置Voters[0]最多变化一个。
+// 如果不是这样，如果响应数:quorum为零，或者如果配置处于联合状态（即如果有一个传出的配置），这个方法将返回一个错误。
 func (c Changer) Simple(ccs ...pb.ConfChangeSingle) (tracker.Config, tracker.ProgressMap, error) {
-	cfg, prs, err := c.checkAndCopy()
+	cfg, prs, err := c.checkAndCopy() // cfg是深拷贝,prs是浅拷贝;获取当前的配置，确保配置和进度是相互兼容的
 	if err != nil {
 		return c.err(err)
 	}
-	if joint(cfg) {
+	if joint(cfg) { // 是不是进入联合共识
 		err := errors.New("不能在联合配置中应用简单的配置更改")
 		return c.err(err)
 	}
 	if err := c.apply(&cfg, prs, ccs...); err != nil {
 		return c.err(err)
 	}
+	// incoming voters[0]
 	if n := symdiff(incoming(c.Tracker.Voters), incoming(cfg.Voters)); n > 1 {
-		return tracker.Config{}, nil, errors.New("more than one voter changed without entering joint config")
+		return tracker.Config{}, nil, errors.New("多个选民在没有进入联合配置的情况下发生变化")
 	}
 
 	return checkAndReturn(cfg, prs)
 }
 
-// apply a change to the configuration. By convention, changes to voters are
-// always made to the incoming majority config Voters[0]. Voters[1] is either
-// empty or preserves the outgoing majority configuration while in a joint state.
+// apply 一个对配置的改变。按照惯例，对voter的更改总是对 Voters[0] 进行。
+//  [变更节点集合,老节点集合] 或 [节点、nil]
+//  Voters[1]要么是空的，要么在联合状态下保留传出的多数配置。
 func (c Changer) apply(cfg *tracker.Config, prs tracker.ProgressMap, ccs ...pb.ConfChangeSingle) error {
+	// cfg是深拷贝,prs是浅拷贝;获取当前的配置，确保配置和进度是相互兼容的
 	for _, cc := range ccs {
 		if cc.NodeID == 0 {
-			// etcd replaces the NodeID with zero if it decides (downstream of
-			// raft) to not apply a change, so we have to have explicit code
-			// here to ignore these.
 			continue
 		}
 		switch cc.Type {
@@ -166,18 +162,18 @@ func (c Changer) apply(cfg *tracker.Config, prs tracker.ProgressMap, ccs ...pb.C
 			c.remove(cfg, prs, cc.NodeID)
 		case pb.ConfChangeUpdateNode:
 		default:
-			return fmt.Errorf("unexpected conf type %d", cc.Type)
+			return fmt.Errorf("未知的conf type %d", cc.Type)
 		}
 	}
 	if len(incoming(cfg.Voters)) == 0 {
-		return errors.New("removed all voters")
+		return errors.New("删除了所有选民")
 	}
 	return nil
 }
 
-// makeVoter adds or promotes the given ID to be a voter in the incoming
-// majority config.
+// makeVoter 增加或提升给定的ID，使其成为入选的多数人配置中的选民。
 func (c Changer) makeVoter(cfg *tracker.Config, prs tracker.ProgressMap, id uint64) {
+	// cfg是深拷贝,prs是浅拷贝;获取当前的配置，确保配置和进度是相互兼容的
 	pr := prs[id]
 	if pr == nil {
 		c.initProgress(cfg, prs, id, false /* isLearner */)
@@ -269,91 +265,6 @@ func (c Changer) initProgress(cfg *tracker.Config, prs tracker.ProgressMap, id u
 	}
 }
 
-// checkInvariants makes sure that the config and progress are compatible with
-// each other. This is used to check both what the Changer is initialized with,
-// as well as what it returns.
-func checkInvariants(cfg tracker.Config, prs tracker.ProgressMap) error {
-	// NB: intentionally allow the empty config. In production we'll never see a
-	// non-empty config (we prevent it from being created) but we will need to
-	// be able to *create* an initial config, for example during bootstrap (or
-	// during tests). Instead of having to hand-code this, we allow
-	// transitioning from an empty config into any other legal and non-empty
-	// config.
-	for _, ids := range []map[uint64]struct{}{
-		cfg.Voters.IDs(),
-		cfg.Learners,
-		cfg.LearnersNext,
-	} {
-		for id := range ids {
-			if _, ok := prs[id]; !ok {
-				return fmt.Errorf("no progress for %d", id)
-			}
-		}
-	}
-
-	// Any staged learner was staged because it could not be directly added due
-	// to a conflicting voter in the outgoing config.
-	for id := range cfg.LearnersNext {
-		if _, ok := outgoing(cfg.Voters)[id]; !ok {
-			return fmt.Errorf("%d is in LearnersNext, but not Voters[1]", id)
-		}
-		if prs[id].IsLearner {
-			return fmt.Errorf("%d is in LearnersNext, but is already marked as learner", id)
-		}
-	}
-	// Conversely Learners and Voters doesn't intersect at all.
-	for id := range cfg.Learners {
-		if _, ok := outgoing(cfg.Voters)[id]; ok {
-			return fmt.Errorf("%d is in Learners and Voters[1]", id)
-		}
-		if _, ok := incoming(cfg.Voters)[id]; ok {
-			return fmt.Errorf("%d is in Learners and Voters[0]", id)
-		}
-		if !prs[id].IsLearner {
-			return fmt.Errorf("%d is in Learners, but is not marked as learner", id)
-		}
-	}
-
-	if !joint(cfg) {
-		// We enforce that empty maps are nil instead of zero.
-		if outgoing(cfg.Voters) != nil {
-			return fmt.Errorf("cfg.Voters[1]必须是nil when not joint")
-		}
-		if cfg.LearnersNext != nil {
-			return fmt.Errorf("cfg.LearnersNext必须是nil when not joint")
-		}
-		if cfg.AutoLeave {
-			return fmt.Errorf("AutoLeave必须是false when not joint")
-		}
-	}
-
-	return nil
-}
-
-// checkAndCopy copies the tracker's config and progress map (deeply enough for
-// the purposes of the Changer) and returns those copies. It returns an error
-// if checkInvariants does.
-func (c Changer) checkAndCopy() (tracker.Config, tracker.ProgressMap, error) {
-	cfg := c.Tracker.Config.Clone()
-	prs := tracker.ProgressMap{}
-
-	for id, pr := range c.Tracker.Progress {
-		// 一个浅层拷贝就足够了,因为我们只对Learner字段进行变异.
-		ppr := *pr
-		prs[id] = &ppr
-	}
-	return checkAndReturn(cfg, prs)
-}
-
-// checkAndReturn calls checkInvariants on the input and returns either the
-// resulting error or the input.
-func checkAndReturn(cfg tracker.Config, prs tracker.ProgressMap) (tracker.Config, tracker.ProgressMap, error) {
-	if err := checkInvariants(cfg, prs); err != nil {
-		return tracker.Config{}, tracker.ProgressMap{}, err
-	}
-	return cfg, prs, nil
-}
-
 // err returns zero values and an error.
 func (c Changer) err(err error) (tracker.Config, tracker.ProgressMap, error) {
 	return tracker.Config{}, nil, err
@@ -396,16 +307,21 @@ func symdiff(l, r map[uint64]struct{}) int {
 	return n
 }
 
+// ------------------------------------  OVER  --------------------------------------------------
+
+// 是不是进入联合共识
 func joint(cfg tracker.Config) bool {
 	return len(outgoing(cfg.Voters)) > 0
 }
 
+//节点未发生变更时，节点信息存储在JointConfig[0] ，即incoming的指向的集合中。
+//当EnterJoint时，将老节点拷贝至outgoing中，变更节点拷贝至incoming中。
+//LeaveJoint时，删除下线的节点，合并在线的节点并合并至incoming中，完成节点变更过程。
 func incoming(voters quorum.JointConfig) quorum.MajorityConfig      { return voters[0] }
 func outgoing(voters quorum.JointConfig) quorum.MajorityConfig      { return voters[1] }
 func outgoingPtr(voters *quorum.JointConfig) *quorum.MajorityConfig { return &voters[1] }
 
-// Describe prints the type and NodeID of the configuration changes as a
-// space-delimited string.
+// Describe 打印配置变更
 func Describe(ccs ...pb.ConfChangeSingle) string {
 	var buf strings.Builder
 	for _, cc := range ccs {
@@ -415,4 +331,82 @@ func Describe(ccs ...pb.ConfChangeSingle) string {
 		fmt.Fprintf(&buf, "%s(%d)", cc.Type, cc.NodeID)
 	}
 	return buf.String()
+}
+
+// checkInvariants 确保配置和进度是相互兼容的。
+func checkInvariants(cfg tracker.Config, prs tracker.ProgressMap) error {
+	// cfg是深拷贝,prs是浅拷贝'
+	for _, ids := range []map[uint64]struct{}{
+		cfg.Voters.IDs(), // JointConfig里的所有节点ID
+		cfg.Learners,     //
+		cfg.LearnersNext, // 即将变成learner的几点
+	} {
+		for id := range ids {
+			if _, ok := prs[id]; !ok {
+				return fmt.Errorf("没有该节点的进度信息 %d", id)
+			}
+		}
+	}
+
+	// LearnersNext 不能直接添加,  只能由leader、follower 变成 ; 即降级得到的.
+	for id := range cfg.LearnersNext {
+		// 之前的旧配置中必须存在它
+		if _, ok := outgoing(cfg.Voters)[id]; !ok {
+			return fmt.Errorf("%d 是在LearnersNext中，但不是在Voters中。[1]", id)
+		}
+		// 是不是已经被标记位了learner
+		if prs[id].IsLearner {
+			return fmt.Errorf("%d 是在LearnersNext中，但已经被标记为learner。", id)
+		}
+	}
+	// 反之，学习者和投票者根本没有交集。
+	for id := range cfg.Learners {
+		if _, ok := outgoing(cfg.Voters)[id]; ok {
+			return fmt.Errorf("%d 在 Learners 、 Voters[1]", id)
+		}
+		if _, ok := incoming(cfg.Voters)[id]; ok {
+			return fmt.Errorf("%d 在 Learners 、 Voters[0]", id)
+		}
+		if !prs[id].IsLearner {
+			return fmt.Errorf("%d 是 Learners, 但没有被标记为learner", id)
+		}
+	}
+
+	if !joint(cfg) { // 没有进入共识状态
+		// 我们强制规定，空map是nil而不是0。
+		if outgoing(cfg.Voters) != nil {
+			return fmt.Errorf("cfg.Voters[1]必须是nil 当没有进入联合共识")
+		}
+		if cfg.LearnersNext != nil {
+			return fmt.Errorf("cfg.LearnersNext必须是nil 当没有进入联合共识")
+		}
+		if cfg.AutoLeave {
+			return fmt.Errorf("AutoLeave必须是false 当没有进入联合共识")
+		}
+	}
+	return nil
+}
+
+// checkAndCopy 复制跟踪器的配置和进度Map，并返回这些副本。
+func (c Changer) checkAndCopy() (tracker.Config, tracker.ProgressMap, error) {
+	cfg := c.Tracker.Config.Clone() // 现有的集群配置
+	var _ tracker.ProgressMap = c.Tracker.Progress
+	prs := tracker.ProgressMap{} // 新的
+
+	for id, pr := range c.Tracker.Progress {
+		// pr是一个指针
+		// 一个浅层拷贝就足够了,因为我们只对Learner字段进行变异.
+		ppr := *pr
+		prs[id] = &ppr
+	}
+	return checkAndReturn(cfg, prs) // cfg是深拷贝,prs是浅拷贝;确保配置和进度是相互兼容的
+}
+
+// checkAndReturn 在输入上调用checkInvariants，并返回结果错误或输入。
+func checkAndReturn(cfg tracker.Config, prs tracker.ProgressMap) (tracker.Config, tracker.ProgressMap, error) {
+	// cfg是深拷贝,prs是浅拷贝
+	if err := checkInvariants(cfg, prs); err != nil { // 确保配置和进度是相互兼容的
+		return tracker.Config{}, tracker.ProgressMap{}, err
+	}
+	return cfg, prs, nil
 }

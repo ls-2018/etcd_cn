@@ -32,20 +32,15 @@ var (
 	_ ConfChangeI = ConfChangeV2{}
 )
 
-// EnterJoint returns two bools. The second bool is true if and only if this
-// config change will use Joint Consensus, which is the case if it contains more
-// than one change or if the use of Joint Consensus was requested explicitly.
-// The first bool can only be true if second one is, and indicates whether the
-// Joint State will be left automatically.
+// EnterJoint 返回两个布尔。当且仅当此配置变更将使用联合共识时，第二个bool为真，
+// 如果它包含一个以上的变更或明确要求使用联合共识，则属于这种情况。
+// 第一个bool只有在第二个bool为真时才会出现，它表示联合状态是否会被自动留下。
 func (c ConfChangeV2) EnterJoint() (autoLeave bool, ok bool) {
-	// NB: in theory, more config changes could qualify for the "simple"
-	// protocol but it depends on the config on top of which the changes apply.
-	// For example, adding two learners is not OK if both nodes are part of the
-	// base config (i.e. two voters are turned into learners in the process of
-	// applying the conf change). In practice, these distinctions should not
-	// matter, so we keep it simple and use Joint Consensus liberally.
+	// 注：理论上，更多的配置变化可以符合 "simple "协议的要求，但这取决于这些变化所基于的配置。
+	// 例如，如果两个节点都是基本配置的一部分，增加两个learner是不可以的（也就是说，在应用配置变化的过程中，
+	// 两个voter变成了learner）。在实践中，这些区别应该是不重要的，所以我们保持简单，随意使用联合共识。
 	if c.Transition != ConfChangeTransitionAuto || len(c.Changes) > 1 {
-		// Use Joint Consensus.
+		// 使用联合共识
 		var autoLeave bool
 		switch c.Transition {
 		case ConfChangeTransitionAuto:
@@ -54,7 +49,7 @@ func (c ConfChangeV2) EnterJoint() (autoLeave bool, ok bool) {
 			autoLeave = true
 		case ConfChangeTransitionJointExplicit:
 		default:
-			panic(fmt.Sprintf("unknown transition: %+v", c))
+			panic(fmt.Sprintf("未知的过渡状态: %+v", c))
 		}
 		return autoLeave, true
 	}
@@ -64,8 +59,9 @@ func (c ConfChangeV2) EnterJoint() (autoLeave bool, ok bool) {
 // LeaveJoint is true if the configuration change leaves a joint configuration.
 // This is the case if the ConfChangeV2 is zero, with the possible exception of
 // the Context field.
+// 是真，如果配置改变留下了一个联合配置。如果ConfChangeV2为零，就会出现这种情况，但Context字段可能例外。
 func (c ConfChangeV2) LeaveJoint() bool {
-	// NB: c is already a copy.
+	// NB: c已经是一个拷贝
 	c.Context = nil
 	return proto.Equal(&c, &ConfChangeV2{})
 }

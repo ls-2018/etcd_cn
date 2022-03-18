@@ -88,11 +88,7 @@ func (t *batchTx) RUnlock() {
 func (t *batchTx) UnsafeCreateBucket(bucket Bucket) {
 	_, err := t.tx.CreateBucket(bucket.Name())
 	if err != nil && err != bolt.ErrBucketExists {
-		t.backend.lg.Fatal(
-			"failed to create a bucket",
-			zap.Stringer("bucket-name", bucket),
-			zap.Error(err),
-		)
+		t.backend.lg.Fatal("创建bucket", zap.Stringer("bucket-name", bucket), zap.Error(err))
 	}
 	t.pending++
 }
@@ -143,25 +139,23 @@ func (t *batchTx) unsafePut(bucketType Bucket, key []byte, value []byte, seq boo
 	t.pending++
 }
 
-// UnsafeRange必须是called holding the lock on the tx.
+// UnsafeRange 调用法必须持锁
 func (t *batchTx) UnsafeRange(bucketType Bucket, key, endKey []byte, limit int64) ([][]byte, [][]byte) {
 	bucket := t.tx.Bucket(bucketType.Name())
 	if bucket == nil {
-		t.backend.lg.Fatal(
-			"failed to find a bucket",
-			zap.Stringer("bucket-name", bucketType),
-			zap.Stack("stack"),
-		)
+		t.backend.lg.Fatal("无法找到bucket", zap.Stringer("bucket-name", bucketType), zap.Stack("stack"))
 	}
 	return unsafeRange(bucket.Cursor(), key, endKey, limit)
 }
 
+// 从blot.db 查找k,v
 func unsafeRange(c *bolt.Cursor, key, endKey []byte, limit int64) (keys [][]byte, vs [][]byte) {
 	if limit <= 0 {
 		limit = math.MaxInt64
 	}
 	var isMatch func(b []byte) bool
 	if len(endKey) > 0 {
+		// 判断是不是相等
 		isMatch = func(b []byte) bool { return bytes.Compare(b, endKey) < 0 }
 	} else {
 		isMatch = func(b []byte) bool { return bytes.Equal(b, key) }
@@ -178,7 +172,7 @@ func unsafeRange(c *bolt.Cursor, key, endKey []byte, limit int64) (keys [][]byte
 	return keys, vs
 }
 
-// UnsafeDelete必须是called holding the lock on the tx.
+// UnsafeDelete 调用方必须持锁
 func (t *batchTx) UnsafeDelete(bucketType Bucket, key []byte) {
 	bucket := t.tx.Bucket(bucketType.Name())
 	if bucket == nil {
@@ -199,7 +193,7 @@ func (t *batchTx) UnsafeDelete(bucketType Bucket, key []byte) {
 	t.pending++
 }
 
-// UnsafeForEach必须是called holding the lock on the tx.
+// UnsafeForEach 调用方必须持锁
 func (t *batchTx) UnsafeForEach(bucket Bucket, visitor func(k, v []byte) error) error {
 	return unsafeForEach(t.tx, bucket, visitor)
 }

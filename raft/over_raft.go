@@ -66,9 +66,6 @@ const (
 // ErrProposalDropped 在某些情况下提案被忽略时返回，以便提案者可以得到通知并快速失败。
 var ErrProposalDropped = errors.New("撤销raft提案")
 
-// lockedRand is a small wrapper around rand.Rand to provide
-// synchronization among multiple raft groups. Only the methods needed
-// by the code are exposed (e.g. Intn).
 type lockedRand struct {
 	mu   sync.Mutex
 	rand *rand.Rand
@@ -161,7 +158,6 @@ func (r *raft) advance(rd Ready) {
 	}
 }
 
-// --------------------------------------------- OVER ------------------------------------------------------
 
 // 检测是否有未应用的EntryConfChange记录
 func numOfPendingConf(ents []pb.Entry) int {
@@ -294,7 +290,7 @@ func (c *Config) validate() error {
 	}
 	// 作为leader时的检查
 	if c.ReadOnlyOption == ReadOnlyLeaseBased && !c.CheckQuorum {
-		return errors.New("如果ReadOnlyOption 是 ReadOnlyLeaseBased 的时候必须开启CheckQuorum.")
+		return errors.New("如果ReadOnlyOption 是 ReadOnlyLeaseBased 的时候必须开启CheckQuorum")
 	}
 
 	return nil

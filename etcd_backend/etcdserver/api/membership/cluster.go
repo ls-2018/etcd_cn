@@ -674,42 +674,6 @@ func (c *RaftCluster) IsReadyToPromoteMember(id uint64) bool {
 	return true
 }
 
-func membersFromStore(lg *zap.Logger, st v2store.Store) (map[types.ID]*Member, map[types.ID]bool) {
-	members := make(map[types.ID]*Member)
-	removed := make(map[types.ID]bool)
-	e, err := st.Get(StoreMembersPrefix, true, true) // 获取事件
-	if err != nil {
-		if isKeyNotFound(err) { // 不存在 /0/members节点
-			return members, removed
-		}
-		lg.Panic("从store获取成员失败", zap.String("path", StoreMembersPrefix), zap.Error(err))
-	}
-	for _, n := range e.NodeExtern.Nodes {
-		var m *Member
-		m, err = nodeToMember(lg, n)
-		if err != nil {
-			lg.Panic("failed to nodeToMember", zap.Error(err))
-		}
-		members[m.ID] = m
-	}
-
-	e, err = st.Get(storeRemovedMembersPrefix, true, true)
-	if err != nil {
-		if isKeyNotFound(err) {
-			return members, removed
-		}
-		lg.Panic(
-			"failed to get removed members from store",
-			zap.String("path", storeRemovedMembersPrefix),
-			zap.Error(err),
-		)
-	}
-	for _, n := range e.NodeExtern.Nodes {
-		removed[MustParseMemberIDFromKey(lg, n.Key)] = true
-	}
-	return members, removed
-}
-
 func membersFromBackend(lg *zap.Logger, be backend.Backend) (map[types.ID]*Member, map[types.ID]bool) {
 	return mustReadMembersFromBackend(lg, be)
 }
@@ -935,4 +899,37 @@ func (c *RaftCluster) Member(id types.ID) *Member {
 	c.Lock()
 	defer c.Unlock()
 	return c.members[id].Clone()
+}
+
+// 从v2Store中获取所有的集群几点
+func membersFromStore(lg *zap.Logger, st v2store.Store) (map[types.ID]*Member, map[types.ID]bool) {
+	members := make(map[types.ID]*Member)
+	removed := make(map[types.ID]bool)
+	e, err := st.Get(StoreMembersPrefix, true, true) // 获取/0/members 事件
+	if err != nil {
+		if isKeyNotFound(err) { // 不存在 /0/members节点
+			return members, removed
+		}
+		lg.Panic("从store获取成员失败", zap.String("path", StoreMembersPrefix), zap.Error(err))
+	}
+	for _, n := range e.NodeExtern.Nodes {
+		var m *Member
+		m, err = nodeToMember(lg, n)
+		if err != nil {
+			lg.Panic("node--->member失败", zap.Error(err))
+		}
+		members[m.ID] = m
+	}
+
+	e, err = st.Get(storeRemovedMembersPrefix, true, true) // 获取/0/removed_members 事件
+	if err != nil {
+		if isKeyNotFound(err) {
+			return members, removed
+		}
+		lg.Panic("从store中获取移除节点失败", zap.String("path", storeRemovedMembersPrefix), zap.Error(err))
+	}
+	for _, n := range e.NodeExtern.Nodes {
+		removed[MustParseMemberIDFromKey(lg, n.Key)] = true
+	}
+	return members, removed
 }

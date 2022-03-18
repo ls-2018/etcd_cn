@@ -8,19 +8,21 @@ import (
 
 // todo 看不懂
 func (r *raft) applyConfChange(cc pb.ConfChangeV2) pb.ConfState {
-	cfg, prs, err := func() (tracker.Config, tracker.ProgressMap, error) {
-		changer := confchange.Changer{
-			Tracker:   r.prs,
-			LastIndex: r.raftLog.lastIndex(),
-		}
-		// todo
-		if cc.LeaveJoint() { // 节点离开
-			return changer.LeaveJoint()
-		} else if autoLeave, ok := cc.EnterJoint(); ok { //
-			return changer.EnterJoint(autoLeave, cc.Changes...)
-		}
-		return changer.Simple(cc.Changes...)
-	}()
+	changer := confchange.Changer{
+		Tracker:   r.prs,
+		LastIndex: r.raftLog.lastIndex(),
+	}
+	var cfg tracker.Config
+	var prs tracker.ProgressMap
+	var err error
+	if cc.LeaveJoint() { // 判断是不是一个空的ConfChangeV2
+		cfg, prs, err = changer.LeaveJoint()
+	} else if autoLeave, ok := cc.EnterJoint(); ok { // change >1 或 !ConfChangeTransitionAuto
+		cfg, prs, err = changer.EnterJoint(autoLeave, cc.Changes...)
+	} else {
+		cfg, prs, err = changer.Simple(cc.Changes...)
+	}
+
 	if err != nil {
 		panic(err)
 	}

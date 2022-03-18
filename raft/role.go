@@ -225,6 +225,8 @@ func stepLeader(r *raft, m pb.Message) error {
 				// true, true
 				// false false
 				if refused != "" { // 忽略配置变更
+					//如果发现当前是在joint consensus过程中，拒绝变更，直接将message type 变成普通的entry。
+					//处理完毕后，会等待将该消息分发。
 					r.logger.Infof("%x 忽略配置变更 %v  %s: %s", r.id, cc, r.prs.Config, refused)
 					m.Entries[i] = pb.Entry{Type: pb.EntryNormal}
 				} else {

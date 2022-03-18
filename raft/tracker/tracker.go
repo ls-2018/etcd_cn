@@ -24,53 +24,35 @@ import (
 )
 
 type Config struct {
-	Voters quorum.JointConfig
+	Voters quorum.JointConfig // 投票者，分为两个阶段   【新的配置、 旧的配置】或  【配置、 nil】
 	// AutoLeave 如果配置是joint的，并且在可能的情况下，应该由Raft自动进行到传递配置的过渡，则为true。
 	// 如果为false，则该配置将被连接，直到应用程序手动启动转换。
 	AutoLeave bool
-	// Learners is a set of IDs corresponding to the learners active in the
-	// current configuration.
+	Learners  map[uint64]struct{} // Learners 当前配置中的learner ID
+	// 当我们在联合共识转换过程中把voter变成learner时，我们不能在进入联合状态时直接增加学习者。
+	// 这是因为这将违反voter和learner的交集是空的这一不变性。例如，假设一个voter被移除，并立即重新添加为learner
+	// （或者换句话说，它被降级）。
 	//
-	// Invariant: Learners and Voters does not intersect, i.e. if a peer is in
-	// either half of the joint config, it can't be a learner; if it is a
-	// learner it can't be in either half of the joint config. This invariant
-	// simplifies the implementation since it allows peers to have clarity about
-	// its current role without taking into account joint consensus.
-	Learners map[uint64]struct{}
-	// When we turn a voter into a learner during a joint consensus transition,
-	// we cannot add the learner directly when entering the joint state. This is
-	// because this would violate the invariant that the intersection of
-	// voters and learners is empty. For example, assume a Voter is removed and
-	// immediately re-added as a learner (or in other words, it is demoted):
-	//
-	// Initially, the configuration will be
-	//
+	// 最初，配置将是
 	//   voters:   {1 2 3}
 	//   learners: {}
 	//
-	// and we want to demote 3. Entering the joint configuration, we naively get
-	//
+	// 而我们想降级3。进入联合配置，我们天真地认为
 	//   voters:   {1 2} & {1 2 3}
 	//   learners: {3}
 	//
-	// but this violates the invariant (3 is both voter and learner). Instead,
-	// we get
-	//
+	// 但这违反了不变量（3既是投票者又是学习者）。相反，我们得到
 	//   voters:   {1 2} & {1 2 3}
 	//   learners: {}
 	//   next_learners: {3}
 	//
-	// Where 3 is now still purely a voter, but we are remembering the intention
-	// to make it a learner upon transitioning into the final configuration:
-	//
+	// 其中3号现在还是纯粹的投票者，但我们记住了在过渡到最终配置时使其成为学习者的意图。
 	//   voters:   {1 2}
 	//   learners: {3}
 	//   next_learners: {}
 	//
-	// Note that next_learners is not used while adding a learner that is not
-	// also a voter in the joint config. In this case, the learner is added
-	// right away when entering the joint configuration, so that it is caught up
-	// as soon as possible.
+	// 请注意，在添加一个不属于joint config中投票人的learner时，不使用next_learners。
+	// 在这种情况下，learners在进入联合配置时被立即添加，以便尽快赶上。
 	LearnersNext map[uint64]struct{}
 }
 
@@ -89,7 +71,6 @@ func (c Config) String() string {
 	return buf.String()
 }
 
-// Clone returns a copy of the Config that shares no memory with the original.
 func (c *Config) Clone() Config {
 	clone := func(m map[uint64]struct{}) map[uint64]struct{} {
 		if m == nil {
@@ -151,8 +132,7 @@ func (p *ProgressTracker) IsSingleton() bool {
 	return len(p.Voters[0]) == 1 && len(p.Voters[1]) == 0
 }
 
-// QuorumActive returns true if the quorum is active from the view of the local
-// raft state machine. Otherwise, it returns false.
+// QuorumActive 如果从本地raft状态机的角度来看，该法定人数是活动的，则返回true。否则，它将返回false。
 func (p *ProgressTracker) QuorumActive() bool {
 	votes := map[uint64]bool{}
 	p.Visit(func(id uint64, pr *Progress) {
