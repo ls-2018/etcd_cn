@@ -62,7 +62,7 @@ func (c ConfChangeV2) EnterJoint() (autoLeave bool, ok bool) {
 // 是真，如果配置改变留下了一个联合配置。如果ConfChangeV2为零，就会出现这种情况，但Context字段可能例外。
 func (c ConfChangeV2) LeaveJoint() bool {
 	// NB: c已经是一个拷贝
-	c.Context = nil
+	c.Context = ""
 	return proto.Equal(&c, &ConfChangeV2{})
 }
 

@@ -39,7 +39,7 @@ func (rn *RawNode) Bootstrap(peers []Peer) error {
 	rn.raft.becomeFollower(1, None)
 	ents := make([]pb.Entry, len(peers))
 	for i, peer := range peers {
-		cc := pb.ConfChangeV1{Type: pb.ConfChangeAddNode, NodeID: peer.ID, Context: peer.Context}
+		cc := pb.ConfChangeV1{Type: pb.ConfChangeAddNode, NodeID: peer.ID, Context: string(peer.Context)}
 		data, err := cc.Marshal()
 		if err != nil {
 			return err

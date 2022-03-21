@@ -102,7 +102,6 @@ func (c MajorityConfig) Describe(l AckedIndexer) string {
 	return buf.String()
 }
 
-// Slice returns the MajorityConfig as a sorted slice.
 func (c MajorityConfig) Slice() []uint64 {
 	var sl []uint64
 	for id := range c {

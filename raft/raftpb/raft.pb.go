@@ -5,7 +5,6 @@ package raftpb
 
 import (
 	fmt "fmt"
-	io "io"
 	math "math"
 	math_bits "math/bits"
 
@@ -523,6 +522,7 @@ func (m *HardState) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_HardState proto.InternalMessageInfo
 
+// ConfState tracker.Config的另一种体现形式
 type ConfState struct {
 	// The voters in the incoming config. (If the configuration is not joint,
 	// then the outgoing config is empty).
@@ -544,7 +544,7 @@ type ConfState struct {
 type ConfChangeV1 struct {
 	Type    ConfChangeType `protobuf:"varint,2,opt,name=type,enum=raftpb.ConfChangeType" json:"type"`
 	NodeID  uint64         `protobuf:"varint,3,opt,name=node_id,json=nodeId" json:"node_id"` // NodeID: 变更节点的id
-	Context []byte         `protobuf:"bytes,4,opt,name=context" json:"context,omitempty"`
+	Context string         `protobuf:"string,4,opt,name=context" json:"context,omitempty"`
 	// 这个字段只被etcd用来传播一个唯一的标识符。理想情况下，它应该真正使用Context来代替。在ConfChangeV2中没有对应的字段存在。
 	ID uint64 `protobuf:"varint,1,opt,name=id" json:"id"` // 节点变更的次数
 }
@@ -553,7 +553,7 @@ type ConfChangeV1 struct {
 type ConfChangeV2 struct {
 	Transition ConfChangeTransition `protobuf:"varint,1,opt,name=transition,enum=raftpb.ConfChangeTransition" json:"transition"`
 	Changes    []ConfChangeSingle   `protobuf:"bytes,2,rep,name=changes" json:"changes"`
-	Context    []byte               `protobuf:"bytes,3,opt,name=context" json:"context,omitempty"`
+	Context    string               `protobuf:"bytes,3,opt,name=context" json:"context,omitempty"`
 }
 
 func (m *ConfState) Reset()         { *m = ConfState{} }
@@ -601,35 +601,6 @@ func (*ConfChangeV1) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b042552c306ae59b, []int{6}
 }
 
-func (m *ConfChangeV1) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-
-func (m *ConfChangeV1) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_ConfChange.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-
-func (m *ConfChangeV1) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ConfChange.Merge(m, src)
-}
-
-func (m *ConfChangeV1) XXX_Size() int {
-	return m.Size()
-}
-
-func (m *ConfChangeV1) XXX_DiscardUnknown() {
-	xxx_messageInfo_ConfChange.DiscardUnknown(m)
-}
-
 var xxx_messageInfo_ConfChange proto.InternalMessageInfo
 
 // ConfChangeSingle is an individual configuration change operation. Multiple
@@ -644,35 +615,6 @@ func (m *ConfChangeSingle) String() string { return proto.CompactTextString(m) }
 func (*ConfChangeSingle) ProtoMessage()    {}
 func (*ConfChangeSingle) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b042552c306ae59b, []int{7}
-}
-
-func (m *ConfChangeSingle) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-
-func (m *ConfChangeSingle) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_ConfChangeSingle.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-
-func (m *ConfChangeSingle) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ConfChangeSingle.Merge(m, src)
-}
-
-func (m *ConfChangeSingle) XXX_Size() int {
-	return m.Size()
-}
-
-func (m *ConfChangeSingle) XXX_DiscardUnknown() {
-	xxx_messageInfo_ConfChangeSingle.DiscardUnknown(m)
 }
 
 var xxx_messageInfo_ConfChangeSingle proto.InternalMessageInfo
@@ -721,25 +663,8 @@ func (m *ConfChangeV2) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
 
-func (m *ConfChangeV2) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_ConfChangeV2.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-
 func (m *ConfChangeV2) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_ConfChangeV2.Merge(m, src)
-}
-
-func (m *ConfChangeV2) XXX_Size() int {
-	return m.Size()
 }
 
 func (m *ConfChangeV2) XXX_DiscardUnknown() {
@@ -1070,40 +995,6 @@ func (m *ConfState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *ConfChangeV1) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *ConfChangeV1) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Context != nil {
-		i -= len(m.Context)
-		copy(dAtA[i:], m.Context)
-		i = encodeVarintRaft(dAtA, i, uint64(len(m.Context)))
-		i--
-		dAtA[i] = 0x22
-	}
-	i = encodeVarintRaft(dAtA, i, uint64(m.NodeID))
-	i--
-	dAtA[i] = 0x18
-	i = encodeVarintRaft(dAtA, i, uint64(m.Type))
-	i--
-	dAtA[i] = 0x10
-	i = encodeVarintRaft(dAtA, i, uint64(m.ID))
-	i--
-	dAtA[i] = 0x8
-	return len(dAtA) - i, nil
-}
-
-func (m *ConfChangeSingle) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
 func (m *ConfChangeSingle) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
@@ -1113,43 +1004,6 @@ func (m *ConfChangeSingle) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i--
 	dAtA[i] = 0x10
 	i = encodeVarintRaft(dAtA, i, uint64(m.Type))
-	i--
-	dAtA[i] = 0x8
-	return len(dAtA) - i, nil
-}
-
-func (m *ConfChangeV2) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *ConfChangeV2) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Context != nil {
-		i -= len(m.Context)
-		copy(dAtA[i:], m.Context)
-		i = encodeVarintRaft(dAtA, i, uint64(len(m.Context)))
-		i--
-		dAtA[i] = 0x1a
-	}
-	if len(m.Changes) > 0 {
-		for iNdEx := len(m.Changes) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.Changes[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintRaft(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0x12
-		}
-	}
-	i = encodeVarintRaft(dAtA, i, uint64(m.Transition))
 	i--
 	dAtA[i] = 0x8
 	return len(dAtA) - i, nil
@@ -1283,138 +1137,8 @@ func (m *ConfState) Size() (n int) {
 	return n
 }
 
-func (m *ConfChangeV1) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovRaft(uint64(m.ID))
-	n += 1 + sovRaft(uint64(m.Type))
-	n += 1 + sovRaft(uint64(m.NodeID))
-	if m.Context != nil {
-		l = len(m.Context)
-		n += 1 + l + sovRaft(uint64(l))
-	}
-	return n
-}
-
-func (m *ConfChangeSingle) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovRaft(uint64(m.Type))
-	n += 1 + sovRaft(uint64(m.NodeID))
-	return n
-}
-
-func (m *ConfChangeV2) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovRaft(uint64(m.Transition))
-	if len(m.Changes) > 0 {
-		for _, e := range m.Changes {
-			l = e.Size()
-			n += 1 + l + sovRaft(uint64(l))
-		}
-	}
-	if m.Context != nil {
-		l = len(m.Context)
-		n += 1 + l + sovRaft(uint64(l))
-	}
-	return n
-}
-
 func sovRaft(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
-}
-
-func sozRaft(x uint64) (n int) {
-	return sovRaft(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-
-func skipRaft(dAtA []byte) (n int, err error) {
-	l := len(dAtA)
-	iNdEx := 0
-	depth := 0
-	for iNdEx < l {
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return 0, ErrIntOverflowRaft
-			}
-			if iNdEx >= l {
-				return 0, io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		wireType := int(wire & 0x7)
-		switch wireType {
-		case 0:
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return 0, ErrIntOverflowRaft
-				}
-				if iNdEx >= l {
-					return 0, io.ErrUnexpectedEOF
-				}
-				iNdEx++
-				if dAtA[iNdEx-1] < 0x80 {
-					break
-				}
-			}
-		case 1:
-			iNdEx += 8
-		case 2:
-			var length int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return 0, ErrIntOverflowRaft
-				}
-				if iNdEx >= l {
-					return 0, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				length |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if length < 0 {
-				return 0, ErrInvalidLengthRaft
-			}
-			iNdEx += length
-		case 3:
-			depth++
-		case 4:
-			if depth == 0 {
-				return 0, ErrUnexpectedEndOfGroupRaft
-			}
-			depth--
-		case 5:
-			iNdEx += 4
-		default:
-			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
-		}
-		if iNdEx < 0 {
-			return 0, ErrInvalidLengthRaft
-		}
-		if depth == 0 {
-			return iNdEx, nil
-		}
-	}
-	return 0, io.ErrUnexpectedEOF
 }
 
 var (

@@ -122,191 +122,6 @@ func (c Changer) LeaveJoint() (tracker.Config, tracker.ProgressMap, error) {
 	return checkAndReturn(cfg, prs)
 }
 
-// Simple 进行一系列的配置改变，（总的来说）使传入的多数配置Voters[0]最多变化一个。
-// 如果不是这样，如果响应数:quorum为零，或者如果配置处于联合状态（即如果有一个传出的配置），这个方法将返回一个错误。
-func (c Changer) Simple(ccs ...pb.ConfChangeSingle) (tracker.Config, tracker.ProgressMap, error) {
-	cfg, prs, err := c.checkAndCopy() // cfg是深拷贝,prs是浅拷贝;获取当前的配置，确保配置和进度是相互兼容的
-	if err != nil {
-		return c.err(err)
-	}
-	if joint(cfg) { // 是不是进入联合共识
-		err := errors.New("不能在联合配置中应用简单的配置更改")
-		return c.err(err)
-	}
-	if err := c.apply(&cfg, prs, ccs...); err != nil {
-		return c.err(err)
-	}
-	// incoming voters[0]
-	if n := symdiff(incoming(c.Tracker.Voters), incoming(cfg.Voters)); n > 1 {
-		return tracker.Config{}, nil, errors.New("多个选民在没有进入联合配置的情况下发生变化")
-	}
-
-	return checkAndReturn(cfg, prs)
-}
-
-// apply 一个对配置的改变。按照惯例，对voter的更改总是对 Voters[0] 进行。
-//  [变更节点集合,老节点集合] 或 [节点、nil]
-//  Voters[1]要么是空的，要么在联合状态下保留传出的多数配置。
-func (c Changer) apply(cfg *tracker.Config, prs tracker.ProgressMap, ccs ...pb.ConfChangeSingle) error {
-	// cfg是深拷贝,prs是浅拷贝;获取当前的配置，确保配置和进度是相互兼容的
-	for _, cc := range ccs {
-		if cc.NodeID == 0 {
-			continue
-		}
-		switch cc.Type {
-		case pb.ConfChangeAddNode:
-			c.makeVoter(cfg, prs, cc.NodeID)
-		case pb.ConfChangeAddLearnerNode:
-			c.makeLearner(cfg, prs, cc.NodeID)
-		case pb.ConfChangeRemoveNode:
-			c.remove(cfg, prs, cc.NodeID)
-		case pb.ConfChangeUpdateNode:
-		default:
-			return fmt.Errorf("未知的conf type %d", cc.Type)
-		}
-	}
-	if len(incoming(cfg.Voters)) == 0 {
-		return errors.New("删除了所有选民")
-	}
-	return nil
-}
-
-// makeVoter 增加或提升给定的ID，使其成为入选的多数人配置中的选民。
-func (c Changer) makeVoter(cfg *tracker.Config, prs tracker.ProgressMap, id uint64) {
-	// cfg是深拷贝,prs是浅拷贝;获取当前的配置，确保配置和进度是相互兼容的
-	pr := prs[id]
-	if pr == nil {
-		c.initProgress(cfg, prs, id, false /* isLearner */)
-		return
-	}
-
-	pr.IsLearner = false
-	nilAwareDelete(&cfg.Learners, id)
-	nilAwareDelete(&cfg.LearnersNext, id)
-	incoming(cfg.Voters)[id] = struct{}{}
-}
-
-// makeLearner makes the given ID a learner or stages it to be a learner once
-// an active joint configuration is exited.
-//
-// The former happens when the peer is not a part of the outgoing config, in
-// which case we either add a new learner or demote a voter in the incoming
-// config.
-//
-// The latter case occurs when the configuration is joint and the peer is a
-// voter in the outgoing config. In that case, we do not want to add the peer
-// as a learner because then we'd have to track a peer as a voter and learner
-// simultaneously. Instead, we add the learner to LearnersNext, so that it will
-// be added to Learners the moment the outgoing config is removed by
-// LeaveJoint().
-func (c Changer) makeLearner(cfg *tracker.Config, prs tracker.ProgressMap, id uint64) {
-	pr := prs[id]
-	if pr == nil {
-		c.initProgress(cfg, prs, id, true /* isLearner */)
-		return
-	}
-	if pr.IsLearner {
-		return
-	}
-	// Remove any existing voter in the incoming config...
-	c.remove(cfg, prs, id)
-	// ... but save the Progress.
-	prs[id] = pr
-	// Use LearnersNext if we can't add the learner to Learners directly, i.e.
-	// if the peer is still tracked as a voter in the outgoing config. It will
-	// be turned into a learner in LeaveJoint().
-	//
-	// Otherwise, add a regular learner right away.
-	if _, onRight := outgoing(cfg.Voters)[id]; onRight {
-		nilAwareAdd(&cfg.LearnersNext, id)
-	} else {
-		pr.IsLearner = true
-		nilAwareAdd(&cfg.Learners, id)
-	}
-}
-
-// remove this peer as a voter or learner from the incoming config.
-func (c Changer) remove(cfg *tracker.Config, prs tracker.ProgressMap, id uint64) {
-	if _, ok := prs[id]; !ok {
-		return
-	}
-
-	delete(incoming(cfg.Voters), id)
-	nilAwareDelete(&cfg.Learners, id)
-	nilAwareDelete(&cfg.LearnersNext, id)
-
-	// If the peer is still a voter in the outgoing config, keep the Progress.
-	if _, onRight := outgoing(cfg.Voters)[id]; !onRight {
-		delete(prs, id)
-	}
-}
-
-// initProgress 初始化给定Follower或Learner的Progress,该节点不能以任何一种形式存在,否则异常.
-// ID是Peer的ID,match和next用来初始化Progress的.
-func (c Changer) initProgress(cfg *tracker.Config, prs tracker.ProgressMap, id uint64, isLearner bool) {
-	if !isLearner {
-		// 等同于  cfg.Voters[0][id] = struct{}{}
-		incoming(cfg.Voters)[id] = struct{}{}
-	} else {
-		nilAwareAdd(&cfg.Learners, id)
-	}
-	// Follower可以参与选举和投票,Learner不可以,只要知道这一点就可以了.无论是Follower还是
-	// Learner都会有一个Progress,但是他们再次进行了分组管理.
-	prs[id] = &tracker.Progress{
-		// 初始化Progress需要给定Next、Match、Inflights容量以及是否是learner,其他也没啥
-		// 此处可以剧透一下,raft的代码初始化的时候Match=0,Next=1.
-		Next:      c.LastIndex,
-		Match:     0,
-		Inflights: tracker.NewInflights(c.Tracker.MaxInflight),
-		IsLearner: isLearner,
-		// 当一个节点第一次被添加时,我们应该把它标记为最近活跃.否则,如果CheckQuorum在被调用之前,可能会导致我们停止工作.
-		// 在被添加的节点有机会与我们通信之前调用它,可能会导致我们降级.
-		RecentActive: true,
-	}
-}
-
-// err returns zero values and an error.
-func (c Changer) err(err error) (tracker.Config, tracker.ProgressMap, error) {
-	return tracker.Config{}, nil, err
-}
-
-// nilAwareAdd populates a map entry, creating the map if necessary.
-func nilAwareAdd(m *map[uint64]struct{}, id uint64) {
-	if *m == nil {
-		*m = map[uint64]struct{}{}
-	}
-	(*m)[id] = struct{}{}
-}
-
-// nilAwareDelete deletes from a map, nil'ing the map itself if it is empty after.
-func nilAwareDelete(m *map[uint64]struct{}, id uint64) {
-	if *m == nil {
-		return
-	}
-	delete(*m, id)
-	if len(*m) == 0 {
-		*m = nil
-	}
-}
-
-// symdiff returns the count of the symmetric difference between the sets of
-// uint64s, i.e. len( (l - r) \union (r - l)).
-func symdiff(l, r map[uint64]struct{}) int {
-	var n int
-	pairs := [][2]quorum.MajorityConfig{
-		{l, r}, // count elems in l but not in r
-		{r, l}, // count elems in r but not in l
-	}
-	for _, p := range pairs {
-		for id := range p[0] {
-			if _, ok := p[1][id]; !ok {
-				n++
-			}
-		}
-	}
-	return n
-}
-
 // ------------------------------------  OVER  --------------------------------------------------
 
 // 是不是进入联合共识
@@ -359,7 +174,7 @@ func checkInvariants(cfg tracker.Config, prs tracker.ProgressMap) error {
 			return fmt.Errorf("%d 是在LearnersNext中，但已经被标记为learner。", id)
 		}
 	}
-	// 反之，学习者和投票者根本没有交集。
+	// 反之，learner和投票者根本没有交集。
 	for id := range cfg.Learners {
 		if _, ok := outgoing(cfg.Voters)[id]; ok {
 			return fmt.Errorf("%d 在 Learners 、 Voters[1]", id)
@@ -409,4 +224,188 @@ func checkAndReturn(cfg tracker.Config, prs tracker.ProgressMap) (tracker.Config
 		return tracker.Config{}, tracker.ProgressMap{}, err
 	}
 	return cfg, prs, nil
+}
+
+// initProgress 初始化给定Follower或Learner的Progress,该节点不能以任何一种形式存在,否则异常.
+// ID是Peer的ID,match和next用来初始化Progress的.
+func (c Changer) initProgress(cfg *tracker.Config, prs tracker.ProgressMap, id uint64, isLearner bool) {
+	if !isLearner {
+		// 等同于  cfg.Voters[0][id] = struct{}{}
+		incoming(cfg.Voters)[id] = struct{}{}
+	} else {
+		nilAwareAdd(&cfg.Learners, id)
+	}
+	// Follower可以参与选举和投票,Learner不可以,只要知道这一点就可以了.无论是Follower还是
+	// Learner都会有一个Progress,但是他们再次进行了分组管理.
+	prs[id] = &tracker.Progress{
+		// 初始化Progress需要给定Next、Match、Inflights容量以及是否是learner,其他也没啥
+		// 此处可以剧透一下,raft的代码初始化的时候Match=0,Next=1.
+		Next:      c.LastIndex,
+		Match:     0,
+		Inflights: tracker.NewInflights(c.Tracker.MaxInflight),
+		IsLearner: isLearner,
+		// 当一个节点第一次被添加时,我们应该把它标记为最近活跃.否则,如果CheckQuorum在被调用之前,可能会导致我们停止工作.
+		// 在被添加的节点有机会与我们通信之前调用它,可能会导致我们降级.
+		RecentActive: true,
+	}
+}
+
+// nilAwareAdd 填充一个map条目，如果需要的话，创建map
+func nilAwareAdd(m *map[uint64]struct{}, id uint64) {
+	if *m == nil {
+		*m = map[uint64]struct{}{}
+	}
+	(*m)[id] = struct{}{}
+}
+
+// nilAwareDelete 从一个map中删除，如果之后map是空的，则将其置空。
+func nilAwareDelete(m *map[uint64]struct{}, id uint64) {
+	if *m == nil {
+		return
+	}
+	delete(*m, id)
+	if len(*m) == 0 {
+		*m = nil
+	}
+}
+
+// err 返回零值和一个错误。
+func (c Changer) err(err error) (tracker.Config, tracker.ProgressMap, error) {
+	return tracker.Config{}, nil, err
+}
+
+// makeVoter 增加或提升给定的ID，使其成为入选的多数人配置中的选民。
+func (c Changer) makeVoter(cfg *tracker.Config, prs tracker.ProgressMap, id uint64) {
+	// cfg是深拷贝,prs是浅拷贝;获取当前的配置，确保配置和进度是相互兼容的
+	pr := prs[id]
+	if pr == nil {
+		// 添加节点
+		c.initProgress(cfg, prs, id, false /* isLearner */)
+		return
+	}
+	// 提升角色 [learner->follower]
+	pr.IsLearner = false
+	nilAwareDelete(&cfg.Learners, id)
+	nilAwareDelete(&cfg.LearnersNext, id)
+	incoming(cfg.Voters)[id] = struct{}{}
+}
+
+// remove 从 voter[0]、learner、learnersNext 中删除
+func (c Changer) remove(cfg *tracker.Config, prs tracker.ProgressMap, id uint64) {
+	if _, ok := prs[id]; !ok {
+		return
+	}
+
+	delete(incoming(cfg.Voters), id)
+	nilAwareDelete(&cfg.Learners, id)
+	nilAwareDelete(&cfg.LearnersNext, id)
+
+	// 如果不再vote[1]中 删除;如果在vote[1]中,之后在leaveJoint处理
+	if _, onRight := outgoing(cfg.Voters)[id]; !onRight {
+		// cfg.Voters[1][id]
+		delete(prs, id)
+	}
+}
+
+// makeLearner 添加learner
+func (c Changer) makeLearner(cfg *tracker.Config, prs tracker.ProgressMap, id uint64) {
+	pr := prs[id]
+	if pr == nil {
+		// 新增加一个learner
+		c.initProgress(cfg, prs, id, true /* isLearner */)
+		return
+	}
+	if pr.IsLearner {
+		return
+	}
+	// // 从 voters、learner、learnersNext 中删除
+	c.remove(cfg, prs, id) // 从 voter[0]、learner、learnersNext 中删除
+	prs[id] = pr
+	//  如果我们不能直接将learner添加到learner中，也就是说，该peer在veto[1]中,是降级来的
+	//  则使用 LearnersNext。
+	//  在LeaveJoint()中，LearnersNext将被转变成一个learner。
+	//  否则，立即添加一个普通的learner。
+	if _, onRight := outgoing(cfg.Voters)[id]; onRight {
+		// 降级
+		nilAwareAdd(&cfg.LearnersNext, id)
+	} else {
+		// 新增
+		pr.IsLearner = true
+		nilAwareAdd(&cfg.Learners, id)
+	}
+}
+
+// apply 一个对配置的改变。按照惯例，对voter的更改总是对 Voters[0] 进行。
+//  [变更节点集合,老节点集合] 或 [节点、nil]
+//  Voters[1]要么是空的，要么在联合状态下保留传出的多数配置。
+func (c Changer) apply(cfg *tracker.Config, prs tracker.ProgressMap, ccs ...pb.ConfChangeSingle) error {
+	// cfg是深拷贝,prs是浅拷贝;获取当前的配置，确保配置和进度是相互兼容的
+	for _, cc := range ccs {
+		if cc.NodeID == 0 {
+			continue
+		}
+		// 只需要 节点 id、角色;   peer url 不需要
+		// 更新cfg prs 数据
+		switch cc.Type {
+		case pb.ConfChangeAddNode:
+			c.makeVoter(cfg, prs, cc.NodeID)
+		case pb.ConfChangeAddLearnerNode:
+			c.makeLearner(cfg, prs, cc.NodeID)
+		case pb.ConfChangeRemoveNode:
+			c.remove(cfg, prs, cc.NodeID)
+		case pb.ConfChangeUpdateNode:
+		default:
+			return fmt.Errorf("未知的conf type %d", cc.Type)
+		}
+	}
+	if len(incoming(cfg.Voters)) == 0 {
+		return errors.New("删除了所有选民")
+	}
+	return nil
+}
+
+// symdiff 返回二者的差异数  len(a-b)+len(b-a)：描述的不够准确
+func symdiff(l, r map[uint64]struct{}) int {
+	var n int
+	// [[1,2],[1,2]]
+	pairs := [][2]quorum.MajorityConfig{
+		{l, r}, // count elems in l but not in r
+		{r, l}, // count elems in r but not in l
+	}
+	for _, p := range pairs {
+		for id := range p[0] {
+			if _, ok := p[1][id]; !ok {
+				n++
+			}
+		}
+	}
+	return n
+}
+
+// Simple 进行一系列的配置改变，（总的来说）使传入的多数配置Voters[0]最多变化一个。
+// 如果不是这样，如果响应数:quorum为零，或者如果配置处于联合状态（即如果有一个传出的配置），这个方法将返回一个错误。
+func (c Changer) Simple(ccs ...pb.ConfChangeSingle) (tracker.Config, tracker.ProgressMap, error) {
+	cfg, prs, err := c.checkAndCopy() // cfg是深拷贝,prs是浅拷贝;获取当前的配置，确保配置和进度是相互兼容的
+	if err != nil {
+		return c.err(err)
+	}
+	if joint(cfg) { // 是不是进入联合共识
+		err := errors.New("不能在联合配置中应用简单的配置更改")
+		return c.err(err)
+	}
+	if err := c.apply(&cfg, prs, ccs...); err != nil { // 只更新cfg、prs记录
+		return c.err(err)
+	}
+	// incoming voters[0]
+	// prs = c.Tracker.Progress cfg = c.Tracker.Config
+	_ = c.Tracker.Voters //  quorum.JointConfig
+	// c.Tracker.Config.Voters   没有区别  Config是匿名结构体  c.Tracker.Voters
+
+	if n := symdiff(incoming(c.Tracker.Voters), incoming(cfg.Voters)); n > 1 {
+		// [12,123] 一般是 1
+		// 存在不同的个数
+		return tracker.Config{}, nil, errors.New("多个选民在没有进入联合配置的情况下发生变化")
+	}
+
+	return checkAndReturn(cfg, prs) // 内容校验
 }

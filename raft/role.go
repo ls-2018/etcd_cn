@@ -162,17 +162,17 @@ func stepLeader(r *raft, m pb.Message) error {
 		//--------------------其他消息处理----------------------
 	case pb.MsgCheckQuorum: // leader专属
 		// 将 leader 自己的 RecentActive 状态设置为 true
-		if pr := r.prs.Progress[r.id]; pr != nil {
+		if pr := r.prstrack.Progress[r.id]; pr != nil {
 			pr.RecentActive = true
 		}
-		if !r.prs.QuorumActive() {
+		if !r.prstrack.QuorumActive() {
 			// 如果当前 leader 发现其不满足 quorum 的条件,则说明该 leader 有可能处于隔离状态,step down
 			r.logger.Warningf("%x stepped down to follower since quorum is not active", r.id)
 			r.becomeFollower(r.Term, None)
 		}
 		// Mark everyone (but ourselves) as inactive in preparation for the next
 		// CheckQuorum.
-		r.prs.Visit(func(id uint64, pr *tracker.Progress) {
+		r.prstrack.Visit(func(id uint64, pr *tracker.Progress) {
 			if id != r.id {
 				pr.RecentActive = false
 			}
@@ -182,7 +182,7 @@ func stepLeader(r *raft, m pb.Message) error {
 		if len(m.Entries) == 0 {
 			r.logger.Panicf("%x stepped empty MsgProp", r.id)
 		}
-		if r.prs.Progress[r.id] == nil {
+		if r.prstrack.Progress[r.id] == nil {
 			// 判断当前节点是不是已经被从集群中移除了
 			return ErrProposalDropped
 		}
@@ -210,7 +210,7 @@ func stepLeader(r *raft, m pb.Message) error {
 			}
 			if cc != nil {
 				alreadyPending := r.pendingConfIndex > r.raftLog.applied // 是否已经apply了该配置变更
-				alreadyJoint := len(r.prs.Config.Voters[1]) > 0          // 判断第二个MajorityConfig:map[uint64]struct{} 有没有数据
+				alreadyJoint := len(r.prstrack.Config.Voters[1]) > 0     // 判断第二个MajorityConfig:map[uint64]struct{} 有没有数据
 				wantsLeaveJoint := len(cc.AsV2().Changes) == 0           // 节点个数
 				// 首先切换到过渡形态，我们称之为联合共识;
 				// 一旦提交了联合共识，系统就会过渡到新的配置。联合共识结合了新旧配置。
@@ -227,7 +227,7 @@ func stepLeader(r *raft, m pb.Message) error {
 				if refused != "" { // 忽略配置变更
 					// 如果发现当前是在joint consensus过程中，拒绝变更，直接将message type 变成普通的entry。
 					// 处理完毕后，会等待将该消息分发。
-					r.logger.Infof("%x 忽略配置变更 %v  %s: %s", r.id, cc, r.prs.Config, refused)
+					r.logger.Infof("%x 忽略配置变更 %v  %s: %s", r.id, cc, r.prstrack.Config, refused)
 					m.Entries[i] = pb.Entry{Type: pb.EntryNormal}
 				} else {
 					r.pendingConfIndex = r.raftLog.lastIndex() + uint64(i) + 1
@@ -243,7 +243,7 @@ func stepLeader(r *raft, m pb.Message) error {
 		return nil
 	case pb.MsgReadIndex:
 		// 集群中只有一个投票成员（领导者）。
-		if r.prs.IsSingleton() {
+		if r.prstrack.IsSingleton() {
 			if resp := r.responseToReadIndexReq(m, r.raftLog.committed); resp.To != None {
 				r.send(resp)
 			}
@@ -262,7 +262,7 @@ func stepLeader(r *raft, m pb.Message) error {
 		return nil
 	}
 	// 根据消息的From字段获取对应的Progress实例,为后面的消息处理做准备
-	pr := r.prs.Progress[m.From]
+	pr := r.prstrack.Progress[m.From]
 	if pr == nil {
 		r.logger.Debugf("%x no progress available for %x", r.id, m.From)
 		return nil
@@ -362,7 +362,7 @@ func stepLeader(r *raft, m pb.Message) error {
 			return nil
 		}
 
-		if r.prs.Voters.VoteResult(r.readOnly.recvAck(m.From, m.Context)) != quorum.VoteWon {
+		if r.prstrack.Voters.VoteResult(r.readOnly.recvAck(m.From, m.Context)) != quorum.VoteWon {
 			return nil
 		}
 
@@ -546,7 +546,7 @@ func stepFollower(r *raft, m pb.Message) error {
 
 // roleUp 是否可以被提升为leader.
 func (r *raft) roleUp() bool {
-	pr := r.prs.Progress[r.id] // 是本节点raft的身份
+	pr := r.prstrack.Progress[r.id] // 是本节点raft的身份
 	// 节点不是learner 且 没有正在应用快照
 	return pr != nil && !pr.IsLearner && !r.raftLog.hasPendingSnapshot()
 }
@@ -581,7 +581,7 @@ func (r *raft) becomePreCandidate() {
 	}
 	// 变成预竞选者更新step func和state,但绝对不能增加任期和投票
 	r.step = stepCandidate
-	r.prs.ResetVotes() // // 清空接收到了哪些节点的投票
+	r.prstrack.ResetVotes() // // 清空接收到了哪些节点的投票
 	r.tick = r.tickElection
 	r.lead = None
 	r.state = StatePreCandidate
@@ -602,7 +602,7 @@ func (r *raft) becomeLeader() {
 	// (perhaps after having received a snapshot as a result). The leader is
 	// trivially in this state. Note that r.reset() has initialized this
 	// progress with the last index already.
-	r.prs.Progress[r.id].BecomeReplicate()
+	r.prstrack.Progress[r.id].BecomeReplicate()
 
 	// Conservatively set the pendingConfIndex to the last index in the
 	// log. There may or may not be a pending config change, but it's

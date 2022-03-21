@@ -40,4 +40,11 @@ func main() {
 	fmt.Println(json.Unmarshal([]byte(b), &etcdserverpb.InternalRaftRequest{}))
 	var c time.Time
 	fmt.Println(c.IsZero())
+	var d JointConfig
+	fmt.Println(d[1]["a"])
 }
+
+type (
+	Config      map[string]string
+	JointConfig [2]Config
+)

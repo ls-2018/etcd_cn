@@ -71,9 +71,9 @@ func (r *raft) restore(s pb.Snapshot) bool {
 	r.raftLog.restore(s)
 
 	// 重置配置并重新添加（可能更新的）对等体。
-	r.prs = tracker.MakeProgressTracker(r.prs.MaxInflight) // 相当于重置prs信息
+	r.prstrack = tracker.MakeProgressTracker(r.prstrack.MaxInflight) // 相当于重置prs信息
 	cfg, prs, err := confchange.Restore(confchange.Changer{
-		Tracker:   r.prs,
+		Tracker:   r.prstrack,
 		LastIndex: r.raftLog.lastIndex(),
 	}, cs)
 	if err != nil {
@@ -82,7 +82,7 @@ func (r *raft) restore(s pb.Snapshot) bool {
 
 	assertConfStatesEquivalent(r.logger, cs, r.switchToConfig(cfg, prs))
 
-	pr := r.prs.Progress[r.id]
+	pr := r.prstrack.Progress[r.id]
 	pr.MaybeUpdate(pr.Next - 1) // TODO(tbg): 这是未经测试的，可能不需要的。
 
 	r.logger.Infof("%x [commit: %d, lastindex: %d, lastterm: %d] 重置快照信息[index: %d, term: %d]",

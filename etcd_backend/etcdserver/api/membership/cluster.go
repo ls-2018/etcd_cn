@@ -20,7 +20,6 @@ import (
 	"crypto/sha1"
 	"encoding/binary"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"path"
 	"sort"
@@ -31,7 +30,6 @@ import (
 	"github.com/ls-2018/etcd_cn/raft"
 
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
-	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v2error"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v2store"
 	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc/backend"
 	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc/buckets"
@@ -52,24 +50,22 @@ type RaftCluster struct {
 	localID types.ID // 本机节点ID
 	cid     types.ID // 集群ID,根据所有初始 memberID hash 得到的
 
-	v2store v2store.Store // 存储
+	v2store v2store.Store // 内存里面的一个树形node结构
 	be      backend.Backend
 
-	sync.Mutex // guards the fields below
-	version    *semver.Version
-	members    map[types.ID]*Member
-	removed    map[types.ID]bool // 记录被删除的节点ID,删除后的节点无法重用
-
-	downgradeInfo *DowngradeInfo // 降级信息
+	sync.Mutex    // 守住下面的字段
+	version       *semver.Version
+	members       map[types.ID]*Member
+	removed       map[types.ID]bool // 记录被删除的节点ID,删除后的节点无法重用
+	downgradeInfo *DowngradeInfo    // 降级信息
 }
 
-// ConfigChangeContext represents a context for confChange.
+// ConfigChangeContext 代表confChange的一个上下文。
 type ConfigChangeContext struct {
 	Member
-	// IsPromote indicates if the config change is for promoting a learner member.
-	// This flag is needed because both adding a new member and promoting a learner member
-	// uses the same config change type 'ConfChangeAddNode'.
-	IsPromote bool `json:"isPromote"`
+	// IsPromote 是否提升learner。
+	// 添加新成员和提升learner都使用相同的配置变更类型 "ConfChangeAddNode"。
+	IsPromote bool `json:"isPromote"` // 是否角色提升
 }
 
 type ShouldApplyV3 bool
@@ -274,7 +270,7 @@ func (c *RaftCluster) Recover(onSet func(*zap.Logger, *semver.Version)) {
 	}
 }
 
-// ValidateConfigurationChange TODO 验证接受 提议的ConfChange 并确保它仍然有效。
+// ValidateConfigurationChange  验证接受 提议的ConfChange 并确保它仍然有效。
 func (c *RaftCluster) ValidateConfigurationChange(cc raftpb.ConfChangeV1) error {
 	members, removed := membersFromStore(c.lg, c.v2store) // 从v2store中获取所有成员
 	// members 包括leader、follower、learner、候选者
@@ -286,10 +282,9 @@ func (c *RaftCluster) ValidateConfigurationChange(cc raftpb.ConfChangeV1) error 
 	switch cc.Type {
 	case raftpb.ConfChangeAddNode, raftpb.ConfChangeAddLearnerNode:
 		confChangeContext := new(ConfigChangeContext)
-		if err := json.Unmarshal(cc.Context, confChangeContext); err != nil {
+		if err := json.Unmarshal([]byte(cc.Context), confChangeContext); err != nil {
 			c.lg.Panic("发序列化失败confChangeContext", zap.Error(err))
 		}
-
 		if confChangeContext.IsPromote { // 将一个learner提升为投票节点, 那他应该是learner
 			if members[id] == nil {
 				return ErrIDNotFound
@@ -302,13 +297,13 @@ func (c *RaftCluster) ValidateConfigurationChange(cc raftpb.ConfChangeV1) error 
 				return ErrIDExists
 			}
 
-			urls := make(map[string]bool)
+			urls := make(map[string]bool) // 当前集群所有节点的通信地址
 			for _, m := range members {
 				for _, u := range m.PeerURLs {
 					urls[u] = true
 				}
 			}
-			// 检查peer
+			// 检查peer地址是否已存在
 			for _, u := range confChangeContext.Member.PeerURLs {
 				if urls[u] {
 					return ErrPeerURLexists
@@ -348,7 +343,7 @@ func (c *RaftCluster) ValidateConfigurationChange(cc raftpb.ConfChangeV1) error 
 			}
 		}
 		m := new(Member)
-		if err := json.Unmarshal(cc.Context, m); err != nil {
+		if err := json.Unmarshal([]byte(cc.Context), m); err != nil {
 			c.lg.Panic("反序列化成员失败", zap.Error(err))
 		}
 		for _, u := range m.PeerURLs {
@@ -361,115 +356,6 @@ func (c *RaftCluster) ValidateConfigurationChange(cc raftpb.ConfChangeV1) error 
 		c.lg.Panic("未知的 ConfChange type", zap.String("type", cc.Type.String()))
 	}
 	return nil
-}
-
-// AddMember adds a new Member into the cluster, and saves the given member's
-// raftAttributes into the store. The given member should have empty attributes.
-// A Member with a matching id must not exist.
-func (c *RaftCluster) AddMember(m *Member, shouldApplyV3 ShouldApplyV3) {
-	c.Lock()
-	defer c.Unlock()
-
-	var v2Err, beErr error
-	if c.v2store != nil {
-		v2Err = unsafeSaveMemberToStore(c.lg, c.v2store, m)
-		if v2Err != nil {
-			if e, ok := v2Err.(*v2error.Error); !ok || e.ErrorCode != v2error.EcodeNodeExist {
-				c.lg.Panic(
-					"failed to save member to store",
-					zap.String("member-id", m.ID.String()),
-					zap.Error(v2Err),
-				)
-			}
-		}
-	}
-	if c.be != nil && shouldApplyV3 {
-		beErr = unsafeSaveMemberToBackend(c.lg, c.be, m)
-		if beErr != nil && !errors.Is(beErr, errMemberAlreadyExist) {
-			c.lg.Panic(
-				"failed to save member to backend",
-				zap.String("member-id", m.ID.String()),
-				zap.Error(beErr),
-			)
-		}
-	}
-	// Panic if both storeV2 and backend report member already exist.
-	if v2Err != nil && (beErr != nil || c.be == nil) {
-		c.lg.Panic(
-			"failed to save member to store",
-			zap.String("member-id", m.ID.String()),
-			zap.Error(v2Err),
-		)
-	}
-
-	c.members[m.ID] = m
-
-	c.lg.Info(
-		"added member",
-		zap.String("cluster-id", c.cid.String()),
-		zap.String("local-member-id", c.localID.String()),
-		zap.String("added-peer-id", m.ID.String()),
-		zap.Strings("added-peer-peer-urls", m.PeerURLs),
-	)
-}
-
-// RemoveMember removes a member from the store.
-// The given id MUST exist, or the function panics.
-func (c *RaftCluster) RemoveMember(id types.ID, shouldApplyV3 ShouldApplyV3) {
-	c.Lock()
-	defer c.Unlock()
-	var v2Err, beErr error
-	if c.v2store != nil {
-		v2Err = unsafeDeleteMemberFromStore(c.v2store, id)
-		if v2Err != nil {
-			if e, ok := v2Err.(*v2error.Error); !ok || e.ErrorCode != v2error.EcodeKeyNotFound {
-				c.lg.Panic(
-					"failed to delete member from store",
-					zap.String("member-id", id.String()),
-					zap.Error(v2Err),
-				)
-			}
-		}
-	}
-	if c.be != nil && shouldApplyV3 {
-		beErr = unsafeDeleteMemberFromBackend(c.be, id)
-		if beErr != nil && !errors.Is(beErr, errMemberNotFound) {
-			c.lg.Panic(
-				"failed to delete member from backend",
-				zap.String("member-id", id.String()),
-				zap.Error(beErr),
-			)
-		}
-	}
-	// Panic if both storeV2 and backend report member not found.
-	if v2Err != nil && (beErr != nil || c.be == nil) {
-		c.lg.Panic(
-			"failed to delete member from store",
-			zap.String("member-id", id.String()),
-			zap.Error(v2Err),
-		)
-	}
-
-	m, ok := c.members[id]
-	delete(c.members, id)
-	c.removed[id] = true
-
-	if ok {
-		c.lg.Info(
-			"removed member",
-			zap.String("cluster-id", c.cid.String()),
-			zap.String("local-member-id", c.localID.String()),
-			zap.String("removed-remote-peer-id", id.String()),
-			zap.Strings("removed-remote-peer-urls", m.PeerURLs),
-		)
-	} else {
-		c.lg.Warn(
-			"skipped removing already removed member",
-			zap.String("cluster-id", c.cid.String()),
-			zap.String("local-member-id", c.localID.String()),
-			zap.String("removed-remote-peer-id", id.String()),
-		)
-	}
 }
 
 func (c *RaftCluster) UpdateAttributes(id types.ID, attr Attributes, shouldApplyV3 ShouldApplyV3) {
@@ -502,26 +388,6 @@ func (c *RaftCluster) UpdateAttributes(id types.ID, attr Attributes, shouldApply
 		zap.String("cluster-id", c.cid.String()),
 		zap.String("local-member-id", c.localID.String()),
 		zap.String("updated-peer-id", id.String()),
-	)
-}
-
-// PromoteMember marks the member's IsLearner RaftAttributes to false.
-func (c *RaftCluster) PromoteMember(id types.ID, shouldApplyV3 ShouldApplyV3) {
-	c.Lock()
-	defer c.Unlock()
-
-	c.members[id].RaftAttributes.IsLearner = false
-	if c.v2store != nil {
-		mustUpdateMemberInStore(c.lg, c.v2store, c.members[id])
-	}
-	if c.be != nil && shouldApplyV3 {
-		unsafeSaveMemberToBackend(c.lg, c.be, c.members[id])
-	}
-
-	c.lg.Info(
-		"promote member",
-		zap.String("cluster-id", c.cid.String()),
-		zap.String("local-member-id", c.localID.String()),
 	)
 }
 
@@ -583,95 +449,6 @@ func (c *RaftCluster) SetVersion(ver *semver.Version, onSet func(*zap.Logger, *s
 		mustSaveClusterVersionToBackend(c.be, ver)
 	}
 	onSet(c.lg, ver)
-}
-
-func (c *RaftCluster) IsReadyToAddVotingMember() bool {
-	nmembers := 1
-	nstarted := 0
-
-	for _, member := range c.VotingMembers() {
-		if member.IsStarted() {
-			nstarted++
-		}
-		nmembers++
-	}
-
-	if nstarted == 1 && nmembers == 2 {
-		// a case of adding a new node to 1-member cluster for restoring cluster data
-		// https://github.com/etcd-io/website/blob/main/content/docs/v2/admin_guide.md#restoring-the-cluster
-		c.lg.Debug("number of started member is 1; can accept add member request")
-		return true
-	}
-
-	nquorum := nmembers/2 + 1
-	if nstarted < nquorum {
-		c.lg.Warn(
-			"rejecting member add; started member will be less than quorum",
-			zap.Int("number-of-started-member", nstarted),
-			zap.Int("quorum", nquorum),
-			zap.String("cluster-id", c.cid.String()),
-			zap.String("local-member-id", c.localID.String()),
-		)
-		return false
-	}
-
-	return true
-}
-
-func (c *RaftCluster) IsReadyToRemoveVotingMember(id uint64) bool {
-	nmembers := 0
-	nstarted := 0
-
-	for _, member := range c.VotingMembers() {
-		if uint64(member.ID) == id {
-			continue
-		}
-
-		if member.IsStarted() {
-			nstarted++
-		}
-		nmembers++
-	}
-
-	nquorum := nmembers/2 + 1
-	if nstarted < nquorum {
-		c.lg.Warn(
-			"rejecting member remove; started member will be less than quorum",
-			zap.Int("number-of-started-member", nstarted),
-			zap.Int("quorum", nquorum),
-			zap.String("cluster-id", c.cid.String()),
-			zap.String("local-member-id", c.localID.String()),
-		)
-		return false
-	}
-
-	return true
-}
-
-func (c *RaftCluster) IsReadyToPromoteMember(id uint64) bool {
-	nmembers := 1 // We count the learner to be promoted for the future quorum
-	nstarted := 1 // and we also count it as started.
-
-	for _, member := range c.VotingMembers() {
-		if member.IsStarted() {
-			nstarted++
-		}
-		nmembers++
-	}
-
-	nquorum := nmembers/2 + 1
-	if nstarted < nquorum {
-		c.lg.Warn(
-			"rejecting member promote; started member will be less than quorum",
-			zap.Int("number-of-started-member", nstarted),
-			zap.Int("quorum", nquorum),
-			zap.String("cluster-id", c.cid.String()),
-			zap.String("local-member-id", c.localID.String()),
-		)
-		return false
-	}
-
-	return true
 }
 
 func membersFromBackend(lg *zap.Logger, be backend.Backend) (map[types.ID]*Member, map[types.ID]bool) {

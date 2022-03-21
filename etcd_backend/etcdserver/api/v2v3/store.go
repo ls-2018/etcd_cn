@@ -30,11 +30,10 @@ import (
 	"go.etcd.io/etcd/api/v3/mvccpb"
 )
 
-// store implements the Store interface for V2 using
-// a v3 client.
+// store 使用v3客户端实现V2的存储接口。
 type v2v3Store struct {
 	c *clientv3.Client
-	// pfx is the v3 prefix where keys should be stored.
+	// pfx 是应该存储钥匙的v3前缀。
 	pfx string
 	ctx context.Context
 }
@@ -136,11 +135,7 @@ func (s *v2v3Store) getDirDepth(nodePath string, depth int, rev int64) ([]*v2sto
 	return nodes, nil
 }
 
-func (s *v2v3Store) Set(
-	nodePath string,
-	dir bool,
-	value string,
-	expireOpts v2store.TTLOptionSet,
+func (s *v2v3Store) Set(nodePath string, dir bool, value string, expireOpts v2store.TTLOptionSet,
 ) (*v2store.Event, error) {
 	if expireOpts.Refresh || !expireOpts.ExpireTime.IsZero() {
 		return nil, errUnsupported
@@ -218,6 +213,7 @@ func (s *v2v3Store) Set(
 	}, nil
 }
 
+// Update 更新节点属性,  例如将islearner变成false
 func (s *v2v3Store) Update(nodePath, newValue string, expireOpts v2store.TTLOptionSet) (*v2store.Event, error) {
 	if isRoot(nodePath) {
 		return nil, v2error.NewError(v2error.EcodeRootROnly, nodePath, 0)
@@ -265,13 +261,7 @@ func (s *v2v3Store) Update(nodePath, newValue string, expireOpts v2store.TTLOpti
 	}, nil
 }
 
-func (s *v2v3Store) Create(
-	nodePath string,
-	dir bool,
-	value string,
-	unique bool,
-	expireOpts v2store.TTLOptionSet,
-) (*v2store.Event, error) {
+func (s *v2v3Store) Create(nodePath string, dir bool, value string, unique bool, expireOpts v2store.TTLOptionSet) (*v2store.Event, error) {
 	if isRoot(nodePath) {
 		return nil, v2error.NewError(v2error.EcodeRootROnly, nodePath, 0)
 	}
@@ -348,13 +338,7 @@ func (s *v2v3Store) Create(
 	}, nil
 }
 
-func (s *v2v3Store) CompareAndSwap(
-	nodePath string,
-	prevValue string,
-	prevIndex uint64,
-	value string,
-	expireOpts v2store.TTLOptionSet,
-) (*v2store.Event, error) {
+func (s *v2v3Store) CompareAndSwap(nodePath string, prevValue string, prevIndex uint64, value string, expireOpts v2store.TTLOptionSet) (*v2store.Event, error) {
 	if isRoot(nodePath) {
 		return nil, v2error.NewError(v2error.EcodeRootROnly, nodePath, 0)
 	}

@@ -135,19 +135,11 @@ type raftNode struct {
 	tickMu         *sync.Mutex
 	raftNodeConfig // 包含了node、storage等重要数据结构
 
-	// a chan to send/receive snapshot
-	msgSnapC chan raftpb.Message
-
-	// a chan to send out apply
-	applyc chan apply
-
-	// a chan to send out readState
-	readStateC chan raft.ReadState
-
-	ticker *time.Ticker // raft 中有两个时间计数器,它们分别是选举计数器 (Follower/Candidate)和心跳计数器  (Leader),它们都依靠 tick 来推进时钟
-
-	// contention detectors for raft heartbeat message
-	td *contention.TimeoutDetector
+	msgSnapC   chan raftpb.Message         // a chan to send/receive snapshot
+	applyc     chan apply                  // a chan to send out apply
+	readStateC chan raft.ReadState         // a chan to send out readState
+	ticker     *time.Ticker                // raft 中有两个时间计数器,它们分别是选举计数器 (Follower/Candidate)和心跳计数器  (Leader),它们都依靠 tick 来推进时钟
+	td         *contention.TimeoutDetector // contention detectors for raft heartbeat message
 
 	stopped chan struct{}
 	done    chan struct{}
@@ -392,7 +384,7 @@ func createConfigChangeEnts(lg *zap.Logger, ids []uint64, self uint64, term, ind
 		cc := &raftpb.ConfChangeV1{
 			Type:    raftpb.ConfChangeAddNode,
 			NodeID:  self,
-			Context: ctx,
+			Context: string(ctx),
 		}
 		e := raftpb.Entry{
 			Type:  raftpb.EntryConfChange,
@@ -463,7 +455,7 @@ func (r *raftNode) start(rh *raftReadyHandler) {
 					select {
 					case r.readStateC <- rd.ReadStates[len(rd.ReadStates)-1]:
 					case <-time.After(internalTimeout):
-						r.lg.Warn("timed out sending read state", zap.Duration("timeout", internalTimeout))
+						r.lg.Warn("发送读状态超时", zap.Duration("timeout", internalTimeout))
 					case <-r.stopped:
 						return
 					}

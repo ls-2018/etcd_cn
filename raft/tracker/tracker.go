@@ -29,7 +29,7 @@ type Config struct {
 	// 如果为false，则该配置将被连接，直到应用程序手动启动转换。
 	AutoLeave bool
 	Learners  map[uint64]struct{} // Learners 当前配置中的learner ID
-	// 当我们在联合共识转换过程中把voter变成learner时，我们不能在进入联合状态时直接增加学习者。
+	// 当我们在联合共识转换过程中把voter变成learner时，我们不能在进入联合状态时直接增加learner。
 	// 这是因为这将违反voter和learner的交集是空的这一不变性。例如，假设一个voter被移除，并立即重新添加为learner
 	// （或者换句话说，它被降级）。
 	//
@@ -41,12 +41,12 @@ type Config struct {
 	//   voters:   {1 2} & {1 2 3}
 	//   learners: {3}
 	//
-	// 但这违反了不变量（3既是投票者又是学习者）。相反，我们得到
+	// 但这违反了不变量（3既是投票者又是learner）。相反，我们得到
 	//   voters:   {1 2} & {1 2 3}
 	//   learners: {}
 	//   next_learners: {3}
 	//
-	// 其中3号现在还是纯粹的投票者，但我们记住了在过渡到最终配置时使其成为学习者的意图。
+	// 其中3号现在还是纯粹的投票者，但我们记住了在过渡到最终配置时使其成为learner的意图。
 	//   voters:   {1 2}
 	//   learners: {3}
 	//   next_learners: {}

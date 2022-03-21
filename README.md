@@ -229,6 +229,7 @@ http://127.0.0.1:2379/members
 - https://www.zhihu.com/question/63995014/answer/2251115833
 - https://blog.csdn.net/weixin_42017400/article/details/123174473
 - https://www.jianshu.com/p/1621360b0b8e
+- https://blog.csdn.net/xxb249/article/details/80787817 
 
 
 
@@ -385,18 +386,36 @@ type Record struct {
 ```
 raft commit->apply  的数据 封装在ready结构体里   <-r.Ready()
     raftNode拿到该ready做一些处理,过滤出操作日志   publishEntries
-        上层应用拿到过滤后的,将其应用到kvstore
+        上层应用拿到过滤后的,将其应用到kvstore【【
 ```
 
-
-集群节点变更：
+### 集群节点变更
+```
 1、先检查是否有待应用的变更
 2、将变更信息放入raft unstable 等待发送----->发送,等到apply
 3、apply 该变更
-- ap := <-s.r.apply()
-  - s.applyAll(&ep, &ap)
-    - s.applyEntries(ep, apply)
-      - s.apply(ents, &ep.confState)
-        - case raftpb.EntryConfChange:
-          - s.applyConfChange(cc, confState, shouldApplyV3)
+case rd := <-r.Ready(): 从raft拿到要apply的消息
+  case r.applyc <- ap:
+       go:
+       - ap := <-s.r.apply()
+        - s.applyAll(&ep, &ap)
+         - s.applyEntries(ep, apply)
+          - s.apply(ents, &ep.confState)
+           - case raftpb.EntryConfChange:
+            - s.applyConfChange(cc, confState, shouldApplyV3)
+             - *s.r.ApplyConfChange(cc)     获取应用配置变更之后的集群状态      
+              - cs := r.applyConfChange(cc) 返回应用配置变更之后的集群状态,已生效,只更新了quorum.JointConfig与peer信息
+               - r.switchToConfig(cfg, prs) 
+             -
+               | s.cluster.PromoteMember 
+               | s.cluster.AddMember 
+               | s.cluster.RemoveMember 
+               | s.cluster.UpdateRaftAttributes 
+
+
+r.Advance()
+
+```
+
+
 

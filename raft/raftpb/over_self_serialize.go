@@ -119,7 +119,7 @@ func (m *ConfState) Unmarshal(dAtA []byte) error {
 func (m *ConfChangeV1) Unmarshal(dAtA []byte) error {
 	a := A{}
 	err := json.Unmarshal(dAtA, &a)
-	m.Context = []byte(a.Context)
+	m.Context = a.Context
 	m.Type = a.Type
 	m.ID = a.ID
 	m.NodeID = a.NodeID

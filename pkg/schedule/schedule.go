@@ -46,10 +46,10 @@ type Scheduler interface {
 type fifo struct {
 	mu sync.Mutex
 
-	resume    chan struct{}
+	resume    chan struct{} // 重新开始
 	scheduled int
 	finished  int
-	pendings  []Job
+	pendings  []Job // 将每从raft获取到的一批待apply的消息封装成一个job
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -71,13 +71,13 @@ func NewFIFOScheduler() Scheduler {
 	return f
 }
 
-// Schedule schedules a job that will be ran in FIFO order sequentially.
+// Schedule 调度一个作业，该作业将按照FIFO顺序顺序运行。
 func (f *fifo) Schedule(j Job) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
 	if f.cancel == nil {
-		panic("schedule: schedule to stopped scheduler")
+		panic("调度:调度到停止的调度程序")
 	}
 
 	if len(f.pendings) == 0 {

@@ -234,15 +234,15 @@ type EtcdServer struct {
 	lessor            lease.Lessor            // v3用,作用是实现过期时间
 	bemu              sync.Mutex              // 守护后端存储的锁,改变后端存储和获取后端存储是使用
 	be                backend.Backend         // 后端存储
-	beHooks           *backendHooks
-	authStore         auth.AuthStore        // 存储鉴权数据
-	alarmStore        *v3alarm.AlarmStore   // 存储告警数据
-	stats             *stats.ServerStats    // 当前节点状态
-	lstats            *stats.LeaderStats    // leader状态
-	SyncTicker        *time.Ticker          // v2用,实现ttl数据过期的
-	compactor         v3compactor.Compactor // 压缩数据的周期任务
-	peerRt            http.RoundTripper     // 用于发送远程请求
-	reqIDGen          *idutil.Generator     // 用于生成请求id
+	beHooks           *backendHooks           // 存储钩子
+	authStore         auth.AuthStore          // 存储鉴权数据
+	alarmStore        *v3alarm.AlarmStore     // 存储告警数据
+	stats             *stats.ServerStats      // 当前节点状态
+	lstats            *stats.LeaderStats      // leader状态
+	SyncTicker        *time.Ticker            // v2用,实现ttl数据过期的
+	compactor         v3compactor.Compactor   // 压缩数据的周期任务
+	peerRt            http.RoundTripper       // 用于发送远程请求
+	reqIDGen          *idutil.Generator       // 用于生成请求id
 	// wgMu blocks concurrent waitgroup mutation while etcd stopping
 	wgMu sync.RWMutex
 	// wg is used to wait for the goroutines that depends on the etcd state
@@ -259,12 +259,13 @@ type EtcdServer struct {
 	*AccessController
 }
 
+// 后端存储钩子
 type backendHooks struct {
 	indexer cindex.ConsistentIndexer
 	lg      *zap.Logger
 
 	// confState to be written in the next submitted backend transaction (if dirty)
-	confState raftpb.ConfState
+	confState raftpb.ConfState // 集群当前的配置信息
 	// first write changes it to 'dirty'. false by default, so
 	// not initialized `confState` is meaningless.
 	confStateDirty bool
@@ -1528,7 +1529,7 @@ func (s *EtcdServer) AddMember(ctx context.Context, memb membership.Member) ([]*
 	cc := raftpb.ConfChangeV1{
 		Type:    raftpb.ConfChangeAddNode,
 		NodeID:  uint64(memb.ID),
-		Context: b,
+		Context: string(b),
 	}
 
 	if memb.IsLearner {
@@ -1656,7 +1657,7 @@ func (s *EtcdServer) promoteMember(ctx context.Context, id uint64) ([]*membershi
 	cc := raftpb.ConfChangeV1{
 		Type:    raftpb.ConfChangeAddNode,
 		NodeID:  id,
-		Context: b,
+		Context: string(b),
 	}
 
 	return s.configure(ctx, cc)
@@ -1775,7 +1776,7 @@ func (s *EtcdServer) UpdateMember(ctx context.Context, memb membership.Member) (
 	cc := raftpb.ConfChangeV1{
 		Type:    raftpb.ConfChangeUpdateNode,
 		NodeID:  uint64(memb.ID),
-		Context: b,
+		Context: string(b),
 	}
 	return s.configure(ctx, cc)
 }
@@ -2170,23 +2171,23 @@ func (s *EtcdServer) applyConfChange(cc raftpb.ConfChangeV1, confState *raftpb.C
 	*confState = *s.r.ApplyConfChange(cc) // 生效之后的配置
 	s.beHooks.SetConfState(confState)
 	switch cc.Type {
+	// 集群里记录的quorum.JointConfig与peer信息已经更新
 	case raftpb.ConfChangeAddNode, raftpb.ConfChangeAddLearnerNode:
 		confChangeContext := new(membership.ConfigChangeContext)
-		if err := json.Unmarshal(cc.Context, confChangeContext); err != nil {
+		if err := json.Unmarshal([]byte(cc.Context), confChangeContext); err != nil {
 			lg.Panic("发序列化成员失败", zap.Error(err))
 		}
 		if cc.NodeID != uint64(confChangeContext.Member.ID) {
 			lg.Panic(
-				"got different member ID",
+				"得到不同的成员ID",
 				zap.String("member-id-from-config-change-entry", types.ID(cc.NodeID).String()),
 				zap.String("member-id-from-message", confChangeContext.Member.ID.String()),
 			)
 		}
-		if confChangeContext.IsPromote {
+		if confChangeContext.IsPromote { // 是否角色提升
 			s.cluster.PromoteMember(confChangeContext.Member.ID, shouldApplyV3)
 		} else {
 			s.cluster.AddMember(&confChangeContext.Member, shouldApplyV3) // 添加节点  /0/members/8e9e05c52164694d
-
 			if confChangeContext.Member.ID != s.id {
 				s.r.transport.AddPeer(confChangeContext.Member.ID, confChangeContext.PeerURLs)
 			}
@@ -2202,7 +2203,7 @@ func (s *EtcdServer) applyConfChange(cc raftpb.ConfChangeV1, confState *raftpb.C
 
 	case raftpb.ConfChangeUpdateNode:
 		m := new(membership.Member)
-		if err := json.Unmarshal(cc.Context, m); err != nil {
+		if err := json.Unmarshal([]byte(cc.Context), m); err != nil {
 			lg.Panic("failed to unmarshal member", zap.Error(err))
 		}
 		if cc.NodeID != uint64(m.ID) {

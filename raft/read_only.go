@@ -161,7 +161,7 @@ func (r *raft) bcastHeartbeat() {
 }
 
 func (r *raft) bcastHeartbeatWithCtx(ctx []byte) {
-	r.prs.Visit(func(id uint64, _ *tracker.Progress) {
+	r.prstrack.Visit(func(id uint64, _ *tracker.Progress) {
 		if id == r.id {
 			return
 		}

@@ -235,17 +235,14 @@ func unsafeDeleteMemberFromStore(s v2store.Store, id types.ID) error {
 }
 
 func mustUpdateMemberInStore(lg *zap.Logger, s v2store.Store, m *Member) {
-	b, err := json.Marshal(m.RaftAttributes)
+	//s 内存里面的一个树形node结构
+	b, err := json.Marshal(m.RaftAttributes) // 是raft集群中的对等体列表. 表示该成员是否是raft Learner.
 	if err != nil {
-		lg.Panic("failed to marshal raftAttributes", zap.Error(err))
+		lg.Panic("序列化raft相关属性失败", zap.Error(err))
 	}
-	p := path.Join(MemberStoreKey(m.ID), raftAttributesSuffix)
+	p := path.Join(MemberStoreKey(m.ID), raftAttributesSuffix) //   123213/raftAttributes
 	if _, err := s.Update(p, string(b), v2store.TTLOptionSet{ExpireTime: v2store.Permanent}); err != nil {
-		lg.Panic(
-			"failed to update raftAttributes",
-			zap.String("path", p),
-			zap.Error(err),
-		)
+		lg.Panic("更新raftAttributes失败", zap.String("path", p), zap.Error(err))
 	}
 }
 

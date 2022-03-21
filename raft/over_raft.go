@@ -93,7 +93,7 @@ type raft struct {
 	raftLog                   *raftLog                // 当前节点的log状态信息
 	maxMsgSize                uint64                  // 每次发送消息的最大大小[多条日志]
 	maxUncommittedSize        uint64                  // 每条日志最大消息体
-	prs                       tracker.ProgressTracker // 跟踪Follower节点的状态,比如日志复制的matchIndex
+	prstrack                  tracker.ProgressTracker // 跟踪Follower节点的状态,比如日志复制的matchIndex
 	state                     StateType               // 当前节点的状态 ,可选值分为StateFollower、StateCandidate、 StateLeader和StatePreCandidat巳四种状态.
 	isLearner                 bool                    // 本节点是不是learner角色
 	msgs                      []pb.Message            // 缓存了当前节点等待发送的消息.
@@ -132,7 +132,7 @@ func (r *raft) advance(rd Ready) {
 		oldApplied := r.raftLog.applied
 		r.raftLog.appliedTo(newApplied)
 
-		if r.prs.Config.AutoLeave && oldApplied <= r.pendingConfIndex && newApplied >= r.pendingConfIndex && r.state == StateLeader {
+		if r.prstrack.Config.AutoLeave && oldApplied <= r.pendingConfIndex && newApplied >= r.pendingConfIndex && r.state == StateLeader {
 			// 如果当前配置(和最近的配置，至少在这个领导人的任期内)应该是自动离开的，现在启动它。我们使用一个空的数据，
 			// 它分解成一个空的ConfChangeV2，并且有一个好处，即appendEntry永远不会根据它的大小(寄存器为零)拒绝它。
 			ent := pb.Entry{
@@ -144,7 +144,7 @@ func (r *raft) advance(rd Ready) {
 				panic("拒绝不可拒绝的 auto-leaving ConfChangeV2")
 			}
 			r.pendingConfIndex = r.raftLog.lastIndex()
-			r.logger.Infof("启动自动过渡，脱离joint配置 %s", r.prs.Config)
+			r.logger.Infof("启动自动过渡，脱离joint配置 %s", r.prstrack.Config)
 		}
 	}
 	// 让unstable 更新数据
@@ -314,7 +314,7 @@ func newRaft(c *Config) *raft {
 		raftLog:                   raftlog,                     // 当前节点的log状态信息
 		maxMsgSize:                c.MaxSizePerMsg,             // 每条消息的最大大小
 		maxUncommittedSize:        c.MaxUncommittedEntriesSize, // 每条日志最大消息体
-		prs:                       tracker.MakeProgressTracker(c.MaxInflightMsgs),
+		prstrack:                  tracker.MakeProgressTracker(c.MaxInflightMsgs),
 		electionTimeout:           c.ElectionTick,  // 返回选举权检查对应多少次tick触发次数
 		heartbeatTimeout:          c.HeartbeatTick, // 返回心跳检查对应多少次tick触发次数
 		logger:                    c.Logger,
@@ -326,7 +326,7 @@ func newRaft(c *Config) *raft {
 	// todo 没看懂
 	// -----------------------
 	cfg, prs, err := confchange.Restore(confchange.Changer{
-		Tracker:   r.prs,
+		Tracker:   r.prstrack,
 		LastIndex: raftlog.lastIndex(),
 	}, cs)
 	if err != nil {
@@ -345,7 +345,7 @@ func newRaft(c *Config) *raft {
 	r.becomeFollower(r.Term, None) // ✅ start
 
 	var nodesStrs []string
-	for _, n := range r.prs.VoterNodes() { // 一开始没有
+	for _, n := range r.prstrack.VoterNodes() { // 一开始没有
 		nodesStrs = append(nodesStrs, fmt.Sprintf("%x", n))
 	}
 
@@ -358,7 +358,7 @@ func (r *raft) hasLeader() bool { return r.lead != None }
 
 // 向指定的节点发送信息
 func (r *raft) sendHeartbeat(to uint64, ctx []byte) {
-	commit := min(r.prs.Progress[to].Match, r.raftLog.committed)
+	commit := min(r.prstrack.Progress[to].Match, r.raftLog.committed)
 	m := pb.Message{
 		To:      to,
 		Type:    pb.MsgHeartbeat,
@@ -371,7 +371,7 @@ func (r *raft) sendHeartbeat(to uint64, ctx []byte) {
 // bcastAppend 向集群中其他节点广播MsgApp消息
 func (r *raft) bcastAppend() {
 	// 遍历所有节点,给除自己外的节点发送日志Append消息
-	r.prs.Visit(func(id uint64, _ *tracker.Progress) {
+	r.prstrack.Visit(func(id uint64, _ *tracker.Progress) {
 		if id == r.id {
 			return
 		}
@@ -391,7 +391,7 @@ func (r *raft) maybeSendAppend(to uint64, sendIfEmpty bool) bool {
 	// 之后根据对应节点的Progress.State值决定发送消息之后的操作
 
 	// 1. 获取对端节点当前同步进度
-	pr := r.prs.Progress[to]
+	pr := r.prstrack.Progress[to]
 	if pr.IsPaused() {
 		return false
 	}
@@ -505,7 +505,7 @@ func (r *raft) loadState(state pb.HardState) {
 // maybeCommit 尝试更新本机committed索引
 func (r *raft) maybeCommit() bool {
 	// 在所有的follower中 获取最大的公共的超过半数确认的index
-	mci := r.prs.Committed()
+	mci := r.prstrack.Committed()
 	// 更新本机commitIndex
 	return r.raftLog.maybeCommit(mci, r.Term)
 }
@@ -523,13 +523,13 @@ func (r *raft) reset(term uint64) {
 	r.resetRandomizedElectionTimeout() // 设置随机选举超时
 	r.abortLeaderTransfer()            // 置空 leader转移目标
 
-	r.prs.ResetVotes() // 将每个节点的记录信息  重置
+	r.prstrack.ResetVotes() // 将每个节点的记录信息  重置
 	// 重直prs, 其中每个Progress中的Next设置为raftLog.lastindex
-	r.prs.Visit(func(id uint64, pr *tracker.Progress) {
+	r.prstrack.Visit(func(id uint64, pr *tracker.Progress) {
 		*pr = tracker.Progress{
 			Match:     0,
 			Next:      r.raftLog.lastIndex() + 1,
-			Inflights: tracker.NewInflights(r.prs.MaxInflight),
+			Inflights: tracker.NewInflights(r.prstrack.MaxInflight),
 			IsLearner: pr.IsLearner,
 		}
 		if id == r.id {
@@ -596,7 +596,7 @@ func (r *raft) appendEntry(es ...pb.Entry) (accepted bool) {
 	li = r.raftLog.append(es...)
 	// 5. 检查并更新日志进度
 	// raft的leader节点保存了所有节点的日志同步进度,这里面也包括它自己
-	r.prs.Progress[r.id].MaybeUpdate(li)
+	r.prstrack.Progress[r.id].MaybeUpdate(li)
 	// 6. 判断是否做一次commit
 	r.maybeCommit()
 	return true
@@ -668,7 +668,7 @@ func (r *raft) campaign(t CampaignType) {
 	var ids []uint64
 	// 给节点排序
 	{
-		idMap := r.prs.Voters.IDs()
+		idMap := r.prstrack.Voters.IDs()
 		ids = make([]uint64, 0, len(idMap))
 		for id := range idMap {
 			ids = append(ids, id)
@@ -697,8 +697,8 @@ func (r *raft) poll(id uint64, t pb.MessageType, v bool) (granted int, rejected 
 	} else {
 		r.logger.Infof("%x 收到 %s 拒绝消息从 %x 在任期 %d", r.id, t, id, r.Term)
 	}
-	r.prs.RecordVote(id, v)   // 记录投票结果
-	return r.prs.TallyVotes() // 竞选情况
+	r.prstrack.RecordVote(id, v)   // 记录投票结果
+	return r.prstrack.TallyVotes() // 竞选情况
 }
 
 // 处理leader发送来的心跳信息   【follower、Candidate】

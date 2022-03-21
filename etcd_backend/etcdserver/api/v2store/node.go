@@ -33,8 +33,7 @@ const (
 	CompareNotMatch             // 不匹配
 )
 
-// Permanent 永久性
-var Permanent time.Time
+var Permanent time.Time // 永久性时间，默认零值
 
 // node is the basic element in the store system.
 // A key-value pair will have a string value
