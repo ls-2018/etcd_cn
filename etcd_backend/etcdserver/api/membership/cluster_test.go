@@ -150,58 +150,19 @@ func TestClusterPeerURLs(t *testing.T) {
 	}
 }
 
-func TestClusterClientURLs(t *testing.T) {
-	tests := []struct {
-		mems  []*Member
-		wurls []string
-	}{
-		// single peer with a single address
-		{
-			mems: []*Member{
-				newTestMember(1, nil, "", []string{"http://192.0.2.1"}),
-			},
-			wurls: []string{"http://192.0.2.1"},
-		},
-
-		// single peer with a single address with a port
-		{
-			mems: []*Member{
-				newTestMember(1, nil, "", []string{"http://192.0.2.1:8001"}),
-			},
-			wurls: []string{"http://192.0.2.1:8001"},
-		},
-
-		// several members explicitly unsorted
-		{
-			mems: []*Member{
-				newTestMember(2, nil, "", []string{"http://192.0.2.3", "http://192.0.2.4"}),
-				newTestMember(3, nil, "", []string{"http://192.0.2.5", "http://192.0.2.6"}),
-				newTestMember(1, nil, "", []string{"http://192.0.2.1", "http://192.0.2.2"}),
-			},
-			wurls: []string{"http://192.0.2.1", "http://192.0.2.2", "http://192.0.2.3", "http://192.0.2.4", "http://192.0.2.5", "http://192.0.2.6"},
-		},
-
-		// no members
-		{
-			mems:  []*Member{},
-			wurls: []string{},
-		},
-
-		// peer with no client urls
-		{
-			mems: []*Member{
-				newTestMember(3, nil, "", []string{}),
-			},
-			wurls: []string{},
-		},
+func newTestMember(id uint64, peerURLs []string, name string, clientURLs []string) *Member {
+	return &Member{
+		ID:             types.ID(id),
+		RaftAttributes: RaftAttributes{PeerURLs: peerURLs},
+		Attributes:     Attributes{Name: name, ClientURLs: clientURLs},
 	}
+}
 
-	for i, tt := range tests {
-		c := newTestCluster(t, tt.mems)
-		urls := c.ClientURLs()
-		if !reflect.DeepEqual(urls, tt.wurls) {
-			t.Errorf("#%d: ClientURLs = %v, want %v", i, urls, tt.wurls)
-		}
+func newTestMemberAsLearner(id uint64, peerURLs []string, name string, clientURLs []string) *Member {
+	return &Member{
+		ID:             types.ID(id),
+		RaftAttributes: RaftAttributes{PeerURLs: peerURLs, IsLearner: true},
+		Attributes:     Attributes{Name: name, ClientURLs: clientURLs},
 	}
 }
 

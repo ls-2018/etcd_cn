@@ -59,7 +59,7 @@ func mustUpdateMemberAttrInStore(lg *zap.Logger, s v2store.Store, m *Member) {
 func mustSaveClusterVersionToStore(lg *zap.Logger, s v2store.Store, ver *semver.Version) {
 	if _, err := s.Set(StoreClusterVersionKey(), false, ver.String(), v2store.TTLOptionSet{ExpireTime: v2store.Permanent}); err != nil {
 		lg.Panic(
-			"failed to save cluster version to store",
+			"保存集群版本到store失败",
 			zap.String("path", StoreClusterVersionKey()),
 			zap.Error(err),
 		)
@@ -277,6 +277,10 @@ func readMembersFromBackend(lg *zap.Logger, be backend.Backend) (map[types.ID]*M
 		return nil, nil, fmt.Errorf("不能读取bolt.db中的 members_removed 桶: %w", err)
 	}
 	return members, removed, nil
+}
+
+func membersFromBackend(lg *zap.Logger, be backend.Backend) (map[types.ID]*Member, map[types.ID]bool) {
+	return mustReadMembersFromBackend(lg, be)
 }
 
 // 从bolt.db读取成员信息

@@ -84,11 +84,10 @@ func newMember(name string, peerURLs types.URLs, memberId types.ID, isLearner bo
 	return m
 }
 
-// PickPeerURL chooses a random address from a given Member's PeerURLs.
-// It will panic if there is no PeerURLs available in Member.
+// PickPeerURL 随机从 Member's PeerURLs 选择一个
 func (m *Member) PickPeerURL() string {
 	if len(m.PeerURLs) == 0 {
-		panic("member should always have some peer url")
+		panic("peer url 应该>0")
 	}
 	return m.PeerURLs[rand.Intn(len(m.PeerURLs))]
 }

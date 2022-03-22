@@ -122,11 +122,7 @@ func startEtcdOrProxy(args []string) {
 			// todo 还没看
 			if derr, ok := err.(*etcdserver.DiscoveryError); ok && derr.Err == v2discovery.ErrFullCluster {
 				if cfg.shouldFallbackToProxy() {
-					lg.Warn(
-						"discovery cluster is full, falling back to proxy",
-						zap.String("fallback-proxy", fallbackFlagProxy),
-						zap.Error(err),
-					)
+					lg.Warn("discovery cluster is full, falling back to proxy", zap.String("fallback-proxy", fallbackFlagProxy), zap.Error(err))
 					shouldProxy = true
 				}
 			} else if err != nil {
@@ -142,34 +138,18 @@ func startEtcdOrProxy(args []string) {
 		if derr, ok := err.(*etcdserver.DiscoveryError); ok {
 			switch derr.Err {
 			case v2discovery.ErrDuplicateID:
-				lg.Warn(
-					"member has been registered with discovery service",
-					zap.String("name", cfg.ec.Name),
-					zap.String("discovery-token", cfg.ec.Durl),
-					zap.Error(derr.Err),
-				)
-				lg.Warn(
-					"but could not find valid cluster configuration",
-					zap.String("data-dir", cfg.ec.Dir),
-				)
+				lg.Warn("member has been registered with discovery service", zap.String("name", cfg.ec.Name), zap.String("discovery-token", cfg.ec.Durl), zap.Error(derr.Err))
+				lg.Warn("but could not find valid cluster configuration", zap.String("data-dir", cfg.ec.Dir))
 				lg.Warn("check data dir if previous bootstrap succeeded")
 				lg.Warn("or use a new discovery token if previous bootstrap failed")
 
 			case v2discovery.ErrDuplicateName:
-				lg.Warn(
-					"member with duplicated name has already been registered",
-					zap.String("discovery-token", cfg.ec.Durl),
-					zap.Error(derr.Err),
-				)
+				lg.Warn("member with duplicated name has already been registered", zap.String("discovery-token", cfg.ec.Durl), zap.Error(derr.Err))
 				lg.Warn("cURL the discovery token URL for details")
 				lg.Warn("do not reuse discovery token; generate a new one to bootstrap a cluster")
 
 			default:
-				lg.Warn(
-					"failed to bootstrap; discovery token was already used",
-					zap.String("discovery-token", cfg.ec.Durl),
-					zap.Error(err),
-				)
+				lg.Warn("failed to bootstrap; discovery token was already used", zap.String("discovery-token", cfg.ec.Durl), zap.Error(err))
 				lg.Warn("do not reuse discovery token; generate a new one to bootstrap a cluster")
 			}
 			os.Exit(1)

@@ -813,8 +813,7 @@ func (s *EtcdServer) start() {
 	s.readNotifier = newNotifier()
 	s.leaderChanged = make(chan struct{})
 	if s.ClusterVersion() != nil {
-		lg.Info(
-			"starting etcd etcd",
+		lg.Info("启动etcd",
 			zap.String("local-member-id", s.ID().String()),
 			zap.String("local-etcd-version", version.Version),
 			zap.String("cluster-id", s.Cluster().ID().String()),

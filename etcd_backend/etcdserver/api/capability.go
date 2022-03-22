@@ -56,7 +56,7 @@ func init() {
 	}
 }
 
-// UpdateCapability updates the enabledMap when the cluster version increases.
+// UpdateCapability 当集群的版本增加时，更新enabledMap。
 func UpdateCapability(lg *zap.Logger, v *semver.Version) {
 	if v == nil {
 		// if recovered but version was never set by cluster

@@ -167,9 +167,7 @@ func urlsEqual(ctx context.Context, lg *zap.Logger, a []url.URL, b []url.URL) (b
 	return true, nil
 }
 
-// URLStringsEqual returns "true" if given URLs are valid
-// and resolved to same IP addresses. Otherwise, return "false"
-// and error, if any.
+// URLStringsEqual a,b解析出的ip是否一致
 func URLStringsEqual(ctx context.Context, lg *zap.Logger, a []string, b []string) (bool, error) {
 	if len(a) != len(b) {
 		return false, fmt.Errorf("len(%q) != len(%q)", a, b)
