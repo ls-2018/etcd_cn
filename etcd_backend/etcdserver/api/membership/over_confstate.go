@@ -26,19 +26,17 @@ import (
 
 var confStateKey = []byte("confState")
 
-// MustUnsafeSaveConfStateToBackend persists confState using given transaction (tx).
-// confState in backend is persisted since etcd v3.5.
+// MustUnsafeSaveConfStateToBackend confstate ---> bolt.db/meta/confState
 func MustUnsafeSaveConfStateToBackend(lg *zap.Logger, tx backend.BatchTx, confState *raftpb.ConfState) {
 	confStateBytes, err := json.Marshal(confState)
 	if err != nil {
-		lg.Panic("Cannot marshal raftpb.ConfState", zap.Stringer("conf-state", confState), zap.Error(err))
+		lg.Panic("不能序列化raftpb.ConfState", zap.Stringer("conf-state", confState), zap.Error(err))
 	}
 
 	tx.UnsafePut(buckets.Meta, confStateKey, confStateBytes)
 }
 
-// UnsafeConfStateFromBackend retrieves ConfState from the backend.
-// Returns nil if confState in backend is not persisted (e.g. backend writen by <v3.5).
+// UnsafeConfStateFromBackend confstate <--- bolt.db/meta/confState
 func UnsafeConfStateFromBackend(lg *zap.Logger, tx backend.ReadTx) *raftpb.ConfState {
 	keys, vals := tx.UnsafeRange(buckets.Meta, confStateKey, nil, 0)
 	if len(keys) == 0 {
@@ -46,14 +44,11 @@ func UnsafeConfStateFromBackend(lg *zap.Logger, tx backend.ReadTx) *raftpb.ConfS
 	}
 
 	if len(keys) != 1 {
-		lg.Panic(
-			"unexpected number of key: "+string(confStateKey)+" when getting cluster version from backend",
-			zap.Int("number-of-key", len(keys)),
-		)
+		lg.Panic("不期待的key: "+string(confStateKey)+" 当从bolt获取集群版本", zap.Int("number-of-key", len(keys)))
 	}
 	var confState raftpb.ConfState
 	if err := json.Unmarshal(vals[0], &confState); err != nil {
-		log.Panic("Cannot unmarshal confState json retrieved from the backend",
+		log.Panic("从bolt.db获取到的值无法反序列化",
 			zap.ByteString("conf-state-json", vals[0]),
 			zap.Error(err))
 	}

@@ -33,46 +33,26 @@ import (
 
 // ServerConfig 持有从命令行或发现中获取的etcd的配置.
 type ServerConfig struct {
-	Name           string
-	DiscoveryURL   string // 节点发现
-	DiscoveryProxy string // discovery代理
-	ClientURLs     types.URLs
-	PeerURLs       types.URLs
-	DataDir        string
-	// DedicatedWALDir 配置将使etcd把WAL写到WALDir 而不是dataDir/member/wal.
-	DedicatedWALDir string
-
-	SnapshotCount uint64 // 触发一次磁盘快照的提交事务的次数
-
-	// SnapshotCatchUpEntries is the number of entries for a slow follower
-	// to catch-up after compacting the raft storage entries.
-	// We expect the follower has a millisecond level latency with the leader.
-	// The max throughput is around 10K. Keep a 5K entries is enough for helping
-	// follower to catch up.
-	// 是slow follower在raft存储条目落后追赶的条目数量.我们希望follower与leader有一毫秒级的延迟.最大的吞吐量是10K左右.保持5K的条目就足以帮助follower赶上.
-	// WARNING: only change this for tests. Always use "DefaultSnapshotCatchUpEntries"
-	SnapshotCatchUpEntries uint64
-
-	MaxSnapFiles uint
-	MaxWALFiles  uint
-
-	// BackendBatchInterval 提交后端事务前的最长时间.
-	BackendBatchInterval time.Duration
-	// BackendBatchLimit  提交后端事务前的最大操作量.
-	BackendBatchLimit int
-
-	// BackendFreelistType boltdb存储的类型
-	BackendFreelistType bolt.FreelistType
-
-	InitialPeerURLsMap  types.URLsMap // 节点 --- 【 通信地址】可能绑定了多块网卡
-	InitialClusterToken string
-	NewCluster          bool
-	PeerTLSInfo         transport.TLSInfo
-
-	CORS map[string]struct{}
-
-	// HostWhitelist 列出了客户端请求中可接受的主机名.如果etcd是不安全的(没有TLS),etcd只接受其Host头值存在于此白名单的请求.
-	HostWhitelist map[string]struct{}
+	Name                   string
+	DiscoveryURL           string // 节点发现
+	DiscoveryProxy         string // discovery代理
+	ClientURLs             types.URLs
+	PeerURLs               types.URLs
+	DataDir                string
+	DedicatedWALDir        string // 配置将使etcd把WAL写到WALDir 而不是dataDir/member/wal.
+	SnapshotCount          uint64 // 触发一次磁盘快照的提交事务的次数
+	SnapshotCatchUpEntries uint64 // 是slow follower在raft存储条目落后追赶的条目数量.我们希望follower与leader有一毫秒级的延迟.最大的吞吐量是10K左右.保持5K的条目就足以帮助follower赶上.
+	MaxSnapFiles           uint
+	MaxWALFiles            uint
+	BackendBatchInterval   time.Duration     // 提交后端事务前的最长时间
+	BackendBatchLimit      int               // 提交后端事务前的最大操作量
+	BackendFreelistType    bolt.FreelistType // boltdb存储的类型
+	InitialPeerURLsMap     types.URLsMap     // 节点 --- 【 通信地址】可能绑定了多块网卡
+	InitialClusterToken    string
+	NewCluster             bool
+	PeerTLSInfo            transport.TLSInfo
+	CORS                   map[string]struct{}
+	HostWhitelist          map[string]struct{} // 列出了客户端请求中可接受的主机名.如果etcd是不安全的(没有TLS),etcd只接受其Host头值存在于此白名单的请求.
 
 	TickMs        uint // tick计时器触发间隔
 	ElectionTicks int  // 返回选举权检查对应多少次tick触发次数
@@ -177,19 +157,16 @@ func (c *ServerConfig) VerifyBootstrap() error {
 	return nil
 }
 
-// VerifyJoinExisting sanity-checks the initial config for join existing cluster
-// case and returns an error for things that should never happen.
+// VerifyJoinExisting  检查加入现有集群的初始配置，并对不应该发生的事情返回一个错误。
 func (c *ServerConfig) VerifyJoinExisting() error {
-	// The member has announced its peer urls to the cluster before starting; no need to
-	// set the configuration again.
 	if err := c.hasLocalMember(); err != nil {
 		return err
 	}
 	if CheckDuplicateURL(c.InitialPeerURLsMap) {
-		return fmt.Errorf("initial cluster %s has duplicate url", c.InitialPeerURLsMap)
+		return fmt.Errorf("初始集群 %s 有重复的地址", c.InitialPeerURLsMap)
 	}
 	if c.DiscoveryURL != "" {
-		return fmt.Errorf("discovery URL should not be set when joining existing initial cluster")
+		return fmt.Errorf("discovery URL 不应该设置，当加入一个存在的初始集群")
 	}
 	return nil
 }
@@ -286,7 +263,6 @@ func (c *ServerConfig) ElectionTimeout() time.Duration {
 }
 
 func (c *ServerConfig) PeerDialTimeout() time.Duration {
-	// 1s for queue wait and election timeout
 	return time.Second + time.Duration(c.ElectionTicks*int(c.TickMs))*time.Millisecond
 }
 

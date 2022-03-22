@@ -152,49 +152,17 @@ type ServerV3 interface {
 func (s *EtcdServer) ClientCertAuthEnabled() bool { return s.Cfg.ClientCertAuthEnabled }
 
 type Server interface {
-	// AddMember attempts to add a member into the cluster. It will return
-	// ErrIDRemoved if member ID is removed from the cluster, or return
-	// ErrIDExists if member ID exists in the cluster.
-	AddMember(ctx context.Context, memb membership.Member) ([]*membership.Member, error)
-	// RemoveMember attempts to remove a member from the cluster. It will
-	// return ErrIDRemoved if member ID is removed from the cluster, or return
-	// ErrIDNotFound if member ID is not in the cluster.
-	RemoveMember(ctx context.Context, id uint64) ([]*membership.Member, error)
-	// UpdateMember attempts to update an existing member in the cluster. It will
-	// return ErrIDNotFound if the member ID does not exist.
-	UpdateMember(ctx context.Context, updateMemb membership.Member) ([]*membership.Member, error)
-	// PromoteMember attempts to promote a non-voting node to a voting node. It will
-	// return ErrIDNotFound if the member ID does not exist.
-	// return ErrLearnerNotReady if the member are not ready.
-	// return ErrMemberNotLearner if the member is not a learner.
-	PromoteMember(ctx context.Context, id uint64) ([]*membership.Member, error)
-
-	// ClusterVersion is the cluster-wide minimum major.minor version.
-	// Cluster version is set to the min version that an etcd member is
-	// compatible with when first bootstrap.
-	//
-	// ClusterVersion is nil until the cluster is bootstrapped (has a quorum).
-	//
-	// During a rolling upgrades, the ClusterVersion will be updated
-	// automatically after a sync. (5 second by default)
-	//
-	// The API/raft component can utilize ClusterVersion to determine if
-	// it can accept a client request or a raft RPC.
-	// NOTE: ClusterVersion might be nil when etcd 2.1 works with etcd 2.0 and
-	// the leader is etcd 2.0. etcd 2.0 leader will not update clusterVersion since
-	// this feature is introduced post 2.0.
-	ClusterVersion() *semver.Version
-	Cluster() api.Cluster
-	Alarms() []*pb.AlarmMember
-
-	// LeaderChangedNotify returns a channel for application level code to be notified
-	// when etcd leader changes, this function is intend to be used only in application
-	// which embed etcd.
-	// Caution:
-	// 1. the returned channel is being closed when the leadership changes.
-	// 2. so the new channel needs to be obtained for each raft term.
-	// 3. user can loose some consecutive channel changes using this API.
-	LeaderChangedNotify() <-chan struct{}
+	AddMember(ctx context.Context, memb membership.Member) ([]*membership.Member, error)          // http  添加节点
+	RemoveMember(ctx context.Context, id uint64) ([]*membership.Member, error)                    // http  移除节点
+	UpdateMember(ctx context.Context, updateMemb membership.Member) ([]*membership.Member, error) // http  更新节点
+	PromoteMember(ctx context.Context, id uint64) ([]*membership.Member, error)                   // http  提升节点
+	ClusterVersion() *semver.Version                                                              //
+	Cluster() api.Cluster                                                                         //
+	Alarms() []*pb.AlarmMember                                                                    //
+	LeaderChangedNotify() <-chan struct{}                                                         // 领导者变更通知
+	// 1. 当领导层发生变化时，返回的通道将被关闭。
+	// 2. 因此,每一个任期都需要获得新的通道。
+	// 3. 用户可能会因为使用这个API而失去一些连续的频道变化。
 }
 
 // EtcdServer 整个etcd节点的功能的入口,包含etcd节点运行过程中需要的大部分成员.
@@ -261,10 +229,8 @@ type EtcdServer struct {
 
 // 后端存储钩子
 type backendHooks struct {
-	indexer cindex.ConsistentIndexer
-	lg      *zap.Logger
-
-	// confState to be written in the next submitted backend transaction (if dirty)
+	indexer   cindex.ConsistentIndexer
+	lg        *zap.Logger
 	confState raftpb.ConfState // 集群当前的配置信息
 	// first write changes it to 'dirty'. false by default, so
 	// not initialized `confState` is meaningless.
@@ -1484,10 +1450,10 @@ func (s *EtcdServer) LeaderStats() []byte {
 
 func (s *EtcdServer) StoreStats() []byte { return s.v2store.JsonStats() }
 
+// 检查节点操作的权限
 func (s *EtcdServer) checkMembershipOperationPermission(ctx context.Context) error {
 	if s.authStore == nil {
-		// In the context of ordinary etcd process, s.authStore will never be nil.
-		// This branch is for handling cases in server_test.go
+		// 在普通的etcd进程中，s.authStore永远不会为零。这个分支是为了处理server_test.go中的情况
 		return nil
 	}
 
@@ -2191,6 +2157,7 @@ func (s *EtcdServer) parseProposeCtxErr(err error, start time.Time) error {
 }
 
 func (s *EtcdServer) KV() mvcc.WatchableKV { return s.kv }
+
 func (s *EtcdServer) Backend() backend.Backend {
 	s.bemu.Lock()
 	defer s.bemu.Unlock()

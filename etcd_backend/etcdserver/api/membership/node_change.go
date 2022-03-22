@@ -67,9 +67,10 @@ func (c *RaftCluster) IsReadyToRemoveVotingMember(id uint64) bool {
 	return true
 }
 
+// IsReadyToPromoteMember 是否准备好提升节点角色
 func (c *RaftCluster) IsReadyToPromoteMember(id uint64) bool {
-	nmembers := 1 // We count the learner to be promoted for the future quorum
-	nstarted := 1 // and we also count it as started.
+	nmembers := 1 // 我们为未来的法定人数计算被提拔的学习者
+	nstarted := 1
 
 	for _, member := range c.VotingMembers() {
 		if member.IsStarted() {
@@ -80,8 +81,7 @@ func (c *RaftCluster) IsReadyToPromoteMember(id uint64) bool {
 
 	nquorum := nmembers/2 + 1
 	if nstarted < nquorum {
-		c.lg.Warn(
-			"rejecting member promote; started member will be less than quorum",
+		c.lg.Warn("拒绝成员晋升；启动成员将少于法定人数",
 			zap.Int("number-of-started-member", nstarted),
 			zap.Int("quorum", nquorum),
 			zap.String("cluster-id", c.cid.String()),

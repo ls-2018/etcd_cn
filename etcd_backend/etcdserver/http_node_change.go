@@ -17,7 +17,6 @@ func (s *EtcdServer) AddMember(ctx context.Context, memb membership.Member) ([]*
 		return nil, err
 	}
 
-	// TODO: move Member to protobuf type
 	b, err := json.Marshal(memb)
 	if err != nil {
 		return nil, err

@@ -90,7 +90,7 @@ func (h *keysHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case resp.Event != nil:
 		if err := writeKeyEvent(w, resp, noValueOnSuccess); err != nil {
-			// Should never be reached
+			// 永远不应达到
 			h.lg.Warn("failed to write key event", zap.Error(err))
 		}
 	case resp.Watcher != nil:
