@@ -50,9 +50,8 @@ type RaftCluster struct {
 	localID types.ID // 本机节点ID
 	cid     types.ID // 集群ID,根据所有初始 memberID hash 得到的
 
-	v2store v2store.Store // 内存里面的一个树形node结构
-	be      backend.Backend
-
+	v2store       v2store.Store // 内存里面的一个树形node结构
+	be            backend.Backend
 	sync.Mutex    // 守住下面的字段
 	version       *semver.Version
 	members       map[types.ID]*Member

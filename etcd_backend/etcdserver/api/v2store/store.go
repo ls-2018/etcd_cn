@@ -144,9 +144,7 @@ func (s *store) Get(nodePath string, recursive, sorted bool) (*Event, error) {
 	return e, nil
 }
 
-// Create creates the node at nodePath. Create will help to create intermediate directories with no ttl.
-// If the node has already existed, create will fail.
-// If any node on the path is a file, create will fail.
+// Create 在nodePath创建节点。创建将有助于创建没有ttl的中间目录。如果该节点已经存在，创建将失败。 如果路径上的任何节点是一个文件，创建将失败。
 func (s *store) Create(nodePath string, dir bool, value string, unique bool, expireOpts TTLOptionSet) (*Event, error) {
 	var err *v2error.Error
 
@@ -162,13 +160,14 @@ func (s *store) Create(nodePath string, dir bool, value string, unique bool, exp
 		s.Stats.Inc(CreateFail)
 	}()
 
+	// 创建一个内存节点, 有ttl放入ttlKeyHeap, 返回一个创建事件
 	e, err := s.internalCreate(nodePath, dir, value, unique, false, expireOpts.ExpireTime, Create)
 	if err != nil {
 		return nil, err
 	}
 
 	e.EtcdIndex = s.CurrentIndex
-	s.WatcherHub.notify(e)
+	s.WatcherHub.notify(e) // ✅
 
 	return e, nil
 }
@@ -539,44 +538,38 @@ func (s *store) Update(nodePath string, newValue string, expireOpts TTLOptionSet
 	return e, nil
 }
 
-func (s *store) internalCreate(nodePath string, dir bool, value string, unique, replace bool,
-	expireTime time.Time, action string) (*Event, *v2error.Error,
-) {
+// /0/members/8e9e05c52164694d/raftAttributes创建节点
+func (s *store) internalCreate(nodePath string, dir bool, value string, unique, replace bool, expireTime time.Time, action string) (*Event, *v2error.Error) {
 	currIndex, nextIndex := s.CurrentIndex, s.CurrentIndex+1
 
-	if unique { // append unique item under the node path
+	if unique { // 在节点路径下附加唯一的项目
 		nodePath += "/" + fmt.Sprintf("%020s", strconv.FormatUint(nextIndex, 10))
 	}
 
 	nodePath = path.Clean(path.Join("/", nodePath))
 
-	// we do not allow the user to change "/"
+	// 我们不允许用户修改"/"。
 	if s.readonlySet.Contains(nodePath) {
 		return nil, v2error.NewError(v2error.EcodeRootROnly, "/", currIndex)
 	}
 
-	// Assume expire times that are way in the past are
-	// This can occur when the time is serialized to JS
 	if expireTime.Before(minExpireTime) {
 		expireTime = Permanent
 	}
 
 	dirName, nodeName := path.Split(nodePath)
-
-	// walk through the nodePath, create dirs and get the last directory node
-	d, err := s.walk(dirName, s.checkDir)
+	d, err := s.walk(dirName, s.checkDir) // 检查节点目录,以及创建
 	if err != nil {
 		s.Stats.Inc(SetFail)
 		err.Index = currIndex
 		return nil, err
 	}
-
+	// create, /0/members/8e9e05c52164694d/raftAttributes, 1, 1
 	e := newEvent(action, nodePath, nextIndex, nextIndex)
 	eNode := e.NodeExtern
 
 	n, _ := d.GetChild(nodeName)
 
-	// force will try to replace an existing file
 	if n != nil {
 		if replace {
 			if n.IsDir() {
@@ -592,29 +585,22 @@ func (s *store) internalCreate(nodePath string, dir bool, value string, unique, 
 		}
 	}
 
-	if !dir { // create file
-		// copy the value for safety
+	if !dir {
 		valueCopy := value
 		eNode.Value = &valueCopy
-
 		// 生成新的树节点node，作为叶子节点
 		n = newKV(s, nodePath, value, nextIndex, d, expireTime)
-
-	} else { // create directory
+	} else {
 		eNode.Dir = true
-
 		n = newDir(s, nodePath, nextIndex, d, expireTime)
 	}
 
-	// we are sure d is a directory and does not have the children with name n.Name
 	if err := d.Add(n); err != nil { // 添加父节点中，即挂到map中
 		return nil, err
 	}
 
-	// node with TTL
-	if !n.IsPermanent() {
+	if !n.IsPermanent() { // 存在有效期
 		s.ttlKeyHeap.push(n)
-
 		eNode.Expiration, eNode.TTL = n.expirationAndTTL(s.clock) // 过期时间和 剩余时间 TTL
 	}
 
@@ -681,25 +667,17 @@ func (s *store) DeleteExpiredKeys(cutoff time.Time) {
 	}
 }
 
-// checkDir will check whether the component is a directory under parent node.
-// If it is a directory, this function will return the pointer to that node.
-// If it does not exist, this function will create a new directory and return the pointer to that node.
-// If it is a file, this function will return error.
+// checkDir 检查目录存不存在,不存在创建
 func (s *store) checkDir(parent *node, dirName string) (*node, *v2error.Error) {
 	node, ok := parent.Children[dirName]
-
 	if ok {
 		if node.IsDir() {
 			return node, nil
 		}
-
 		return nil, v2error.NewError(v2error.EcodeNotDir, node.Path, s.CurrentIndex)
 	}
-
 	n := newDir(s, path.Join(parent.Path, dirName), s.CurrentIndex+1, parent, Permanent)
-
 	parent.Children[dirName] = n
-
 	return n, nil
 }
 

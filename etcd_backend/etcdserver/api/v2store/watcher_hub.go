@@ -105,25 +105,20 @@ func (wh *watcherHub) add(e *Event) {
 	wh.EventHistory.addEvent(e)
 }
 
-// notify function accepts an event and notify to the watchers.
+// notify 接收一个事件，通知watcher
 func (wh *watcherHub) notify(e *Event) {
-	e = wh.EventHistory.addEvent(e) // add event into the eventHistory
-
-	segments := strings.Split(e.NodeExtern.Key, "/")
-
+	e = wh.EventHistory.addEvent(e)
+	segments := strings.Split(e.NodeExtern.Key, "/") //  /0/members/8e9e05c52164694d/raftAttributes
 	currPath := "/"
-
-	// walk through all the segments of the path and notify the watchers
-	// if the path is "/foo/bar", it will notify watchers with path "/",
-	// "/foo" and "/foo/bar"
-
+	// if the path is "/foo/bar", --> "/","/foo", "/foo/bar"
 	for _, segment := range segments {
 		currPath = path.Join(currPath, segment)
-		// notify the watchers who interests in the changes of current path
+		// 通知对当前路径变化 感兴趣的观察者
 		wh.notifyWatchers(e, currPath, false)
 	}
 }
 
+// ok
 func (wh *watcherHub) notifyWatchers(e *Event, nodePath string, deleted bool) {
 	wh.mutex.Lock()
 	defer wh.mutex.Unlock()
@@ -133,10 +128,14 @@ func (wh *watcherHub) notifyWatchers(e *Event, nodePath string, deleted bool) {
 		curr := l.Front()
 
 		for curr != nil {
-			next := curr.Next() // save reference to the next one in the list
-
+			next := curr.Next()
 			w, _ := curr.Value.(*watcher)
-
+			// e.NodeExtern.Key    /0/members/8e9e05c52164694d/raftAttributes
+			// nodePath :		/
+			// nodePath :		/0
+			// nodePath :		/0/members
+			// nodePath :		/0/members/8e9e05c52164694d
+			// nodePath :		/0/members/8e9e05c52164694d/raftAttributes
 			originalPath := e.NodeExtern.Key == nodePath
 			if (originalPath || !isHidden(nodePath, e.NodeExtern.Key)) && w.notify(e, originalPath, deleted) {
 				if !w.stream { // do not remove the stream watcher
@@ -148,13 +147,11 @@ func (wh *watcherHub) notifyWatchers(e *Event, nodePath string, deleted bool) {
 					atomic.AddInt64(&wh.count, -1)
 				}
 			}
-
-			curr = next // update current to the next element in the list
+			curr = next
 		}
 
 		if l.Len() == 0 {
-			// if we have notified all watcher in the list
-			// we can delete the list
+			// 通知之后,就删除
 			delete(wh.watchers, nodePath)
 		}
 	}
@@ -170,16 +167,11 @@ func (wh *watcherHub) clone() *watcherHub {
 	}
 }
 
-// isHidden checks to see if key path is considered hidden to watch path i.e. the
-// last element is hidden or it's within a hidden directory
+// isHidden 检查关键路径是否被认为是隐藏的观察路径，即最后一个元素是隐藏的，或者它在一个隐藏的目录中。
 func isHidden(watchPath, keyPath string) bool {
-	// When deleting a directory, watchPath might be deeper than the actual keyPath
-	// For example, when deleting /foo we also need to notify watchers on /foo/bar.
 	if len(watchPath) > len(keyPath) {
 		return false
 	}
-	// if watch path is just a "/", after path will start without "/"
-	// add a "/" to deal with the special case when watchPath is "/"
-	afterPath := path.Clean("/" + keyPath[len(watchPath):])
+	afterPath := path.Clean("/" + keyPath[len(watchPath):]) // 去后边的路径
 	return strings.Contains(afterPath, "/_")
 }

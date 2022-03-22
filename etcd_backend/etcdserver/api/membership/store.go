@@ -38,8 +38,8 @@ const (
 )
 
 var (
-	StoreMembersPrefix        = path.Join(storePrefix, "members")
-	storeRemovedMembersPrefix = path.Join(storePrefix, "removed_members")
+	StoreMembersPrefix        = path.Join(storePrefix, "members")         // /0/members
+	storeRemovedMembersPrefix = path.Join(storePrefix, "removed_members") // /0/removed_members
 	errMemberAlreadyExist     = fmt.Errorf("member already exists")
 	errMemberNotFound         = fmt.Errorf("member not found")
 )
@@ -203,39 +203,33 @@ func mustSaveDowngradeToBackend(lg *zap.Logger, be backend.Backend, downgrade *D
 	tx.UnsafePut(buckets.Cluster, dkey, dvalue)
 }
 
+// OK
 func mustSaveMemberToStore(lg *zap.Logger, s v2store.Store, m *Member) {
 	err := unsafeSaveMemberToStore(lg, s, m)
 	if err != nil {
 		lg.Panic(
-			"failed to save member to store",
+			"保存member到store失败",
 			zap.String("member-id", m.ID.String()),
 			zap.Error(err),
 		)
 	}
 }
 
+// node---->v2store [memory]
 func unsafeSaveMemberToStore(lg *zap.Logger, s v2store.Store, m *Member) error {
-	b, err := json.Marshal(m.RaftAttributes)
+	b, err := json.Marshal(m.RaftAttributes) // 是raft集群中的对等体列表. 表示该成员是否是raft Learner.
 	if err != nil {
-		lg.Panic("failed to marshal raftAttributes", zap.Error(err))
+		lg.Panic("序列化失败raftAttributes", zap.Error(err))
 	}
-	p := path.Join(MemberStoreKey(m.ID), raftAttributesSuffix)
-	_, err = s.Create(p, false, string(b), false, v2store.TTLOptionSet{ExpireTime: v2store.Permanent})
+	_ = computeMemberId                                        // id 由这个函数生成，需要 peerURLs clusterName 创建时间,创建时间一般为nil
+	p := path.Join(MemberStoreKey(m.ID), raftAttributesSuffix) // /0/members/123/raftAttributes
+	_, err = s.Create(p, false, string(b),                     // ✅
+		false, v2store.TTLOptionSet{ExpireTime: v2store.Permanent})
 	return err
 }
 
-func unsafeDeleteMemberFromStore(s v2store.Store, id types.ID) error {
-	if _, err := s.Delete(MemberStoreKey(id), true, true); err != nil {
-		return err
-	}
-	if _, err := s.Create(RemovedMemberStoreKey(id), false, "", false, v2store.TTLOptionSet{ExpireTime: v2store.Permanent}); err != nil {
-		return err
-	}
-	return nil
-}
-
 func mustUpdateMemberInStore(lg *zap.Logger, s v2store.Store, m *Member) {
-	//s 内存里面的一个树形node结构
+	// s 内存里面的一个树形node结构
 	b, err := json.Marshal(m.RaftAttributes) // 是raft集群中的对等体列表. 表示该成员是否是raft Learner.
 	if err != nil {
 		lg.Panic("序列化raft相关属性失败", zap.Error(err))
@@ -244,6 +238,17 @@ func mustUpdateMemberInStore(lg *zap.Logger, s v2store.Store, m *Member) {
 	if _, err := s.Update(p, string(b), v2store.TTLOptionSet{ExpireTime: v2store.Permanent}); err != nil {
 		lg.Panic("更新raftAttributes失败", zap.String("path", p), zap.Error(err))
 	}
+}
+
+func unsafeDeleteMemberFromStore(s v2store.Store, id types.ID) error {
+	if _, err := s.Delete(MemberStoreKey(id), true, true); err != nil {
+		return err
+	}
+	if _, err := s.Create(RemovedMemberStoreKey(id), // ✅
+		false, "", false, v2store.TTLOptionSet{ExpireTime: v2store.Permanent}); err != nil {
+		return err
+	}
+	return nil
 }
 
 func mustUpdateMemberAttrInStore(lg *zap.Logger, s v2store.Store, m *Member) {
@@ -319,8 +324,9 @@ func mustCreateBackendBuckets(be backend.Backend) {
 	tx.UnsafeCreateBucket(buckets.Cluster)
 }
 
+// MemberStoreKey /0/members/123
 func MemberStoreKey(id types.ID) string {
-	return path.Join(StoreMembersPrefix, id.String())
+	return path.Join(StoreMembersPrefix, id.String()) // /0/members/123
 }
 
 func StoreClusterVersionKey() string {

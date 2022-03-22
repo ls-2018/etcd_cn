@@ -77,6 +77,7 @@ func (h *ttlKeyHeap) pop() *node {
 	return n
 }
 
+// 存入一个有过期时间的node
 func (h *ttlKeyHeap) push(x interface{}) {
 	heap.Push(h, x)
 }
