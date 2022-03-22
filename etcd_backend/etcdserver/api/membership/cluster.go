@@ -45,18 +45,16 @@ const maxLearners = 1
 
 // RaftCluster raft集群成员
 type RaftCluster struct {
-	lg *zap.Logger
-
-	localID types.ID // 本机节点ID
-	cid     types.ID // 集群ID,根据所有初始 memberID hash 得到的
-
-	v2store       v2store.Store // 内存里面的一个树形node结构
-	be            backend.Backend
-	sync.Mutex    // 守住下面的字段
-	version       *semver.Version
-	members       map[types.ID]*Member
-	removed       map[types.ID]bool // 记录被删除的节点ID,删除后的节点无法重用
-	downgradeInfo *DowngradeInfo    // 降级信息
+	lg            *zap.Logger
+	localID       types.ID             // 本机节点ID
+	cid           types.ID             // 集群ID,根据所有初始 memberID hash 得到的
+	v2store       v2store.Store        // 内存里面的一个树形node结构
+	be            backend.Backend      //
+	sync.Mutex                         // 守住下面的字段
+	version       *semver.Version      //
+	members       map[types.ID]*Member //
+	removed       map[types.ID]bool    // 记录被删除的节点ID,删除后的节点无法重用
+	downgradeInfo *DowngradeInfo       // 降级信息
 }
 
 // ConfigChangeContext 代表confChange的一个上下文。
@@ -154,12 +152,6 @@ func (c *RaftCluster) MemberIDs() []types.ID {
 	return ids
 }
 
-func (c *RaftCluster) IsIDRemoved(id types.ID) bool {
-	c.Lock()
-	defer c.Unlock()
-	return c.removed[id]
-}
-
 // PeerURLs returns a list of all peer addresses.
 // The returned list is sorted in ascending lexicographical order.
 func (c *RaftCluster) PeerURLs() []string {
@@ -184,36 +176,6 @@ func (c *RaftCluster) ClientURLs() []string {
 	}
 	sort.Strings(urls)
 	return urls
-}
-
-func (c *RaftCluster) String() string {
-	c.Lock()
-	defer c.Unlock()
-	b := &bytes.Buffer{}
-	fmt.Fprintf(b, "{ClusterID:%s ", c.cid)
-	var ms []string
-	for _, m := range c.members {
-		ms = append(ms, fmt.Sprintf("%+v", m))
-	}
-	fmt.Fprintf(b, "Members:[%s] ", strings.Join(ms, " "))
-	var ids []string
-	for id := range c.removed {
-		ids = append(ids, id.String())
-	}
-	fmt.Fprintf(b, "RemovedMemberIDs:[%s]}", strings.Join(ids, " "))
-	return b.String()
-}
-
-// 生成集群ID
-func (c *RaftCluster) genID() {
-	mIDs := c.MemberIDs() // 返回所有成员iD
-	b := make([]byte, 8*len(mIDs))
-	//[id,id,id,id,id,id,id]
-	for i, id := range mIDs {
-		binary.BigEndian.PutUint64(b[8*i:], uint64(id))
-	}
-	hash := sha1.Sum(b)
-	c.cid = types.ID(binary.BigEndian.Uint64(hash[:8]))
 }
 
 // SetID 设置ID
@@ -387,27 +349,6 @@ func (c *RaftCluster) UpdateAttributes(id types.ID, attr Attributes, shouldApply
 		zap.String("cluster-id", c.cid.String()),
 		zap.String("local-member-id", c.localID.String()),
 		zap.String("updated-peer-id", id.String()),
-	)
-}
-
-func (c *RaftCluster) UpdateRaftAttributes(id types.ID, raftAttr RaftAttributes, shouldApplyV3 ShouldApplyV3) {
-	c.Lock()
-	defer c.Unlock()
-
-	c.members[id].RaftAttributes = raftAttr
-	if c.v2store != nil {
-		mustUpdateMemberInStore(c.lg, c.v2store, c.members[id])
-	}
-	if c.be != nil && shouldApplyV3 {
-		unsafeSaveMemberToBackend(c.lg, c.be, c.members[id])
-	}
-
-	c.lg.Info(
-		"updated member",
-		zap.String("cluster-id", c.cid.String()),
-		zap.String("local-member-id", c.localID.String()),
-		zap.String("updated-remote-peer-id", id.String()),
-		zap.Strings("updated-remote-peer-urls", raftAttr.PeerURLs),
 	)
 }
 
@@ -708,4 +649,60 @@ func membersFromStore(lg *zap.Logger, st v2store.Store) (map[types.ID]*Member, m
 		removed[MustParseMemberIDFromKey(lg, n.Key)] = true
 	}
 	return members, removed
+}
+
+func (c *RaftCluster) IsIDRemoved(id types.ID) bool {
+	c.Lock()
+	defer c.Unlock()
+	return c.removed[id]
+}
+
+func (c *RaftCluster) String() string {
+	c.Lock()
+	defer c.Unlock()
+	b := &bytes.Buffer{}
+	fmt.Fprintf(b, "{ClusterID:%s ", c.cid)
+	var ms []string
+	for _, m := range c.members {
+		ms = append(ms, fmt.Sprintf("%+v", m))
+	}
+	fmt.Fprintf(b, "Members:[%s] ", strings.Join(ms, " "))
+	var ids []string
+	for id := range c.removed {
+		ids = append(ids, id.String())
+	}
+	fmt.Fprintf(b, "RemovedMemberIDs:[%s]}", strings.Join(ids, " "))
+	return b.String()
+}
+
+// 生成集群ID
+func (c *RaftCluster) genID() {
+	mIDs := c.MemberIDs() // 返回所有成员iD
+	b := make([]byte, 8*len(mIDs))
+	//[id,id,id,id,id,id,id]
+	for i, id := range mIDs {
+		binary.BigEndian.PutUint64(b[8*i:], uint64(id))
+	}
+	hash := sha1.Sum(b)
+	c.cid = types.ID(binary.BigEndian.Uint64(hash[:8]))
+}
+
+// UpdateRaftAttributes 节点的属性更新
+func (c *RaftCluster) UpdateRaftAttributes(id types.ID, raftAttr RaftAttributes, shouldApplyV3 ShouldApplyV3) {
+	c.Lock()
+	defer c.Unlock()
+
+	c.members[id].RaftAttributes = raftAttr
+	if c.v2store != nil {
+		mustUpdateMemberInStore(c.lg, c.v2store, c.members[id])
+	}
+	if c.be != nil && shouldApplyV3 {
+		unsafeSaveMemberToBackend(c.lg, c.be, c.members[id])
+	}
+
+	c.lg.Info("更新成员属性", zap.String("cluster-id", c.cid.String()),
+		zap.String("local-member-id", c.localID.String()),
+		zap.String("updated-remote-peer-id", id.String()),
+		zap.Strings("updated-remote-peer-urls", raftAttr.PeerURLs),
+	)
 }

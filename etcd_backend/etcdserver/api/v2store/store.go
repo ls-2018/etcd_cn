@@ -243,8 +243,7 @@ func (s *store) CompareAndSwap(nodePath string, prevValue string, prevIndex uint
 	return e, nil
 }
 
-// Delete deletes the node at the given path.
-// If the node is a directory, recursive必须是true to delete it.
+// Delete 删除节点,并删除该节点包含的   /0/members/8e9e05c52164694d  true,true
 func (s *store) Delete(nodePath string, dir, recursive bool) (*Event, error) {
 	var err *v2error.Error
 
@@ -261,18 +260,17 @@ func (s *store) Delete(nodePath string, dir, recursive bool) (*Event, error) {
 	}()
 
 	nodePath = path.Clean(path.Join("/", nodePath))
-	// we do not allow the user to change "/"
 	if s.readonlySet.Contains(nodePath) {
 		return nil, v2error.NewError(v2error.EcodeRootROnly, "/", s.CurrentIndex)
 	}
 
-	// recursive implies dir
+	// 递归意味着dir
 	if recursive {
 		dir = true
 	}
 
 	n, err := s.internalGet(nodePath)
-	if err != nil { // if the node does not exist, return error
+	if err != nil { // 如果该节点不存在，则返回错误
 		return nil, err
 	}
 
@@ -285,9 +283,7 @@ func (s *store) Delete(nodePath string, dir, recursive bool) (*Event, error) {
 	if n.IsDir() {
 		eNode.Dir = true
 	}
-
-	callback := func(path string) { // notify function
-		// notify the watchers with deleted set true
+	callback := func(path string) {
 		s.WatcherHub.notifyWatchers(e, path, true)
 	}
 
@@ -295,11 +291,8 @@ func (s *store) Delete(nodePath string, dir, recursive bool) (*Event, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	// update etcd index
 	s.CurrentIndex++
-
-	s.WatcherHub.notify(e)
+	s.WatcherHub.notify(e) // 通知上层
 
 	return e, nil
 }
@@ -654,31 +647,6 @@ func (s *store) internalCreate(nodePath string, dir bool, value string, unique, 
 	return e, nil
 }
 
-// InternalGet 获取给定nodePath的节点。
-func (s *store) internalGet(nodePath string) (*node, *v2error.Error) {
-	nodePath = path.Clean(path.Join("/", nodePath)) // /0/members
-
-	walkFunc := func(parent *node, name string) (*node, *v2error.Error) {
-		if !parent.IsDir() {
-			err := v2error.NewError(v2error.EcodeNotDir, parent.Path, s.CurrentIndex)
-			return nil, err
-		}
-
-		child, ok := parent.Children[name]
-		if ok {
-			return child, nil
-		}
-
-		return nil, v2error.NewError(v2error.EcodeKeyNotFound, path.Join(parent.Path, name), s.CurrentIndex)
-	}
-
-	n, err := s.walk(nodePath, walkFunc)
-	if err != nil {
-		return nil, err
-	}
-	return n, nil
-}
-
 // Version 检索存储的当前版本. <= CurrentIndex
 func (s *store) Version() int {
 	return s.CurrentVersion
@@ -723,7 +691,6 @@ func (s *store) Get(nodePath string, recursive, sorted bool) (*Event, error) {
 // Create 在nodePath创建节点。创建将有助于创建没有ttl的中间目录。如果该节点已经存在，创建将失败。 如果路径上的任何节点是一个文件，创建将失败。
 func (s *store) Create(nodePath string, dir bool, value string, unique bool, expireOpts TTLOptionSet) (*Event, error) {
 	var err *v2error.Error
-
 	s.worldLock.Lock()
 	defer s.worldLock.Unlock()
 
@@ -746,4 +713,29 @@ func (s *store) Create(nodePath string, dir bool, value string, unique bool, exp
 	s.WatcherHub.notify(e) // ✅
 
 	return e, nil
+}
+
+// InternalGet 获取给定nodePath的节点。
+func (s *store) internalGet(nodePath string) (*node, *v2error.Error) {
+	nodePath = path.Clean(path.Join("/", nodePath)) // /0/members
+
+	walkFunc := func(parent *node, name string) (*node, *v2error.Error) {
+		if !parent.IsDir() {
+			err := v2error.NewError(v2error.EcodeNotDir, parent.Path, s.CurrentIndex)
+			return nil, err
+		}
+
+		child, ok := parent.Children[name]
+		if ok {
+			return child, nil
+		}
+
+		return nil, v2error.NewError(v2error.EcodeKeyNotFound, path.Join(parent.Path, name), s.CurrentIndex)
+	}
+
+	n, err := s.walk(nodePath, walkFunc)
+	if err != nil {
+		return nil, err
+	}
+	return n, nil
 }

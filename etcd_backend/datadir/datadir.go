@@ -20,7 +20,7 @@ const (
 	memberDirSegment   = "member"
 	snapDirSegment     = "snap"
 	walDirSegment      = "wal"
-	backendFileSegment = "blot.db"
+	backendFileSegment = "bolt.db"
 )
 
 func ToBackendFileName(dataDir string) string {

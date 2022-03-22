@@ -101,6 +101,7 @@ func (a *AlarmStore) Deactivate(id types.ID, at pb.AlarmType) *pb.AlarmMember {
 	return m
 }
 
+// Get 获取指定类型的警报,NONE 是所有
 func (a *AlarmStore) Get(at pb.AlarmType) (ret []*pb.AlarmMember) {
 	a.mu.Lock()
 	defer a.mu.Unlock()

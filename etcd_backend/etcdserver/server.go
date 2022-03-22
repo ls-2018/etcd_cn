@@ -867,8 +867,6 @@ func (s *EtcdServer) purgeFile() {
 	}
 }
 
-func (s *EtcdServer) Cluster() api.Cluster { return s.cluster }
-
 func (s *EtcdServer) ApplyWait() <-chan struct{} { return s.applyWait.Wait(s.getCommittedIndex()) }
 
 type ServerPeer interface {
@@ -955,8 +953,6 @@ func (s *EtcdServer) Process(ctx context.Context, m raftpb.Message) error {
 	_ = raftNode{}.Step
 	return s.r.Step(ctx, m)
 }
-
-func (s *EtcdServer) IsIDRemoved(id uint64) bool { return s.cluster.IsIDRemoved(types.ID(id)) }
 
 func (s *EtcdServer) ReportUnreachable(id uint64) { s.r.ReportUnreachable(id) }
 
@@ -1510,182 +1506,6 @@ func (s *EtcdServer) checkMembershipOperationPermission(ctx context.Context) err
 	return s.AuthStore().IsAdminPermitted(authInfo)
 }
 
-func (s *EtcdServer) AddMember(ctx context.Context, memb membership.Member) ([]*membership.Member, error) {
-	if err := s.checkMembershipOperationPermission(ctx); err != nil {
-		return nil, err
-	}
-
-	// TODO: move Member to protobuf type
-	b, err := json.Marshal(memb)
-	if err != nil {
-		return nil, err
-	}
-
-	// by default StrictReconfigCheck is enabled; reject new members if unhealthy.
-	if err := s.mayAddMember(memb); err != nil {
-		return nil, err
-	}
-
-	cc := raftpb.ConfChangeV1{
-		Type:    raftpb.ConfChangeAddNode,
-		NodeID:  uint64(memb.ID),
-		Context: string(b),
-	}
-
-	if memb.IsLearner {
-		cc.Type = raftpb.ConfChangeAddLearnerNode
-	}
-
-	return s.configure(ctx, cc)
-}
-
-func (s *EtcdServer) mayAddMember(memb membership.Member) error {
-	lg := s.Logger()
-	if !s.Cfg.StrictReconfigCheck {
-		return nil
-	}
-
-	// protect quorum when adding voting member
-	if !memb.IsLearner && !s.cluster.IsReadyToAddVotingMember() {
-		lg.Warn(
-			"rejecting member add request; not enough healthy members",
-			zap.String("local-member-id", s.ID().String()),
-			zap.String("requested-member-add", fmt.Sprintf("%+v", memb)),
-			zap.Error(ErrNotEnoughStartedMembers),
-		)
-		return ErrNotEnoughStartedMembers
-	}
-
-	if !isConnectedFullySince(s.r.transport, time.Now().Add(-HealthInterval), s.ID(), s.cluster.VotingMembers()) {
-		lg.Warn(
-			"rejecting member add request; local member has not been connected to all peers, reconfigure breaks active quorum",
-			zap.String("local-member-id", s.ID().String()),
-			zap.String("requested-member-add", fmt.Sprintf("%+v", memb)),
-			zap.Error(ErrUnhealthy),
-		)
-		return ErrUnhealthy
-	}
-
-	return nil
-}
-
-func (s *EtcdServer) RemoveMember(ctx context.Context, id uint64) ([]*membership.Member, error) {
-	if err := s.checkMembershipOperationPermission(ctx); err != nil {
-		return nil, err
-	}
-
-	// by default StrictReconfigCheck is enabled; reject removal if leads to quorum loss
-	if err := s.mayRemoveMember(types.ID(id)); err != nil {
-		return nil, err
-	}
-
-	cc := raftpb.ConfChangeV1{
-		Type:   raftpb.ConfChangeRemoveNode,
-		NodeID: id,
-	}
-	return s.configure(ctx, cc)
-}
-
-// PromoteMember promotes a learner node to a voting node.
-func (s *EtcdServer) PromoteMember(ctx context.Context, id uint64) ([]*membership.Member, error) {
-	// only raft leader has information on whether the to-be-promoted learner node is ready. If promoteMember call
-	// fails with ErrNotLeader, forward the request to leader node via HTTP. If promoteMember call fails with error
-	// other than ErrNotLeader, return the error.
-	resp, err := s.promoteMember(ctx, id)
-	if err == nil {
-		return resp, nil
-	}
-	if err != ErrNotLeader {
-		return resp, err
-	}
-
-	cctx, cancel := context.WithTimeout(ctx, s.Cfg.ReqTimeout())
-	defer cancel()
-	// forward to leader
-	for cctx.Err() == nil {
-		leader, err := s.waitLeader(cctx)
-		if err != nil {
-			return nil, err
-		}
-		for _, url := range leader.PeerURLs {
-			resp, err := promoteMemberHTTP(cctx, url, id, s.peerRt)
-			if err == nil {
-				return resp, nil
-			}
-			// If member promotion failed, return early. Otherwise keep retry.
-			if err == ErrLearnerNotReady || err == membership.ErrIDNotFound || err == membership.ErrMemberNotLearner {
-				return nil, err
-			}
-		}
-	}
-
-	if cctx.Err() == context.DeadlineExceeded {
-		return nil, ErrTimeout
-	}
-	return nil, ErrCanceled
-}
-
-// promoteMember checks whether the to-be-promoted learner node is ready before sending the promote
-// request to raft.
-// The function returns ErrNotLeader if the local node is not raft leader (therefore does not have
-// enough information to determine if the learner node is ready), returns ErrLearnerNotReady if the
-// local node is leader (therefore has enough information) but decided the learner node is not ready
-// to be promoted.
-func (s *EtcdServer) promoteMember(ctx context.Context, id uint64) ([]*membership.Member, error) {
-	if err := s.checkMembershipOperationPermission(ctx); err != nil {
-		return nil, err
-	}
-
-	// check if we can promote this learner.
-	if err := s.mayPromoteMember(types.ID(id)); err != nil {
-		return nil, err
-	}
-
-	// build the context for the promote confChange. mark IsLearner to false and IsPromote to true.
-	promoteChangeContext := membership.ConfigChangeContext{
-		Member: membership.Member{
-			ID: types.ID(id),
-		},
-		IsPromote: true,
-	}
-
-	b, err := json.Marshal(promoteChangeContext)
-	if err != nil {
-		return nil, err
-	}
-
-	cc := raftpb.ConfChangeV1{
-		Type:    raftpb.ConfChangeAddNode,
-		NodeID:  id,
-		Context: string(b),
-	}
-
-	return s.configure(ctx, cc)
-}
-
-func (s *EtcdServer) mayPromoteMember(id types.ID) error {
-	lg := s.Logger()
-	err := s.isLearnerReady(uint64(id))
-	if err != nil {
-		return err
-	}
-
-	if !s.Cfg.StrictReconfigCheck {
-		return nil
-	}
-	if !s.cluster.IsReadyToPromoteMember(uint64(id)) {
-		lg.Warn(
-			"rejecting member promote request; not enough healthy members",
-			zap.String("local-member-id", s.ID().String()),
-			zap.String("requested-member-remove-id", id.String()),
-			zap.Error(ErrNotEnoughStartedMembers),
-		)
-		return ErrNotEnoughStartedMembers
-	}
-
-	return nil
-}
-
 // check whether the learner catches up with leader or not.
 // Note: it will return nil if member is not found in cluster or if member is not learner.
 // These two conditions will be checked before apply phase later.
@@ -1781,38 +1601,6 @@ func (s *EtcdServer) UpdateMember(ctx context.Context, memb membership.Member) (
 	return s.configure(ctx, cc)
 }
 
-func (s *EtcdServer) setCommittedIndex(v uint64) {
-	atomic.StoreUint64(&s.committedIndex, v)
-}
-
-func (s *EtcdServer) getCommittedIndex() uint64 {
-	return atomic.LoadUint64(&s.committedIndex)
-}
-
-func (s *EtcdServer) setAppliedIndex(v uint64) {
-	atomic.StoreUint64(&s.appliedIndex, v)
-}
-
-func (s *EtcdServer) getAppliedIndex() uint64 {
-	return atomic.LoadUint64(&s.appliedIndex)
-}
-
-func (s *EtcdServer) setTerm(v uint64) {
-	atomic.StoreUint64(&s.term, v)
-}
-
-func (s *EtcdServer) getTerm() uint64 {
-	return atomic.LoadUint64(&s.term)
-}
-
-func (s *EtcdServer) setLead(v uint64) {
-	atomic.StoreUint64(&s.lead, v)
-}
-
-func (s *EtcdServer) getLead() uint64 {
-	return atomic.LoadUint64(&s.lead)
-}
-
 func (s *EtcdServer) LeaderChangedNotify() <-chan struct{} {
 	s.leaderChangedMu.RLock()
 	defer s.leaderChangedMu.RUnlock()
@@ -1837,18 +1625,6 @@ type RaftStatusGetter interface {
 	AppliedIndex() uint64
 	Term() uint64
 }
-
-func (s *EtcdServer) ID() types.ID { return s.id }
-
-func (s *EtcdServer) Leader() types.ID { return types.ID(s.getLead()) }
-
-func (s *EtcdServer) Lead() uint64 { return s.getLead() }
-
-func (s *EtcdServer) CommittedIndex() uint64 { return s.getCommittedIndex() }
-
-func (s *EtcdServer) AppliedIndex() uint64 { return s.getAppliedIndex() }
-
-func (s *EtcdServer) Term() uint64 { return s.getTerm() }
 
 type confChangeResponse struct {
 	membs []*membership.Member
@@ -2030,7 +1806,7 @@ func (s *EtcdServer) apply(es []raftpb.Entry, confState *raftpb.ConfState) (appl
 
 		case raftpb.EntryConfChange:
 			shouldApplyV3 := membership.ApplyV2storeOnly    // false
-			if e.Index > s.consistIndex.ConsistentIndex() { // 查找 blot.db meta 库里的 	consistent_index、term
+			if e.Index > s.consistIndex.ConsistentIndex() { // 查找 bolt.db meta 库里的 	consistent_index、term
 				s.consistIndex.SetConsistentIndex(e.Index, e.Term) // 更新内存里的
 				shouldApplyV3 = membership.ApplyBoth               // true
 			}
@@ -2157,67 +1933,6 @@ func (s *EtcdServer) notifyAboutFirstCommitInTerm() {
 	s.firstCommitInTermC = newNotifier
 	s.firstCommitInTermMu.Unlock()
 	close(notifierToClose)
-}
-
-// applyConfChange 将一个confChange作用到当前raft,它必须已经committed
-func (s *EtcdServer) applyConfChange(cc raftpb.ConfChangeV1, confState *raftpb.ConfState, shouldApplyV3 membership.ShouldApplyV3) (bool, error) {
-	if err := s.cluster.ValidateConfigurationChange(cc); err != nil {
-		cc.NodeID = raft.None // 这种，不会处理的
-		s.r.ApplyConfChange(cc)
-		return false, err
-	}
-
-	lg := s.Logger()
-	*confState = *s.r.ApplyConfChange(cc) // 生效之后的配置
-	s.beHooks.SetConfState(confState)
-	switch cc.Type {
-	// 集群里记录的quorum.JointConfig与peer信息已经更新
-	case raftpb.ConfChangeAddNode, raftpb.ConfChangeAddLearnerNode:
-		confChangeContext := new(membership.ConfigChangeContext)
-		if err := json.Unmarshal([]byte(cc.Context), confChangeContext); err != nil {
-			lg.Panic("发序列化成员失败", zap.Error(err))
-		}
-		if cc.NodeID != uint64(confChangeContext.Member.ID) {
-			lg.Panic("得到不同的成员ID",
-				zap.String("member-id-from-config-change-entry", types.ID(cc.NodeID).String()),
-				zap.String("member-id-from-message", confChangeContext.Member.ID.String()),
-			)
-		}
-		if confChangeContext.IsPromote { // 是否角色提升
-			s.cluster.PromoteMember(confChangeContext.Member.ID, shouldApplyV3)
-		} else {
-			s.cluster.AddMember(&confChangeContext.Member, shouldApplyV3) // 添加节点  /0/members/8e9e05c52164694d
-			if confChangeContext.Member.ID != s.id {// 不是本实例
-				s.r.transport.AddPeer(confChangeContext.Member.ID, confChangeContext.PeerURLs)
-			}
-		}
-
-	case raftpb.ConfChangeRemoveNode:
-		id := types.ID(cc.NodeID)
-		s.cluster.RemoveMember(id, shouldApplyV3)
-		if id == s.id {
-			return true, nil
-		}
-		s.r.transport.RemovePeer(id)
-
-	case raftpb.ConfChangeUpdateNode:
-		m := new(membership.Member)
-		if err := json.Unmarshal([]byte(cc.Context), m); err != nil {
-			lg.Panic("反序列化失败", zap.Error(err))
-		}
-		if cc.NodeID != uint64(m.ID) {
-			lg.Panic(
-				"得到了一个不同的ID",
-				zap.String("member-id-from-config-change-entry", types.ID(cc.NodeID).String()),
-				zap.String("member-id-from-message", m.ID.String()),
-			)
-		}
-		s.cluster.UpdateRaftAttributes(m.ID, m.RaftAttributes, shouldApplyV3)
-		if m.ID != s.id {
-			s.r.transport.UpdatePeer(m.ID, m.PeerURLs)
-		}
-	}
-	return false, nil
 }
 
 // TODO: non-blocking snapshot
@@ -2523,9 +2238,7 @@ func (s *EtcdServer) GoAttach(f func()) {
 	}()
 }
 
-func (s *EtcdServer) Alarms() []*pb.AlarmMember {
-	return s.alarmStore.Get(pb.AlarmType_NONE)
-}
+// ----------------------------------------- OVER  --------------------------------------------------------------
 
 // IsLearner 当前节点是不是 raft learner
 func (s *EtcdServer) IsLearner() bool {
@@ -2561,3 +2274,116 @@ func maybeDefragBackend(cfg config.ServerConfig, be backend.Backend) error {
 	}
 	return be.Defrag()
 }
+
+// applyConfChange 将一个confChange作用到当前raft,它必须已经committed
+func (s *EtcdServer) applyConfChange(cc raftpb.ConfChangeV1, confState *raftpb.ConfState, shouldApplyV3 membership.ShouldApplyV3) (bool, error) {
+	if err := s.cluster.ValidateConfigurationChange(cc); err != nil {
+		cc.NodeID = raft.None // 这种，不会处理的
+		s.r.ApplyConfChange(cc)
+		return false, err
+	}
+
+	lg := s.Logger()
+	*confState = *s.r.ApplyConfChange(cc) // 生效之后的配置
+	s.beHooks.SetConfState(confState)
+	switch cc.Type {
+	// 集群里记录的quorum.JointConfig与peer信息已经更新
+	case raftpb.ConfChangeAddNode, raftpb.ConfChangeAddLearnerNode:
+		confChangeContext := new(membership.ConfigChangeContext)
+		if err := json.Unmarshal([]byte(cc.Context), confChangeContext); err != nil {
+			lg.Panic("发序列化成员失败", zap.Error(err))
+		}
+		if cc.NodeID != uint64(confChangeContext.Member.ID) {
+			lg.Panic("得到不同的成员ID",
+				zap.String("member-id-from-config-change-entry", types.ID(cc.NodeID).String()),
+				zap.String("member-id-from-message", confChangeContext.Member.ID.String()),
+			)
+		}
+		if confChangeContext.IsPromote { // 是否角色提升
+			s.cluster.PromoteMember(confChangeContext.Member.ID, shouldApplyV3)
+		} else {
+			s.cluster.AddMember(&confChangeContext.Member, shouldApplyV3) // 添加节点  /0/members/8e9e05c52164694d
+			if confChangeContext.Member.ID != s.id {                      // 不是本实例
+				s.r.transport.AddPeer(confChangeContext.Member.ID, confChangeContext.PeerURLs)
+			}
+		}
+
+	case raftpb.ConfChangeRemoveNode:
+		id := types.ID(cc.NodeID)
+		s.cluster.RemoveMember(id, shouldApplyV3) // ✅
+		if id == s.id {
+			return true, nil
+		}
+		s.r.transport.RemovePeer(id)
+
+	case raftpb.ConfChangeUpdateNode:
+		m := new(membership.Member)
+		if err := json.Unmarshal([]byte(cc.Context), m); err != nil {
+			lg.Panic("反序列化失败", zap.Error(err))
+		}
+		if cc.NodeID != uint64(m.ID) {
+			lg.Panic("得到了一个不同的ID",
+				zap.String("member-id-from-config-change-entry", types.ID(cc.NodeID).String()),
+				zap.String("member-id-from-message", m.ID.String()),
+			)
+		}
+		s.cluster.UpdateRaftAttributes(m.ID, m.RaftAttributes, shouldApplyV3)
+		if m.ID != s.id {
+			s.r.transport.UpdatePeer(m.ID, m.PeerURLs)
+		}
+	}
+	return false, nil
+}
+
+// Alarms 获取所有的警报,
+func (s *EtcdServer) Alarms() []*pb.AlarmMember {
+	return s.alarmStore.Get(pb.AlarmType_NONE)
+}
+
+func (s *EtcdServer) ID() types.ID { return s.id }
+
+func (s *EtcdServer) Leader() types.ID { return types.ID(s.getLead()) }
+
+func (s *EtcdServer) Lead() uint64 { return s.getLead() }
+
+func (s *EtcdServer) CommittedIndex() uint64 { return s.getCommittedIndex() }
+
+func (s *EtcdServer) AppliedIndex() uint64 { return s.getAppliedIndex() }
+
+func (s *EtcdServer) Term() uint64 { return s.getTerm() }
+
+func (s *EtcdServer) setCommittedIndex(v uint64) {
+	atomic.StoreUint64(&s.committedIndex, v)
+}
+
+func (s *EtcdServer) getCommittedIndex() uint64 {
+	return atomic.LoadUint64(&s.committedIndex)
+}
+
+func (s *EtcdServer) setAppliedIndex(v uint64) {
+	atomic.StoreUint64(&s.appliedIndex, v)
+}
+
+func (s *EtcdServer) getAppliedIndex() uint64 {
+	return atomic.LoadUint64(&s.appliedIndex)
+}
+
+func (s *EtcdServer) setTerm(v uint64) {
+	atomic.StoreUint64(&s.term, v)
+}
+
+func (s *EtcdServer) getTerm() uint64 {
+	return atomic.LoadUint64(&s.term)
+}
+
+func (s *EtcdServer) setLead(v uint64) {
+	atomic.StoreUint64(&s.lead, v)
+}
+
+func (s *EtcdServer) getLead() uint64 {
+	return atomic.LoadUint64(&s.lead)
+}
+
+func (s *EtcdServer) IsIDRemoved(id uint64) bool { return s.cluster.IsIDRemoved(types.ID(id)) }
+
+func (s *EtcdServer) Cluster() api.Cluster { return s.cluster }

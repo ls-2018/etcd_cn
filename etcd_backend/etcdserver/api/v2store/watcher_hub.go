@@ -110,6 +110,12 @@ func (wh *watcherHub) notify(e *Event) {
 	for _, segment := range segments {
 		currPath = path.Join(currPath, segment)
 		// 通知对当前路径变化 感兴趣的观察者
+		// e.NodeExtern.Key    /0/members/8e9e05c52164694d/raftAttributes
+		// nodePath :		/
+		// nodePath :		/0
+		// nodePath :		/0/members
+		// nodePath :		/0/members/8e9e05c52164694d
+		// nodePath :		/0/members/8e9e05c52164694d/raftAttributes
 		wh.notifyWatchers(e, currPath, false)
 	}
 }
@@ -122,16 +128,11 @@ func (wh *watcherHub) notifyWatchers(e *Event, nodePath string, deleted bool) {
 	l, ok := wh.watchers[nodePath]
 	if ok {
 		curr := l.Front()
-
+		// e.NodeExtern.Key    /0/members/8e9e05c52164694d/raftAttributes
+		// nodePath :		/0/members/8e9e05c52164694d/raftAttributes
 		for curr != nil {
 			next := curr.Next()
 			w, _ := curr.Value.(*watcher)
-			// e.NodeExtern.Key    /0/members/8e9e05c52164694d/raftAttributes
-			// nodePath :		/
-			// nodePath :		/0
-			// nodePath :		/0/members
-			// nodePath :		/0/members/8e9e05c52164694d
-			// nodePath :		/0/members/8e9e05c52164694d/raftAttributes
 			originalPath := e.NodeExtern.Key == nodePath
 			// 是不是起源,或者该目录不是隐藏节点
 			if (originalPath || !isHidden(nodePath, e.NodeExtern.Key)) && w.notify(e, originalPath, deleted) {

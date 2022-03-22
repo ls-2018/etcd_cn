@@ -148,7 +148,7 @@ func (t *batchTx) UnsafeRange(bucketType Bucket, key, endKey []byte, limit int64
 	return unsafeRange(bucket.Cursor(), key, endKey, limit)
 }
 
-// 从blot.db 查找k,v
+// 从bolt.db 查找k,v
 func unsafeRange(c *bolt.Cursor, key, endKey []byte, limit int64) (keys [][]byte, vs [][]byte) {
 	if limit <= 0 {
 		limit = math.MaxInt64
@@ -191,18 +191,6 @@ func (t *batchTx) UnsafeDelete(bucketType Bucket, key []byte) {
 		)
 	}
 	t.pending++
-}
-
-// UnsafeForEach 调用方必须持锁
-func (t *batchTx) UnsafeForEach(bucket Bucket, visitor func(k, v []byte) error) error {
-	return unsafeForEach(t.tx, bucket, visitor)
-}
-
-func unsafeForEach(tx *bolt.Tx, bucket Bucket, visitor func(k, v []byte) error) error {
-	if b := tx.Bucket(bucket.Name()); b != nil {
-		return b.ForEach(visitor)
-	}
-	return nil
 }
 
 // Commit commits a previous tx and begins a new writable one.
@@ -327,4 +315,18 @@ func (t *batchTxBuffered) UnsafePut(bucket Bucket, key []byte, value []byte) {
 func (t *batchTxBuffered) UnsafeSeqPut(bucket Bucket, key []byte, value []byte) {
 	t.batchTx.UnsafeSeqPut(bucket, key, value)
 	t.buf.putSeq(bucket, key, value)
+}
+
+// -------------------------------------------- OVER  -------------------------------------------------------------
+
+// UnsafeForEach 调用方必须持锁
+func (t *batchTx) UnsafeForEach(bucket Bucket, visitor func(k, v []byte) error) error {
+	return unsafeForEach(t.tx, bucket, visitor)
+}
+
+func unsafeForEach(tx *bolt.Tx, bucket Bucket, visitor func(k, v []byte) error) error {
+	if b := tx.Bucket(bucket.Name()); b != nil {
+		return b.ForEach(visitor)
+	}
+	return nil
 }

@@ -75,6 +75,7 @@ func (n *node) Write(value string, index uint64) *v2error.Error {
 	return nil
 }
 
+// Remove 清理node包含的子数据
 func (n *node) Remove(dir, recursive bool, callback func(path string)) *v2error.Error {
 	if !n.IsDir() { // key-value pair
 		_, name := path.Split(n.Path)

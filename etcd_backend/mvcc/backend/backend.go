@@ -46,23 +46,15 @@ var (
 )
 
 type Backend interface {
-	// ReadTx 开启读事务.
-	ReadTx() ReadTx
-	// BatchTx 开启写事务
-	BatchTx() BatchTx
-	// ConcurrentReadTx 开启并发读事务,互相之间不阻塞
-	ConcurrentReadTx() ReadTx
-	// Snapshot 对db做快照
-	Snapshot() Snapshot
+	ReadTx() ReadTx           // 开启读事务
+	BatchTx() BatchTx         // 开启写事务
+	ConcurrentReadTx() ReadTx // 开启并发读事务,互相之间不阻塞
+	Snapshot() Snapshot       // 对db做快照
 	Hash(ignores func(bucketName, keyName []byte) bool) (uint32, error)
-	// Size DB占用的物理磁盘大小,空间可以预分配,所以不是实际数据大小
-	Size() int64
-	// SizeInUse 实际使用的磁盘空间
-	SizeInUse() int64
-	// OpenReadTxN 返回当前读事务个数
-	OpenReadTxN() int64
-	// Defrag 数据文件整理,会回收已删除key和已更新的key旧版本占用的磁盘
-	Defrag() error
+	Size() int64        // DB占用的物理磁盘大小,空间可以预分配,所以不是实际数据大小
+	SizeInUse() int64   // 实际使用的磁盘空间
+	OpenReadTxN() int64 // 返回当前读事务个数
+	Defrag() error      // 数据文件整理,会回收已删除key和已更新的key旧版本占用的磁盘
 	ForceCommit()
 	Close() error
 }
@@ -82,43 +74,46 @@ type txReadBufferCache struct {
 	bufVersion uint64
 }
 
-type backend struct {
-	// 已经占用的磁盘大小
-	size int64
-	// 实际使用的大小
-	sizeInUse int64
-	// 已提交事务数
-	commits int64
-	// 当前开启的读事务数
-	openReadTxN int64
-	// mlock prevents backend database file to be swapped
-	mlock bool
-	// 读写锁
-	mu sync.RWMutex
-	// 底层存储为boltDB
-	db *bolt.DB
-	// 批量写提交间隔
-	batchInterval time.Duration
-	// 批量写最大事务数
-	batchLimit int
-	// 写事务缓冲队列
-	batchTx *batchTxBuffered
-	// 写事务
-	readTx *readTx
+type (
+	MyBackend = backend
+	backend   struct {
+		// 已经占用的磁盘大小
+		size int64
+		// 实际使用的大小
+		sizeInUse int64
+		// 已提交事务数
+		commits int64
+		// 当前开启的读事务数
+		openReadTxN int64
+		// mlock prevents backend database file to be swapped
+		mlock bool
+		// 读写锁
+		mu sync.RWMutex
+		// 底层存储为boltDB
+		db *bolt.DB
+		// 批量写提交间隔
+		batchInterval time.Duration
+		// 批量写最大事务数
+		batchLimit int
+		// 写事务缓冲队列
+		batchTx *batchTxBuffered
+		// 写事务
+		readTx *readTx
 
-	// txReadBufferCache mirrors "txReadBuffer" within "readTx" -- readTx.baseReadTx.buf.
-	// When creating "concurrentReadTx":
-	// - if the cache is up-to-date, "readTx.baseReadTx.buf" copy can be skipped
-	// - if the cache is empty or outdated, "readTx.baseReadTx.buf" copy is required
-	txReadBufferCache txReadBufferCache
+		// txReadBufferCache mirrors "txReadBuffer" within "readTx" -- readTx.baseReadTx.buf.
+		// When creating "concurrentReadTx":
+		// - if the cache is up-to-date, "readTx.baseReadTx.buf" copy can be skipped
+		// - if the cache is empty or outdated, "readTx.baseReadTx.buf" copy is required
+		txReadBufferCache txReadBufferCache
 
-	stopc chan struct{}
-	donec chan struct{}
+		stopc chan struct{}
+		donec chan struct{}
 
-	hooks Hooks
+		hooks Hooks
 
-	lg *zap.Logger
-}
+		lg *zap.Logger
+	}
+)
 
 type BackendConfig struct {
 	// Path is the file path to the backend file.

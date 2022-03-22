@@ -35,9 +35,9 @@ type ConsistentIndexer interface {
 	SetBackend(be Backend)                    // 为ConsistentIndexer设置可用的backend.BatchTx.
 }
 
-// 当blotdb用作状态机的时候，wal和blotdb作为两个不同的实体，很有可能存在不一致的情况。
-// 所以etcd在blotdb中存储一条记录consistent-index，来代表已经apply到blot-db上成功的log index，
-// 这样当根据wal恢复blot-db的时候，就可以判断log index是不是已经被apply过。
+// 当boltdb用作状态机的时候，wal和boltdb作为两个不同的实体，很有可能存在不一致的情况。
+// 所以etcd在boltdb中存储一条记录consistent-index，来代表已经apply到bolt-db上成功的log index，
+// 这样当根据wal恢复bolt-db的时候，就可以判断log index是不是已经被apply过。
 
 // consistentIndex implements the ConsistentIndexer interface.
 type consistentIndex struct {
@@ -153,7 +153,7 @@ func CreateMetaBucket(tx backend.BatchTx) {
 	tx.UnsafeCreateBucket(buckets.Meta)
 }
 
-// 从blot.db  加载一致的索引和任期
+// 从bolt.db  加载一致的索引和任期
 func unsafeReadConsistentIndex(tx backend.ReadTx) (uint64, uint64) {
 	// consistent_index
 	_, vs := tx.UnsafeRange(buckets.Meta, buckets.MetaConsistentIndexKeyName, nil, 0)
@@ -177,7 +177,7 @@ func ReadConsistentIndex(tx backend.ReadTx) (uint64, uint64) {
 	return unsafeReadConsistentIndex(tx)
 }
 
-// UpdateConsistentIndex 会写到blot.db meta库
+// UpdateConsistentIndex 会写到bolt.db meta库
 func UpdateConsistentIndex(tx backend.BatchTx, index uint64, term uint64, onlyGrow bool) {
 	tx.Lock()
 	defer tx.Unlock()

@@ -44,23 +44,6 @@ var (
 	errMemberNotFound         = fmt.Errorf("member not found")
 )
 
-func unsafeSaveMemberToBackend(lg *zap.Logger, be backend.Backend, m *Member) error {
-	mkey := backendMemberKey(m.ID)
-	mvalue, err := json.Marshal(m)
-	if err != nil {
-		lg.Panic("failed to marshal member", zap.Error(err))
-	}
-
-	tx := be.BatchTx()
-	tx.Lock()
-	defer tx.Unlock()
-	if unsafeMemberExists(tx, mkey) {
-		return errMemberAlreadyExist
-	}
-	tx.UnsafePut(buckets.Members, mkey, mvalue)
-	return nil
-}
-
 // TrimClusterFromBackend removes all information about cluster (versions)
 // from the v3 backend.
 func TrimClusterFromBackend(be backend.Backend) error {
@@ -69,31 +52,6 @@ func TrimClusterFromBackend(be backend.Backend) error {
 	defer tx.Unlock()
 	tx.UnsafeDeleteBucket(buckets.Cluster)
 	return nil
-}
-
-func unsafeDeleteMemberFromBackend(be backend.Backend, id types.ID) error {
-	mkey := backendMemberKey(id)
-
-	tx := be.BatchTx()
-	tx.Lock()
-	defer tx.Unlock()
-	tx.UnsafePut(buckets.MembersRemoved, mkey, []byte("removed"))
-	if !unsafeMemberExists(tx, mkey) {
-		return errMemberNotFound
-	}
-	tx.UnsafeDelete(buckets.Members, mkey)
-	return nil
-}
-
-func unsafeMemberExists(tx backend.ReadTx, mkey []byte) bool {
-	var found bool
-	tx.UnsafeForEach(buckets.Members, func(k, v []byte) error {
-		if bytes.Equal(k, mkey) {
-			found = true
-		}
-		return nil
-	})
-	return found
 }
 
 func readMembersFromBackend(lg *zap.Logger, be backend.Backend) (map[types.ID]*Member, map[types.ID]bool, error) {
@@ -203,66 +161,14 @@ func mustSaveDowngradeToBackend(lg *zap.Logger, be backend.Backend, downgrade *D
 	tx.UnsafePut(buckets.Cluster, dkey, dvalue)
 }
 
-// OK
-func mustSaveMemberToStore(lg *zap.Logger, s v2store.Store, m *Member) {
-	err := unsafeSaveMemberToStore(lg, s, m)
-	if err != nil {
-		lg.Panic(
-			"保存member到store失败",
-			zap.String("member-id", m.ID.String()),
-			zap.Error(err),
-		)
-	}
-}
-
-// node---->v2store [memory]
-func unsafeSaveMemberToStore(lg *zap.Logger, s v2store.Store, m *Member) error {
-	b, err := json.Marshal(m.RaftAttributes) // 是raft集群中的对等体列表. 表示该成员是否是raft Learner.
-	if err != nil {
-		lg.Panic("序列化失败raftAttributes", zap.Error(err))
-	}
-	_ = computeMemberId                                        // id 由这个函数生成，需要 peerURLs clusterName 创建时间,创建时间一般为nil
-	p := path.Join(MemberStoreKey(m.ID), raftAttributesSuffix) // /0/members/123/raftAttributes
-	_, err = s.Create(p, false, string(b),                     // ✅
-		false, v2store.TTLOptionSet{ExpireTime: v2store.Permanent})
-	return err
-}
-
-func mustUpdateMemberInStore(lg *zap.Logger, s v2store.Store, m *Member) {
-	// s 内存里面的一个树形node结构
-	b, err := json.Marshal(m.RaftAttributes) // 是raft集群中的对等体列表. 表示该成员是否是raft Learner.
-	if err != nil {
-		lg.Panic("序列化raft相关属性失败", zap.Error(err))
-	}
-	p := path.Join(MemberStoreKey(m.ID), raftAttributesSuffix) //   123213/raftAttributes
-	if _, err := s.Update(p, string(b), v2store.TTLOptionSet{ExpireTime: v2store.Permanent}); err != nil {
-		lg.Panic("更新raftAttributes失败", zap.String("path", p), zap.Error(err))
-	}
-}
-
-func unsafeDeleteMemberFromStore(s v2store.Store, id types.ID) error {
-	if _, err := s.Delete(MemberStoreKey(id), true, true); err != nil {
-		return err
-	}
-	if _, err := s.Create(RemovedMemberStoreKey(id), // ✅
-		false, "", false, v2store.TTLOptionSet{ExpireTime: v2store.Permanent}); err != nil {
-		return err
-	}
-	return nil
-}
-
 func mustUpdateMemberAttrInStore(lg *zap.Logger, s v2store.Store, m *Member) {
 	b, err := json.Marshal(m.Attributes)
 	if err != nil {
-		lg.Panic("failed to marshal attributes", zap.Error(err))
+		lg.Panic("序列化 属性失败", zap.Error(err))
 	}
 	p := path.Join(MemberStoreKey(m.ID), attributesSuffix)
 	if _, err := s.Set(p, false, string(b), v2store.TTLOptionSet{ExpireTime: v2store.Permanent}); err != nil {
-		lg.Panic(
-			"failed to update attributes",
-			zap.String("path", p),
-			zap.Error(err),
-		)
+		lg.Panic("更新属性失败", zap.String("path", p), zap.Error(err))
 	}
 }
 
@@ -324,11 +230,6 @@ func mustCreateBackendBuckets(be backend.Backend) {
 	tx.UnsafeCreateBucket(buckets.Cluster)
 }
 
-// MemberStoreKey /0/members/123
-func MemberStoreKey(id types.ID) string {
-	return path.Join(StoreMembersPrefix, id.String()) // /0/members/123
-}
-
 func StoreClusterVersionKey() string {
 	return path.Join(storePrefix, "version")
 }
@@ -345,6 +246,45 @@ func mustParseMemberIDFromBytes(lg *zap.Logger, key []byte) types.ID {
 	return id
 }
 
+// --------------------------------------------- OVER  ---------------------------------------------------
+
+// OK
+func mustSaveMemberToStore(lg *zap.Logger, s v2store.Store, m *Member) {
+	err := unsafeSaveMemberToStore(lg, s, m)
+	if err != nil {
+		lg.Panic(
+			"保存member到store失败",
+			zap.String("member-id", m.ID.String()),
+			zap.Error(err),
+		)
+	}
+}
+
+// node---->v2store [memory]
+func unsafeSaveMemberToStore(lg *zap.Logger, s v2store.Store, m *Member) error {
+	b, err := json.Marshal(m.RaftAttributes) // 是raft集群中的对等体列表. 表示该成员是否是raft Learner.
+	if err != nil {
+		lg.Panic("序列化失败raftAttributes", zap.Error(err))
+	}
+	_ = computeMemberId                                        // id 由这个函数生成，需要 peerURLs clusterName 创建时间,创建时间一般为nil
+	p := path.Join(MemberStoreKey(m.ID), raftAttributesSuffix) // /0/members/123/raftAttributes
+	_, err = s.Create(p, false, string(b),                     // ✅
+		false, v2store.TTLOptionSet{ExpireTime: v2store.Permanent})
+	return err
+}
+
+func mustUpdateMemberInStore(lg *zap.Logger, s v2store.Store, m *Member) {
+	// s 内存里面的一个树形node结构
+	b, err := json.Marshal(m.RaftAttributes) // 是raft集群中的对等体列表. 表示该成员是否是raft Learner.
+	if err != nil {
+		lg.Panic("序列化raft相关属性失败", zap.Error(err))
+	}
+	p := path.Join(MemberStoreKey(m.ID), raftAttributesSuffix) //   123213/raftAttributes
+	if _, err := s.Update(p, string(b), v2store.TTLOptionSet{ExpireTime: v2store.Permanent}); err != nil {
+		lg.Panic("更新raftAttributes失败", zap.String("path", p), zap.Error(err))
+	}
+}
+
 // MustParseMemberIDFromKey ok
 func MustParseMemberIDFromKey(lg *zap.Logger, key string) types.ID {
 	id, err := types.IDFromString(path.Base(key)) // /0/members/8e9e05c52164694d
@@ -354,6 +294,69 @@ func MustParseMemberIDFromKey(lg *zap.Logger, key string) types.ID {
 	return id
 }
 
+// 将member保存到Backend   bolt.db
+func unsafeSaveMemberToBackend(lg *zap.Logger, be backend.Backend, m *Member) error {
+	mkey := backendMemberKey(m.ID) // 16进制字符串
+	mvalue, err := json.Marshal(m)
+	if err != nil {
+		lg.Panic("序列化失败", zap.Error(err))
+	}
+
+	tx := be.BatchTx() // 写事务
+	tx.Lock()
+	defer tx.Unlock()
+	if unsafeMemberExists(tx, mkey) { // ✅
+		return errMemberAlreadyExist
+	}
+	tx.UnsafePut(buckets.Members, mkey, mvalue)
+	return nil
+}
+
+// MemberStoreKey 15   ----->  /0/members/e
+func MemberStoreKey(id types.ID) string {
+	return path.Join(StoreMembersPrefix, id.String()) // /0/members/e
+}
+
+// RemovedMemberStoreKey 15   -----> /0/removed_members/e
 func RemovedMemberStoreKey(id types.ID) string {
 	return path.Join(storeRemovedMembersPrefix, id.String())
+}
+
+// 移除节点，并添加到removed_member
+func unsafeDeleteMemberFromStore(s v2store.Store, id types.ID) error {
+	if _, err := s.Delete(MemberStoreKey(id), true, true); err != nil {
+		return err
+	}
+	if _, err := s.Create(RemovedMemberStoreKey(id), // ✅
+		false, "", false, v2store.TTLOptionSet{ExpireTime: v2store.Permanent}); err != nil {
+		return err
+	}
+	return nil
+}
+
+// 首先遍历bolt.db members下的所有k,v
+func unsafeMemberExists(tx backend.ReadTx, mkey []byte) bool {
+	var found bool
+	tx.UnsafeForEach(buckets.Members, func(k, v []byte) error {
+		if bytes.Equal(k, mkey) {
+			found = true
+		}
+		return nil
+	})
+	return found
+}
+
+// 从bolt.db删除节点信息
+func unsafeDeleteMemberFromBackend(be backend.Backend, id types.ID) error {
+	mkey := backendMemberKey(id)
+
+	tx := be.BatchTx()
+	tx.Lock()
+	defer tx.Unlock()
+	tx.UnsafePut(buckets.MembersRemoved, mkey, []byte("removed")) // 更新
+	if !unsafeMemberExists(tx, mkey) {
+		return errMemberNotFound
+	}
+	tx.UnsafeDelete(buckets.Members, mkey)
+	return nil
 }
