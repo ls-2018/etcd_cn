@@ -102,8 +102,6 @@ func (c *RaftCluster) Recover(onSet func(*zap.Logger, *semver.Version)) {
 	}
 }
 
-// --------------------------------------   OVER  --------------------------------------------------
-
 // NewClusterFromMembers 从远端节点获取到的集群节点信息
 func NewClusterFromMembers(lg *zap.Logger, id types.ID, membs []*Member) *RaftCluster {
 	c := NewCluster(lg)
