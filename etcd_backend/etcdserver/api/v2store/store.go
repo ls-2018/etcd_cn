@@ -103,75 +103,6 @@ func newStore(namespaces ...string) *store {
 	return s
 }
 
-// Version 检索存储的当前版本. <= CurrentIndex
-func (s *store) Version() int {
-	return s.CurrentVersion
-}
-
-// Index 检索存储的当前索引.
-func (s *store) Index() uint64 {
-	s.worldLock.RLock()
-	defer s.worldLock.RUnlock()
-	return s.CurrentIndex
-}
-
-// Get 返回一个get事件。如果递归为真，它将返回节点路径下的所有内容。如果sorted为真，它将按键对内容进行排序。
-func (s *store) Get(nodePath string, recursive, sorted bool) (*Event, error) {
-	// /0/members
-	var err *v2error.Error
-
-	s.worldLock.RLock()
-	defer s.worldLock.RUnlock()
-
-	defer func() {
-		if err == nil {
-			s.Stats.Inc(GetSuccess)
-			return
-		}
-
-		s.Stats.Inc(GetFail)
-	}()
-
-	n, err := s.internalGet(nodePath) // 没有 /0/members 这个node
-	if err != nil {
-		return nil, err
-	}
-
-	e := newEvent(Get, nodePath, n.ModifiedIndex, n.CreatedIndex)
-	e.EtcdIndex = s.CurrentIndex                                 // 给事件分配索引
-	e.NodeExtern.loadInternalNode(n, recursive, sorted, s.clock) // 加载node，主要是获取node中数据
-
-	return e, nil
-}
-
-// Create 在nodePath创建节点。创建将有助于创建没有ttl的中间目录。如果该节点已经存在，创建将失败。 如果路径上的任何节点是一个文件，创建将失败。
-func (s *store) Create(nodePath string, dir bool, value string, unique bool, expireOpts TTLOptionSet) (*Event, error) {
-	var err *v2error.Error
-
-	s.worldLock.Lock()
-	defer s.worldLock.Unlock()
-
-	defer func() {
-		if err == nil {
-			s.Stats.Inc(CreateSuccess)
-			return
-		}
-
-		s.Stats.Inc(CreateFail)
-	}()
-
-	// 创建一个内存节点, 有ttl放入ttlKeyHeap, 返回一个创建事件
-	e, err := s.internalCreate(nodePath, dir, value, unique, false, expireOpts.ExpireTime, Create)
-	if err != nil {
-		return nil, err
-	}
-
-	e.EtcdIndex = s.CurrentIndex
-	s.WatcherHub.notify(e) // ✅
-
-	return e, nil
-}
-
 // Set creates or replace the node at nodePath.
 func (s *store) Set(nodePath string, dir bool, value string, expireOpts TTLOptionSet) (*Event, error) {
 	var err *v2error.Error
@@ -538,6 +469,120 @@ func (s *store) Update(nodePath string, newValue string, expireOpts TTLOptionSet
 	return e, nil
 }
 
+// DeleteExpiredKeys will delete all expired keys
+func (s *store) DeleteExpiredKeys(cutoff time.Time) {
+	s.worldLock.Lock()
+	defer s.worldLock.Unlock()
+
+	for {
+		node := s.ttlKeyHeap.top()
+		if node == nil || node.ExpireTime.After(cutoff) {
+			break
+		}
+
+		s.CurrentIndex++
+		e := newEvent(Expire, node.Path, s.CurrentIndex, node.CreatedIndex)
+		e.EtcdIndex = s.CurrentIndex
+		e.PrevNode = node.Repr(false, false, s.clock)
+		if node.IsDir() {
+			e.NodeExtern.Dir = true
+		}
+
+		callback := func(path string) { // notify function
+			// notify the watchers with deleted set true
+			s.WatcherHub.notifyWatchers(e, path, true)
+		}
+
+		s.ttlKeyHeap.pop()
+		node.Remove(true, true, callback)
+
+		s.Stats.Inc(ExpireCount)
+
+		s.WatcherHub.notify(e)
+	}
+}
+
+// Save saves the static state of the store system.
+// It will not be able to save the state of watchers.
+// It will not save the parent field of the node. Or there will
+// be cyclic dependencies issue for the json package.
+func (s *store) Save() ([]byte, error) {
+	b, err := json.Marshal(s.Clone())
+	if err != nil {
+		return nil, err
+	}
+
+	return b, nil
+}
+
+func (s *store) SaveNoCopy() ([]byte, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+
+	return b, nil
+}
+
+func (s *store) Clone() Store {
+	s.worldLock.RLock()
+
+	clonedStore := newStore()
+	clonedStore.CurrentIndex = s.CurrentIndex
+	clonedStore.Root = s.Root.Clone()
+	clonedStore.WatcherHub = s.WatcherHub.clone()
+	clonedStore.Stats = s.Stats.clone()
+	clonedStore.CurrentVersion = s.CurrentVersion
+
+	s.worldLock.RUnlock()
+	return clonedStore
+}
+
+// Recovery recovers the store system from a static state
+// It needs to recover the parent field of the nodes.
+// It needs to delete the expired nodes since the saved time and also
+// needs to create monitoring goroutines.
+func (s *store) Recovery(state []byte) error {
+	s.worldLock.Lock()
+	defer s.worldLock.Unlock()
+	err := json.Unmarshal(state, s)
+	if err != nil {
+		return err
+	}
+
+	s.ttlKeyHeap = newTtlKeyHeap()
+
+	s.Root.recoverAndclean()
+	return nil
+}
+
+func (s *store) JsonStats() []byte {
+	s.Stats.Watchers = uint64(s.WatcherHub.count)
+	return s.Stats.toJson()
+}
+
+func (s *store) HasTTLKeys() bool {
+	s.worldLock.RLock()
+	defer s.worldLock.RUnlock()
+	return s.ttlKeyHeap.Len() != 0
+}
+
+// ------------------------------------------  OVER  --------------------------------------------------------
+
+// checkDir 检查目录存不存在,不存在创建
+func (s *store) checkDir(parent *node, dirName string) (*node, *v2error.Error) {
+	node, ok := parent.Children[dirName]
+	if ok {
+		if node.IsDir() {
+			return node, nil
+		}
+		return nil, v2error.NewError(v2error.EcodeNotDir, node.Path, s.CurrentIndex)
+	}
+	n := newDir(s, path.Join(parent.Path, dirName), s.CurrentIndex+1, parent, Permanent)
+	parent.Children[dirName] = n
+	return n, nil
+}
+
 // /0/members/8e9e05c52164694d/raftAttributes创建节点
 func (s *store) internalCreate(nodePath string, dir bool, value string, unique, replace bool, expireTime time.Time, action string) (*Event, *v2error.Error) {
 	currIndex, nextIndex := s.CurrentIndex, s.CurrentIndex+1
@@ -634,114 +679,71 @@ func (s *store) internalGet(nodePath string) (*node, *v2error.Error) {
 	return n, nil
 }
 
-// DeleteExpiredKeys will delete all expired keys
-func (s *store) DeleteExpiredKeys(cutoff time.Time) {
-	s.worldLock.Lock()
-	defer s.worldLock.Unlock()
-
-	for {
-		node := s.ttlKeyHeap.top()
-		if node == nil || node.ExpireTime.After(cutoff) {
-			break
-		}
-
-		s.CurrentIndex++
-		e := newEvent(Expire, node.Path, s.CurrentIndex, node.CreatedIndex)
-		e.EtcdIndex = s.CurrentIndex
-		e.PrevNode = node.Repr(false, false, s.clock)
-		if node.IsDir() {
-			e.NodeExtern.Dir = true
-		}
-
-		callback := func(path string) { // notify function
-			// notify the watchers with deleted set true
-			s.WatcherHub.notifyWatchers(e, path, true)
-		}
-
-		s.ttlKeyHeap.pop()
-		node.Remove(true, true, callback)
-
-		s.Stats.Inc(ExpireCount)
-
-		s.WatcherHub.notify(e)
-	}
+// Version 检索存储的当前版本. <= CurrentIndex
+func (s *store) Version() int {
+	return s.CurrentVersion
 }
 
-// checkDir 检查目录存不存在,不存在创建
-func (s *store) checkDir(parent *node, dirName string) (*node, *v2error.Error) {
-	node, ok := parent.Children[dirName]
-	if ok {
-		if node.IsDir() {
-			return node, nil
-		}
-		return nil, v2error.NewError(v2error.EcodeNotDir, node.Path, s.CurrentIndex)
-	}
-	n := newDir(s, path.Join(parent.Path, dirName), s.CurrentIndex+1, parent, Permanent)
-	parent.Children[dirName] = n
-	return n, nil
-}
-
-// Save saves the static state of the store system.
-// It will not be able to save the state of watchers.
-// It will not save the parent field of the node. Or there will
-// be cyclic dependencies issue for the json package.
-func (s *store) Save() ([]byte, error) {
-	b, err := json.Marshal(s.Clone())
-	if err != nil {
-		return nil, err
-	}
-
-	return b, nil
-}
-
-func (s *store) SaveNoCopy() ([]byte, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-
-	return b, nil
-}
-
-func (s *store) Clone() Store {
-	s.worldLock.RLock()
-
-	clonedStore := newStore()
-	clonedStore.CurrentIndex = s.CurrentIndex
-	clonedStore.Root = s.Root.Clone()
-	clonedStore.WatcherHub = s.WatcherHub.clone()
-	clonedStore.Stats = s.Stats.clone()
-	clonedStore.CurrentVersion = s.CurrentVersion
-
-	s.worldLock.RUnlock()
-	return clonedStore
-}
-
-// Recovery recovers the store system from a static state
-// It needs to recover the parent field of the nodes.
-// It needs to delete the expired nodes since the saved time and also
-// needs to create monitoring goroutines.
-func (s *store) Recovery(state []byte) error {
-	s.worldLock.Lock()
-	defer s.worldLock.Unlock()
-	err := json.Unmarshal(state, s)
-	if err != nil {
-		return err
-	}
-
-	s.ttlKeyHeap = newTtlKeyHeap()
-
-	s.Root.recoverAndclean()
-	return nil
-}
-
-func (s *store) JsonStats() []byte {
-	s.Stats.Watchers = uint64(s.WatcherHub.count)
-	return s.Stats.toJson()
-}
-
-func (s *store) HasTTLKeys() bool {
+// Index 检索存储的当前索引.
+func (s *store) Index() uint64 {
 	s.worldLock.RLock()
 	defer s.worldLock.RUnlock()
-	return s.ttlKeyHeap.Len() != 0
+	return s.CurrentIndex
+}
+
+// Get 返回一个get事件。如果递归为真，它将返回节点路径下的所有内容。如果sorted为真，它将按键对内容进行排序。
+func (s *store) Get(nodePath string, recursive, sorted bool) (*Event, error) {
+	// /0/members
+	var err *v2error.Error
+
+	s.worldLock.RLock()
+	defer s.worldLock.RUnlock()
+
+	defer func() {
+		if err == nil {
+			s.Stats.Inc(GetSuccess)
+			return
+		}
+
+		s.Stats.Inc(GetFail)
+	}()
+
+	n, err := s.internalGet(nodePath) // 没有 /0/members 这个node
+	if err != nil {
+		return nil, err
+	}
+
+	e := newEvent(Get, nodePath, n.ModifiedIndex, n.CreatedIndex)
+	e.EtcdIndex = s.CurrentIndex                                 // 给事件分配索引
+	e.NodeExtern.loadInternalNode(n, recursive, sorted, s.clock) // 加载node，主要是获取node中数据
+
+	return e, nil
+}
+
+// Create 在nodePath创建节点。创建将有助于创建没有ttl的中间目录。如果该节点已经存在，创建将失败。 如果路径上的任何节点是一个文件，创建将失败。
+func (s *store) Create(nodePath string, dir bool, value string, unique bool, expireOpts TTLOptionSet) (*Event, error) {
+	var err *v2error.Error
+
+	s.worldLock.Lock()
+	defer s.worldLock.Unlock()
+
+	defer func() {
+		if err == nil {
+			s.Stats.Inc(CreateSuccess)
+			return
+		}
+
+		s.Stats.Inc(CreateFail)
+	}()
+
+	// 创建一个内存节点, 有ttl放入ttlKeyHeap, 返回一个创建事件
+	e, err := s.internalCreate(nodePath, dir, value, unique, false, expireOpts.ExpireTime, Create)
+	if err != nil {
+		return nil, err
+	}
+
+	e.EtcdIndex = s.CurrentIndex
+	s.WatcherHub.notify(e) // ✅
+
+	return e, nil
 }

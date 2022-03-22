@@ -28,11 +28,10 @@ import (
 // EventHistory为watcherHub保存旧的事件.
 // 它被用来帮助watcher获得一个连续的事件历史.观察者可能会错过在第一个观察命令结束和第二个命令开始之间发生的事件.
 type watcherHub struct {
-	// count必须是64位对齐
-	count        int64 // current number of watchers.
-	mutex        sync.Mutex
-	watchers     map[string]*list.List
-	EventHistory *EventHistory // 历史事件
+	count        int64                 // 当前的监听者数量
+	mutex        sync.Mutex            //
+	watchers     map[string]*list.List // 所有在xxx目录下的监听者
+	EventHistory *EventHistory         // 历史事件
 }
 
 // newWatchHub 创建一个watcherHub.容量决定了我们将在eventHistory中保留多少个事件.
@@ -43,10 +42,7 @@ func newWatchHub(capacity int) *watcherHub {
 	}
 }
 
-// Watch function returns a Watcher.
-// If recursive is true, the first change after index under key will be sent to the event channel of the watcher.
-// If recursive is false, the first change after index at key will be sent to the event channel of the watcher.
-// If index is zero, watch will start from the current index + 1.
+// Watch 返回一个Watcher。
 func (wh *watcherHub) watch(key string, recursive, stream bool, index, storeIndex uint64) (Watcher, *v2error.Error) {
 	event, err := wh.EventHistory.scan(key, recursive, index)
 	if err != nil {
@@ -137,11 +133,10 @@ func (wh *watcherHub) notifyWatchers(e *Event, nodePath string, deleted bool) {
 			// nodePath :		/0/members/8e9e05c52164694d
 			// nodePath :		/0/members/8e9e05c52164694d/raftAttributes
 			originalPath := e.NodeExtern.Key == nodePath
+			// 是不是起源,或者该目录不是隐藏节点
 			if (originalPath || !isHidden(nodePath, e.NodeExtern.Key)) && w.notify(e, originalPath, deleted) {
-				if !w.stream { // do not remove the stream watcher
-					// if we successfully notify a watcher
-					// we need to remove the watcher from the list
-					// and decrease the counter
+				if !w.stream {
+					// 如果不是流观察者---> 删除,-1
 					w.removed = true
 					l.Remove(curr)
 					atomic.AddInt64(&wh.count, -1)
@@ -157,8 +152,6 @@ func (wh *watcherHub) notifyWatchers(e *Event, nodePath string, deleted bool) {
 	}
 }
 
-// clone function clones the watcherHub and return the cloned one.
-// only clone the static content. do not clone the current watchers.
 func (wh *watcherHub) clone() *watcherHub {
 	clonedHistory := wh.EventHistory.clone()
 

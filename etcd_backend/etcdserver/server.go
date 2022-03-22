@@ -2178,8 +2178,7 @@ func (s *EtcdServer) applyConfChange(cc raftpb.ConfChangeV1, confState *raftpb.C
 			lg.Panic("发序列化成员失败", zap.Error(err))
 		}
 		if cc.NodeID != uint64(confChangeContext.Member.ID) {
-			lg.Panic(
-				"得到不同的成员ID",
+			lg.Panic("得到不同的成员ID",
 				zap.String("member-id-from-config-change-entry", types.ID(cc.NodeID).String()),
 				zap.String("member-id-from-message", confChangeContext.Member.ID.String()),
 			)
@@ -2188,7 +2187,7 @@ func (s *EtcdServer) applyConfChange(cc raftpb.ConfChangeV1, confState *raftpb.C
 			s.cluster.PromoteMember(confChangeContext.Member.ID, shouldApplyV3)
 		} else {
 			s.cluster.AddMember(&confChangeContext.Member, shouldApplyV3) // 添加节点  /0/members/8e9e05c52164694d
-			if confChangeContext.Member.ID != s.id {
+			if confChangeContext.Member.ID != s.id {// 不是本实例
 				s.r.transport.AddPeer(confChangeContext.Member.ID, confChangeContext.PeerURLs)
 			}
 		}
@@ -2204,11 +2203,11 @@ func (s *EtcdServer) applyConfChange(cc raftpb.ConfChangeV1, confState *raftpb.C
 	case raftpb.ConfChangeUpdateNode:
 		m := new(membership.Member)
 		if err := json.Unmarshal([]byte(cc.Context), m); err != nil {
-			lg.Panic("failed to unmarshal member", zap.Error(err))
+			lg.Panic("反序列化失败", zap.Error(err))
 		}
 		if cc.NodeID != uint64(m.ID) {
 			lg.Panic(
-				"got different member ID",
+				"得到了一个不同的ID",
 				zap.String("member-id-from-config-change-entry", types.ID(cc.NodeID).String()),
 				zap.String("member-id-from-message", m.ID.String()),
 			)
