@@ -618,7 +618,7 @@ func (c *RaftCluster) Member(id types.ID) *Member {
 	return c.members[id].Clone()
 }
 
-// 从v2Store中获取所有的集群几点
+// 从v2Store中获取所有的集群节点
 func membersFromStore(lg *zap.Logger, st v2store.Store) (map[types.ID]*Member, map[types.ID]bool) {
 	members := make(map[types.ID]*Member)
 	removed := make(map[types.ID]bool)
@@ -629,7 +629,7 @@ func membersFromStore(lg *zap.Logger, st v2store.Store) (map[types.ID]*Member, m
 		}
 		lg.Panic("从store获取成员失败", zap.String("path", StoreMembersPrefix), zap.Error(err))
 	}
-	for _, n := range e.NodeExtern.Nodes {
+	for _, n := range e.NodeExtern.ExternNodes {
 		var m *Member
 		m, err = nodeToMember(lg, n)
 		if err != nil {
@@ -645,7 +645,7 @@ func membersFromStore(lg *zap.Logger, st v2store.Store) (map[types.ID]*Member, m
 		}
 		lg.Panic("从store中获取移除节点失败", zap.String("path", storeRemovedMembersPrefix), zap.Error(err))
 	}
-	for _, n := range e.NodeExtern.Nodes {
+	for _, n := range e.NodeExtern.ExternNodes {
 		removed[MustParseMemberIDFromKey(lg, n.Key)] = true
 	}
 	return members, removed

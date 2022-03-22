@@ -31,7 +31,7 @@ const (
 var (
 	emptyState = pb.HardState{}
 
-	// ErrStopped is returned by methods on Nodes that have been stopped.
+	// ErrStopped is returned by methods on ExternNodes that have been stopped.
 	ErrStopped = errors.New("raft: stopped")
 )
 

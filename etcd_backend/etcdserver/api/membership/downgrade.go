@@ -21,10 +21,9 @@ import (
 )
 
 type DowngradeInfo struct {
-	// TargetVersion is the target downgrade version, if the cluster is not under downgrading,
-	// the targetVersion will be an empty string
+	// TargetVersion 是目标降级版本，如果集群不在降级中，targetVersion将是一个空字符串。
 	TargetVersion string `json:"target-version"`
-	// Enabled indicates whether the cluster is enabled to downgrade
+	// Enabled 表示集群是否启用了降级功能
 	Enabled bool `json:"enabled"`
 }
 

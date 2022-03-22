@@ -179,7 +179,7 @@ func (s *store) AllUsers() ([]string, error) {
 		return nil, err
 	}
 	var nodes []string
-	for _, n := range resp.Event.NodeExtern.Nodes {
+	for _, n := range resp.Event.NodeExtern.ExternNodes {
 		_, user := path.Split(n.Key)
 		nodes = append(nodes, user)
 	}
@@ -288,7 +288,7 @@ func (s *store) AllRoles() ([]string, error) {
 		}
 		return nil, err
 	}
-	for _, n := range resp.Event.NodeExtern.Nodes {
+	for _, n := range resp.Event.NodeExtern.ExternNodes {
 		_, role := path.Split(n.Key)
 		nodes = append(nodes, role)
 	}

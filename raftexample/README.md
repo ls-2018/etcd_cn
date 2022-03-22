@@ -81,7 +81,7 @@ curl -L http://127.0.0.1:22380/my-key
 
 ### Dynamic cluster reconfiguration
 
-Nodes can be added to or removed from a running cluster using requests to the REST API.
+ExternNodes can be added to or removed from a running cluster using requests to the REST API.
 
 For example, suppose we have a 3-node cluster that was started with the commands:
 

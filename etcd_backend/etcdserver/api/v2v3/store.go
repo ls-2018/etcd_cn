@@ -72,7 +72,7 @@ func (s *v2v3Store) Get(nodePath string, recursive, sorted bool) (*v2store.Event
 			NodeExtern: &v2store.NodeExtern{
 				Key:           nodePath,
 				Dir:           true,
-				Nodes:         nodes,
+				ExternNodes:   nodes,
 				CreatedIndex:  cidx,
 				ModifiedIndex: midx,
 			},
@@ -107,7 +107,7 @@ func (s *v2v3Store) getDir(nodePath string, recursive, sorted bool, rev int64) (
 		for _, n := range nextNodes {
 			nodes[n.Key] = n
 			if parent := nodes[path.Dir(n.Key)]; parent != nil {
-				parent.Nodes = append(parent.Nodes, n)
+				parent.ExternNodes = append(parent.ExternNodes, n)
 			}
 		}
 		if nextNodes, err = s.getDirDepth(nodePath, i, rev); err != nil {

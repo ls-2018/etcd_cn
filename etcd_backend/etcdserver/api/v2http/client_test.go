@@ -1993,14 +1993,14 @@ func TestTrimNodeExternPrefix(t *testing.T) {
 		{
 			&v2store.NodeExtern{
 				Key: "/abc/def",
-				Nodes: []*v2store.NodeExtern{
+				ExternNodes: []*v2store.NodeExtern{
 					{Key: "/abc/def/1"},
 					{Key: "/abc/def/2"},
 				},
 			},
 			&v2store.NodeExtern{
 				Key: "/def",
-				Nodes: []*v2store.NodeExtern{
+				ExternNodes: []*v2store.NodeExtern{
 					{Key: "/def/1"},
 					{Key: "/def/2"},
 				},

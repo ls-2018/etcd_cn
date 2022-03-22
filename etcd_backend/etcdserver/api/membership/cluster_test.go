@@ -15,8 +15,6 @@
 package membership
 
 import (
-	"encoding/json"
-	"fmt"
 	"path"
 	"reflect"
 	"testing"
@@ -32,7 +30,6 @@ import (
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v2store"
 	"github.com/ls-2018/etcd_cn/etcd_backend/mock/mockstore"
-	"github.com/ls-2018/etcd_cn/raft/raftpb"
 )
 
 func TestClusterMember(t *testing.T) {
@@ -280,161 +277,6 @@ func TestClusterValidateAndAssignIDs(t *testing.T) {
 	}
 }
 
-func TestClusterValidateConfigurationChange(t *testing.T) {
-	cl := NewCluster(zaptest.NewLogger(t))
-	cl.SetStore(v2store.New())
-	for i := 1; i <= 4; i++ {
-		attr := RaftAttributes{PeerURLs: []string{fmt.Sprintf("http://127.0.0.1:%d", i)}}
-		cl.AddMember(&Member{ID: types.ID(i), RaftAttributes: attr}, true)
-	}
-	cl.RemoveMember(4, true)
-
-	attr := RaftAttributes{PeerURLs: []string{fmt.Sprintf("http://127.0.0.1:%d", 1)}}
-	ctx, err := json.Marshal(&Member{ID: types.ID(5), RaftAttributes: attr})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	attr = RaftAttributes{PeerURLs: []string{fmt.Sprintf("http://127.0.0.1:%d", 1)}}
-	ctx1, err := json.Marshal(&Member{ID: types.ID(1), RaftAttributes: attr})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	attr = RaftAttributes{PeerURLs: []string{fmt.Sprintf("http://127.0.0.1:%d", 5)}}
-	ctx5, err := json.Marshal(&Member{ID: types.ID(5), RaftAttributes: attr})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	attr = RaftAttributes{PeerURLs: []string{fmt.Sprintf("http://127.0.0.1:%d", 3)}}
-	ctx2to3, err := json.Marshal(&Member{ID: types.ID(2), RaftAttributes: attr})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	attr = RaftAttributes{PeerURLs: []string{fmt.Sprintf("http://127.0.0.1:%d", 5)}}
-	ctx2to5, err := json.Marshal(&Member{ID: types.ID(2), RaftAttributes: attr})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	ctx3, err := json.Marshal(&ConfigChangeContext{Member: Member{ID: types.ID(3), RaftAttributes: attr}, IsPromote: true})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	ctx6, err := json.Marshal(&ConfigChangeContext{Member: Member{ID: types.ID(6), RaftAttributes: attr}, IsPromote: true})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	tests := []struct {
-		cc   raftpb.ConfChangeV1
-		werr error
-	}{
-		{
-			raftpb.ConfChangeV1{
-				Type:   raftpb.ConfChangeRemoveNode,
-				NodeID: 3,
-			},
-			nil,
-		},
-		{
-			raftpb.ConfChangeV1{
-				Type:   raftpb.ConfChangeAddNode,
-				NodeID: 4,
-			},
-			ErrIDRemoved,
-		},
-		{
-			raftpb.ConfChangeV1{
-				Type:   raftpb.ConfChangeRemoveNode,
-				NodeID: 4,
-			},
-			ErrIDRemoved,
-		},
-		{
-			raftpb.ConfChangeV1{
-				Type:    raftpb.ConfChangeAddNode,
-				NodeID:  1,
-				Context: ctx1,
-			},
-			ErrIDExists,
-		},
-		{
-			raftpb.ConfChangeV1{
-				Type:    raftpb.ConfChangeAddNode,
-				NodeID:  5,
-				Context: ctx,
-			},
-			ErrPeerURLexists,
-		},
-		{
-			raftpb.ConfChangeV1{
-				Type:   raftpb.ConfChangeRemoveNode,
-				NodeID: 5,
-			},
-			ErrIDNotFound,
-		},
-		{
-			raftpb.ConfChangeV1{
-				Type:    raftpb.ConfChangeAddNode,
-				NodeID:  5,
-				Context: ctx5,
-			},
-			nil,
-		},
-		{
-			raftpb.ConfChangeV1{
-				Type:    raftpb.ConfChangeUpdateNode,
-				NodeID:  5,
-				Context: ctx,
-			},
-			ErrIDNotFound,
-		},
-		// try to change the peer url of 2 to the peer url of 3
-		{
-			raftpb.ConfChangeV1{
-				Type:    raftpb.ConfChangeUpdateNode,
-				NodeID:  2,
-				Context: ctx2to3,
-			},
-			ErrPeerURLexists,
-		},
-		{
-			raftpb.ConfChangeV1{
-				Type:    raftpb.ConfChangeUpdateNode,
-				NodeID:  2,
-				Context: ctx2to5,
-			},
-			nil,
-		},
-		{
-			raftpb.ConfChangeV1{
-				Type:    raftpb.ConfChangeAddNode,
-				NodeID:  3,
-				Context: ctx3,
-			},
-			ErrMemberNotLearner,
-		},
-		{
-			raftpb.ConfChangeV1{
-				Type:    raftpb.ConfChangeAddNode,
-				NodeID:  6,
-				Context: ctx6,
-			},
-			ErrIDNotFound,
-		},
-	}
-	for i, tt := range tests {
-		err := cl.ValidateConfigurationChange(tt.cc)
-		if err != tt.werr {
-			t.Errorf("#%d: validateConfigurationChange error = %v, want %v", i, err, tt.werr)
-		}
-	}
-}
-
 func TestClusterGenID(t *testing.T) {
 	cs := newTestCluster(t, []*Member{
 		newTestMember(1, nil, "", nil),
@@ -457,24 +299,24 @@ func TestClusterGenID(t *testing.T) {
 
 func TestNodeToMemberBad(t *testing.T) {
 	tests := []*v2store.NodeExtern{
-		{Key: "/1234", Nodes: []*v2store.NodeExtern{
+		{Key: "/1234", ExternNodes: []*v2store.NodeExtern{
 			{Key: "/1234/strange"},
 		}},
-		{Key: "/1234", Nodes: []*v2store.NodeExtern{
+		{Key: "/1234", ExternNodes: []*v2store.NodeExtern{
 			{Key: "/1234/raftAttributes", Value: stringp("garbage")},
 		}},
-		{Key: "/1234", Nodes: []*v2store.NodeExtern{
+		{Key: "/1234", ExternNodes: []*v2store.NodeExtern{
 			{Key: "/1234/attributes", Value: stringp(`{"name":"node1","clientURLs":null}`)},
 		}},
-		{Key: "/1234", Nodes: []*v2store.NodeExtern{
+		{Key: "/1234", ExternNodes: []*v2store.NodeExtern{
 			{Key: "/1234/raftAttributes", Value: stringp(`{"peerURLs":null}`)},
 			{Key: "/1234/strange"},
 		}},
-		{Key: "/1234", Nodes: []*v2store.NodeExtern{
+		{Key: "/1234", ExternNodes: []*v2store.NodeExtern{
 			{Key: "/1234/raftAttributes", Value: stringp(`{"peerURLs":null}`)},
 			{Key: "/1234/attributes", Value: stringp("garbage")},
 		}},
-		{Key: "/1234", Nodes: []*v2store.NodeExtern{
+		{Key: "/1234", ExternNodes: []*v2store.NodeExtern{
 			{Key: "/1234/raftAttributes", Value: stringp(`{"peerURLs":null}`)},
 			{Key: "/1234/attributes", Value: stringp(`{"name":"node1","clientURLs":null}`)},
 			{Key: "/1234/strange"},
@@ -605,7 +447,7 @@ func TestClusterUpdateAttributes(t *testing.T) {
 }
 
 func TestNodeToMember(t *testing.T) {
-	n := &v2store.NodeExtern{Key: "/1234", Nodes: []*v2store.NodeExtern{
+	n := &v2store.NodeExtern{Key: "/1234", ExternNodes: []*v2store.NodeExtern{
 		{Key: "/1234/attributes", Value: stringp(`{"name":"node1","clientURLs":null}`)},
 		{Key: "/1234/raftAttributes", Value: stringp(`{"peerURLs":null}`)},
 	}}

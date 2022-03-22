@@ -590,7 +590,7 @@ func trimNodeExternPrefix(n *v2store.NodeExtern, prefix string) {
 		return
 	}
 	n.Key = strings.TrimPrefix(n.Key, prefix)
-	for _, nn := range n.Nodes {
+	for _, nn := range n.ExternNodes {
 		trimNodeExternPrefix(nn, prefix)
 	}
 }

@@ -281,18 +281,18 @@ func (n *node) Repr(recursive, sorted bool, clock clockwork.Clock) *NodeExtern {
 			return node
 		}
 		children, _ := n.List()
-		node.Nodes = make(NodeExterns, len(children))
+		node.ExternNodes = make(NodeExterns, len(children))
 		i := 0
 		for _, child := range children {
 			if child.IsHidden() { // 跳过隐藏节点
 				continue
 			}
-			node.Nodes[i] = child.Repr(recursive, sorted, clock)
+			node.ExternNodes[i] = child.Repr(recursive, sorted, clock)
 			i++
 		}
-		node.Nodes = node.Nodes[:i]
+		node.ExternNodes = node.ExternNodes[:i]
 		if sorted {
-			sort.Sort(node.Nodes)
+			sort.Sort(node.ExternNodes)
 		}
 		return node
 	}

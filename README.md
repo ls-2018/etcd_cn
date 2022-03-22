@@ -408,8 +408,8 @@ case rd := <-r.Ready(): 从raft拿到要apply的消息
                - r.switchToConfig(cfg, prs) 
              -
                | s.cluster.PromoteMember 
-               | s.cluster.AddMember 
-               | s.cluster.RemoveMember 
+               | s.cluster.AddMember                    -----> 更新v2store[memory node tree]、backend[bolt.db] 
+               | s.cluster.RemoveMember                                     |---> 触发watcher
                | s.cluster.UpdateRaftAttributes 
 
 

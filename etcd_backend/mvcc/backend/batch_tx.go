@@ -93,24 +93,12 @@ func (t *batchTx) UnsafeCreateBucket(bucket Bucket) {
 	t.pending++
 }
 
-func (t *batchTx) UnsafeDeleteBucket(bucket Bucket) {
-	err := t.tx.DeleteBucket(bucket.Name())
-	if err != nil && err != bolt.ErrBucketNotFound {
-		t.backend.lg.Fatal(
-			"failed to delete a bucket",
-			zap.Stringer("bucket-name", bucket),
-			zap.Error(err),
-		)
-	}
-	t.pending++
-}
-
-// UnsafePut必须是called holding the lock on the tx.
+// UnsafePut 必须是called holding the lock on the tx.
 func (t *batchTx) UnsafePut(bucket Bucket, key []byte, value []byte) {
 	t.unsafePut(bucket, key, value, false)
 }
 
-// UnsafeSeqPut必须是called holding the lock on the tx.
+// UnsafeSeqPut 必须是called holding the lock on the tx.
 func (t *batchTx) UnsafeSeqPut(bucket Bucket, key []byte, value []byte) {
 	t.unsafePut(bucket, key, value, true)
 }
@@ -329,4 +317,13 @@ func unsafeForEach(tx *bolt.Tx, bucket Bucket, visitor func(k, v []byte) error) 
 		return b.ForEach(visitor)
 	}
 	return nil
+}
+
+// UnsafeDeleteBucket 删除桶
+func (t *batchTx) UnsafeDeleteBucket(bucket Bucket) {
+	err := t.tx.DeleteBucket(bucket.Name())
+	if err != nil && err != bolt.ErrBucketNotFound {
+		t.backend.lg.Fatal("删除桶失败", zap.Stringer("bucket-name", bucket), zap.Error(err))
+	}
+	t.pending++
 }

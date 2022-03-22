@@ -32,9 +32,8 @@ import (
 const (
 	attributesSuffix     = "attributes"
 	raftAttributesSuffix = "raftAttributes"
+	storePrefix          = "/0" // 在store中存储成员信息的前缀
 
-	// the prefix for storing membership related information in store provided by store pkg.
-	storePrefix = "/0"
 )
 
 var (
@@ -44,123 +43,7 @@ var (
 	errMemberNotFound         = fmt.Errorf("member not found")
 )
 
-// TrimClusterFromBackend removes all information about cluster (versions)
-// from the v3 backend.
-func TrimClusterFromBackend(be backend.Backend) error {
-	tx := be.BatchTx()
-	tx.Lock()
-	defer tx.Unlock()
-	tx.UnsafeDeleteBucket(buckets.Cluster)
-	return nil
-}
-
-func readMembersFromBackend(lg *zap.Logger, be backend.Backend) (map[types.ID]*Member, map[types.ID]bool, error) {
-	members := make(map[types.ID]*Member)
-	removed := make(map[types.ID]bool)
-
-	tx := be.ReadTx()
-	tx.RLock()
-	defer tx.RUnlock()
-	err := tx.UnsafeForEach(buckets.Members, func(k, v []byte) error {
-		memberId := mustParseMemberIDFromBytes(lg, k)
-		m := &Member{ID: memberId}
-		if err := json.Unmarshal(v, &m); err != nil {
-			return err
-		}
-		members[memberId] = m
-		return nil
-	})
-	if err != nil {
-		return nil, nil, fmt.Errorf("couldn't read members from backend: %w", err)
-	}
-
-	err = tx.UnsafeForEach(buckets.MembersRemoved, func(k, v []byte) error {
-		memberId := mustParseMemberIDFromBytes(lg, k)
-		removed[memberId] = true
-		return nil
-	})
-	if err != nil {
-		return nil, nil, fmt.Errorf("couldn't read members_removed from backend: %w", err)
-	}
-	return members, removed, nil
-}
-
-func mustReadMembersFromBackend(lg *zap.Logger, be backend.Backend) (map[types.ID]*Member, map[types.ID]bool) {
-	members, removed, err := readMembersFromBackend(lg, be)
-	if err != nil {
-		lg.Panic("couldn't read members from backend", zap.Error(err))
-	}
-	return members, removed
-}
-
-// TrimMembershipFromBackend removes all information about members &
-// removed_members from the v3 backend.
-func TrimMembershipFromBackend(lg *zap.Logger, be backend.Backend) error {
-	lg.Info("Trimming membership information from the backend...")
-	tx := be.BatchTx()
-	tx.Lock()
-	defer tx.Unlock()
-	err := tx.UnsafeForEach(buckets.Members, func(k, v []byte) error {
-		tx.UnsafeDelete(buckets.Members, k)
-		lg.Debug("Removed member from the backend",
-			zap.Stringer("member", mustParseMemberIDFromBytes(lg, k)))
-		return nil
-	})
-	if err != nil {
-		return err
-	}
-	return tx.UnsafeForEach(buckets.MembersRemoved, func(k, v []byte) error {
-		tx.UnsafeDelete(buckets.MembersRemoved, k)
-		lg.Debug("Removed removed_member from the backend",
-			zap.Stringer("member", mustParseMemberIDFromBytes(lg, k)))
-		return nil
-	})
-}
-
-// TrimMembershipFromV2Store removes all information about members &
-// removed_members from the v2 store.
-func TrimMembershipFromV2Store(lg *zap.Logger, s v2store.Store) error {
-	members, removed := membersFromStore(lg, s)
-
-	for mID := range members {
-		_, err := s.Delete(MemberStoreKey(mID), true, true)
-		if err != nil {
-			return err
-		}
-	}
-	for mID := range removed {
-		_, err := s.Delete(RemovedMemberStoreKey(mID), true, true)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// The field is populated since etcd v3.5.
-func mustSaveClusterVersionToBackend(be backend.Backend, ver *semver.Version) {
-	ckey := backendClusterVersionKey()
-
-	tx := be.BatchTx()
-	tx.Lock()
-	defer tx.Unlock()
-	tx.UnsafePut(buckets.Cluster, ckey, []byte(ver.String()))
-}
-
-// The field is populated since etcd v3.5.
-func mustSaveDowngradeToBackend(lg *zap.Logger, be backend.Backend, downgrade *DowngradeInfo) {
-	dkey := backendDowngradeKey()
-	dvalue, err := json.Marshal(downgrade)
-	if err != nil {
-		lg.Panic("failed to marshal downgrade information", zap.Error(err))
-	}
-	tx := be.BatchTx()
-	tx.Lock()
-	defer tx.Unlock()
-	tx.UnsafePut(buckets.Cluster, dkey, dvalue)
-}
-
+// v2store 更新成员属性
 func mustUpdateMemberAttrInStore(lg *zap.Logger, s v2store.Store, m *Member) {
 	b, err := json.Marshal(m.Attributes)
 	if err != nil {
@@ -172,6 +55,7 @@ func mustUpdateMemberAttrInStore(lg *zap.Logger, s v2store.Store, m *Member) {
 	}
 }
 
+// v2store 保存集群版本
 func mustSaveClusterVersionToStore(lg *zap.Logger, s v2store.Store, ver *semver.Version) {
 	if _, err := s.Set(StoreClusterVersionKey(), false, ver.String(), v2store.TTLOptionSet{ExpireTime: v2store.Permanent}); err != nil {
 		lg.Panic(
@@ -182,45 +66,7 @@ func mustSaveClusterVersionToStore(lg *zap.Logger, s v2store.Store, ver *semver.
 	}
 }
 
-// nodeToMember 从node构建一个member
-func nodeToMember(lg *zap.Logger, n *v2store.NodeExtern) (*Member, error) {
-	m := &Member{ID: MustParseMemberIDFromKey(lg, n.Key)}
-	attrs := make(map[string][]byte)
-	raftAttrKey := path.Join(n.Key, raftAttributesSuffix)
-	attrKey := path.Join(n.Key, attributesSuffix)
-	for _, nn := range n.Nodes {
-		if nn.Key != raftAttrKey && nn.Key != attrKey {
-			return nil, fmt.Errorf("unknown key %q", nn.Key)
-		}
-		attrs[nn.Key] = []byte(*nn.Value)
-	}
-	if data := attrs[raftAttrKey]; data != nil {
-		if err := json.Unmarshal(data, &m.RaftAttributes); err != nil {
-			return nil, fmt.Errorf("unmarshal raftAttributes error: %v", err)
-		}
-	} else {
-		return nil, fmt.Errorf("raftAttributes key doesn't exist")
-	}
-	if data := attrs[attrKey]; data != nil {
-		if err := json.Unmarshal(data, &m.Attributes); err != nil {
-			return m, fmt.Errorf("unmarshal attributes error: %v", err)
-		}
-	}
-	return m, nil
-}
-
-func backendMemberKey(id types.ID) []byte {
-	return []byte(id.String())
-}
-
-func backendClusterVersionKey() []byte {
-	return []byte("clusterVersion")
-}
-
-func backendDowngradeKey() []byte {
-	return []byte("downgrade")
-}
-
+// 创建blot.db存储桶
 func mustCreateBackendBuckets(be backend.Backend) {
 	tx := be.BatchTx()
 	tx.Lock()
@@ -230,10 +76,7 @@ func mustCreateBackendBuckets(be backend.Backend) {
 	tx.UnsafeCreateBucket(buckets.Cluster)
 }
 
-func StoreClusterVersionKey() string {
-	return path.Join(storePrefix, "version")
-}
-
+// MemberAttributesStorePath v2store 成员属性路径
 func MemberAttributesStorePath(id types.ID) string {
 	return path.Join(MemberStoreKey(id), attributesSuffix)
 }
@@ -241,12 +84,10 @@ func MemberAttributesStorePath(id types.ID) string {
 func mustParseMemberIDFromBytes(lg *zap.Logger, key []byte) types.ID {
 	id, err := types.IDFromString(string(key))
 	if err != nil {
-		lg.Panic("failed to parse member id from key", zap.Error(err))
+		lg.Panic("从key解析成员ID失败", zap.Error(err))
 	}
 	return id
 }
-
-// --------------------------------------------- OVER  ---------------------------------------------------
 
 // OK
 func mustSaveMemberToStore(lg *zap.Logger, s v2store.Store, m *Member) {
@@ -359,4 +200,167 @@ func unsafeDeleteMemberFromBackend(be backend.Backend, id types.ID) error {
 	}
 	tx.UnsafeDelete(buckets.Members, mkey)
 	return nil
+}
+
+// 在bolt.db存储的key
+func backendMemberKey(id types.ID) []byte {
+	return []byte(id.String())
+}
+
+// nodeToMember 从node构建一个member
+func nodeToMember(lg *zap.Logger, n *v2store.NodeExtern) (*Member, error) {
+	m := &Member{ID: MustParseMemberIDFromKey(lg, n.Key)}
+	attrs := make(map[string][]byte)
+	raftAttrKey := path.Join(n.Key, raftAttributesSuffix) // /0/members/8e9e05c52164694d/raftAttributes
+	attrKey := path.Join(n.Key, attributesSuffix)         // /0/members/8e9e05c52164694d/raftAttributes/attributes
+	//  &v2store.NodeExtern{Key: "/0/members/8e9e05c52164694d", ExternNodes: []*v2store.NodeExtern{
+	//		{Key: "/0/members/8e9e05c52164694d/raftAttributes/attributes", Value: stringp(`{"name":"node1","clientURLs":null}`)},
+	//		{Key: "/0/members/8e9e05c52164694d/raftAttributes", Value: stringp(`{"peerURLs":null}`)},
+	//	}}
+	for _, nn := range n.ExternNodes {
+		if nn.Key != raftAttrKey && nn.Key != attrKey {
+			return nil, fmt.Errorf("未知的 key %q", nn.Key)
+		}
+		attrs[nn.Key] = []byte(*nn.Value)
+	}
+	if data := attrs[raftAttrKey]; data != nil {
+		if err := json.Unmarshal(data, &m.RaftAttributes); err != nil {
+			return nil, fmt.Errorf("反序列化 raftAttributes 失败: %v", err)
+		}
+	} else {
+		return nil, fmt.Errorf("raftAttributes key不存在")
+	}
+	if data := attrs[attrKey]; data != nil {
+		if err := json.Unmarshal(data, &m.Attributes); err != nil {
+			return m, fmt.Errorf("反序列化 attributes 失败: %v", err)
+		}
+	}
+	return m, nil
+}
+
+// TrimClusterFromBackend 从bolt.db移除cluster 桶
+func TrimClusterFromBackend(be backend.Backend) error {
+	tx := be.BatchTx()
+	tx.Lock()
+	defer tx.Unlock()
+	tx.UnsafeDeleteBucket(buckets.Cluster)
+	return nil
+}
+
+// 读取bolt.db中的member桶
+func readMembersFromBackend(lg *zap.Logger, be backend.Backend) (map[types.ID]*Member, map[types.ID]bool, error) {
+	members := make(map[types.ID]*Member)
+	removed := make(map[types.ID]bool)
+
+	tx := be.ReadTx()
+	tx.RLock()
+	defer tx.RUnlock()
+	err := tx.UnsafeForEach(buckets.Members, func(k, v []byte) error {
+		memberId := mustParseMemberIDFromBytes(lg, k)
+		m := &Member{ID: memberId}
+		if err := json.Unmarshal(v, &m); err != nil {
+			return err
+		}
+		members[memberId] = m
+		return nil
+	})
+	if err != nil {
+		return nil, nil, fmt.Errorf("不能读取bolt.db中的member桶: %w", err)
+	}
+
+	err = tx.UnsafeForEach(buckets.MembersRemoved, func(k, v []byte) error {
+		memberId := mustParseMemberIDFromBytes(lg, k)
+		removed[memberId] = true
+		return nil
+	})
+	if err != nil {
+		return nil, nil, fmt.Errorf("不能读取bolt.db中的 members_removed 桶: %w", err)
+	}
+	return members, removed, nil
+}
+
+// 从bolt.db读取成员信息
+func mustReadMembersFromBackend(lg *zap.Logger, be backend.Backend) (map[types.ID]*Member, map[types.ID]bool) {
+	members, removed, err := readMembersFromBackend(lg, be)
+	if err != nil {
+		lg.Panic("不能从bolt.db读取成员信息", zap.Error(err))
+	}
+	return members, removed
+}
+
+// TrimMembershipFromBackend  从bolt.db删除成员信息
+func TrimMembershipFromBackend(lg *zap.Logger, be backend.Backend) error {
+	lg.Info("开始删除成员信息...")
+	tx := be.BatchTx()
+	tx.Lock()
+	defer tx.Unlock()
+	err := tx.UnsafeForEach(buckets.Members, func(k, v []byte) error {
+		tx.UnsafeDelete(buckets.Members, k)
+		lg.Debug("删除成员信息", zap.Stringer("member", mustParseMemberIDFromBytes(lg, k)))
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	return tx.UnsafeForEach(buckets.MembersRemoved, func(k, v []byte) error {
+		tx.UnsafeDelete(buckets.MembersRemoved, k)
+		lg.Debug("删除 已移除的成员信息", zap.Stringer("member", mustParseMemberIDFromBytes(lg, k)))
+		return nil
+	})
+}
+
+// TrimMembershipFromV2Store 从v2store删除所有节点信息
+func TrimMembershipFromV2Store(lg *zap.Logger, s v2store.Store) error {
+	members, removed := membersFromStore(lg, s)
+
+	for mID := range members {
+		_, err := s.Delete(MemberStoreKey(mID), true, true)
+		if err != nil {
+			return err
+		}
+	}
+	for mID := range removed {
+		_, err := s.Delete(RemovedMemberStoreKey(mID), true, true)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// 保存集群版本到bolt.db
+func mustSaveClusterVersionToBackend(be backend.Backend, ver *semver.Version) {
+	ckey := backendClusterVersionKey()
+	tx := be.BatchTx()
+	tx.Lock()
+	defer tx.Unlock()
+	tx.UnsafePut(buckets.Cluster, ckey, []byte(ver.String()))
+}
+
+// bolt.db 集群版本key
+func backendClusterVersionKey() []byte {
+	return []byte("clusterVersion")
+}
+
+func backendDowngradeKey() []byte {
+	return []byte("downgrade")
+}
+
+// 保存降级信息到blot.db
+func mustSaveDowngradeToBackend(lg *zap.Logger, be backend.Backend, downgrade *DowngradeInfo) {
+	dkey := backendDowngradeKey() // downgrade
+	dvalue, err := json.Marshal(downgrade)
+	if err != nil {
+		lg.Panic("序列化降级信息失败", zap.Error(err))
+	}
+	tx := be.BatchTx()
+	tx.Lock()
+	defer tx.Unlock()
+	tx.UnsafePut(buckets.Cluster, dkey, dvalue)
+}
+
+// StoreClusterVersionKey v2store中集群版本路径
+func StoreClusterVersionKey() string { // /0/version
+	return path.Join(storePrefix, "version")
 }

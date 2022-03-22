@@ -25,35 +25,40 @@ var _ node
 
 // NodeExtern 是内部节点的外部表示，带有附加字段 PrevValue是节点的前一个值 TTL是生存时间，以秒为单位
 type NodeExtern struct {
-	Key           string      `json:"key,omitempty"`
+	Key           string      `json:"key,omitempty"` // /0/members/8e9e05c52164694d/raftAttributes
 	Value         *string     `json:"value,omitempty"`
 	Dir           bool        `json:"dir,omitempty"`
 	Expiration    *time.Time  `json:"expiration,omitempty"`
 	TTL           int64       `json:"ttl,omitempty"`
-	Nodes         NodeExterns `json:"nodes,omitempty"`
+	ExternNodes   NodeExterns `json:"nodes,omitempty"`
 	ModifiedIndex uint64      `json:"modifiedIndex,omitempty"`
 	CreatedIndex  uint64      `json:"createdIndex,omitempty"`
 }
+
+//  &v2store.NodeExtern{Key: "/1234", ExternNodes: []*v2store.NodeExtern{
+//		{Key: "/1234/attributes", Value: stringp(`{"name":"node1","clientURLs":null}`)},
+//		{Key: "/1234/raftAttributes", Value: stringp(`{"peerURLs":null}`)},
+//	}}
 
 // 加载node，主要是获取node中数据   n: /0/members
 func (eNode *NodeExtern) loadInternalNode(n *node, recursive, sorted bool, clock clockwork.Clock) {
 	if n.IsDir() {
 		eNode.Dir = true
 		children, _ := n.List()
-		eNode.Nodes = make(NodeExterns, len(children))
+		eNode.ExternNodes = make(NodeExterns, len(children))
 		// 我们不直接使用子片中的索引，我们需要跳过隐藏的node。
 		i := 0
 		for _, child := range children {
 			if child.IsHidden() {
 				continue
 			}
-			eNode.Nodes[i] = child.Repr(recursive, sorted, clock)
+			eNode.ExternNodes[i] = child.Repr(recursive, sorted, clock)
 			i++
 		}
 		// 消除隐藏节点
-		eNode.Nodes = eNode.Nodes[:i]
+		eNode.ExternNodes = eNode.ExternNodes[:i]
 		if sorted {
-			sort.Sort(eNode.Nodes)
+			sort.Sort(eNode.ExternNodes)
 		}
 	} else {
 		value, _ := n.Read()
@@ -81,10 +86,10 @@ func (eNode *NodeExtern) Clone() *NodeExtern {
 		t := *eNode.Expiration
 		nn.Expiration = &t
 	}
-	if eNode.Nodes != nil {
-		nn.Nodes = make(NodeExterns, len(eNode.Nodes))
-		for i, n := range eNode.Nodes {
-			nn.Nodes[i] = n.Clone()
+	if eNode.ExternNodes != nil {
+		nn.ExternNodes = make(NodeExterns, len(eNode.ExternNodes))
+		for i, n := range eNode.ExternNodes {
+			nn.ExternNodes[i] = n.Clone()
 		}
 	}
 	return nn

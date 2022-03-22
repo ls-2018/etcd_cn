@@ -26,8 +26,8 @@ func IsMetaStoreOnly(store v2store.Store) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	for _, n := range event.NodeExtern.Nodes {
-		if n.Key != storePrefix && n.Nodes.Len() > 0 {
+	for _, n := range event.NodeExtern.ExternNodes {
+		if n.Key != storePrefix && n.ExternNodes.Len() > 0 {
 			return false, nil
 		}
 	}
