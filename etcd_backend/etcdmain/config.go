@@ -324,7 +324,11 @@ func (cfg *config) parse(arguments []string) error {
 	} else {
 		err = cfg.configFromCmdLine()
 	}
-
+	if runtime.GOOS == "windows" {
+		fmt.Println(os.RemoveAll("E:\\etcd_cn\\default.etcd"))
+	} else {
+		fmt.Println(os.RemoveAll(fmt.Sprintf("/Users/liushuo/Desktop/source_code/etcd_cn/%s.etcd", cfg.ec.Name)))
+	}
 	return err
 }
 

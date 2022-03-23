@@ -44,6 +44,7 @@ type commit struct {
 	applyDoneC chan<- struct{}
 }
 
+// raftNode.transport.Handler() -->
 // 基于raft的k,v存储
 type raftNode struct {
 	proposeC           <-chan string              // 发送提议消息

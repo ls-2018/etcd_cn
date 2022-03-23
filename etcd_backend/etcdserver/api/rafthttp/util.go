@@ -125,60 +125,6 @@ func reportCriticalError(err error, errc chan<- error) {
 	}
 }
 
-// compareMajorMinorVersion returns an integer comparing two versions based on
-// their major and minor version. The result will be 0 if a==b, -1 if a < b,
-// and 1 if a > b.
-func compareMajorMinorVersion(a, b *semver.Version) int {
-	na := &semver.Version{Major: a.Major, Minor: a.Minor}
-	nb := &semver.Version{Major: b.Major, Minor: b.Minor}
-	switch {
-	case na.LessThan(*nb):
-		return -1
-	case nb.LessThan(*na):
-		return 1
-	default:
-		return 0
-	}
-}
-
-// serverVersion returns the etcd version from the given header.
-func serverVersion(h http.Header) *semver.Version {
-	verStr := h.Get("X-Server-Version")
-	// backward compatibility with etcd 2.0
-	if verStr == "" {
-		verStr = "2.0.0"
-	}
-	return semver.Must(semver.NewVersion(verStr))
-}
-
-// serverVersion returns the min cluster version from the given header.
-func minClusterVersion(h http.Header) *semver.Version {
-	verStr := h.Get("X-Min-Cluster-Version")
-	// backward compatibility with etcd 2.0
-	if verStr == "" {
-		verStr = "2.0.0"
-	}
-	return semver.Must(semver.NewVersion(verStr))
-}
-
-// checkVersionCompatibility checks whether the given version is compatible
-// with the local version.
-func checkVersionCompatibility(name string, server, minCluster *semver.Version) (
-	localServer *semver.Version,
-	localMinCluster *semver.Version,
-	err error,
-) {
-	localServer = semver.Must(semver.NewVersion(version.Version))
-	localMinCluster = semver.Must(semver.NewVersion(version.MinClusterVersion))
-	if compareMajorMinorVersion(server, localMinCluster) == -1 {
-		return localServer, localMinCluster, fmt.Errorf("remote version is too low: remote[%s]=%s, local=%s", name, server, localServer)
-	}
-	if compareMajorMinorVersion(minCluster, localServer) == 1 {
-		return localServer, localMinCluster, fmt.Errorf("local version is too low: remote[%s]=%s, local=%s", name, server, localServer)
-	}
-	return localServer, localMinCluster, nil
-}
-
 // setPeerURLsHeader reports local urls for peer discovery
 func setPeerURLsHeader(req *http.Request, urls types.URLs) {
 	if urls == nil {
@@ -199,4 +145,49 @@ func addRemoteFromRequest(tr Transporter, r *http.Request) {
 			tr.AddRemote(from, strings.Split(urls, ","))
 		}
 	}
+}
+
+//  -----------------------------------------  OVER ----------------------------------------------------
+
+func serverVersion(h http.Header) *semver.Version {
+	verStr := h.Get("X-Server-Version")
+	if verStr == "" {
+		verStr = "2.0.0"
+	}
+	return semver.Must(semver.NewVersion(verStr))
+}
+
+func minClusterVersion(h http.Header) *semver.Version {
+	verStr := h.Get("X-Min-Cluster-Version")
+	if verStr == "" {
+		verStr = "2.0.0"
+	}
+	return semver.Must(semver.NewVersion(verStr))
+}
+
+// compareMajorMinorVersion 比较两个版本
+func compareMajorMinorVersion(a, b *semver.Version) int {
+	na := &semver.Version{Major: a.Major, Minor: a.Minor}
+	nb := &semver.Version{Major: b.Major, Minor: b.Minor}
+	switch {
+	case na.LessThan(*nb):
+		return -1
+	case nb.LessThan(*na):
+		return 1
+	default:
+		return 0
+	}
+}
+
+// checkVersionCompatibility 检查给定的版本是否与本地的版本兼容
+func checkVersionCompatibility(name string, server, minCluster *semver.Version) (localServer *semver.Version, localMinCluster *semver.Version, err error) {
+	localServer = semver.Must(semver.NewVersion(version.Version))
+	localMinCluster = semver.Must(semver.NewVersion(version.MinClusterVersion))
+	if compareMajorMinorVersion(server, localMinCluster) == -1 {
+		return localServer, localMinCluster, fmt.Errorf("远端版本太低: remote[%s]=%s, local=%s", name, server, localServer)
+	}
+	if compareMajorMinorVersion(minCluster, localServer) == 1 {
+		return localServer, localMinCluster, fmt.Errorf("本地版本太低: remote[%s]=%s, local=%s", name, server, localServer)
+	}
+	return localServer, localMinCluster, nil
 }

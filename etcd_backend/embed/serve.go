@@ -191,23 +191,6 @@ func (sctx *serveCtx) serve(s *etcdserver.EtcdServer, tlsinfo *transport.TLSInfo
 	return m.Serve()
 }
 
-// grpcHandlerFunc returns an http.Handler that delegates to grpcServer on incoming gRPC
-// connections or otherHandler otherwise. Given in gRPC docs.
-func grpcHandlerFunc(grpcServer *grpc.Server, otherHandler http.Handler) http.Handler {
-	if otherHandler == nil {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			grpcServer.ServeHTTP(w, r)
-		})
-	}
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.ProtoMajor == 2 && strings.Contains(r.Header.Get("Content-Type"), "application/grpc") {
-			grpcServer.ServeHTTP(w, r)
-		} else {
-			otherHandler.ServeHTTP(w, r)
-		}
-	})
-}
-
 type registerHandlerFunc func(context.Context, *gw.ServeMux, *grpc.ClientConn) error
 
 // 注册网关     http 转换成 grpc / true
@@ -418,4 +401,22 @@ func (sctx *serveCtx) registerTrace() {
 	sctx.registerUserHandler("/debug/requests", http.HandlerFunc(reqf))
 	evf := func(w http.ResponseWriter, r *http.Request) { trace.RenderEvents(w, r, true) }
 	sctx.registerUserHandler("/debug/events", http.HandlerFunc(evf))
+}
+
+// ----------------------------------------  OVER  --------------------------------------------------------------
+
+// grpcHandlerFunc 返回一个http.Handler，该Handler在接收到gRPC连接时委托给grpcServer，否则返回otherHandler。在gRPC文档中给出。
+func grpcHandlerFunc(grpcServer *grpc.Server, otherHandler http.Handler) http.Handler {
+	if otherHandler == nil {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			grpcServer.ServeHTTP(w, r)
+		})
+	}
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.ProtoMajor == 2 && strings.Contains(r.Header.Get("Content-Type"), "application/grpc") {
+			grpcServer.ServeHTTP(w, r)
+		} else {
+			otherHandler.ServeHTTP(w, r)
+		}
+	})
 }

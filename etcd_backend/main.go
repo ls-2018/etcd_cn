@@ -23,19 +23,11 @@
 package main
 
 import (
-	"fmt"
 	"os"
-	"runtime"
 
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdmain"
 )
 
 func main() {
-	if runtime.GOOS == "windows" {
-		fmt.Println(os.RemoveAll("E:\\etcd_cn\\default.etcd"))
-	} else {
-		fmt.Println(os.RemoveAll("/Users/liushuo/Desktop/source_code/etcd_cn/default.etcd"))
-	}
-
 	etcdmain.Main(os.Args)
 }

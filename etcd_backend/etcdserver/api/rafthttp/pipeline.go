@@ -63,7 +63,7 @@ type pipeline struct {
 
 func (p *pipeline) start() {
 	p.stopc = make(chan struct{})
-	p.msgc = make(chan raftpb.Message, pipelineBufSize)
+	p.msgc = make(chan raftpb.Message, pipelineBufSize) // 64
 	p.wg.Add(connPerPipeline)
 	for i := 0; i < connPerPipeline; i++ {
 		go p.handle()
@@ -71,7 +71,7 @@ func (p *pipeline) start() {
 
 	if p.tr != nil && p.tr.Logger != nil {
 		p.tr.Logger.Info(
-			"started HTTP pipelining with remote peer",
+			"与远程对等端启动HTTP管道",
 			zap.String("local-member-id", p.tr.ID.String()),
 			zap.String("remote-peer-id", p.peerID.String()),
 		)
@@ -84,7 +84,7 @@ func (p *pipeline) stop() {
 
 	if p.tr != nil && p.tr.Logger != nil {
 		p.tr.Logger.Info(
-			"stopped HTTP pipelining with remote peer",
+			"停止与远程对等端HTTP管道",
 			zap.String("local-member-id", p.tr.ID.String()),
 			zap.String("remote-peer-id", p.peerID.String()),
 		)

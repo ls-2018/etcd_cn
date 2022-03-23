@@ -79,10 +79,8 @@ type apply struct {
 }
 
 type raftNodeConfig struct {
-	lg *zap.Logger
-
-	// to check if msg receiver is removed from cluster
-	isIDRemoved func(id uint64) bool
+	lg          *zap.Logger
+	isIDRemoved func(id uint64) bool // to check if msg receiver is removed from cluster
 	raft.RaftNodeInterFace
 	raftStorage *raft.MemoryStorage
 	storage     Storage
@@ -130,19 +128,16 @@ func newRaftNode(cfg raftNodeConfig) *raftNode {
 
 // raft状态机,维护raft状态机的步进和状态迁移.
 type raftNode struct {
-	lg *zap.Logger
-
+	lg             *zap.Logger
 	tickMu         *sync.Mutex
-	raftNodeConfig // 包含了node、storage等重要数据结构
-
-	msgSnapC   chan raftpb.Message         // a chan to send/receive snapshot
-	applyc     chan apply                  // a chan to send out apply
-	readStateC chan raft.ReadState         // a chan to send out readState
-	ticker     *time.Ticker                // raft 中有两个时间计数器,它们分别是选举计数器 (Follower/Candidate)和心跳计数器  (Leader),它们都依靠 tick 来推进时钟
-	td         *contention.TimeoutDetector // contention detectors for raft heartbeat message
-
-	stopped chan struct{}
-	done    chan struct{}
+	raftNodeConfig                             // 包含了node、storage等重要数据结构
+	msgSnapC       chan raftpb.Message         // a chan to send/receive snapshot
+	applyc         chan apply                  // a chan to send out apply
+	readStateC     chan raft.ReadState         // a chan to send out readState
+	ticker         *time.Ticker                // raft 中有两个时间计数器,它们分别是选举计数器 (Follower/Candidate)和心跳计数器  (Leader),它们都依靠 tick 来推进时钟
+	td             *contention.TimeoutDetector // contention detectors for raft heartbeat message
+	stopped        chan struct{}
+	done           chan struct{}
 }
 
 // 启动节点

@@ -66,13 +66,13 @@ type streamType string
 
 func (t streamType) endpoint(lg *zap.Logger) string {
 	switch t {
-	case streamTypeMsgAppV2:
+	case streamTypeMsgAppV2: // /raft/stream/msgappv2
 		return path.Join(RaftStreamPrefix, "msgapp")
-	case streamTypeMessage:
+	case streamTypeMessage: // /raft/stream/message
 		return path.Join(RaftStreamPrefix, "message")
 	default:
 		if lg != nil {
-			lg.Panic("unhandled stream type", zap.String("stream-type", t.String()))
+			lg.Panic("无法处理的路由", zap.String("stream-type", t.String()))
 		}
 		return ""
 	}

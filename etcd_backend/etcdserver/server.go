@@ -157,7 +157,7 @@ type Server interface {
 	UpdateMember(ctx context.Context, updateMemb membership.Member) ([]*membership.Member, error) // http  更新节点
 	PromoteMember(ctx context.Context, id uint64) ([]*membership.Member, error)                   // http  提升节点
 	ClusterVersion() *semver.Version                                                              //
-	Cluster() api.Cluster                                                                         //
+	Cluster() api.Cluster                                                                         // 返回内部集群cluster 结构体
 	Alarms() []*pb.AlarmMember                                                                    //
 	LeaderChangedNotify() <-chan struct{}                                                         // 领导者变更通知
 	// 1. 当领导层发生变化时，返回的通道将被关闭。
@@ -847,7 +847,9 @@ func (s *EtcdServer) LeaseHandler() http.Handler {
 	return leasehttp.NewHandler(s.lessor, s.ApplyWait)
 }
 
-func (s *EtcdServer) RaftHandler() http.Handler { return s.r.transport.Handler() }
+func (s *EtcdServer) RaftHandler() http.Handler {
+	return s.r.transport.Handler()
+}
 
 type ServerPeerV2 interface {
 	ServerPeer
@@ -2074,15 +2076,15 @@ func (s *EtcdServer) updateClusterVersionV2(ver string) {
 
 	switch err {
 	case nil:
-		lg.Info("cluster version is updated", zap.String("cluster-version", version.Cluster(ver)))
+		lg.Info("集群版本已更新", zap.String("cluster-version", version.Cluster(ver)))
 		return
 
 	case ErrStopped:
-		lg.Warn("aborting cluster version update; etcd is stopped", zap.Error(err))
+		lg.Warn("终止集群版本更新；etcd被停止了", zap.Error(err))
 		return
 
 	default:
-		lg.Warn("failed to update cluster version", zap.Error(err))
+		lg.Warn("集群版本更新失败", zap.Error(err))
 	}
 }
 

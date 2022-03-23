@@ -515,9 +515,9 @@ func configurePeerListeners(cfg *Config) (peers []*peerListener, err error) {
 	return peers, nil
 }
 
-// configure peer handlers after rafthttp.Transport started
+// 在rafthttp.Transport启动后配置对等处理程序
 func (e *Etcd) servePeers() (err error) {
-	ph := etcdhttp.NewPeerHandler(e.GetLogger(), e.Server)
+	httpHandler := etcdhttp.NewPeerHandler(e.GetLogger(), e.Server)
 	var peerTLScfg *tls.Config
 	if !e.cfg.PeerTLSInfo.Empty() {
 		if peerTLScfg, err = e.cfg.PeerTLSInfo.ServerConfig(); err != nil {
@@ -527,26 +527,26 @@ func (e *Etcd) servePeers() (err error) {
 
 	for _, p := range e.Peers {
 		u := p.Listener.Addr().String()
-		gs := v3rpc.Server(e.Server, peerTLScfg, nil)
+		grpcServer := v3rpc.Server(e.Server, peerTLScfg, nil)
 		m := cmux.New(p.Listener)
-		go gs.Serve(m.Match(cmux.HTTP2()))
-		srv := &http.Server{
-			Handler:     grpcHandlerFunc(gs, ph),
+		go grpcServer.Serve(m.Match(cmux.HTTP2())) // 基于http2
+
+		httpServer := &http.Server{
+			Handler:     grpcHandlerFunc(grpcServer, httpHandler),
 			ReadTimeout: 5 * time.Minute,
 			ErrorLog:    defaultLog.New(ioutil.Discard, "", 0), // do not log user error
 		}
-		go srv.Serve(m.Match(cmux.Any()))
+		go httpServer.Serve(m.Match(cmux.Any())) // http1
+
 		p.serve = func() error {
-			e.cfg.logger.Info(
-				"cmux::serve",
-				zap.String("address", u),
-			)
+			e.cfg.logger.Info("cmux::serve", zap.String("address", u))
 			return m.Serve()
 		}
+
 		p.close = func(ctx context.Context) error {
 			// 优雅关闭 http.Server、打开的listeners、空闲的connections 直到超时或上下文关闭
 			e.cfg.logger.Info("开始停止服务", zap.String("address", u))
-			stopServers(ctx, &servers{secure: peerTLScfg != nil, grpc: gs, http: srv})
+			stopServers(ctx, &servers{secure: peerTLScfg != nil, grpc: grpcServer, http: httpServer})
 			e.cfg.logger.Info("已停止服务", zap.String("address", u))
 			m.Close()
 			return nil

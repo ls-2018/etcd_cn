@@ -91,21 +91,18 @@ type Transporter interface {
 // User needs to call Start before calling other functions, and call
 // Stop when the Transport is no longer used.
 type Transport struct {
-	Logger *zap.Logger
-
+	Logger      *zap.Logger
 	DialTimeout time.Duration // maximum duration before timing out dial of the request
 	// DialRetryFrequency defines the frequency of streamReader dial retrial attempts;
 	// a distinct rate limiter is created per every peer (default value: 10 events/sec)
 	DialRetryFrequency rate.Limit
-
-	TLSInfo transport.TLSInfo // TLS information used when creating connection
-
-	ID          types.ID   // local member ID
-	URLs        types.URLs // local peer URLs
-	ClusterID   types.ID   // 集群标识符
-	Raft        Raft       // raft state machine, to which the Transport forwards received messages and reports status
-	Snapshotter *snap.Snapshotter
-	ServerStats *stats.ServerStats // used to record general transportation statistics
+	TLSInfo            transport.TLSInfo // TLS information used when creating connection
+	ID                 types.ID          // 本节点ID
+	URLs               types.URLs        // local peer URLs
+	ClusterID          types.ID          // 集群标识符
+	Raft               Raft              // raft状态机，Transport向其转发收到的信息并报告状态。
+	Snapshotter        *snap.Snapshotter
+	ServerStats        *stats.ServerStats // used to record general transportation statistics
 	// used to record transportation statistics with followers when
 	// performing as leader in raft protocol
 	LeaderStats *stats.LeaderStats
@@ -113,15 +110,12 @@ type Transport struct {
 	// the member has been permanently removed from the cluster
 	// When an error is received from ErrorC, user should stop raft state
 	// machine and thus stop the Transport.
-	ErrorC chan error
-
-	streamRt   http.RoundTripper // roundTripper used by streams
-	pipelineRt http.RoundTripper // roundTripper used by pipelines
-
-	mu      sync.RWMutex         // protect the remote and peer map
-	remotes map[types.ID]*remote // 帮助新加入的成员赶上
-	peers   map[types.ID]Peer    // peers map
-
+	ErrorC         chan error
+	streamRt       http.RoundTripper    // roundTripper used by streams
+	pipelineRt     http.RoundTripper    // roundTripper used by pipelines
+	mu             sync.RWMutex         // protect the remote and peer map
+	remotes        map[types.ID]*remote // 帮助新加入的成员赶上
+	peers          map[types.ID]Peer    // peers map
 	pipelineProber probing.Prober
 	streamProber   probing.Prober
 }
@@ -150,15 +144,17 @@ func (t *Transport) Start() error {
 	return nil
 }
 
+// Handler ✅
 func (t *Transport) Handler() http.Handler {
+	//_ = etcdserver.EtcdServer{}  // loop import
 	pipelineHandler := newPipelineHandler(t, t.Raft, t.ClusterID)
 	streamHandler := newStreamHandler(t, t, t.Raft, t.ID, t.ClusterID)
 	snapHandler := newSnapshotHandler(t, t.Raft, t.Snapshotter, t.ClusterID)
 	mux := http.NewServeMux()
-	mux.Handle(RaftPrefix, pipelineHandler)
-	mux.Handle(RaftStreamPrefix+"/", streamHandler)
-	mux.Handle(RaftSnapshotPrefix, snapHandler)
-	mux.Handle(ProbingPrefix, probing.NewHandler())
+	mux.Handle(RaftPrefix, pipelineHandler)         // /raft
+	mux.Handle(RaftStreamPrefix+"/", streamHandler) // /raft/stream/
+	mux.Handle(RaftSnapshotPrefix, snapHandler)     // /raft/snapshot
+	mux.Handle(ProbingPrefix, probing.NewHandler()) // /raft/probing
 	return mux
 }
 
@@ -258,28 +254,28 @@ func (t *Transport) AddRemote(id types.ID, us []string) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	if t.remotes == nil {
-		// there's no clean way to shutdown the golang http etcd
+		// TODO there's no clean way to shutdown the golang http etcd
 		// (see: https://github.com/golang/go/issues/4674) before
 		// stopping the transport; ignore any new connections.
 		return
 	}
 	if _, ok := t.peers[id]; ok {
-		return
+		return // 存在
 	}
 	if _, ok := t.remotes[id]; ok {
-		return
+		return // 存在
 	}
 	urls, err := types.NewURLs(us)
 	if err != nil {
 		if t.Logger != nil {
-			t.Logger.Panic("failed NewURLs", zap.Strings("urls", us), zap.Error(err))
+			t.Logger.Panic("失败 NewURLs", zap.Strings("urls", us), zap.Error(err))
 		}
 	}
 	t.remotes[id] = startRemote(t, urls, id)
 
 	if t.Logger != nil {
 		t.Logger.Info(
-			"added new remote peer",
+			"添加一个远端节点的通信地址",
 			zap.String("local-member-id", t.ID.String()),
 			zap.String("remote-peer-id", id.String()),
 			zap.Strings("remote-peer-urls", us),

@@ -28,7 +28,6 @@ import (
 )
 
 const (
-	// time to wait for a Watch request
 	defaultWatchTimeout = time.Duration(math.MaxInt64)
 )
 
@@ -40,12 +39,7 @@ func writeError(lg *zap.Logger, w http.ResponseWriter, r *http.Request, err erro
 		herr := httptypes.NewHTTPError(e.HTTPStatus(), e.Error())
 		if et := herr.WriteTo(w); et != nil {
 			if lg != nil {
-				lg.Debug(
-					"failed to write v2 HTTP error",
-					zap.String("remote-addr", r.RemoteAddr),
-					zap.String("v2auth-error", e.Error()),
-					zap.Error(et),
-				)
+				lg.Debug("将错误写入v2 HTTP失败", zap.String("remote-addr", r.RemoteAddr), zap.String("v2auth-error", e.Error()), zap.Error(et))
 			}
 		}
 		return

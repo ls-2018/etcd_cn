@@ -56,7 +56,6 @@ func (c *fakeCluster) Version() *semver.Version              { return nil }
 // It returns the given error from any Do/Process/AddMember/RemoveMember calls.
 type errServer struct {
 	err error
-	fakeServer
 }
 
 func (fs *errServer) Do(ctx context.Context, r etcdserverpb.Request) (etcdserver.Response, error) {
