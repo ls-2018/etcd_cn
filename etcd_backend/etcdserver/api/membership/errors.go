@@ -21,12 +21,12 @@ import (
 )
 
 var (
-	ErrIDRemoved        = errors.New("membership: ID removed")
-	ErrIDExists         = errors.New("membership: ID exists")
-	ErrIDNotFound       = errors.New("membership: ID not found")
-	ErrPeerURLexists    = errors.New("membership: peerURL exists")
-	ErrMemberNotLearner = errors.New("membership: can only promote a learner member")
-	ErrTooManyLearners  = errors.New("membership: too many learner members in cluster")
+	ErrIDRemoved        = errors.New("membership: ID 已移除")
+	ErrIDExists         = errors.New("membership: ID 存在")
+	ErrIDNotFound       = errors.New("membership: ID 没有找到")
+	ErrPeerURLexists    = errors.New("membership: peerURL 已存在")
+	ErrMemberNotLearner = errors.New("membership: 只能提升一个learner成员")
+	ErrTooManyLearners  = errors.New("membership: 集群中成员太多")
 )
 
 func isKeyNotFound(err error) bool {

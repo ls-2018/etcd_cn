@@ -1,10 +1,9 @@
 # etcd
 
 ![etcd Logo](logos/etcd-horizontal-color.svg)
-v3.5.2
-Etcd是分布式系统中最关键的数据的可靠的分布式键值存储,其重点是:
+v3.5.2 Etcd是分布式系统中最关键的数据的可靠的分布式键值存储,其重点是:
 
-自己看源码 用  
+自己看源码 用
 
 ### 配置
 
@@ -53,27 +52,16 @@ http://127.0.0.1:2379/members
 
 ### msgType
 
-| 消息类型 | 处理方 | 描述 |
-| :--- | :--- | :--: |
-| MsgHup | 节点支持 | 本地：开启选举,---->会触发vote或pre-vote |
-| MsgBeat | Leader | 本地：心跳,---->给peers发送Msghearbeat |
-| MsgProp | Leader、Candidate、Follower | 本地：Propose -----> MsgApp |
-| MsgApp | Candidate、Follower | 非本地：操作日志【复制、配置变更 req】 |
-| MsgAppResp | Leader | 非本地：操作日志【复制 res】 |
-| MsgVote | 节点支持 | 非本地：投票请求 |
-| MsgVoteResp | Candidate | 非本地：投票相应 |
-| MsgPreVote | 节点支持 | 非本地：预投票请求 |
-| MsgPreVoteResp | Candidate | 非本地：预投票相应 |
-| MsgSnap | Candidate、Follower | 非本地：leader向follower拷贝快照,响应是MsgAppResp,告诉leader继续复制之后的值 |
-| MsgHeartbeat | Candidate、Follower | |
-| MsgHeartbeatResp | Leader | |
-| MsgUnreachable | Leader | 非本地：etcdserver通过这个消息告诉raft状态机某个follower不可达,让其发送消息的方式由pipeline切成ping-pong模式 |
-| MsgSnapStatus | Leader | 非本地：etcdserver通过这个消息告诉raft状态机快照发送成功还是失败 |
-| MsgCheckQuorum | Leader | |
-| MsgTransferLeader | Leader、Follower | 非本地： |
-| MsgTimeoutNow | Candidate、Follower | 非本地： |
-| MsgReadIndex | Leader、Follower | 非本地： |
-| MsgReadIndexResp | Follower | 非本地： |
+| 消息类型 | 处理方 | 描述 | | :--- | :--- | :--: | | MsgHup | 节点支持 | 本地：开启选举,---->会触发vote或pre-vote | | MsgBeat | Leader |
+本地：心跳,---->给peers发送Msghearbeat | | MsgProp | Leader、Candidate、Follower | 本地：Propose -----> MsgApp | | MsgApp |
+Candidate、Follower | 非本地：操作日志【复制、配置变更 req】 | | MsgAppResp | Leader | 非本地：操作日志【复制 res】 | | MsgVote | 节点支持 | 非本地：投票请求 | |
+MsgVoteResp | Candidate | 非本地：投票相应 | | MsgPreVote | 节点支持 | 非本地：预投票请求 | | MsgPreVoteResp | Candidate | 非本地：预投票相应 | |
+MsgSnap | Candidate、Follower | 非本地：leader向follower拷贝快照,响应是MsgAppResp,告诉leader继续复制之后的值 | | MsgHeartbeat |
+Candidate、Follower | | | MsgHeartbeatResp | Leader | | | MsgUnreachable | Leader |
+非本地：etcdserver通过这个消息告诉raft状态机某个follower不可达,让其发送消息的方式由pipeline切成ping-pong模式 | | MsgSnapStatus | Leader |
+非本地：etcdserver通过这个消息告诉raft状态机快照发送成功还是失败 | | MsgCheckQuorum | Leader | | | MsgTransferLeader | Leader、Follower | 非本地： | |
+MsgTimeoutNow | Candidate、Follower | 非本地： | | MsgReadIndex | Leader、Follower | 非本地： | | MsgReadIndexResp | Follower |
+非本地： |
 
 ### issue
 
@@ -144,7 +132,7 @@ http://127.0.0.1:2379/members
   ```
 
 
-- checkquorum  过半机制：
+- checkquorum 过半机制：
   ```
   每隔一段时间,leader节点会尝试连接集群中的节点(发送心跳),如果发现自己可以连接到的节点个数没有超过半数,则主动切换成follower状态.
   这样在网络分区的情况下,旧的leader节点可以很快的知道自己已经过期了.
@@ -197,46 +185,45 @@ http://127.0.0.1:2379/members
 - https://www.jianshu.com/p/267e1d626c22
 - https://blog.csdn.net/qq_40504851/category_10905363.html
 - https://blog.csdn.net/cyq6239075/category_9756361.html             ☆
--【一文搞懂Raft算法】https://www.cnblogs.com/xybaby/p/10124083.html    
--【寻找一种易于理解的一致性算法（扩展版）】https://github.com/maemual/raft-zh_cn/blob/master/raft-zh_cn.md  
--【raft演示动画】https://raft.github.io/raftscope/index.html    
--【理解 raft 算法】https://sanyuesha.com/2019/04/18/raft/  
--【理解Raft一致性算法—一篇学术论文总结】https://mp.weixin.qq.com/s/RkMeYyUck1WQPjNiGvahKQ  
--【Raft协议原理详解】https://zhuanlan.zhihu.com/p/91288179  
--【Raft算法详解】https://zhuanlan.zhihu.com/p/32052223
--【etcd技术内幕】一本关于etcd不错的书籍  
--【高可用分布式存储 etcd 的实现原理】https://draveness.me/etcd-introduction/  
--【Raft 在 etcd 中的实现】https://blog.betacat.io/post/raft-implementation-in-etcd/  tickHeartbeart 会同时推进两个计数器  heartbeatElapsed 和 electionElapsed .
--【etcd Raft库解析】https://www.codedump.info/post/20180922-etcd-raft/  
--【etcd raft 设计与实现《一》】https://zhuanlan.zhihu.com/p/51063866    (1) heartbeatElapsed
--【raftexample 源码解读】https://zhuanlan.zhihu.com/p/91314329  
--【etcd实现-全流程分析】https://zhuanlan.zhihu.com/p/135891186    当 heartbeatElapsed 超时,发送 MsgBeat 消息给当前节点,当前节点收到消息之后会广播心跳消息(bcastHeartbeat)给其他节点 MsgHeartbeat 消息.
--【线性一致性和Raft】https://pingcap.com/zh/blog/linearizability-and-raft  
--【etcd raft 设计与实现《二》】https://zhuanlan.zhihu.com/p/51065416  当 Follower 或者 Candidate 收到 MsgHeartbeat 消息会重置 electionElapsed 为 0,同时会响应 MsgHeartbeatResp 消息.
--【《深入浅出etcd》part 3 – 解析etcd的日志同步机制】https://mp.weixin.qq.com/s/o_g5z77VZbImgTqjNBSktA    
--【一文入门ETCD】https://juejin.cn/post/6844904031186321416   
--【etcd：从应用场景到实现原理的全方位解读】https://www.infoq.cn/article/etcd-interpretation-application-scenario-implement-principle   
--【Etcd 架构与实现解析】http://jolestar.com/etcd-architecture/   
--【linux单节点和集群的etcd】https://www.jianshu.com/p/07ca88b6ff67   
--【软负载均衡与硬负载均衡、4层与7层负载均衡】https://cloud.tencent.com/developer/article/1446391   
--【Etcd Lock详解】https://tangxusc.github.io/blog/2019/05/etcd-lock%E8%AF%A6%E8%A7%A3/   
--【etcd基础与使用】https://zhuyasen.com/post/etcd.html   
--【ETCD核心机制解析】https://www.cnblogs.com/FG123/p/13632095.html      
--【etcd watch机制】http://liangjf.top/2019/12/31/110.etcd-watch%E6%9C%BA%E5%88%B6%E5%88%86%E6%9E%90/   
--【ETCD 源码学习--Watch(server)】https://www.codeleading.com/article/15455457381/   
--【etcdV3—watcher服务端源码解析】https://blog.csdn.net/stayfoolish_yj/article/details/104497233
+  -【一文搞懂Raft算法】https://www.cnblogs.com/xybaby/p/10124083.html    
+  -【寻找一种易于理解的一致性算法（扩展版）】https://github.com/maemual/raft-zh_cn/blob/master/raft-zh_cn.md  
+  -【raft演示动画】https://raft.github.io/raftscope/index.html    
+  -【理解 raft 算法】https://sanyuesha.com/2019/04/18/raft/  
+  -【理解Raft一致性算法—一篇学术论文总结】https://mp.weixin.qq.com/s/RkMeYyUck1WQPjNiGvahKQ  
+  -【Raft协议原理详解】https://zhuanlan.zhihu.com/p/91288179  
+  -【Raft算法详解】https://zhuanlan.zhihu.com/p/32052223
+  -【etcd技术内幕】一本关于etcd不错的书籍  
+  -【高可用分布式存储 etcd 的实现原理】https://draveness.me/etcd-introduction/  
+  -【Raft 在 etcd 中的实现】https://blog.betacat.io/post/raft-implementation-in-etcd/  tickHeartbeart 会同时推进两个计数器
+  heartbeatElapsed 和 electionElapsed . -【etcd Raft库解析】https://www.codedump.info/post/20180922-etcd-raft/  
+  -【etcd raft 设计与实现《一》】https://zhuanlan.zhihu.com/p/51063866    (1) heartbeatElapsed -【raftexample
+  源码解读】https://zhuanlan.zhihu.com/p/91314329  
+  -【etcd实现-全流程分析】https://zhuanlan.zhihu.com/p/135891186    当 heartbeatElapsed 超时,发送 MsgBeat 消息给当前节点,当前节点收到消息之后会广播心跳消息(
+  bcastHeartbeat)给其他节点 MsgHeartbeat 消息. -【线性一致性和Raft】https://pingcap.com/zh/blog/linearizability-and-raft  
+  -【etcd raft 设计与实现《二》】https://zhuanlan.zhihu.com/p/51065416  当 Follower 或者 Candidate 收到 MsgHeartbeat 消息会重置
+  electionElapsed 为 0,同时会响应 MsgHeartbeatResp 消息. -【《深入浅出etcd》part 3 –
+  解析etcd的日志同步机制】https://mp.weixin.qq.com/s/o_g5z77VZbImgTqjNBSktA    
+  -【一文入门ETCD】https://juejin.cn/post/6844904031186321416   
+  -【etcd：从应用场景到实现原理的全方位解读】https://www.infoq.cn/article/etcd-interpretation-application-scenario-implement-principle   
+  -【Etcd 架构与实现解析】http://jolestar.com/etcd-architecture/   
+  -【linux单节点和集群的etcd】https://www.jianshu.com/p/07ca88b6ff67   
+  -【软负载均衡与硬负载均衡、4层与7层负载均衡】https://cloud.tencent.com/developer/article/1446391   
+  -【Etcd Lock详解】https://tangxusc.github.io/blog/2019/05/etcd-lock%E8%AF%A6%E8%A7%A3/   
+  -【etcd基础与使用】https://zhuyasen.com/post/etcd.html   
+  -【ETCD核心机制解析】https://www.cnblogs.com/FG123/p/13632095.html      
+  -【etcd watch机制】http://liangjf.top/2019/12/31/110.etcd-watch%E6%9C%BA%E5%88%B6%E5%88%86%E6%9E%90/   
+  -【ETCD 源码学习--Watch(server)】https://www.codeleading.com/article/15455457381/   
+  -【etcdV3—watcher服务端源码解析】https://blog.csdn.net/stayfoolish_yj/article/details/104497233
 - https://www.jianshu.com/p/f0a63762ac13
 - https://www.zhihu.com/question/63995014/answer/2251115833
 - https://blog.csdn.net/weixin_42017400/article/details/123174473
 - https://www.jianshu.com/p/1621360b0b8e
-- https://blog.csdn.net/xxb249/article/details/80787817 
-
-
+- https://blog.csdn.net/xxb249/article/details/80787817
 
 (2) electionElapsed
 
-当 electionElapsed 超时,发送 MsgCheckQuorum 给当前节点,当前节点收到消息之后,进行自我检查,判断是否能继续维持 Leader 状态,如果不能切换为Follower.同时如果节点正在进行 Leader 切换(切换其他节点为Leader),当 electionElapsed 超时,说明 Leader 节点转移超时,会终止切换.
-
+当 electionElapsed 超时,发送 MsgCheckQuorum 给当前节点,当前节点收到消息之后,进行自我检查,判断是否能继续维持 Leader 状态,如果不能切换为Follower.同时如果节点正在进行 Leader 切换(
+切换其他节点为Leader),当 electionElapsed 超时,说明 Leader 节点转移超时,会终止切换.
 
 ```
 curl    --------http--------->    gateway ------------> etcd grpc server 2379
@@ -254,7 +241,6 @@ curl    --------http--------->    gateway ------------> etcd grpc server 2379
 
 - github.com/soheilhy/cmux 可以在同一个listener上监听不同协议的请求
 -
-
 
 ```
 etcdServer 会单独处理 Propose消息, 其余消息交给raft.step 来处理 [该函数,会随着节点角色的改变而发生改变] [会首先判断任期、索引,在判断消息类型]
@@ -390,7 +376,70 @@ raft commit->apply  的数据 封装在ready结构体里   <-r.Ready()
 ```
 
 ### 集群节点变更
+
 ```
+                                                        ┌────┐       ┌──────────────────────┐           
+                                                     ┌─▶│POST│──────▶│h.server.AddMember    │──┐        
+                                                     │  └────┘       └──────────────────────┘  │        
+                                                     │  ┌────────┐   ┌─────────────────────────┼┐       
+┌────┐   ┌─────────────────────────────────────────┐ ├─▶│ DELETE │──▶│h.server.RemoveMember    ││──┐    
+│http│──▶│ v2http/client.membersHandler.ServeHTTP  │─┤  └────────┘   └─────────────────────────┼┘  │    
+└────┘   └─────────────────────────────────────────┘ │  ┌────┐       ┌─────────────────────────┼───┼┐   
+                                                     ├─▶│PUT │──────▶│h.server.UpdateMember    │   ││──┐
+                                                     │  └────┘       └─────────────────────────┼───┼┘  │
+                                                     │  ┌────┐       ┌──────────────────────┐  │   │   │
+                                                     └─▶│GET │───┬──▶│h.cluster.Members     │  │   │   │
+                                                        └────┘   │   └──────────────────────┘  │   │   │
+                                                                 │   ┌───────────────────────┐ │   │   │
+                                                                 └──▶│h.cluster.Member       │ │   │   │
+                                                                     └───────────────────────┘ │   │   │
+                     ┌──────────────────────────────────────────┐                              │   │   │
+             ┌──────▶│   v3rpc/member.ClusterServer.MemberAdd   │◀─────────────────────────────┘   │   │
+             │       └──────────────────────────────────────────┘                                  │   │
+             │                             │                                                       │   │
+             │                             ▼                                                       │   │
+             │           ┌──────────────────────────────────┐                                      │   │
+             │           │ etcdserver.EtcdServer.AddMember  │                                      │   │
+             │           └──────────────────────────────────┘                                      │   │
+             │       ┌──────────────────────────────────────────┐                                  │   │
+             ├──────▶│ v3rpc/member.ClusterServer.MemberRemove  │◀─────────────────────────────────┘   │
+             │       └──────────────────────────────────────────┘                                      │
+             │                             │                                                           │
+             │                             ▼                                                           │
+┌────┐       │           ┌──────────────────────────────────┐                                          │
+│grpc│───────┤           │etcdserver.EtcdServer.RemoveMember│                                          │
+└────┘       │           └──────────────────────────────────┘                                          │
+             │       ┌──────────────────────────────────────────┐                                      │
+             ├──────▶│ v3rpc/member.ClusterServer.MemberUpdate  │◀─────────────────────────────────────┘
+             │       └──────────────────────────────────────────┘                                       
+             │                             │                                                            
+             │                             ▼                                                            
+             │           ┌──────────────────────────────────┐                                           
+             │           │etcdserver.EtcdServer.UpdateMember│                                           
+             │           └──────────────────────────────────┘                                           
+             │       ┌──────────────────────────────────────────┐                                       
+             ├──────▶│ v3rpc/member.ClusterServer.MemberPromote │                                       
+             │       └──────────────────────────────────────────┘                                       
+             │                             │                                                            
+             │                             ▼                                                            
+             │           ┌───────────────────────────────────┐                                          
+             │           │etcdserver.EtcdServer.PromoteMember│                                          
+             │           └───────────────────────────────────┘                                          
+             │       ┌──────────────────────────────────────────┐                                       
+             └──────▶│  v3rpc/member.ClusterServer.MemberList   │                                       
+                     └──────────────────────────────────────────┘                                       
+                                           │                                                            
+                                           ▼                                                            
+                   ┌──────────────────────────────────────────────┐                                     
+                   │ etcdserver.EtcdServer.LinearizableReadNotify │                                     
+                   └──────────────────────────────────────────────┘                                     
+
+
+
+
+
+
+
 1、先检查是否有待应用的变更
 2、将变更信息放入raft unstable 等待发送----->发送,等到apply
 3、apply 该变更

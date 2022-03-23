@@ -544,18 +544,10 @@ func (e *Etcd) servePeers() (err error) {
 			return m.Serve()
 		}
 		p.close = func(ctx context.Context) error {
-			// gracefully shutdown http.Server
-			// close open listeners, idle connections
-			// until context cancel or time-out
-			e.cfg.logger.Info(
-				"stopping serving peer traffic",
-				zap.String("address", u),
-			)
+			// 优雅关闭 http.Server、打开的listeners、空闲的connections 直到超时或上下文关闭
+			e.cfg.logger.Info("开始停止服务", zap.String("address", u))
 			stopServers(ctx, &servers{secure: peerTLScfg != nil, grpc: gs, http: srv})
-			e.cfg.logger.Info(
-				"stopped serving peer traffic",
-				zap.String("address", u),
-			)
+			e.cfg.logger.Info("已停止服务", zap.String("address", u))
 			m.Close()
 			return nil
 		}

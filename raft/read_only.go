@@ -38,7 +38,6 @@ type readIndexStatus struct {
 	// this becomes performance sensitive enough (doubtful), quorum.VoteResult
 	// can change to an API that is closer to that of CommittedIndex.
 	acks map[uint64]bool // 记录了该MsgReadIndex相关的MsgHeartbeatResp响应的信息
-
 }
 
 type readOnly struct {

@@ -38,6 +38,16 @@ func NewClusterServer(s *etcdserver.EtcdServer) *ClusterServer {
 	}
 }
 
+func (cs *ClusterServer) MemberList(ctx context.Context, r *pb.MemberListRequest) (*pb.MemberListResponse, error) {
+	if r.Linearizable {
+		if err := cs.server.LinearizableReadNotify(ctx); err != nil {
+			return nil, togRPCError(err)
+		}
+	}
+	membs := membersToProtoMembers(cs.cluster.Members())
+	return &pb.MemberListResponse{Header: cs.header(), Members: membs}, nil
+}
+
 func (cs *ClusterServer) MemberAdd(ctx context.Context, r *pb.MemberAddRequest) (*pb.MemberAddResponse, error) {
 	urls, err := types.NewURLs(r.PeerURLs)
 	if err != nil {
@@ -87,26 +97,23 @@ func (cs *ClusterServer) MemberUpdate(ctx context.Context, r *pb.MemberUpdateReq
 	return &pb.MemberUpdateResponse{Header: cs.header(), Members: membersToProtoMembers(membs)}, nil
 }
 
-func (cs *ClusterServer) MemberList(ctx context.Context, r *pb.MemberListRequest) (*pb.MemberListResponse, error) {
-	if r.Linearizable {
-		if err := cs.server.LinearizableReadNotify(ctx); err != nil {
-			return nil, togRPCError(err)
-		}
-	}
-	membs := membersToProtoMembers(cs.cluster.Members())
-	return &pb.MemberListResponse{Header: cs.header(), Members: membs}, nil
-}
-
 func (cs *ClusterServer) MemberPromote(ctx context.Context, r *pb.MemberPromoteRequest) (*pb.MemberPromoteResponse, error) {
 	membs, err := cs.server.PromoteMember(ctx, r.ID)
 	if err != nil {
 		return nil, togRPCError(err)
 	}
-	return &pb.MemberPromoteResponse{Header: cs.header(), Members: membersToProtoMembers(membs)}, nil
+	return &pb.MemberPromoteResponse{
+		Header:  cs.header(),
+		Members: membersToProtoMembers(membs),
+	}, nil
 }
 
 func (cs *ClusterServer) header() *pb.ResponseHeader {
-	return &pb.ResponseHeader{ClusterId: uint64(cs.cluster.ID()), MemberId: uint64(cs.server.ID()), RaftTerm: cs.server.Term()}
+	return &pb.ResponseHeader{
+		ClusterId: uint64(cs.cluster.ID()),
+		MemberId:  uint64(cs.server.ID()),
+		RaftTerm:  cs.server.Term(),
+	}
 }
 
 func membersToProtoMembers(membs []*membership.Member) []*pb.Member {

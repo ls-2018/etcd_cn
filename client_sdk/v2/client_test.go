@@ -503,7 +503,8 @@ func (f fakeCancelContext) Value(key interface{}) interface{} { return 1 }
 
 func withTimeout(parent context.Context, timeout time.Duration) (
 	ctx context.Context,
-	cancel context.CancelFunc) {
+	cancel context.CancelFunc,
+) {
 	ctx = parent
 	cancel = func() {
 		ctx = nil

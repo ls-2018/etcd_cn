@@ -84,7 +84,7 @@ func userFromClientCertificate(lg *zap.Logger, sec v2auth.Store, r *http.Request
 
 func hasRootAccess(lg *zap.Logger, sec v2auth.Store, r *http.Request, clientCertAuthEnabled bool) bool {
 	if sec == nil {
-		// No store means no auth available, eg, tests.
+		// 没有store意味着没有可用的认证，例如，测试。
 		return true
 	}
 	if !sec.AuthEnabled() {
@@ -111,7 +111,7 @@ func hasRootAccess(lg *zap.Logger, sec v2auth.Store, r *http.Request, clientCert
 	}
 
 	lg.Warn(
-		"a user does not have root role for resource",
+		"用户没有资源的root角色",
 		zap.String("root-user", rootUser.User),
 		zap.String("root-role-name", v2auth.RootRoleName),
 		zap.String("resource-path", r.URL.Path),

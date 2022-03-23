@@ -124,6 +124,7 @@ type membersHandler struct {
 	clientCertAuthEnabled bool
 }
 
+// 专门服务集群成员变化的
 func (h *membersHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if !allowMethod(w, r.Method, "GET", "POST", "DELETE", "PUT") {
 		return
@@ -144,21 +145,21 @@ func (h *membersHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			mc := newMemberCollection(h.cluster.Members())
 			w.Header().Set("Content-Type", "application/json")
 			if err := json.NewEncoder(w).Encode(mc); err != nil {
-				h.lg.Warn("failed to encode members response", zap.Error(err))
+				h.lg.Warn("未能对成员进行编码", zap.Error(err))
 			}
 		case "leader":
 			id := h.server.Leader()
 			if id == 0 {
-				writeError(h.lg, w, r, httptypes.NewHTTPError(http.StatusServiceUnavailable, "During election"))
+				writeError(h.lg, w, r, httptypes.NewHTTPError(http.StatusServiceUnavailable, "在选举期间"))
 				return
 			}
 			m := newMember(h.cluster.Member(id))
 			w.Header().Set("Content-Type", "application/json")
 			if err := json.NewEncoder(w).Encode(m); err != nil {
-				h.lg.Warn("failed to encode members response", zap.Error(err))
+				h.lg.Warn("未能对成员进行编码", zap.Error(err))
 			}
 		default:
-			writeError(h.lg, w, r, httptypes.NewHTTPError(http.StatusNotFound, "Not found"))
+			writeError(h.lg, w, r, httptypes.NewHTTPError(http.StatusNotFound, "没有找到"))
 		}
 
 	case "POST":
@@ -174,11 +175,7 @@ func (h *membersHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			writeError(h.lg, w, r, httptypes.NewHTTPError(http.StatusConflict, err.Error()))
 			return
 		case err != nil:
-			h.lg.Warn(
-				"failed to add a member",
-				zap.String("member-id", m.ID.String()),
-				zap.Error(err),
-			)
+			h.lg.Warn("添加成员失败", zap.String("member-id", m.ID.String()), zap.Error(err))
 			writeError(h.lg, w, r, err)
 			return
 		}
@@ -186,7 +183,7 @@ func (h *membersHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 		if err := json.NewEncoder(w).Encode(res); err != nil {
-			h.lg.Warn("failed to encode members response", zap.Error(err))
+			h.lg.Warn("解码成员响应失败", zap.Error(err))
 		}
 
 	case "DELETE":
@@ -201,11 +198,7 @@ func (h *membersHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		case err == membership.ErrIDNotFound:
 			writeError(h.lg, w, r, httptypes.NewHTTPError(http.StatusNotFound, fmt.Sprintf("No such member: %s", id)))
 		case err != nil:
-			h.lg.Warn(
-				"failed to remove a member",
-				zap.String("member-id", id.String()),
-				zap.Error(err),
-			)
+			h.lg.Warn("移除成员失败", zap.String("member-id", id.String()), zap.Error(err))
 			writeError(h.lg, w, r, err)
 		default:
 			w.WriteHeader(http.StatusNoContent)
@@ -231,11 +224,7 @@ func (h *membersHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		case err == membership.ErrIDNotFound:
 			writeError(h.lg, w, r, httptypes.NewHTTPError(http.StatusNotFound, fmt.Sprintf("No such member: %s", id)))
 		case err != nil:
-			h.lg.Warn(
-				"failed to update a member",
-				zap.String("member-id", m.ID.String()),
-				zap.Error(err),
-			)
+			h.lg.Warn("更新成员失败", zap.String("member-id", m.ID.String()), zap.Error(err))
 			writeError(h.lg, w, r, err)
 		default:
 			w.WriteHeader(http.StatusNoContent)
@@ -660,8 +649,9 @@ func getBool(form url.Values, key string) (b bool, err error) {
 	return
 }
 
-// trimPrefix removes a given prefix and any slash following the prefix
-// e.g.: trimPrefix("foo", "foo") == trimPrefix("foo/", "foo") == ""
+// ------------------------------------------------ OVER  ---------------------------------------------------
+
+// trimPrefix 移除前缀 和 /
 func trimPrefix(p, prefix string) (s string) {
 	s = strings.TrimPrefix(p, prefix)
 	s = strings.TrimPrefix(s, "/")

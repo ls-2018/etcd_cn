@@ -125,7 +125,8 @@ func SnapshotRestoreCommandFunc(restoreCluster string,
 	restorePeerURLs string,
 	restoreName string,
 	skipHashCheck bool,
-	args []string) {
+	args []string,
+) {
 	if len(args) != 1 {
 		err := fmt.Errorf("snapshot restore requires exactly one argument")
 		cobrautl.ExitWithError(cobrautl.ExitBadArgs, err)

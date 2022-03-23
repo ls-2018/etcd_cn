@@ -1204,7 +1204,8 @@ func NewTokenProvider(
 	lg *zap.Logger,
 	tokenOpts string,
 	indexWaiter func(uint64) <-chan struct{},
-	TokenTTL time.Duration) (TokenProvider, error) {
+	TokenTTL time.Duration,
+) (TokenProvider, error) {
 	tokenType, typeSpecificOpts, err := decomposeOpts(lg, tokenOpts)
 	if err != nil {
 		return nil, ErrInvalidAuthOpts

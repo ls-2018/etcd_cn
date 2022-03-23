@@ -99,7 +99,7 @@ func (s *store) detectAuth() bool {
 			}
 		}
 		s.lg.Warn(
-			"failed to detect auth settings",
+			"未能检测到授权设置",
 			zap.Error(err),
 		)
 		return false

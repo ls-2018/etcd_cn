@@ -75,7 +75,8 @@ func checkKeyInterval(
 	lg *zap.Logger,
 	cachedPerms *unifiedRangePermissions,
 	key, rangeEnd []byte,
-	permtyp authpb.Permission_Type) bool {
+	permtyp authpb.Permission_Type,
+) bool {
 	if len(rangeEnd) == 1 && rangeEnd[0] == 0 {
 		rangeEnd = nil
 	}

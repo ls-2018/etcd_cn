@@ -1452,17 +1452,15 @@ func (s *EtcdServer) StoreStats() []byte { return s.v2store.JsonStats() }
 
 // 检查节点操作的权限
 func (s *EtcdServer) checkMembershipOperationPermission(ctx context.Context) error {
+	_ = auth.NewAuthStore
 	if s.authStore == nil {
 		// 在普通的etcd进程中，s.authStore永远不会为零。这个分支是为了处理server_test.go中的情况
 		return nil
 	}
 
-	// Note that this permission check is done in the API layer,
-	// so TOCTOU problem can be caused potentially in a schedule like this:
-	// update membership with user A -> revoke root role of A -> apply membership change
-	// in the state machine layer
-	// However, both of membership change and role management requires the root privilege.
-	// So careful operation by admins can prevent the problem.
+	// 请注意，这个权限检查是在API层完成的，所以TOCTOU问题可能会在这样的时间表中引起：
+	// 更新用户A的会员资格------撤销A的根角色------在状态机层应用会员资格的改变
+	// 然而，会员资格的改变和角色管理都需要根权限。所以管理员的谨慎操作可以防止这个问题。
 	authInfo, err := s.AuthInfoFromCtx(ctx)
 	if err != nil {
 		return err

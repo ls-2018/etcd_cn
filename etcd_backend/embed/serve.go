@@ -87,7 +87,8 @@ func newServeCtx(lg *zap.Logger) *serveCtx {
 
 // serve 为接收入站请求创建一个goroutine
 func (sctx *serveCtx) serve(s *etcdserver.EtcdServer, tlsinfo *transport.TLSInfo, handler http.Handler, errHandler func(error),
-	gopts ...grpc.ServerOption) (err error) {
+	gopts ...grpc.ServerOption,
+) (err error) {
 	logger := defaultLog.New(ioutil.Discard, "etcdhttp", 0)
 	<-s.ReadyNotify() // 准备好了,该channel会被关闭
 

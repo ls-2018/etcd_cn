@@ -22,8 +22,31 @@ func (s *EtcdServer) AddMember(ctx context.Context, memb membership.Member) ([]*
 		return nil, err
 	}
 
+	lg := s.Logger()
+	if !s.Cfg.StrictReconfigCheck {
+	} else {
+		// protect quorum when adding voting member
+		if !memb.IsLearner && !s.cluster.IsReadyToAddVotingMember() {
+			lg.Warn(
+				"rejecting member add request; not enough healthy members",
+				zap.String("local-member-id", s.ID().String()),
+				zap.String("requested-member-add", fmt.Sprintf("%+v", memb)),
+				zap.Error(ErrNotEnoughStartedMembers),
+			)
+			return nil, ErrNotEnoughStartedMembers
+		}
+		if !isConnectedFullySince(s.r.transport, time.Now().Add(-HealthInterval), s.ID(), s.cluster.VotingMembers()) {
+			lg.Warn(
+				"rejecting member add request; local member has not been connected to all peers, reconfigure breaks active quorum",
+				zap.String("local-member-id", s.ID().String()),
+				zap.String("requested-member-add", fmt.Sprintf("%+v", memb)),
+				zap.Error(ErrUnhealthy),
+			)
+			return nil, ErrUnhealthy
+		}
+	}
 	// by default StrictReconfigCheck is enabled; reject new members if unhealthy.
-	if err := s.mayAddMember(memb); err != nil {
+	if err != nil {
 		return nil, err
 	}
 
@@ -38,36 +61,6 @@ func (s *EtcdServer) AddMember(ctx context.Context, memb membership.Member) ([]*
 	}
 
 	return s.configure(ctx, cc)
-}
-
-func (s *EtcdServer) mayAddMember(memb membership.Member) error {
-	lg := s.Logger()
-	if !s.Cfg.StrictReconfigCheck {
-		return nil
-	}
-
-	// protect quorum when adding voting member
-	if !memb.IsLearner && !s.cluster.IsReadyToAddVotingMember() {
-		lg.Warn(
-			"rejecting member add request; not enough healthy members",
-			zap.String("local-member-id", s.ID().String()),
-			zap.String("requested-member-add", fmt.Sprintf("%+v", memb)),
-			zap.Error(ErrNotEnoughStartedMembers),
-		)
-		return ErrNotEnoughStartedMembers
-	}
-
-	if !isConnectedFullySince(s.r.transport, time.Now().Add(-HealthInterval), s.ID(), s.cluster.VotingMembers()) {
-		lg.Warn(
-			"rejecting member add request; local member has not been connected to all peers, reconfigure breaks active quorum",
-			zap.String("local-member-id", s.ID().String()),
-			zap.String("requested-member-add", fmt.Sprintf("%+v", memb)),
-			zap.Error(ErrUnhealthy),
-		)
-		return ErrUnhealthy
-	}
-
-	return nil
 }
 
 func (s *EtcdServer) RemoveMember(ctx context.Context, id uint64) ([]*membership.Member, error) {
