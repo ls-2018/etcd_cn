@@ -2,7 +2,6 @@ package etcdserverpb
 
 import (
 	fmt "fmt"
-	io "io"
 	math "math"
 	math_bits "math/bits"
 
@@ -54,37 +53,6 @@ func (*Request) Descriptor() ([]byte, []int) {
 	return fileDescriptor_09ffbeb3bebbce7e, []int{0}
 }
 
-func (m *Request) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-
-func (m *Request) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_Request.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-
-func (m *Request) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Request.Merge(m, src)
-}
-
-func (m *Request) XXX_Size() int {
-	return m.Size()
-}
-
-func (m *Request) XXX_DiscardUnknown() {
-	xxx_messageInfo_Request.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_Request proto.InternalMessageInfo
-
 type Metadata struct {
 	NodeID               uint64   `protobuf:"varint,1,opt,name=NodeID" json:"NodeID"`
 	ClusterID            uint64   `protobuf:"varint,2,opt,name=ClusterID" json:"ClusterID"`
@@ -99,37 +67,6 @@ func (*Metadata) ProtoMessage()    {}
 func (*Metadata) Descriptor() ([]byte, []int) {
 	return fileDescriptor_09ffbeb3bebbce7e, []int{1}
 }
-
-func (m *Metadata) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-
-func (m *Metadata) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_Metadata.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-
-func (m *Metadata) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Metadata.Merge(m, src)
-}
-
-func (m *Metadata) XXX_Size() int {
-	return m.Size()
-}
-
-func (m *Metadata) XXX_DiscardUnknown() {
-	xxx_messageInfo_Metadata.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_Metadata proto.InternalMessageInfo
 
 func init() {
 	proto.RegisterType((*Request)(nil), "etcdserverpb.Request")
@@ -164,165 +101,6 @@ var fileDescriptor_09ffbeb3bebbce7e = []byte{
 	0x57, 0x69, 0xa2, 0x51, 0x85, 0x41, 0xf6, 0x28, 0xce, 0xb7, 0x70, 0xe6, 0x61, 0xef, 0xf0, 0xea,
 	0x56, 0x0e, 0x47, 0x97, 0x3c, 0x1d, 0x5d, 0xf2, 0x72, 0x74, 0xc9, 0xe3, 0x9b, 0x5b, 0x79, 0x0f,
 	0x00, 0x00, 0xff, 0xff, 0xee, 0x40, 0xba, 0xd6, 0xa4, 0x02, 0x00, 0x00,
-}
-
-func (m *Request) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *Request) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.XXX_unrecognized != nil {
-		i -= len(m.XXX_unrecognized)
-		copy(dAtA[i:], m.XXX_unrecognized)
-	}
-	if m.Refresh != nil {
-		i--
-		if *m.Refresh {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i--
-		dAtA[i] = 0x1
-		i--
-		dAtA[i] = 0x88
-	}
-	i--
-	if m.Stream {
-		dAtA[i] = 1
-	} else {
-		dAtA[i] = 0
-	}
-	i--
-	dAtA[i] = 0x1
-	i--
-	dAtA[i] = 0x80
-	i = encodeVarintEtcdserver(dAtA, i, uint64(m.Time))
-	i--
-	dAtA[i] = 0x78
-	i--
-	if m.Quorum {
-		dAtA[i] = 1
-	} else {
-		dAtA[i] = 0
-	}
-	i--
-	dAtA[i] = 0x70
-	i--
-	if m.Sorted {
-		dAtA[i] = 1
-	} else {
-		dAtA[i] = 0
-	}
-	i--
-	dAtA[i] = 0x68
-	i--
-	if m.Recursive {
-		dAtA[i] = 1
-	} else {
-		dAtA[i] = 0
-	}
-	i--
-	dAtA[i] = 0x60
-	i = encodeVarintEtcdserver(dAtA, i, uint64(m.Since))
-	i--
-	dAtA[i] = 0x58
-	i--
-	if m.Wait {
-		dAtA[i] = 1
-	} else {
-		dAtA[i] = 0
-	}
-	i--
-	dAtA[i] = 0x50
-	i = encodeVarintEtcdserver(dAtA, i, uint64(m.Expiration))
-	i--
-	dAtA[i] = 0x48
-	if m.PrevExist != nil {
-		i--
-		if *m.PrevExist {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i--
-		dAtA[i] = 0x40
-	}
-	i = encodeVarintEtcdserver(dAtA, i, uint64(m.PrevIndex))
-	i--
-	dAtA[i] = 0x38
-	i -= len(m.PrevValue)
-	copy(dAtA[i:], m.PrevValue)
-	i = encodeVarintEtcdserver(dAtA, i, uint64(len(m.PrevValue)))
-	i--
-	dAtA[i] = 0x32
-	i--
-	if m.Dir {
-		dAtA[i] = 1
-	} else {
-		dAtA[i] = 0
-	}
-	i--
-	dAtA[i] = 0x28
-	i -= len(m.Val)
-	copy(dAtA[i:], m.Val)
-	i = encodeVarintEtcdserver(dAtA, i, uint64(len(m.Val)))
-	i--
-	dAtA[i] = 0x22
-	i -= len(m.Path)
-	copy(dAtA[i:], m.Path)
-	i = encodeVarintEtcdserver(dAtA, i, uint64(len(m.Path)))
-	i--
-	dAtA[i] = 0x1a
-	i -= len(m.Method)
-	copy(dAtA[i:], m.Method)
-	i = encodeVarintEtcdserver(dAtA, i, uint64(len(m.Method)))
-	i--
-	dAtA[i] = 0x12
-	i = encodeVarintEtcdserver(dAtA, i, uint64(m.ID))
-	i--
-	dAtA[i] = 0x8
-	return len(dAtA) - i, nil
-}
-
-func (m *Metadata) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *Metadata) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.XXX_unrecognized != nil {
-		i -= len(m.XXX_unrecognized)
-		copy(dAtA[i:], m.XXX_unrecognized)
-	}
-	i = encodeVarintEtcdserver(dAtA, i, uint64(m.ClusterID))
-	i--
-	dAtA[i] = 0x10
-	i = encodeVarintEtcdserver(dAtA, i, uint64(m.NodeID))
-	i--
-	dAtA[i] = 0x8
-	return len(dAtA) - i, nil
-}
-
-func encodeVarintEtcdserver(dAtA []byte, offset int, v uint64) int {
-	offset -= sovEtcdserver(v)
-	base := offset
-	for v >= 1<<7 {
-		dAtA[offset] = uint8(v&0x7f | 0x80)
-		v >>= 7
-		offset++
-	}
-	dAtA[offset] = uint8(v)
-	return base
 }
 
 func (m *Request) Size() (n int) {
@@ -378,89 +156,6 @@ func (m *Metadata) Size() (n int) {
 
 func sovEtcdserver(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
-}
-
-func sozEtcdserver(x uint64) (n int) {
-	return sovEtcdserver(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-
-func skipEtcdserver(dAtA []byte) (n int, err error) {
-	l := len(dAtA)
-	iNdEx := 0
-	depth := 0
-	for iNdEx < l {
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return 0, ErrIntOverflowEtcdserver
-			}
-			if iNdEx >= l {
-				return 0, io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		wireType := int(wire & 0x7)
-		switch wireType {
-		case 0:
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return 0, ErrIntOverflowEtcdserver
-				}
-				if iNdEx >= l {
-					return 0, io.ErrUnexpectedEOF
-				}
-				iNdEx++
-				if dAtA[iNdEx-1] < 0x80 {
-					break
-				}
-			}
-		case 1:
-			iNdEx += 8
-		case 2:
-			var length int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return 0, ErrIntOverflowEtcdserver
-				}
-				if iNdEx >= l {
-					return 0, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				length |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if length < 0 {
-				return 0, ErrInvalidLengthEtcdserver
-			}
-			iNdEx += length
-		case 3:
-			depth++
-		case 4:
-			if depth == 0 {
-				return 0, ErrUnexpectedEndOfGroupEtcdserver
-			}
-			depth--
-		case 5:
-			iNdEx += 4
-		default:
-			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
-		}
-		if iNdEx < 0 {
-			return 0, ErrInvalidLengthEtcdserver
-		}
-		if depth == 0 {
-			return iNdEx, nil
-		}
-	}
-	return 0, io.ErrUnexpectedEOF
 }
 
 var (

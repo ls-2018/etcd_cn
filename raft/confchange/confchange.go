@@ -129,9 +129,9 @@ func joint(cfg tracker.Config) bool {
 	return len(outgoing(cfg.Voters)) > 0
 }
 
-// 节点未发生变更时，节点信息存储在JointConfig[0] ，即incoming的指向的集合中。
-// 当EnterJoint时，将老节点拷贝至outgoing中，变更节点拷贝至incoming中。
-// LeaveJoint时，删除下线的节点，合并在线的节点并合并至incoming中，完成节点变更过程。
+// 节点未发生变更时,节点信息存储在JointConfig[0] ,即incoming的指向的集合中.
+// 当EnterJoint时,将老节点拷贝至outgoing中,变更节点拷贝至incoming中.
+// LeaveJoint时,删除下线的节点,合并在线的节点并合并至incoming中,完成节点变更过程.
 func incoming(voters quorum.JointConfig) quorum.MajorityConfig      { return voters[0] }
 func outgoing(voters quorum.JointConfig) quorum.MajorityConfig      { return voters[1] }
 func outgoingPtr(voters *quorum.JointConfig) *quorum.MajorityConfig { return &voters[1] }
@@ -148,7 +148,7 @@ func Describe(ccs ...pb.ConfChangeSingle) string {
 	return buf.String()
 }
 
-// checkInvariants 确保配置和进度是相互兼容的。
+// checkInvariants 确保配置和进度是相互兼容的.
 func checkInvariants(cfg tracker.Config, prs tracker.ProgressMap) error {
 	// cfg是深拷贝,prs是浅拷贝'
 	for _, ids := range []map[uint64]struct{}{
@@ -167,14 +167,14 @@ func checkInvariants(cfg tracker.Config, prs tracker.ProgressMap) error {
 	for id := range cfg.LearnersNext {
 		// 之前的旧配置中必须存在它
 		if _, ok := outgoing(cfg.Voters)[id]; !ok {
-			return fmt.Errorf("%d 是在LearnersNext中，但不是在Voters中。[1]", id)
+			return fmt.Errorf("%d 是在LearnersNext中,但不是在Voters中.[1]", id)
 		}
 		// 是不是已经被标记位了learner
 		if prs[id].IsLearner {
-			return fmt.Errorf("%d 是在LearnersNext中，但已经被标记为learner。", id)
+			return fmt.Errorf("%d 是在LearnersNext中,但已经被标记为learner.", id)
 		}
 	}
-	// 反之，learner和投票者根本没有交集。
+	// 反之,learner和投票者根本没有交集.
 	for id := range cfg.Learners {
 		if _, ok := outgoing(cfg.Voters)[id]; ok {
 			return fmt.Errorf("%d 在 Learners 、 Voters[1]", id)
@@ -188,7 +188,7 @@ func checkInvariants(cfg tracker.Config, prs tracker.ProgressMap) error {
 	}
 
 	if !joint(cfg) { // 没有进入共识状态
-		// 我们强制规定，空map是nil而不是0。
+		// 我们强制规定,空map是nil而不是0.
 		if outgoing(cfg.Voters) != nil {
 			return fmt.Errorf("cfg.Voters[1]必须是nil 当没有进入联合共识")
 		}
@@ -202,7 +202,7 @@ func checkInvariants(cfg tracker.Config, prs tracker.ProgressMap) error {
 	return nil
 }
 
-// checkAndCopy 复制跟踪器的配置和进度Map，并返回这些副本。
+// checkAndCopy 复制跟踪器的配置和进度Map,并返回这些副本.
 func (c Changer) checkAndCopy() (tracker.Config, tracker.ProgressMap, error) {
 	cfg := c.Tracker.Config.Clone() // 现有的集群配置
 	var _ tracker.ProgressMap = c.Tracker.Progress
@@ -217,7 +217,7 @@ func (c Changer) checkAndCopy() (tracker.Config, tracker.ProgressMap, error) {
 	return checkAndReturn(cfg, prs) // cfg是深拷贝,prs是浅拷贝;确保配置和进度是相互兼容的
 }
 
-// checkAndReturn 在输入上调用checkInvariants，并返回结果错误或输入。
+// checkAndReturn 在输入上调用checkInvariants,并返回结果错误或输入.
 func checkAndReturn(cfg tracker.Config, prs tracker.ProgressMap) (tracker.Config, tracker.ProgressMap, error) {
 	// cfg是深拷贝,prs是浅拷贝
 	if err := checkInvariants(cfg, prs); err != nil { // 确保配置和进度是相互兼容的
@@ -250,7 +250,7 @@ func (c Changer) initProgress(cfg *tracker.Config, prs tracker.ProgressMap, id u
 	}
 }
 
-// nilAwareAdd 填充一个map条目，如果需要的话，创建map
+// nilAwareAdd 填充一个map条目,如果需要的话,创建map
 func nilAwareAdd(m *map[uint64]struct{}, id uint64) {
 	if *m == nil {
 		*m = map[uint64]struct{}{}
@@ -258,7 +258,7 @@ func nilAwareAdd(m *map[uint64]struct{}, id uint64) {
 	(*m)[id] = struct{}{}
 }
 
-// nilAwareDelete 从一个map中删除，如果之后map是空的，则将其置空。
+// nilAwareDelete 从一个map中删除,如果之后map是空的,则将其置空.
 func nilAwareDelete(m *map[uint64]struct{}, id uint64) {
 	if *m == nil {
 		return
@@ -269,14 +269,14 @@ func nilAwareDelete(m *map[uint64]struct{}, id uint64) {
 	}
 }
 
-// err 返回零值和一个错误。
+// err 返回零值和一个错误.
 func (c Changer) err(err error) (tracker.Config, tracker.ProgressMap, error) {
 	return tracker.Config{}, nil, err
 }
 
-// makeVoter 增加或提升给定的ID，使其成为入选的多数人配置中的选民。
+// makeVoter 增加或提升给定的ID,使其成为入选的多数人配置中的选民.
 func (c Changer) makeVoter(cfg *tracker.Config, prs tracker.ProgressMap, id uint64) {
-	// cfg是深拷贝,prs是浅拷贝;获取当前的配置，确保配置和进度是相互兼容的
+	// cfg是深拷贝,prs是浅拷贝;获取当前的配置,确保配置和进度是相互兼容的
 	pr := prs[id]
 	if pr == nil {
 		// 添加节点
@@ -321,10 +321,10 @@ func (c Changer) makeLearner(cfg *tracker.Config, prs tracker.ProgressMap, id ui
 	// // 从 voters、learner、learnersNext 中删除
 	c.remove(cfg, prs, id) // 从 voter[0]、learner、learnersNext 中删除
 	prs[id] = pr
-	//  如果我们不能直接将learner添加到learner中，也就是说，该peer在veto[1]中,是降级来的
-	//  则使用 LearnersNext。
-	//  在LeaveJoint()中，LearnersNext将被转变成一个learner。
-	//  否则，立即添加一个普通的learner。
+	//  如果我们不能直接将learner添加到learner中,也就是说,该peer在veto[1]中,是降级来的
+	//  则使用 LearnersNext.
+	//  在LeaveJoint()中,LearnersNext将被转变成一个learner.
+	//  否则,立即添加一个普通的learner.
 	if _, onRight := outgoing(cfg.Voters)[id]; onRight {
 		// 降级
 		nilAwareAdd(&cfg.LearnersNext, id)
@@ -335,11 +335,11 @@ func (c Changer) makeLearner(cfg *tracker.Config, prs tracker.ProgressMap, id ui
 	}
 }
 
-// apply 一个对配置的改变。按照惯例，对voter的更改总是对 Voters[0] 进行。
+// apply 一个对配置的改变.按照惯例,对voter的更改总是对 Voters[0] 进行.
 //  [变更节点集合,老节点集合] 或 [节点、nil]
-//  Voters[1]要么是空的，要么在联合状态下保留传出的多数配置。
+//  Voters[1]要么是空的,要么在联合状态下保留传出的多数配置.
 func (c Changer) apply(cfg *tracker.Config, prs tracker.ProgressMap, ccs ...pb.ConfChangeSingle) error {
-	// cfg是深拷贝,prs是浅拷贝;获取当前的配置，确保配置和进度是相互兼容的
+	// cfg是深拷贝,prs是浅拷贝;获取当前的配置,确保配置和进度是相互兼容的
 	for _, cc := range ccs {
 		if cc.NodeID == 0 {
 			continue
@@ -382,10 +382,10 @@ func symdiff(l, r map[uint64]struct{}) int {
 	return n
 }
 
-// Simple 进行一系列的配置改变，（总的来说）使传入的多数配置Voters[0]最多变化一个。
-// 如果不是这样，如果响应数:quorum为零，或者如果配置处于联合状态（即如果有一个传出的配置），这个方法将返回一个错误。
+// Simple 进行一系列的配置改变,（总的来说）使传入的多数配置Voters[0]最多变化一个.
+// 如果不是这样,如果响应数:quorum为零,或者如果配置处于联合状态（即如果有一个传出的配置）,这个方法将返回一个错误.
 func (c Changer) Simple(ccs ...pb.ConfChangeSingle) (tracker.Config, tracker.ProgressMap, error) {
-	cfg, prs, err := c.checkAndCopy() // cfg是深拷贝,prs是浅拷贝;获取当前的配置，确保配置和进度是相互兼容的
+	cfg, prs, err := c.checkAndCopy() // cfg是深拷贝,prs是浅拷贝;获取当前的配置,确保配置和进度是相互兼容的
 	if err != nil {
 		return c.err(err)
 	}

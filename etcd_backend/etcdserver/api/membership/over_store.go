@@ -107,7 +107,7 @@ func unsafeSaveMemberToStore(lg *zap.Logger, s v2store.Store, m *Member) error {
 	if err != nil {
 		lg.Panic("序列化失败raftAttributes", zap.Error(err))
 	}
-	_ = computeMemberId                                        // id 由这个函数生成，需要 peerURLs clusterName 创建时间,创建时间一般为nil
+	_ = computeMemberId                                        // id 由这个函数生成,需要 peerURLs clusterName 创建时间,创建时间一般为nil
 	p := path.Join(MemberStoreKey(m.ID), raftAttributesSuffix) // /0/members/123/raftAttributes
 	_, err = s.Create(p, false, string(b),                     // ✅
 		false, v2store.TTLOptionSet{ExpireTime: v2store.Permanent})
@@ -163,7 +163,7 @@ func RemovedMemberStoreKey(id types.ID) string {
 	return path.Join(storeRemovedMembersPrefix, id.String())
 }
 
-// 移除节点，并添加到removed_member
+// 移除节点,并添加到removed_member
 func unsafeDeleteMemberFromStore(s v2store.Store, id types.ID) error {
 	if _, err := s.Delete(MemberStoreKey(id), true, true); err != nil {
 		return err

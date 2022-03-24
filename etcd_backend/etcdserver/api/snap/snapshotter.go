@@ -43,7 +43,7 @@ var (
 	ErrCRCMismatch   = errors.New("snap: crc mismatch")
 	crcTable         = crc32.MakeTable(crc32.Castagnoli)
 
-	// 一个可以出现在snap文件夹中的有效文件的映射。
+	// 一个可以出现在snap文件夹中的有效文件的映射.
 	validFiles = map[string]bool{
 		"db": true,
 	}
@@ -108,7 +108,7 @@ func (s *Snapshotter) LoadNewestAvailable(walSnaps []walpb.Snapshot) (*raftpb.Sn
 	return s.loadMatching(func(snapshot *raftpb.Snapshot) bool {
 		m := snapshot.Metadata
 		// 倒着匹配
-		// 存在的、wal记录的，寻找最新的快照
+		// 存在的、wal记录的,寻找最新的快照
 		for i := len(walSnaps) - 1; i >= 0; i-- {
 			if m.Term == walSnaps[i].Term && m.Index == walSnaps[i].Index {
 				return true
@@ -209,7 +209,7 @@ func Read(lg *zap.Logger, snapname string) (*raftpb.Snapshot, error) {
 	return &snap, nil
 }
 
-// snapNames 返回快照的文件名，按逻辑时间顺序（从最新到最旧）。如果没有可用的快照，将返回ErrNoSnapshot。
+// snapNames 返回快照的文件名,按逻辑时间顺序（从最新到最旧）.如果没有可用的快照,将返回ErrNoSnapshot.
 func (s *Snapshotter) snapNames() ([]string, error) {
 	dir, err := os.Open(s.dir) // ./raftexample/db/raftexample-1-snap
 	if err != nil {
@@ -239,7 +239,7 @@ func checkSuffix(lg *zap.Logger, names []string) []string {
 		if strings.HasSuffix(names[i], snapSuffix) { //  ".snap"
 			snaps = append(snaps, names[i])
 		} else {
-			// 一个可以出现在snap文件夹中的有效文件的映射。
+			// 一个可以出现在snap文件夹中的有效文件的映射.
 			if _, ok := validFiles[names[i]]; !ok {
 				if lg != nil {
 					lg.Warn("发现了未期待的文件在快照目录下; 跳过", zap.String("path", names[i]))

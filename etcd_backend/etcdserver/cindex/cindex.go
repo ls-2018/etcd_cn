@@ -27,7 +27,7 @@ type Backend interface {
 	BatchTx() backend.BatchTx
 }
 
-// ConsistentIndexer 用于处理boltdb和raftlog之间的幂等性。
+// ConsistentIndexer 用于处理boltdb和raftlog之间的幂等性.
 type ConsistentIndexer interface {
 	ConsistentIndex() uint64                  // 返回当前执行条目的一致索引
 	SetConsistentIndex(v uint64, term uint64) // 设置当前执行条目的一致索引
@@ -35,9 +35,9 @@ type ConsistentIndexer interface {
 	SetBackend(be Backend)                    // 为ConsistentIndexer设置可用的backend.BatchTx.
 }
 
-// 当boltdb用作状态机的时候，wal和boltdb作为两个不同的实体，很有可能存在不一致的情况。
-// 所以etcd在boltdb中存储一条记录consistent-index，来代表已经apply到bolt-db上成功的log index，
-// 这样当根据wal恢复bolt-db的时候，就可以判断log index是不是已经被apply过。
+// 当boltdb用作状态机的时候,wal和boltdb作为两个不同的实体,很有可能存在不一致的情况.
+// 所以etcd在boltdb中存储一条记录consistent-index,来代表已经apply到bolt-db上成功的log index,
+// 这样当根据wal恢复bolt-db的时候,就可以判断log index是不是已经被apply过.
 
 // consistentIndex implements the ConsistentIndexer interface.
 type consistentIndex struct {
@@ -170,7 +170,7 @@ func unsafeReadConsistentIndex(tx backend.ReadTx) (uint64, uint64) {
 	return v, t
 }
 
-// ReadConsistentIndex 从给定的tx中加载一致的索引和任期。如果没有找到数据，返回0。
+// ReadConsistentIndex 从给定的tx中加载一致的索引和任期.如果没有找到数据,返回0.
 func ReadConsistentIndex(tx backend.ReadTx) (uint64, uint64) {
 	tx.Lock()
 	defer tx.Unlock()

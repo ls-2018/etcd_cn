@@ -39,9 +39,9 @@ func newSnapshotHandler(t *Transport, r Raft, snapshotter *snap.Snapshotter, cid
 }
 
 // ServeHTTP serves HTTP request to receive and process snapshot message.
-// 如果请求发送者在没有关闭基础TCP连接的情况下死亡。处理程序将继续等待请求主体，直到TCP keepalive发现连接在几分钟后被破坏。
-// 这是可接受的，因为通过其他 TCP 连接发送的快照信息仍然可以被接收和处理。接收和处理。
-// 2. 这种情况应该很少发生，所以不做进一步优化。
+// 如果请求发送者在没有关闭基础TCP连接的情况下死亡.处理程序将继续等待请求主体,直到TCP keepalive发现连接在几分钟后被破坏.
+// 这是可接受的,因为通过其他 TCP 连接发送的快照信息仍然可以被接收和处理.接收和处理.
+// 2. 这种情况应该很少发生,所以不做进一步优化.
 func (h *snapshotHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 
@@ -61,7 +61,7 @@ func (h *snapshotHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	addRemoteFromRequest(h.tr, r)
 
 	dec := &messageDecoder{r: r.Body}
-	// 快照可能超过512MB。
+	// 快照可能超过512MB.
 	m, err := dec.decodeLimit(snapshotLimitByte) // 8字节[消息长度]+消息+snap
 	from := types.ID(m.From).String()
 	if err != nil {

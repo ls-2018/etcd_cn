@@ -16,7 +16,7 @@ package raft
 
 import pb "github.com/ls-2018/etcd_cn/raft/raftpb"
 
-// 使用内存数组维护其中所有的Entry记录,对于Leader节点而言,它维护了客户端请求对应的Entry记录；
+// 使用内存数组维护其中所有的Entry记录,对于Leader节点而言,它维护了客户端请求对应的Entry记录;
 // 对于Follower节点而言,它维护的是从Leader节点复制来的Entry记录.
 // 无论是Leader节点还是Follower节点,对于刚刚接收到的Entry记录首先都会被存储在unstable中.
 // 然后按照Raft协议将unstable中缓存的这些Entry记录交给上层模块进行处理,上层模块会将这些Entry记录发送到集群其他节点或进行保存（写入Storage中）.

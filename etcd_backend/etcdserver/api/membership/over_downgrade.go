@@ -21,7 +21,7 @@ import (
 )
 
 type DowngradeInfo struct {
-	TargetVersion string `json:"target-version"` // 是目标降级版本，如果集群不在降级中，targetVersion将是一个空字符串。
+	TargetVersion string `json:"target-version"` // 是目标降级版本,如果集群不在降级中,targetVersion将是一个空字符串.
 	Enabled       bool   `json:"enabled"`        // 表示集群是否启用了降级功能
 }
 
@@ -29,12 +29,12 @@ func (d *DowngradeInfo) GetTargetVersion() *semver.Version {
 	return semver.Must(semver.NewVersion(d.TargetVersion))
 }
 
-// mustDetectDowngrade 检测版本降级。
+// mustDetectDowngrade 检测版本降级.
 func mustDetectDowngrade(lg *zap.Logger, cv *semver.Version, d *DowngradeInfo) {
 	lv := semver.Must(semver.NewVersion(version.Version))
 	lv = &semver.Version{Major: lv.Major, Minor: lv.Minor}
 
-	// 如果集群启用了降级功能，请对照降级目标版本检查本地版本。
+	// 如果集群启用了降级功能,请对照降级目标版本检查本地版本.
 	if d != nil && d.Enabled && d.TargetVersion != "" {
 		if lv.Equal(*d.GetTargetVersion()) {
 			if cv != nil {
@@ -42,10 +42,10 @@ func mustDetectDowngrade(lg *zap.Logger, cv *semver.Version, d *DowngradeInfo) {
 			}
 			return
 		}
-		lg.Fatal("无效的降级;当降级被启用时，etcd版本不允许加入", zap.String("current-etcd-version", version.Version), zap.String("target-cluster-version", d.TargetVersion))
+		lg.Fatal("无效的降级;当降级被启用时,etcd版本不允许加入", zap.String("current-etcd-version", version.Version), zap.String("target-cluster-version", d.TargetVersion))
 	}
 
-	// 如果集群禁止降级，则根据确定的集群版本检查本地版本，如果本地版本不低于集群版本，则验证通过
+	// 如果集群禁止降级,则根据确定的集群版本检查本地版本,如果本地版本不低于集群版本,则验证通过
 	if cv != nil && lv.LessThan(*cv) {
 		lg.Fatal("无效的降级;etcd版本低于确定的集群版本", zap.String("current-etcd-version", version.Version), zap.String("determined-cluster-version", version.Cluster(cv.String())))
 	}

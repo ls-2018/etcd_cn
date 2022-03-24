@@ -157,7 +157,7 @@ func (c *ServerConfig) VerifyBootstrap() error {
 	return nil
 }
 
-// VerifyJoinExisting  检查加入现有集群的初始配置，并对不应该发生的事情返回一个错误。
+// VerifyJoinExisting  检查加入现有集群的初始配置,并对不应该发生的事情返回一个错误.
 func (c *ServerConfig) VerifyJoinExisting() error {
 	if err := c.hasLocalMember(); err != nil {
 		return err
@@ -166,7 +166,7 @@ func (c *ServerConfig) VerifyJoinExisting() error {
 		return fmt.Errorf("初始集群 %s 有重复的地址", c.InitialPeerURLsMap)
 	}
 	if c.DiscoveryURL != "" {
-		return fmt.Errorf("discovery URL 不应该设置，当加入一个存在的初始集群")
+		return fmt.Errorf("discovery URL 不应该设置,当加入一个存在的初始集群")
 	}
 	return nil
 }

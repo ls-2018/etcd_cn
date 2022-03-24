@@ -79,7 +79,7 @@ func (rc *raftNode) saveSnap(snap raftpb.Snapshot) error {
 		Term:      snap.Metadata.Term,
 		ConfState: &snap.Metadata.ConfState,
 	}
-	// 在把快照写到wal之前保存快照文件。这使得快照文件有可能成为孤儿，但可以防止一个WAL快照条目没有相应的快照文件。
+	// 在把快照写到wal之前保存快照文件.这使得快照文件有可能成为孤儿,但可以防止一个WAL快照条目没有相应的快照文件.
 	if err := rc.snapshotter.SaveSnap(snap); err != nil {
 		return err
 	}
@@ -416,7 +416,7 @@ func (rc *raftNode) writeError(err error) {
 	rc.node.Stop()
 }
 
-// openWAL 返回一个准备读取的WAL。
+// openWAL 返回一个准备读取的WAL.
 func (rc *raftNode) openWAL(snapshot *raftpb.Snapshot) *wal.WAL {
 	if !wal.Exist(rc.waldir) {
 		if err := os.Mkdir(rc.waldir, 0o750); err != nil {
@@ -483,7 +483,7 @@ func (rc *raftNode) publishEntries(ents []raftpb.Entry) (<-chan struct{}, bool) 
 				}
 			case raftpb.ConfChangeRemoveNode:
 				if cc.NodeID == uint64(rc.id) {
-					log.Println("我已经被移出集群了!关闭。")
+					log.Println("我已经被移出集群了!关闭.")
 					return nil, false
 				}
 				rc.transport.RemovePeer(types.ID(cc.NodeID))
@@ -499,7 +499,7 @@ func (rc *raftNode) publishEntries(ents []raftpb.Entry) (<-chan struct{}, bool) 
 			return nil, false
 		}
 	}
-	// 提交后，更新appliedIndex
+	// 提交后,更新appliedIndex
 	rc.appliedIndex = ents[len(ents)-1].Index
 	return applyDoneC, true
 }

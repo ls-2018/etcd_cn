@@ -27,12 +27,12 @@ import (
 
 // walPageBytes
 const walPageBytes = 8 * minSectorSize // 8字节对齐
-// encoder模块把会增量的计算crc和数据一起写入到wal文件中。 下面为encoder数据结构undefined
+// encoder模块把会增量的计算crc和数据一起写入到wal文件中. 下面为encoder数据结构undefined
 type encoder struct {
 	mu        sync.Mutex
 	bw        *ioutil.PageWriter
 	crc       hash.Hash32
-	buf       []byte // 缓存空间，默认为1M，降低数据分配的压力undefined,序列化时使用
+	buf       []byte // 缓存空间,默认为1M,降低数据分配的压力undefined,序列化时使用
 	uint64buf []byte // 将数据变成特定格式的数据,大端、小端
 }
 

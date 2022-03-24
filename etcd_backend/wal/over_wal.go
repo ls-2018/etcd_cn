@@ -42,7 +42,7 @@ const (
 	stateType                                 // 存放的是集群当前的状态HardState,如果集群的状态有变化,就会在WAL中存放一个新集群状态数据.里面包括当前Term,当前竞选者、当前已经commit的日志.
 	crcType                                   // 存放crc校验字段.读取数据时,会根据这个记录里的crc字段对前面已经读出来的数据进行校验.
 	snapshotType                              // 存放snapshot的日志点.包括日志的Index和Term.
-	warnSyncDuration = time.Second            // 是指在记录警告之前分配给fsync的时间量。
+	warnSyncDuration = time.Second            // 是指在记录警告之前分配给fsync的时间量.
 )
 
 var (
@@ -74,7 +74,7 @@ var (
 type WAL struct {
 	lg           *zap.Logger
 	dir          string           // wal文件的存储目录
-	dirFile      *os.File         // 是一个用于重命名时同步的wal目录的fd。
+	dirFile      *os.File         // 是一个用于重命名时同步的wal目录的fd.
 	metadata     []byte           // wal文件构建后会写的第一个metadata记录
 	state        raftpb.HardState // wal文件构建后会写的第一个state记录
 	start        walpb.Snapshot   // wal开始的snapshot,代表读取wal时从这个snapshot的记录之后开始
@@ -182,7 +182,7 @@ func Create(lg *zap.Logger, dirpath string, metadata []byte) (*WAL, error) {
 		}
 	}()
 
-	// 目录被重新命名；同步父目录以保持重命名。
+	// 目录被重新命名;同步父目录以保持重命名.
 	pdir, perr := fileutil.OpenDir(filepath.Dir(w.dir)) // ./raftexample/db
 	if perr != nil {
 		lg.Warn(
@@ -248,8 +248,8 @@ func (w *WAL) renameWAL(tmpdirpath string) (*WAL, error) {
 	if err := os.RemoveAll(w.dir); err != nil { // 删除 raftexample/db/raftexample-1
 		return nil, err
 	}
-	// 在非Windows平台上，重命名时要按住锁。释放锁并试图快速重新获得它可能是不稳定的，因为在此过程中，进程可能会分叉产生一个进程。
-	// Go运行时将fds设置为执行时关闭，但在分叉和执行之间存在一个窗口，另一个进程持有锁。
+	// 在非Windows平台上,重命名时要按住锁.释放锁并试图快速重新获得它可能是不稳定的,因为在此过程中,进程可能会分叉产生一个进程.
+	// Go运行时将fds设置为执行时关闭,但在分叉和执行之间存在一个窗口,另一个进程持有锁.
 	if err := os.Rename(tmpdirpath, w.dir); err != nil { // raftexample/db/raftexample-1.tmp ---> raftexample/db/raftexample-1
 		if _, ok := err.(*os.LinkError); ok {
 			return w.renameWALUnlock(tmpdirpath)
@@ -288,8 +288,8 @@ func (w *WAL) renameWALUnlock(tmpdirpath string) (*WAL, error) {
 	return newWAL, nil
 }
 
-// Open 在给定的快照处打开WAL。这个快照应该是先前保存在WAL中的，否则下面的ReadAll会失败。
-// 返回的WAL已经准备好读取，第一条记录将是给定sap之后的那条。在读出所有之前的记录之前，不能对WAL进行追加。
+// Open 在给定的快照处打开WAL.这个快照应该是先前保存在WAL中的,否则下面的ReadAll会失败.
+// 返回的WAL已经准备好读取,第一条记录将是给定sap之后的那条.在读出所有之前的记录之前,不能对WAL进行追加.
 func Open(lg *zap.Logger, dirpath string, snap walpb.Snapshot) (*WAL, error) {
 	w, err := openAtIndex(lg, dirpath, snap, true)
 	if err != nil {
@@ -333,7 +333,7 @@ func openAtIndex(lg *zap.Logger, dirpath string, snap walpb.Snapshot, write bool
 	}
 
 	if write { // true
-		// 写入重用读出的文件描述符；不要关闭，以便
+		// 写入重用读出的文件描述符;不要关闭,以便
 		w.readClose = nil
 		if _, _, err := parseWALName(filepath.Base(w.tail().Name())); err != nil {
 			closer()
@@ -409,14 +409,14 @@ func (w *WAL) ReadAll() (metadata []byte, state raftpb.HardState, ents []raftpb.
 			e := mustUnmarshalEntry(rec.Data)
 			// 0 <= e.Index-w.start.Index - 1 < len(ents)
 			if e.Index > w.start.Index {
-				// 防止 "panic：运行时错误：切片边界超出范围[：13038096702221461992]，容量为0"
+				// 防止 "panic：运行时错误：切片边界超出范围[：13038096702221461992],容量为0"
 				up := e.Index - w.start.Index - 1 //
 				if up > uint64(len(ents)) {
 					// 在调用append前返回错误导致运行时恐慌
 					return nil, state, nil, ErrSliceOutOfRange
 				}
-				// 下面这一行有可能覆盖一些 "未提交 "的条目。
-				// wal只关注写入日志，不会校验日志的index是否重复，
+				// 下面这一行有可能覆盖一些 "未提交 "的条目.
+				// wal只关注写入日志,不会校验日志的index是否重复,
 				ents = append(ents[:up], e)
 			}
 			w.enti = e.Index // 保存到wal的最新日志索引
@@ -465,7 +465,7 @@ func (w *WAL) ReadAll() (metadata []byte, state raftpb.HardState, ents []raftpb.
 			return nil, state, nil, err
 		}
 	default:
-		// 如果WAL是以写模式打开的，我们必须读取所有的条目。
+		// 如果WAL是以写模式打开的,我们必须读取所有的条目.
 		if err != io.EOF {
 			state.Reset()
 			return nil, state, nil, err
@@ -494,7 +494,7 @@ func (w *WAL) ReadAll() (metadata []byte, state raftpb.HardState, ents []raftpb.
 	w.metadata = metadata
 
 	if w.tail() != nil { // wal文件
-		// 创建编码器（与解码器连锁crc），启用追加功能
+		// 创建编码器（与解码器连锁crc）,启用追加功能
 		w.encoder, err = newFileEncoder(w.tail().File, w.decoder.lastCRC())
 		if err != nil {
 			return
@@ -505,7 +505,7 @@ func (w *WAL) ReadAll() (metadata []byte, state raftpb.HardState, ents []raftpb.
 	return metadata, state, ents, err
 }
 
-// ValidSnapshotEntries 返回给定目录下wal日志中的所有有效快照条目。如果快照条目的索引小于或等于最近提交的hardstate，则为有效。
+// ValidSnapshotEntries 返回给定目录下wal日志中的所有有效快照条目.如果快照条目的索引小于或等于最近提交的hardstate,则为有效.
 func ValidSnapshotEntries(lg *zap.Logger, walDir string) ([]walpb.Snapshot, error) {
 	var snaps []walpb.Snapshot
 	var state raftpb.HardState
@@ -517,7 +517,7 @@ func ValidSnapshotEntries(lg *zap.Logger, walDir string) ([]walpb.Snapshot, erro
 		return nil, err
 	}
 
-	// 在读模式下打开WAL文件，这样，当在其他地方以写模式打开同样的WAL时，就不会有冲突。
+	// 在读模式下打开WAL文件,这样,当在其他地方以写模式打开同样的WAL时,就不会有冲突.
 	rs, _, closer, err := openWALFiles(lg, walDir, names, 0, false)
 	if err != nil {
 		return nil, err
@@ -746,7 +746,7 @@ func (w *WAL) sync() error {
 	}
 
 	start := time.Now()
-	// Fdatasync类似于fsync()，但不会刷新修改后的元数据，除非为了允许正确处理后续的数据检索而需要这些元数据。
+	// Fdatasync类似于fsync(),但不会刷新修改后的元数据,除非为了允许正确处理后续的数据检索而需要这些元数据.
 	err := fileutil.Fdatasync(w.tail().File)
 
 	took := time.Since(start)
@@ -761,8 +761,8 @@ func (w *WAL) Sync() error {
 	return w.sync()
 }
 
-// ReleaseLockTo 释放锁，这些锁的索引比给定的索引小，但其中最大的一个除外。
-// 例如，如果WAL持有锁1,2,3,4,5,6，ReleaseLockTo(4)将释放 锁1,2，但保留3。ReleaseLockTo(5)将释放1,2,3，但保留4。
+// ReleaseLockTo 释放锁,这些锁的索引比给定的索引小,但其中最大的一个除外.
+// 例如,如果WAL持有锁1,2,3,4,5,6,ReleaseLockTo(4)将释放 锁1,2,但保留3.ReleaseLockTo(5)将释放1,2,3,但保留4.
 func (w *WAL) ReleaseLockTo(index uint64) error {
 	w.mu.Lock()
 	defer w.mu.Unlock()

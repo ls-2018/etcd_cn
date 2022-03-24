@@ -42,7 +42,7 @@ func newWatchHub(capacity int) *watcherHub {
 	}
 }
 
-// Watch 返回一个Watcher。
+// Watch 返回一个Watcher.
 func (wh *watcherHub) watch(key string, recursive, stream bool, index, storeIndex uint64) (Watcher, *v2error.Error) {
 	event, err := wh.EventHistory.scan(key, recursive, index)
 	if err != nil {
@@ -101,7 +101,7 @@ func (wh *watcherHub) add(e *Event) {
 	wh.EventHistory.addEvent(e)
 }
 
-// notify 接收一个事件，通知watcher
+// notify 接收一个事件,通知watcher
 func (wh *watcherHub) notify(e *Event) {
 	e = wh.EventHistory.addEvent(e)
 	segments := strings.Split(e.NodeExtern.Key, "/") //  /0/members/8e9e05c52164694d/raftAttributes
@@ -161,7 +161,7 @@ func (wh *watcherHub) clone() *watcherHub {
 	}
 }
 
-// isHidden 检查关键路径是否被认为是隐藏的观察路径，即最后一个元素是隐藏的，或者它在一个隐藏的目录中。
+// isHidden 检查关键路径是否被认为是隐藏的观察路径,即最后一个元素是隐藏的,或者它在一个隐藏的目录中.
 func isHidden(watchPath, keyPath string) bool {
 	if len(watchPath) > len(keyPath) {
 		return false

@@ -52,7 +52,7 @@ func newKVStore(snapshotter *snap.Snapshotter, proposeC chan<- string, commitC <
 			log.Panic(err)
 		}
 	}
-	// 从raft读取提交到kvStore映射，直到错误
+	// 从raft读取提交到kvStore映射,直到错误
 	go s.readCommits(commitC, errorC)
 	return s
 }

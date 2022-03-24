@@ -6,7 +6,6 @@ package leasepb
 import (
 	"encoding/json"
 	fmt "fmt"
-	io "io"
 	math "math"
 	math_bits "math/bits"
 
@@ -45,37 +44,6 @@ func (*Lease) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3dd57e402472b33a, []int{0}
 }
 
-func (m *Lease) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-
-func (m *Lease) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_Lease.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-
-func (m *Lease) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Lease.Merge(m, src)
-}
-
-func (m *Lease) XXX_Size() int {
-	return m.Size()
-}
-
-func (m *Lease) XXX_DiscardUnknown() {
-	xxx_messageInfo_Lease.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_Lease proto.InternalMessageInfo
-
 type LeaseInternalRequest struct {
 	LeaseTimeToLiveRequest *etcdserverpb.LeaseTimeToLiveRequest `protobuf:"bytes,1,opt,name=LeaseTimeToLiveRequest,proto3" json:"LeaseTimeToLiveRequest,omitempty"`
 	XXX_NoUnkeyedLiteral   struct{}                             `json:"-"`
@@ -90,37 +58,6 @@ func (*LeaseInternalRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3dd57e402472b33a, []int{1}
 }
 
-func (m *LeaseInternalRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-
-func (m *LeaseInternalRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_LeaseInternalRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-
-func (m *LeaseInternalRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_LeaseInternalRequest.Merge(m, src)
-}
-
-func (m *LeaseInternalRequest) XXX_Size() int {
-	return m.Size()
-}
-
-func (m *LeaseInternalRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_LeaseInternalRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_LeaseInternalRequest proto.InternalMessageInfo
-
 type LeaseInternalResponse struct {
 	LeaseTimeToLiveResponse *etcdserverpb.LeaseTimeToLiveResponse `protobuf:"bytes,1,opt,name=LeaseTimeToLiveResponse,proto3" json:"LeaseTimeToLiveResponse,omitempty"`
 	XXX_NoUnkeyedLiteral    struct{}                              `json:"-"`
@@ -134,37 +71,6 @@ func (*LeaseInternalResponse) ProtoMessage()    {}
 func (*LeaseInternalResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3dd57e402472b33a, []int{2}
 }
-
-func (m *LeaseInternalResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-
-func (m *LeaseInternalResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_LeaseInternalResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-
-func (m *LeaseInternalResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_LeaseInternalResponse.Merge(m, src)
-}
-
-func (m *LeaseInternalResponse) XXX_Size() int {
-	return m.Size()
-}
-
-func (m *LeaseInternalResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_LeaseInternalResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_LeaseInternalResponse proto.InternalMessageInfo
 
 func init() {
 	proto.RegisterType((*Lease)(nil), "leasepb.Lease")
@@ -198,115 +104,14 @@ func (m *Lease) Marshal() (dAtA []byte, err error) {
 	return json.Marshal(m)
 }
 
-func (m *Lease) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *Lease) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.XXX_unrecognized != nil {
-		i -= len(m.XXX_unrecognized)
-		copy(dAtA[i:], m.XXX_unrecognized)
-	}
-	if m.RemainingTTL != 0 {
-		i = encodeVarintLease(dAtA, i, uint64(m.RemainingTTL))
-		i--
-		dAtA[i] = 0x18
-	}
-	if m.TTL != 0 {
-		i = encodeVarintLease(dAtA, i, uint64(m.TTL))
-		i--
-		dAtA[i] = 0x10
-	}
-	if m.ID != 0 {
-		i = encodeVarintLease(dAtA, i, uint64(m.ID))
-		i--
-		dAtA[i] = 0x8
-	}
-	return len(dAtA) - i, nil
-}
-
 func (m *LeaseInternalRequest) Marshal() (dAtA []byte, err error) {
 	return json.Marshal(m)
-}
-
-func (m *LeaseInternalRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *LeaseInternalRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.XXX_unrecognized != nil {
-		i -= len(m.XXX_unrecognized)
-		copy(dAtA[i:], m.XXX_unrecognized)
-	}
-	if m.LeaseTimeToLiveRequest != nil {
-		{
-			size, err := m.LeaseTimeToLiveRequest.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintLease(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
 }
 
 func (m *LeaseInternalResponse) Marshal() (dAtA []byte, err error) {
 	return json.Marshal(m)
 }
 
-func (m *LeaseInternalResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *LeaseInternalResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.XXX_unrecognized != nil {
-		i -= len(m.XXX_unrecognized)
-		copy(dAtA[i:], m.XXX_unrecognized)
-	}
-	if m.LeaseTimeToLiveResponse != nil {
-		{
-			size, err := m.LeaseTimeToLiveResponse.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintLease(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func encodeVarintLease(dAtA []byte, offset int, v uint64) int {
-	offset -= sovLease(v)
-	base := offset
-	for v >= 1<<7 {
-		dAtA[offset] = uint8(v&0x7f | 0x80)
-		v >>= 7
-		offset++
-	}
-	dAtA[offset] = uint8(v)
-	return base
-}
 
 func (m *Lease) Size() (n int) {
 	if m == nil {
@@ -365,9 +170,6 @@ func sovLease(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
 
-func sozLease(x uint64) (n int) {
-	return sovLease(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
 
 func (m *Lease) Unmarshal(dAtA []byte) error {
 	return json.Unmarshal(dAtA, m)
@@ -381,84 +183,6 @@ func (m *LeaseInternalResponse) Unmarshal(dAtA []byte) error {
 	return json.Unmarshal(dAtA, m)
 }
 
-func skipLease(dAtA []byte) (n int, err error) {
-	l := len(dAtA)
-	iNdEx := 0
-	depth := 0
-	for iNdEx < l {
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return 0, ErrIntOverflowLease
-			}
-			if iNdEx >= l {
-				return 0, io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		wireType := int(wire & 0x7)
-		switch wireType {
-		case 0:
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return 0, ErrIntOverflowLease
-				}
-				if iNdEx >= l {
-					return 0, io.ErrUnexpectedEOF
-				}
-				iNdEx++
-				if dAtA[iNdEx-1] < 0x80 {
-					break
-				}
-			}
-		case 1:
-			iNdEx += 8
-		case 2:
-			var length int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return 0, ErrIntOverflowLease
-				}
-				if iNdEx >= l {
-					return 0, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				length |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if length < 0 {
-				return 0, ErrInvalidLengthLease
-			}
-			iNdEx += length
-		case 3:
-			depth++
-		case 4:
-			if depth == 0 {
-				return 0, ErrUnexpectedEndOfGroupLease
-			}
-			depth--
-		case 5:
-			iNdEx += 4
-		default:
-			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
-		}
-		if iNdEx < 0 {
-			return 0, ErrInvalidLengthLease
-		}
-		if depth == 0 {
-			return iNdEx, nil
-		}
-	}
-	return 0, io.ErrUnexpectedEOF
-}
 
 var (
 	ErrInvalidLengthLease        = fmt.Errorf("proto: negative length found during unmarshaling")

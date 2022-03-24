@@ -32,8 +32,8 @@ import (
 )
 
 var (
-	errMemberRemoved  = fmt.Errorf("the member has been permanently removed from the cluster")
-	errMemberNotFound = fmt.Errorf("member not found")
+	errMemberRemoved  = fmt.Errorf("成员已经从集群中移除")
+	errMemberNotFound = fmt.Errorf("成员没有找到")
 )
 
 // NewListener returns a listener for raft message transfer between peers.
@@ -138,6 +138,8 @@ func setPeerURLsHeader(req *http.Request, urls types.URLs) {
 	req.Header.Set("X-PeerURLs", strings.Join(peerURLs, ","))
 }
 
+//  -----------------------------------------  OVER ----------------------------------------------------
+
 // addRemoteFromRequest 根据http请求头添加一个远程对等体
 func addRemoteFromRequest(tr Transporter, r *http.Request) {
 	if from, err := types.IDFromString(r.Header.Get("X-Server-From")); err == nil {
@@ -146,8 +148,6 @@ func addRemoteFromRequest(tr Transporter, r *http.Request) {
 		}
 	}
 }
-
-//  -----------------------------------------  OVER ----------------------------------------------------
 
 func serverVersion(h http.Header) *semver.Version {
 	verStr := h.Get("X-Server-Version")

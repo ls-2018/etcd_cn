@@ -39,7 +39,7 @@ func (q *Queue) Enqueue(val string) error {
 }
 
 // Dequeue 处理的是一个先进新出的队列
-// 如果队列为空，Dequeue将会阻塞直到里面有值塞入
+// 如果队列为空,Dequeue将会阻塞直到里面有值塞入
 func (q *Queue) Dequeue() (string, error) {
 	// TODO: fewer round trips by fetching more than one key
 	resp, err := q.client.Get(q.ctx, q.keyPrefix, v3.WithFirstRev()...)

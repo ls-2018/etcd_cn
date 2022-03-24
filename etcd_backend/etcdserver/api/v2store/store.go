@@ -28,7 +28,7 @@ import (
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v2error"
 )
 
-// The 当store第一次被初始化时，要设置的默认版本。
+// The 当store第一次被初始化时,要设置的默认版本.
 const defaultVersion = 2
 
 var minExpireTime time.Time
@@ -38,12 +38,12 @@ func init() {
 }
 
 // Store Etcd是存储有如下特点：
-// 1、采用kv型数据存储，一般情况下比关系型数据库快。
-// 2、支持动态存储(内存)以及静态存储(磁盘)。
-// 3、分布式存储，可集成为多节点集群。
-// 4、存储方式，采用类似目录结构。
-// 1)只有叶子节点才能真正存储数据，相当于文件。
-// 2)叶子节点的父节点一定是目录，目录不能存储数据。
+// 1、采用kv型数据存储,一般情况下比关系型数据库快.
+// 2、支持动态存储(内存)以及静态存储(磁盘).
+// 3、分布式存储,可集成为多节点集群.
+// 4、存储方式,采用类似目录结构.
+// 1)只有叶子节点才能真正存储数据,相当于文件.
+// 2)叶子节点的父节点一定是目录,目录不能存储数据.
 type Store interface {
 	Version() int
 	Index() uint64
@@ -270,7 +270,7 @@ func (s *store) Delete(nodePath string, dir, recursive bool) (*Event, error) {
 	}
 
 	n, err := s.internalGet(nodePath)
-	if err != nil { // 如果该节点不存在，则返回错误
+	if err != nil { // 如果该节点不存在,则返回错误
 		return nil, err
 	}
 
@@ -586,7 +586,7 @@ func (s *store) internalCreate(nodePath string, dir bool, value string, unique, 
 
 	nodePath = path.Clean(path.Join("/", nodePath))
 
-	// 我们不允许用户修改"/"。
+	// 我们不允许用户修改"/".
 	if s.readonlySet.Contains(nodePath) {
 		return nil, v2error.NewError(v2error.EcodeRootROnly, "/", currIndex)
 	}
@@ -626,14 +626,14 @@ func (s *store) internalCreate(nodePath string, dir bool, value string, unique, 
 	if !dir {
 		valueCopy := value
 		eNode.Value = &valueCopy
-		// 生成新的树节点node，作为叶子节点
+		// 生成新的树节点node,作为叶子节点
 		n = newKV(s, nodePath, value, nextIndex, d, expireTime)
 	} else {
 		eNode.Dir = true
 		n = newDir(s, nodePath, nextIndex, d, expireTime)
 	}
 
-	if err := d.Add(n); err != nil { // 添加父节点中，即挂到map中
+	if err := d.Add(n); err != nil { // 添加父节点中,即挂到map中
 		return nil, err
 	}
 
@@ -659,7 +659,7 @@ func (s *store) Index() uint64 {
 	return s.CurrentIndex
 }
 
-// Get 返回一个get事件。如果递归为真，它将返回节点路径下的所有内容。如果sorted为真，它将按键对内容进行排序。
+// Get 返回一个get事件.如果递归为真,它将返回节点路径下的所有内容.如果sorted为真,它将按键对内容进行排序.
 func (s *store) Get(nodePath string, recursive, sorted bool) (*Event, error) {
 	// /0/members
 	var err *v2error.Error
@@ -683,12 +683,12 @@ func (s *store) Get(nodePath string, recursive, sorted bool) (*Event, error) {
 
 	e := newEvent(Get, nodePath, n.ModifiedIndex, n.CreatedIndex)
 	e.EtcdIndex = s.CurrentIndex                                 // 给事件分配索引
-	e.NodeExtern.loadInternalNode(n, recursive, sorted, s.clock) // 加载node，主要是获取node中数据
+	e.NodeExtern.loadInternalNode(n, recursive, sorted, s.clock) // 加载node,主要是获取node中数据
 
 	return e, nil
 }
 
-// Create 在nodePath创建节点。创建将有助于创建没有ttl的中间目录。如果该节点已经存在，创建将失败。 如果路径上的任何节点是一个文件，创建将失败。
+// Create 在nodePath创建节点.创建将有助于创建没有ttl的中间目录.如果该节点已经存在,创建将失败. 如果路径上的任何节点是一个文件,创建将失败.
 func (s *store) Create(nodePath string, dir bool, value string, unique bool, expireOpts TTLOptionSet) (*Event, error) {
 	var err *v2error.Error
 	s.worldLock.Lock()
@@ -715,7 +715,7 @@ func (s *store) Create(nodePath string, dir bool, value string, unique bool, exp
 	return e, nil
 }
 
-// InternalGet 获取给定nodePath的节点。
+// InternalGet 获取给定nodePath的节点.
 func (s *store) internalGet(nodePath string) (*node, *v2error.Error) {
 	nodePath = path.Clean(path.Join("/", nodePath)) // /0/members
 

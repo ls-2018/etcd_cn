@@ -30,7 +30,7 @@ import (
 
 var ErrNoDBSnapshot = errors.New("snap: 快照文件不存在")
 
-// SaveDBFrom 从给定的reader中保存数据库的快照。它保证 save操作是原子性的。
+// SaveDBFrom 从给定的reader中保存数据库的快照.它保证 save操作是原子性的.
 func (s *Snapshotter) SaveDBFrom(r io.Reader, id uint64) (int64, error) {
 	f, err := ioutil.TempFile(s.dir, "tmp")
 	if err != nil {
@@ -67,7 +67,7 @@ func (s *Snapshotter) SaveDBFrom(r io.Reader, id uint64) (int64, error) {
 	return n, nil
 }
 
-// DBFilePath 返回给定id的数据库快照的文件路径。如果该快照不存在，则返回错误。
+// DBFilePath 返回给定id的数据库快照的文件路径.如果该快照不存在,则返回错误.
 func (s *Snapshotter) DBFilePath(id uint64) (string, error) {
 	if _, err := fileutil.ReadDir(s.dir); err != nil {
 		return "", err

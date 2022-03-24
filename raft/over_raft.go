@@ -63,7 +63,7 @@ const (
 	campaignTransfer    CampaignType = "CampaignTransfer"    // 竞选类型：leader开始转移
 )
 
-// ErrProposalDropped 在某些情况下提案被忽略时返回，以便提案者可以得到通知并快速失败。
+// ErrProposalDropped 在某些情况下提案被忽略时返回,以便提案者可以得到通知并快速失败.
 var ErrProposalDropped = errors.New("撤销raft提案")
 
 type lockedRand struct {
@@ -121,30 +121,30 @@ type raft struct {
 	readOnly                 *readOnly
 }
 
-// 通知RawNode 应用程序已经应用并保存了最后一个Ready结果的进度。
+// 通知RawNode 应用程序已经应用并保存了最后一个Ready结果的进度.
 func (r *raft) advance(rd Ready) {
 	// 此时这些数据,应用到了wal,与应用程序状态机
 	r.reduceUncommittedSize(rd.CommittedEntries) // 日志committed以后应该从这里扣除
 
-	// 如果应用了条目(或快照)，则将游标更新为下一个Ready。请注意，如果当前的HardState包含一个新的Commit索引，
-	// 这并不意味着我们也应用了所有由于按大小提交分页而产生的新条目。
+	// 如果应用了条目(或快照),则将游标更新为下一个Ready.请注意,如果当前的HardState包含一个新的Commit索引,
+	// 这并不意味着我们也应用了所有由于按大小提交分页而产生的新条目.
 	if newApplied := rd.appliedCursor(); newApplied > 0 {
 		oldApplied := r.raftLog.applied
 		r.raftLog.appliedTo(newApplied)
 
 		if r.prstrack.Config.AutoLeave && oldApplied <= r.pendingConfIndex && newApplied >= r.pendingConfIndex && r.state == StateLeader {
-			// 如果当前配置(和最近的配置，至少在这个领导人的任期内)应该是自动离开的，现在启动它。我们使用一个空的数据，
-			// 它分解成一个空的ConfChangeV2，并且有一个好处，即appendEntry永远不会根据它的大小(寄存器为零)拒绝它。
+			// 如果当前配置(和最近的配置,至少在这个领导人的任期内)应该是自动离开的,现在启动它.我们使用一个空的数据,
+			// 它分解成一个空的ConfChangeV2,并且有一个好处,即appendEntry永远不会根据它的大小(寄存器为零)拒绝它.
 			ent := pb.Entry{
 				Type: pb.EntryConfChangeV2,
 				Data: nil,
 			}
-			// 这个建议是不可能被拒绝的。
+			// 这个建议是不可能被拒绝的.
 			if !r.appendEntry(ent) {
 				panic("拒绝不可拒绝的 auto-leaving ConfChangeV2")
 			}
 			r.pendingConfIndex = r.raftLog.lastIndex()
-			r.logger.Infof("启动自动过渡，脱离joint配置 %s", r.prstrack.Config)
+			r.logger.Infof("启动自动过渡,脱离joint配置 %s", r.prstrack.Config)
 		}
 	}
 	// 让unstable 更新数据
@@ -411,7 +411,7 @@ func (r *raft) maybeSendAppend(to uint64, sendIfEmpty bool) bool {
 		// 那么在这种情况下,leader改为发送最近一次快照给Follower,从而提高同步效率
 
 		if !pr.RecentActive {
-			r.logger.Debugf("忽略向%x发送快照，因为它最近没有活动。", to)
+			r.logger.Debugf("忽略向%x发送快照,因为它最近没有活动.", to)
 			return false
 		}
 		// 4. 改为发送Snapshot消息
@@ -419,7 +419,7 @@ func (r *raft) maybeSendAppend(to uint64, sendIfEmpty bool) bool {
 		snapshot, err := r.raftLog.snapshot()
 		if err != nil {
 			if err == ErrSnapshotTemporarilyUnavailable {
-				r.logger.Debugf("%x 由于快照暂时不可用，未能向%x发送快照。", r.id, to)
+				r.logger.Debugf("%x 由于快照暂时不可用,未能向%x发送快照.", r.id, to)
 				return false
 			}
 			panic(err)
@@ -542,11 +542,11 @@ func (r *raft) reset(term uint64) {
 	r.readOnly = newReadOnly(r.readOnly.option) // 只读请求的相关摄者
 }
 
-// 通过减少记录未提交的条目大小   来处理新提交的条目。
+// 通过减少记录未提交的条目大小   来处理新提交的条目.
 func (r *raft) reduceUncommittedSize(ents []pb.Entry) {
 	// 日志committed以后应该从这里扣除
 	if r.uncommittedSize == 0 {
-		// follower的快速路径，他们不跟踪或执行限制。
+		// follower的快速路径,他们不跟踪或执行限制.
 		return
 	}
 
@@ -555,7 +555,7 @@ func (r *raft) reduceUncommittedSize(ents []pb.Entry) {
 		s += uint64(PayloadSize(e))
 	}
 	if s > r.uncommittedSize {
-		// uncommittedSize可能会低估未提交的Raft日志的大小，但永远不会高估它。
+		// uncommittedSize可能会低估未提交的Raft日志的大小,但永远不会高估它.
 		r.uncommittedSize = 0
 	} else {
 		r.uncommittedSize -= s
@@ -633,7 +633,7 @@ func (r *raft) hup(t CampaignType) {
 // campaign 开始竞选
 func (r *raft) campaign(t CampaignType) {
 	if !r.roleUp() {
-		r.logger.Warningf("%x is 无法推动；不应该调用 campaign()", r.id)
+		r.logger.Warningf("%x is 无法推动;不应该调用 campaign()", r.id)
 	}
 	var term uint64
 	var voteMsg pb.MessageType
@@ -715,7 +715,7 @@ func (r *raft) tickElection() {
 	// roleUp返回是否可以被提升为leader
 	// pastElectionTimeout检测当前的候选超时间是否过期
 	if r.roleUp() && r.pastElectionTimeout() {
-		// 自己可以被promote & election timeout 超时了,规定时间没有听到心跳发起选举；发送MsgHup// 选举超时
+		// 自己可以被promote & election timeout 超时了,规定时间没有听到心跳发起选举;发送MsgHup// 选举超时
 		r.electionElapsed = 0                           // 避免两次计时器触发,仍然走这里
 		r.Step(pb.Message{From: r.id, Type: pb.MsgHup}) // 让自己选举
 	}

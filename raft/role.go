@@ -212,21 +212,21 @@ func stepLeader(r *raft, m pb.Message) error {
 				alreadyPending := r.pendingConfIndex > r.raftLog.applied // 是否已经apply了该配置变更
 				alreadyJoint := len(r.prstrack.Config.Voters[1]) > 0     // 判断第二个MajorityConfig:map[uint64]struct{} 有没有数据
 				wantsLeaveJoint := len(cc.AsV2().Changes) == 0           // 节点个数
-				// 首先切换到过渡形态，我们称之为联合共识;
-				// 一旦提交了联合共识，系统就会过渡到新的配置。联合共识结合了新旧配置。
+				// 首先切换到过渡形态,我们称之为联合共识;
+				// 一旦提交了联合共识,系统就会过渡到新的配置.联合共识结合了新旧配置.
 				var refused string
 				if alreadyPending {
-					refused = fmt.Sprintf("在索引%d处可能有未应用的conf变更（应用于%d）。", r.pendingConfIndex, r.raftLog.applied)
+					refused = fmt.Sprintf("在索引%d处可能有未应用的conf变更（应用于%d）.", r.pendingConfIndex, r.raftLog.applied)
 				} else if alreadyJoint && !wantsLeaveJoint {
 					refused = "必须先从联合配置中过渡出去"
 				} else if !alreadyJoint && wantsLeaveJoint {
-					refused = "不处于联合状态；拒绝空洞的改变"
+					refused = "不处于联合状态;拒绝空洞的改变"
 				}
 				// true, true
 				// false false
 				if refused != "" { // 忽略配置变更
-					// 如果发现当前是在joint consensus过程中，拒绝变更，直接将message type 变成普通的entry。
-					// 处理完毕后，会等待将该消息分发。
+					// 如果发现当前是在joint consensus过程中,拒绝变更,直接将message type 变成普通的entry.
+					// 处理完毕后,会等待将该消息分发.
 					r.logger.Infof("%x 忽略配置变更 %v  %s: %s", r.id, cc, r.prstrack.Config, refused)
 					m.Entries[i] = pb.Entry{Type: pb.EntryNormal}
 				} else {
@@ -242,7 +242,7 @@ func stepLeader(r *raft, m pb.Message) error {
 		r.bcastAppend()
 		return nil
 	case pb.MsgReadIndex:
-		// 集群中只有一个投票成员（领导者）。
+		// 集群中只有一个投票成员（领导者）.
 		if r.prstrack.IsSingleton() {
 			if resp := r.responseToReadIndexReq(m, r.raftLog.committed); resp.To != None {
 				r.send(resp)

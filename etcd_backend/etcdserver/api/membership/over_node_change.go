@@ -118,7 +118,7 @@ func (c *RaftCluster) IsReadyToPromoteMember(id uint64) bool {
 
 	nquorum := nmembers/2 + 1
 	if nstarted < nquorum {
-		c.lg.Warn("拒绝成员晋升；启动成员将少于法定人数",
+		c.lg.Warn("拒绝成员晋升;启动成员将少于法定人数",
 			zap.Int("number-of-started-member", nstarted),
 			zap.Int("quorum", nquorum),
 			zap.String("cluster-id", c.cid.String()),
@@ -132,7 +132,7 @@ func (c *RaftCluster) IsReadyToPromoteMember(id uint64) bool {
 
 // ------------------------------------------------ over ------------------------------------------------
 
-// PromoteMember 将该成员的IsLearner属性标记为false。
+// PromoteMember 将该成员的IsLearner属性标记为false.
 func (c *RaftCluster) PromoteMember(id types.ID, shouldApplyV3 ShouldApplyV3) {
 	c.Lock()
 	defer c.Unlock()
@@ -149,7 +149,7 @@ func (c *RaftCluster) PromoteMember(id types.ID, shouldApplyV3 ShouldApplyV3) {
 	c.lg.Info("成员角色提升", zap.String("cluster-id", c.cid.String()), zap.String("local-member-id", c.localID.String()))
 }
 
-// AddMember 在集群中添加一个新的成员，并将给定成员的raftAttributes保存到存储空间。给定的成员应该有空的属性。 一个具有匹配id的成员必须不存在。
+// AddMember 在集群中添加一个新的成员,并将给定成员的raftAttributes保存到存储空间.给定的成员应该有空的属性. 一个具有匹配id的成员必须不存在.
 func (c *RaftCluster) AddMember(m *Member, shouldApplyV3 ShouldApplyV3) {
 	c.Lock()
 	defer c.Unlock()
@@ -179,7 +179,7 @@ func (c *RaftCluster) AddMember(m *Member, shouldApplyV3 ShouldApplyV3) {
 	c.lg.Info("添加成员", zap.String("cluster-id", c.cid.String()), zap.String("local-member-id", c.localID.String()), zap.String("added-peer-id", m.ID.String()), zap.Strings("added-peer-peer-urls", m.PeerURLs))
 }
 
-// RemoveMember  store中必须存在该ID，否则会panic
+// RemoveMember  store中必须存在该ID,否则会panic
 func (c *RaftCluster) RemoveMember(id types.ID, shouldApplyV3 ShouldApplyV3) {
 	c.Lock()
 	defer c.Unlock()

@@ -82,7 +82,7 @@ func (h *streamHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if h.r.IsIDRemoved(uint64(from)) {
 		h.lg.Warn(
-			"拒绝流，该节点已被移除",
+			"拒绝流,该节点已被移除",
 			zap.String("local-member-id", h.tr.ID.String()),
 			zap.String("remote-peer-id-stream-handler", h.id.String()),
 			zap.String("remote-peer-id-from", from.String()),
@@ -93,8 +93,8 @@ func (h *streamHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	p := h.peerGetter.Get(from)
 	if p == nil {
 		// 这可能发生在以下情况:
-		// 1。用户启动的远端节点属于不同的集群,且集群ID相同。
-		// 2. 本地etcd落后于集群,无法识别在当前进度之后加入的成员。
+		// 1.用户启动的远端节点属于不同的集群,且集群ID相同.
+		// 2. 本地etcd落后于集群,无法识别在当前进度之后加入的成员.
 		if urls := r.Header.Get("X-PeerURLs"); urls != "" {
 			h.tr.AddRemote(from, strings.Split(urls, ","))
 		}

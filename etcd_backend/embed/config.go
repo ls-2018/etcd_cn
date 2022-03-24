@@ -221,7 +221,7 @@ type Config struct {
 	// AutoCompactionMode 基于时间保留模式  时间、修订版本
 	AutoCompactionMode string `json:"auto-compaction-mode"`
 
-	//--auto-compaction-mode=revision --auto-compaction-retention=1000 每5分钟自动压缩"latest revision" - 1000；
+	//--auto-compaction-mode=revision --auto-compaction-retention=1000 每5分钟自动压缩"latest revision" - 1000;
 	//--auto-compaction-mode=periodic --auto-compaction-retention=12h 每1小时自动压缩并保留12小时窗口.
 
 	AutoCompactionRetention string `json:"auto-compaction-retention"`

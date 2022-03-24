@@ -53,7 +53,7 @@ func newUniqueKV(kv v3.KV, prefix string, val string) (*RemoteKV, error) {
 		if err == nil {
 			return &RemoteKV{kv, newKey, rev, val}, nil
 		}
-		// 如果之前已经创建了，就返回
+		// 如果之前已经创建了,就返回
 		if err != ErrKeyExists {
 			return nil, err
 		}

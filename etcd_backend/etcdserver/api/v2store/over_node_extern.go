@@ -23,7 +23,7 @@ import (
 
 var _ node
 
-// NodeExtern 是内部节点的外部表示，带有附加字段 PrevValue是节点的前一个值 TTL是生存时间，以秒为单位
+// NodeExtern 是内部节点的外部表示,带有附加字段 PrevValue是节点的前一个值 TTL是生存时间,以秒为单位
 type NodeExtern struct {
 	Key           string      `json:"key,omitempty"` // /0/members/8e9e05c52164694d/raftAttributes
 	Value         *string     `json:"value,omitempty"`
@@ -40,13 +40,13 @@ type NodeExtern struct {
 //		{Key: "/1234/raftAttributes", Value: stringp(`{"peerURLs":null}`)},
 //	}}
 
-// 加载node，主要是获取node中数据   n: /0/members
+// 加载node,主要是获取node中数据   n: /0/members
 func (eNode *NodeExtern) loadInternalNode(n *node, recursive, sorted bool, clock clockwork.Clock) {
 	if n.IsDir() {
 		eNode.Dir = true
 		children, _ := n.List()
 		eNode.ExternNodes = make(NodeExterns, len(children))
-		// 我们不直接使用子片中的索引，我们需要跳过隐藏的node。
+		// 我们不直接使用子片中的索引,我们需要跳过隐藏的node.
 		i := 0
 		for _, child := range children {
 			if child.IsHidden() {

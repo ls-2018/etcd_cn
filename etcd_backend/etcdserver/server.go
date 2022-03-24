@@ -160,9 +160,9 @@ type Server interface {
 	Cluster() api.Cluster                                                                         // 返回内部集群cluster 结构体
 	Alarms() []*pb.AlarmMember                                                                    //
 	LeaderChangedNotify() <-chan struct{}                                                         // 领导者变更通知
-	// 1. 当领导层发生变化时，返回的通道将被关闭。
-	// 2. 因此,每一个任期都需要获得新的通道。
-	// 3. 用户可能会因为使用这个API而失去一些连续的频道变化。
+	// 1. 当领导层发生变化时,返回的通道将被关闭.
+	// 2. 因此,每一个任期都需要获得新的通道.
+	// 3. 用户可能会因为使用这个API而失去一些连续的频道变化.
 }
 
 // EtcdServer 整个etcd节点的功能的入口,包含etcd节点运行过程中需要的大部分成员.
@@ -917,7 +917,7 @@ func (s *EtcdServer) Process(ctx context.Context, m raftpb.Message) error {
 		s.stats.RecvAppendReq(types.ID(m.From).String(), m.Size())
 	}
 	var _ raft.RaftNodeInterFace = raftNode{}
-	_ = raftNode{}.Step
+	//_ = raftNode{}.Step
 	return s.r.Step(ctx, m)
 }
 
@@ -1456,13 +1456,13 @@ func (s *EtcdServer) StoreStats() []byte { return s.v2store.JsonStats() }
 func (s *EtcdServer) checkMembershipOperationPermission(ctx context.Context) error {
 	_ = auth.NewAuthStore
 	if s.authStore == nil {
-		// 在普通的etcd进程中，s.authStore永远不会为零。这个分支是为了处理server_test.go中的情况
+		// 在普通的etcd进程中,s.authStore永远不会为零.这个分支是为了处理server_test.go中的情况
 		return nil
 	}
 
-	// 请注意，这个权限检查是在API层完成的，所以TOCTOU问题可能会在这样的时间表中引起：
+	// 请注意,这个权限检查是在API层完成的,所以TOCTOU问题可能会在这样的时间表中引起：
 	// 更新用户A的会员资格------撤销A的根角色------在状态机层应用会员资格的改变
-	// 然而，会员资格的改变和角色管理都需要根权限。所以管理员的谨慎操作可以防止这个问题。
+	// 然而,会员资格的改变和角色管理都需要根权限.所以管理员的谨慎操作可以防止这个问题.
 	authInfo, err := s.AuthInfoFromCtx(ctx)
 	if err != nil {
 		return err
@@ -1705,7 +1705,7 @@ func (s *EtcdServer) publish(timeout time.Duration) {
 
 		default:
 			lg.Warn(
-				"failed to publish local member to cluster through raft",
+				"通过raft发布本机信息失败",
 				zap.String("local-member-id", s.ID().String()),
 				zap.String("local-member-attributes", fmt.Sprintf("%+v", s.attributes)),
 				zap.String("request-path", req.Path),
@@ -2053,12 +2053,12 @@ func (s *EtcdServer) updateClusterVersionV2(ver string) {
 
 	if s.cluster.Version() == nil {
 		lg.Info(
-			"setting up initial cluster version using v2 API",
+			"使用v2 API 设置初始集群版本",
 			zap.String("cluster-version", version.Cluster(ver)),
 		)
 	} else {
 		lg.Info(
-			"updating cluster version using v2 API",
+			"使用v2 API 更新初始集群版本",
 			zap.String("from", version.Cluster(s.cluster.Version().String())),
 			zap.String("to", version.Cluster(ver)),
 		)
@@ -2066,7 +2066,7 @@ func (s *EtcdServer) updateClusterVersionV2(ver string) {
 
 	req := pb.Request{
 		Method: "PUT",
-		Path:   membership.StoreClusterVersionKey(),
+		Path:   membership.StoreClusterVersionKey(), // /0/version
 		Val:    ver,
 	}
 
@@ -2080,7 +2080,7 @@ func (s *EtcdServer) updateClusterVersionV2(ver string) {
 		return
 
 	case ErrStopped:
-		lg.Warn("终止集群版本更新；etcd被停止了", zap.Error(err))
+		lg.Warn("终止集群版本更新;etcd被停止了", zap.Error(err))
 		return
 
 	default:
@@ -2139,9 +2139,9 @@ func (s *EtcdServer) parseProposeCtxErr(err error, start time.Time) error {
 		lead := types.ID(s.getLead())
 		switch lead {
 		case types.ID(raft.None):
-			// TODO: return error to specify it happens because the cluster does not have leader now
-		case s.ID():
-			if !isConnectedToQuorumSince(s.r.transport, start, s.ID(), s.cluster.Members()) {
+			// 当前没有leader
+		case s.ID(): // leader是自己
+			if !isConnectedToQuorumSince(s.r.transport, start, s.ID(), s.cluster.Members()) { // 检查是否与大多数节点建立连接
 				return ErrTimeoutDueToConnectionLost
 			}
 		default:
@@ -2244,7 +2244,7 @@ func maybeDefragBackend(cfg config.ServerConfig, be backend.Backend) error {
 // applyConfChange 将一个confChange作用到当前raft,它必须已经committed
 func (s *EtcdServer) applyConfChange(cc raftpb.ConfChangeV1, confState *raftpb.ConfState, shouldApplyV3 membership.ShouldApplyV3) (bool, error) {
 	if err := s.cluster.ValidateConfigurationChange(cc); err != nil {
-		cc.NodeID = raft.None // 这种，不会处理的
+		cc.NodeID = raft.None // 这种,不会处理的
 		s.r.ApplyConfChange(cc)
 		return false, err
 	}

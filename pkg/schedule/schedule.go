@@ -71,7 +71,7 @@ func NewFIFOScheduler() Scheduler {
 	return f
 }
 
-// Schedule 调度一个作业，该作业将按照FIFO顺序顺序运行。
+// Schedule 调度一个作业,该作业将按照FIFO顺序顺序运行.
 func (f *fifo) Schedule(j Job) {
 	f.mu.Lock()
 	defer f.mu.Unlock()

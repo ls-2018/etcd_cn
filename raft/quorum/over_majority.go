@@ -121,7 +121,7 @@ func insertionSort(sl []uint64) {
 	}
 }
 
-// CommittedIndex 获取已经提交了的 大多数索引 ；计算raft的提交索引
+// CommittedIndex 获取已经提交了的 大多数索引 ;计算raft的提交索引
 func (c MajorityConfig) CommittedIndex(l AckedIndexer) Index {
 	n := len(c)
 	if n == 0 {

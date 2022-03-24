@@ -58,7 +58,7 @@ type Peer struct {
 // Peer封装了节点的ID, peers记录了当前集群中全部节点的ID
 func StartNode(c *Config, peers []Peer) RaftNodeInterFace { // ✅✈️ 🚗🚴🏻😁
 	if len(peers) == 0 {
-		panic("没有给定peers；使用RestartNode代替.")
+		panic("没有给定peers;使用RestartNode代替.")
 	}
 	rn, err := NewRawNode(c) // ✅
 	if err != nil {
@@ -73,7 +73,7 @@ func StartNode(c *Config, peers []Peer) RaftNodeInterFace { // ✅✈️ 🚗�
 }
 
 // RestartNode 集群的当前成员将从Storage中恢复.
-// 如果调用者有一个现有的状态机,请传入最后应用于它的日志索引；否则使用0.
+// 如果调用者有一个现有的状态机,请传入最后应用于它的日志索引;否则使用0.
 func RestartNode(c *Config) RaftNodeInterFace {
 	rn, err := NewRawNode(c)
 	if err != nil {
@@ -84,8 +84,8 @@ func RestartNode(c *Config) RaftNodeInterFace {
 	return &n
 }
 
-// Ready数据通过上一次的软、硬状态,计算这两个状态的变化，其他
-// 的数据都是来源于raft。
+// Ready数据通过上一次的软、硬状态,计算这两个状态的变化,其他
+// 的数据都是来源于raft.
 func newReady(r *raft, prevSoftSt *SoftState, prevHardSt pb.HardState) Ready {
 	rd := Ready{
 		Entries:          r.raftLog.unstableEntries(), // 还没有落盘的,需要调用方落盘
@@ -175,7 +175,7 @@ func (n *localNode) run() {
 		if advancec != nil { // 开始时是nil
 			readyc = nil
 		} else if n.rn.HasReady() { // 判断是否有Ready数据:待发送的数据
-			rd = n.rn.readyWithoutAccept() // 计算软硬状态变化；返回ready结构体
+			rd = n.rn.readyWithoutAccept() // 计算软硬状态变化;返回ready结构体
 			readyc = n.readyc              // 下边有放入数据的
 		}
 		// 初始时都是0,   lead发生变化
@@ -214,12 +214,12 @@ func (n *localNode) run() {
 				r.Step(m)
 			}
 		case cc := <-n.confc: // 配置的变更信息 [新增、删除、更新节点]
-			// 如果NodeID是None，就变成了获取节点信息的操作
+			// 如果NodeID是None,就变成了获取节点信息的操作
 			_, okBefore := r.prstrack.Progress[r.id] // 获取本节点的信息
 			cs := r.applyConfChange(cc)
-			// 如果localNode被移除，则阻止传入的变化。请注意，我们只在localNode之前在配置中时才这样做。
-			// 节点可能在不知道这一点的情况下成为组的成员（当他们在追赶日志时，没有最新的配置），在这种情况下，我们不希望阻止提案通道。
-			// NB：当领导者发生变化时，propc会被重置，如果我们了解到这一点，就有点暗示我们被读取了，也许？这并不 这不是很合理，而且很可能有bug。
+			// 如果localNode被移除,则阻止传入的变化.请注意,我们只在localNode之前在配置中时才这样做.
+			// 节点可能在不知道这一点的情况下成为组的成员（当他们在追赶日志时,没有最新的配置）,在这种情况下,我们不希望阻止提案通道.
+			// NB：当领导者发生变化时,propc会被重置,如果我们了解到这一点,就有点暗示我们被读取了,也许？这并不 这不是很合理,而且很可能有bug.
 			if _, okAfter := r.prstrack.Progress[r.id]; okBefore && !okAfter {
 				// 变更前有自己,变更后没有自己
 				var found bool
@@ -247,8 +247,8 @@ func (n *localNode) run() {
 		case readyc <- rd: // 数据放入ready channel中
 			n.rn.acceptReady(rd)  // 告诉raft,ready数据已被接收
 			advancec = n.advancec // 赋值Advance channel等待Ready处理完成的消息
-		case <-advancec: // 使用者处理完Ready数据后，调用了Advance()
-			n.rn.Advance(rd) // 通知RawNode  应用程序已经应用并保存了最后一个Ready结果的进度。
+		case <-advancec: // 使用者处理完Ready数据后,调用了Advance()
+			n.rn.Advance(rd) // 通知RawNode  应用程序已经应用并保存了最后一个Ready结果的进度.
 			rd = Ready{}     // 重置数据
 			advancec = nil
 		case c := <-n.status: // 收取了获取节点状态的信号
@@ -303,7 +303,7 @@ func (n *localNode) Advance() {
 func (n *localNode) Status() Status {
 	c := make(chan Status)
 	select {
-	case n.status <- c: // 通过status把c送给node，让node通过c把Status输出 		  chan chan Status
+	case n.status <- c: // 通过status把c送给node,让node通过c把Status输出 		  chan chan Status
 		_ = getStatus // 就是它的返回结果
 		return <-c    // 此时再从c中把Status读出来
 	case <-n.done:
@@ -328,7 +328,7 @@ func (n *localNode) ReportSnapshot(id uint64, status SnapshotStatus) {
 }
 
 func (n *localNode) Propose(ctx context.Context, data []byte) error {
-	// 发起提议，要等到得到大多数响应
+	// 发起提议,要等到得到大多数响应
 	return n.stepWait(ctx, pb.Message{Type: pb.MsgProp, Entries: []pb.Entry{{Data: data}}}) // ok
 }
 
@@ -350,8 +350,8 @@ func (n *localNode) stepWait(ctx context.Context, m pb.Message) error {
 
 func (n *localNode) stepWithWaitOption(ctx context.Context, m pb.Message, wait bool) error {
 	if m.Type != pb.MsgProp {
-		// 所有的非pb.MsgProp消息通过recvc送给node处理，此时是否wait根本不关心，因为通过recvc
-		// 提交给node处理的消息可以理解为没有返回值的调用。
+		// 所有的非pb.MsgProp消息通过recvc送给node处理,此时是否wait根本不关心,因为通过recvc
+		// 提交给node处理的消息可以理解为没有返回值的调用.
 		select {
 		case n.recvc <- m: // 非提议信息,放进去就完事了
 			return nil // 一般都会走这里
@@ -398,22 +398,22 @@ func (n *localNode) Tick() {
 	case n.tickc <- struct{}{}:
 	case <-n.done:
 	default:
-		n.rn.raft.logger.Warningf("%x 错过了开火的时间。RaftNodeInterFace 阻塞时间过长! ", n.rn.raft.id)
+		n.rn.raft.logger.Warningf("%x 错过了开火的时间.RaftNodeInterFace 阻塞时间过长! ", n.rn.raft.id)
 	}
 }
 
 func (n *localNode) Campaign(ctx context.Context) error {
-	// 封装成pb.MsgHup消息然后再处理，step()后面会详细说明
+	// 封装成pb.MsgHup消息然后再处理,step()后面会详细说明
 	// 主动触发一次选举
 	return n.step(ctx, pb.Message{Type: pb.MsgHup})
 }
 
 // MustSync 设置是否必须同步
 func MustSync(st, prevst pb.HardState, entsnum int) bool {
-	// 有不可靠日志、leader更换以及换届选举都需要设置同步标记，也就是说当有不可靠日志或者
-	// 新一轮选举发生时必须等到这些数据同步到可靠存储后才能继续执行，这还算是比较好理解，毕竟
-	// 这些状态是全局性的，需要leader统计超过半数可靠可靠以后确认为可靠的数据。如果此时采用
-	// 异步实现，就会出现不一致的可能性。
+	// 有不可靠日志、leader更换以及换届选举都需要设置同步标记,也就是说当有不可靠日志或者
+	// 新一轮选举发生时必须等到这些数据同步到可靠存储后才能继续执行,这还算是比较好理解,毕竟
+	// 这些状态是全局性的,需要leader统计超过半数可靠可靠以后确认为可靠的数据.如果此时采用
+	// 异步实现,就会出现不一致的可能性.
 	return entsnum != 0 || st.Vote != prevst.Vote || st.Term != prevst.Term
 }
 

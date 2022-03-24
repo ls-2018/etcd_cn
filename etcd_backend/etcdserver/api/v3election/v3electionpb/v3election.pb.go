@@ -56,36 +56,7 @@ func (*CampaignRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_c9b1f26cc432a035, []int{0}
 }
 
-func (m *CampaignRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
 
-func (m *CampaignRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_CampaignRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-
-func (m *CampaignRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_CampaignRequest.Merge(m, src)
-}
-
-func (m *CampaignRequest) XXX_Size() int {
-	return m.Size()
-}
-
-func (m *CampaignRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_CampaignRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_CampaignRequest proto.InternalMessageInfo
 
 func (m *CampaignRequest) GetName() []byte {
 	if m != nil {
@@ -124,37 +95,6 @@ func (*CampaignResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_c9b1f26cc432a035, []int{1}
 }
 
-func (m *CampaignResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-
-func (m *CampaignResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_CampaignResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-
-func (m *CampaignResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_CampaignResponse.Merge(m, src)
-}
-
-func (m *CampaignResponse) XXX_Size() int {
-	return m.Size()
-}
-
-func (m *CampaignResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_CampaignResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_CampaignResponse proto.InternalMessageInfo
-
 func (m *CampaignResponse) GetHeader() *etcdserverpb.ResponseHeader {
 	if m != nil {
 		return m.Header
@@ -192,37 +132,6 @@ func (*LeaderKey) ProtoMessage()    {}
 func (*LeaderKey) Descriptor() ([]byte, []int) {
 	return fileDescriptor_c9b1f26cc432a035, []int{2}
 }
-
-func (m *LeaderKey) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-
-func (m *LeaderKey) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_LeaderKey.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-
-func (m *LeaderKey) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_LeaderKey.Merge(m, src)
-}
-
-func (m *LeaderKey) XXX_Size() int {
-	return m.Size()
-}
-
-func (m *LeaderKey) XXX_DiscardUnknown() {
-	xxx_messageInfo_LeaderKey.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_LeaderKey proto.InternalMessageInfo
 
 func (m *LeaderKey) GetName() []byte {
 	if m != nil {
@@ -267,37 +176,6 @@ func (*LeaderRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_c9b1f26cc432a035, []int{3}
 }
 
-func (m *LeaderRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-
-func (m *LeaderRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_LeaderRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-
-func (m *LeaderRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_LeaderRequest.Merge(m, src)
-}
-
-func (m *LeaderRequest) XXX_Size() int {
-	return m.Size()
-}
-
-func (m *LeaderRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_LeaderRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_LeaderRequest proto.InternalMessageInfo
-
 func (m *LeaderRequest) GetName() []byte {
 	if m != nil {
 		return m.Name
@@ -320,37 +198,6 @@ func (*LeaderResponse) ProtoMessage()    {}
 func (*LeaderResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_c9b1f26cc432a035, []int{4}
 }
-
-func (m *LeaderResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-
-func (m *LeaderResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_LeaderResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-
-func (m *LeaderResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_LeaderResponse.Merge(m, src)
-}
-
-func (m *LeaderResponse) XXX_Size() int {
-	return m.Size()
-}
-
-func (m *LeaderResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_LeaderResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_LeaderResponse proto.InternalMessageInfo
 
 func (m *LeaderResponse) GetHeader() *etcdserverpb.ResponseHeader {
 	if m != nil {
@@ -381,36 +228,7 @@ func (*ResignRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_c9b1f26cc432a035, []int{5}
 }
 
-func (m *ResignRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
 
-func (m *ResignRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_ResignRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-
-func (m *ResignRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ResignRequest.Merge(m, src)
-}
-
-func (m *ResignRequest) XXX_Size() int {
-	return m.Size()
-}
-
-func (m *ResignRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_ResignRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ResignRequest proto.InternalMessageInfo
 
 func (m *ResignRequest) GetLeader() *LeaderKey {
 	if m != nil {
@@ -432,37 +250,6 @@ func (*ResignResponse) ProtoMessage()    {}
 func (*ResignResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_c9b1f26cc432a035, []int{6}
 }
-
-func (m *ResignResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-
-func (m *ResignResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_ResignResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-
-func (m *ResignResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ResignResponse.Merge(m, src)
-}
-
-func (m *ResignResponse) XXX_Size() int {
-	return m.Size()
-}
-
-func (m *ResignResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_ResignResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ResignResponse proto.InternalMessageInfo
 
 func (m *ResignResponse) GetHeader() *etcdserverpb.ResponseHeader {
 	if m != nil {
@@ -487,37 +274,6 @@ func (*ProclaimRequest) ProtoMessage()    {}
 func (*ProclaimRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_c9b1f26cc432a035, []int{7}
 }
-
-func (m *ProclaimRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-
-func (m *ProclaimRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_ProclaimRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-
-func (m *ProclaimRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ProclaimRequest.Merge(m, src)
-}
-
-func (m *ProclaimRequest) XXX_Size() int {
-	return m.Size()
-}
-
-func (m *ProclaimRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_ProclaimRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ProclaimRequest proto.InternalMessageInfo
 
 func (m *ProclaimRequest) GetLeader() *LeaderKey {
 	if m != nil {
@@ -546,37 +302,6 @@ func (*ProclaimResponse) ProtoMessage()    {}
 func (*ProclaimResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_c9b1f26cc432a035, []int{8}
 }
-
-func (m *ProclaimResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-
-func (m *ProclaimResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_ProclaimResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-
-func (m *ProclaimResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ProclaimResponse.Merge(m, src)
-}
-
-func (m *ProclaimResponse) XXX_Size() int {
-	return m.Size()
-}
-
-func (m *ProclaimResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_ProclaimResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ProclaimResponse proto.InternalMessageInfo
 
 func (m *ProclaimResponse) GetHeader() *etcdserverpb.ResponseHeader {
 	if m != nil {
@@ -916,355 +641,42 @@ func (m *CampaignRequest) Marshal() (dAtA []byte, err error) {
 	return json.Marshal(m)
 }
 
-func (m *CampaignRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *CampaignRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.XXX_unrecognized != nil {
-		i -= len(m.XXX_unrecognized)
-		copy(dAtA[i:], m.XXX_unrecognized)
-	}
-	if len(m.Value) > 0 {
-		i -= len(m.Value)
-		copy(dAtA[i:], m.Value)
-		i = encodeVarintV3Election(dAtA, i, uint64(len(m.Value)))
-		i--
-		dAtA[i] = 0x1a
-	}
-	if m.Lease != 0 {
-		i = encodeVarintV3Election(dAtA, i, uint64(m.Lease))
-		i--
-		dAtA[i] = 0x10
-	}
-	if len(m.Name) > 0 {
-		i -= len(m.Name)
-		copy(dAtA[i:], m.Name)
-		i = encodeVarintV3Election(dAtA, i, uint64(len(m.Name)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
 
 func (m *CampaignResponse) Marshal() (dAtA []byte, err error) {
 	return json.Marshal(m)
 }
 
-func (m *CampaignResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *CampaignResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.XXX_unrecognized != nil {
-		i -= len(m.XXX_unrecognized)
-		copy(dAtA[i:], m.XXX_unrecognized)
-	}
-	if m.Leader != nil {
-		{
-			size, err := m.Leader.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintV3Election(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x12
-	}
-	if m.Header != nil {
-		{
-			size, err := m.Header.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintV3Election(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
 
 func (m *LeaderKey) Marshal() (dAtA []byte, err error) {
 	return json.Marshal(m)
-}
-
-func (m *LeaderKey) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *LeaderKey) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.XXX_unrecognized != nil {
-		i -= len(m.XXX_unrecognized)
-		copy(dAtA[i:], m.XXX_unrecognized)
-	}
-	if m.Lease != 0 {
-		i = encodeVarintV3Election(dAtA, i, uint64(m.Lease))
-		i--
-		dAtA[i] = 0x20
-	}
-	if m.Rev != 0 {
-		i = encodeVarintV3Election(dAtA, i, uint64(m.Rev))
-		i--
-		dAtA[i] = 0x18
-	}
-	if len(m.Key) > 0 {
-		i -= len(m.Key)
-		copy(dAtA[i:], m.Key)
-		i = encodeVarintV3Election(dAtA, i, uint64(len(m.Key)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.Name) > 0 {
-		i -= len(m.Name)
-		copy(dAtA[i:], m.Name)
-		i = encodeVarintV3Election(dAtA, i, uint64(len(m.Name)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
 }
 
 func (m *LeaderRequest) Marshal() (dAtA []byte, err error) {
 	return json.Marshal(m)
 }
 
-func (m *LeaderRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *LeaderRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.XXX_unrecognized != nil {
-		i -= len(m.XXX_unrecognized)
-		copy(dAtA[i:], m.XXX_unrecognized)
-	}
-	if len(m.Name) > 0 {
-		i -= len(m.Name)
-		copy(dAtA[i:], m.Name)
-		i = encodeVarintV3Election(dAtA, i, uint64(len(m.Name)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
 func (m *LeaderResponse) Marshal() (dAtA []byte, err error) {
 	return json.Marshal(m)
 }
 
-func (m *LeaderResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *LeaderResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.XXX_unrecognized != nil {
-		i -= len(m.XXX_unrecognized)
-		copy(dAtA[i:], m.XXX_unrecognized)
-	}
-	if m.Kv != nil {
-		{
-			size, err := m.Kv.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintV3Election(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x12
-	}
-	if m.Header != nil {
-		{
-			size, err := m.Header.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintV3Election(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
 
 func (m *ResignRequest) Marshal() (dAtA []byte, err error) {
 	return json.Marshal(m)
 }
-
-func (m *ResignRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *ResignRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.XXX_unrecognized != nil {
-		i -= len(m.XXX_unrecognized)
-		copy(dAtA[i:], m.XXX_unrecognized)
-	}
-	if m.Leader != nil {
-		{
-			size, err := m.Leader.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintV3Election(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
 func (m *ResignResponse) Marshal() (dAtA []byte, err error) {
 	return json.Marshal(m)
 }
 
-func (m *ResignResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *ResignResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.XXX_unrecognized != nil {
-		i -= len(m.XXX_unrecognized)
-		copy(dAtA[i:], m.XXX_unrecognized)
-	}
-	if m.Header != nil {
-		{
-			size, err := m.Header.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintV3Election(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
 
 func (m *ProclaimRequest) Marshal() (dAtA []byte, err error) {
 	return json.Marshal(m)
 }
 
-func (m *ProclaimRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *ProclaimRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.XXX_unrecognized != nil {
-		i -= len(m.XXX_unrecognized)
-		copy(dAtA[i:], m.XXX_unrecognized)
-	}
-	if len(m.Value) > 0 {
-		i -= len(m.Value)
-		copy(dAtA[i:], m.Value)
-		i = encodeVarintV3Election(dAtA, i, uint64(len(m.Value)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if m.Leader != nil {
-		{
-			size, err := m.Leader.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintV3Election(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
 
 func (m *ProclaimResponse) Marshal() (dAtA []byte, err error) {
 	return json.Marshal(m)
 }
 
-func (m *ProclaimResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *ProclaimResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.XXX_unrecognized != nil {
-		i -= len(m.XXX_unrecognized)
-		copy(dAtA[i:], m.XXX_unrecognized)
-	}
-	if m.Header != nil {
-		{
-			size, err := m.Header.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintV3Election(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func encodeVarintV3Election(dAtA []byte, offset int, v uint64) int {
-	offset -= sovV3Election(v)
-	base := offset
-	for v >= 1<<7 {
-		dAtA[offset] = uint8(v&0x7f | 0x80)
-		v >>= 7
-		offset++
-	}
-	dAtA[offset] = uint8(v)
-	return base
-}
 
 func (m *CampaignRequest) Size() (n int) {
 	if m == nil {

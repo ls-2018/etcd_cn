@@ -24,35 +24,35 @@ import (
 )
 
 type Config struct {
-	Voters quorum.JointConfig // 投票者，分为两个阶段   【新的配置、 旧的配置】或  【配置、 nil】
-	// AutoLeave 如果配置是joint的，并且在可能的情况下，应该由Raft自动进行到传递配置的过渡，则为true。
-	// 如果为false，则该配置将被连接，直到应用程序手动启动转换。
+	Voters quorum.JointConfig // 投票者,分为两个阶段   【新的配置、 旧的配置】或  【配置、 nil】
+	// AutoLeave 如果配置是joint的,并且在可能的情况下,应该由Raft自动进行到传递配置的过渡,则为true.
+	// 如果为false,则该配置将被连接,直到应用程序手动启动转换.
 	AutoLeave bool
 	Learners  map[uint64]struct{} // Learners 当前配置中的learner ID
-	// 当我们在联合共识转换过程中把voter变成learner时，我们不能在进入联合状态时直接增加learner。
-	// 这是因为这将违反voter和learner的交集是空的这一不变性。例如，假设一个voter被移除，并立即重新添加为learner
-	// （或者换句话说，它被降级）。
+	// 当我们在联合共识转换过程中把voter变成learner时,我们不能在进入联合状态时直接增加learner.
+	// 这是因为这将违反voter和learner的交集是空的这一不变性.例如,假设一个voter被移除,并立即重新添加为learner
+	// （或者换句话说,它被降级）.
 	//
-	// 最初，配置将是
+	// 最初,配置将是
 	//   voters:   {1 2 3}
 	//   learners: {}
 	//
-	// 而我们想降级3。进入联合配置，我们天真地认为
+	// 而我们想降级3.进入联合配置,我们天真地认为
 	//   voters:   {1 2} & {1 2 3}
 	//   learners: {3}
 	//
-	// 但这违反了不变量（3既是投票者又是learner）。相反，我们得到
+	// 但这违反了不变量（3既是投票者又是learner）.相反,我们得到
 	//   voters:   {1 2} & {1 2 3}
 	//   learners: {}
 	//   next_learners: {3}
 	//
-	// 其中3号现在还是纯粹的投票者，但我们记住了在过渡到最终配置时使其成为learner的意图。
+	// 其中3号现在还是纯粹的投票者,但我们记住了在过渡到最终配置时使其成为learner的意图.
 	//   voters:   {1 2}
 	//   learners: {3}
 	//   next_learners: {}
 	//
-	// 请注意，在添加一个不属于joint config中投票人的learner时，不使用next_learners。
-	// 在这种情况下，learners在进入联合配置时被立即添加，以便尽快赶上。
+	// 请注意,在添加一个不属于joint config中投票人的learner时,不使用next_learners.
+	// 在这种情况下,learners在进入联合配置时被立即添加,以便尽快赶上.
 	LearnersNext map[uint64]struct{}
 }
 
@@ -127,12 +127,12 @@ func (p *ProgressTracker) ConfState() pb.ConfState {
 	}
 }
 
-// IsSingleton 集群中只有一个投票成员（领导者）。
+// IsSingleton 集群中只有一个投票成员（领导者）.
 func (p *ProgressTracker) IsSingleton() bool {
 	return len(p.Voters[0]) == 1 && len(p.Voters[1]) == 0
 }
 
-// QuorumActive 如果从本地raft状态机的角度来看，该法定人数是活动的，则返回true。否则，它将返回false。
+// QuorumActive 如果从本地raft状态机的角度来看,该法定人数是活动的,则返回true.否则,它将返回false.
 func (p *ProgressTracker) QuorumActive() bool {
 	votes := map[uint64]bool{}
 	p.Visit(func(id uint64, pr *Progress) {
@@ -172,7 +172,7 @@ func insertionSort(sl []uint64) {
 	}
 }
 
-// Visit 对所有跟踪的进度按稳定的顺序调用所提供的闭包。
+// Visit 对所有跟踪的进度按稳定的顺序调用所提供的闭包.
 func (p *ProgressTracker) Visit(f func(id uint64, pr *Progress)) {
 	n := len(p.Progress)
 	var sl [7]uint64

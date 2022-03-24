@@ -35,7 +35,7 @@ func Exist(dir string) bool {
 	return len(names) != 0
 }
 
-// searchIndex 返回 raft 索引部分等于或小于给定索引的名字的最后一个数组索引。
+// searchIndex 返回 raft 索引部分等于或小于给定索引的名字的最后一个数组索引.
 func searchIndex(lg *zap.Logger, names []string, index uint64) (int, bool) {
 	for i := len(names) - 1; i >= 0; i-- {
 		name := names[i]
@@ -50,7 +50,7 @@ func searchIndex(lg *zap.Logger, names []string, index uint64) (int, bool) {
 	return -1, false
 }
 
-// isValidSeq 检查seq是否连续增加。
+// isValidSeq 检查seq是否连续增加.
 func isValidSeq(lg *zap.Logger, names []string) bool {
 	var lastSeq uint64
 	for _, name := range names {

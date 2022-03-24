@@ -23,8 +23,6 @@ import (
 	"github.com/ls-2018/etcd_cn/raft/raftpb"
 )
 
-// messageEncoder is a encoder that can encode all kinds of messages.
-// It必须是used with a paired messageDecoder.
 type messageEncoder struct {
 	w io.Writer
 }

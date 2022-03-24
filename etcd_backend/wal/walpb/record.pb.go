@@ -44,37 +44,6 @@ func (*Record) Descriptor() ([]byte, []int) {
 	return fileDescriptor_bf94fd919e302a1d, []int{0}
 }
 
-func (m *Record) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-
-func (m *Record) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_Record.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-
-func (m *Record) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Record.Merge(m, src)
-}
-
-func (m *Record) XXX_Size() int {
-	return m.Size()
-}
-
-func (m *Record) XXX_DiscardUnknown() {
-	xxx_messageInfo_Record.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_Record proto.InternalMessageInfo
-
 // Keep in sync with raftpb.SnapshotMetadata.
 type Snapshot struct {
 	Index uint64 `protobuf:"varint,1,opt,name=index" json:"index"`
@@ -92,37 +61,6 @@ func (*Snapshot) ProtoMessage()    {}
 func (*Snapshot) Descriptor() ([]byte, []int) {
 	return fileDescriptor_bf94fd919e302a1d, []int{1}
 }
-
-func (m *Snapshot) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-
-func (m *Snapshot) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_Snapshot.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-
-func (m *Snapshot) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Snapshot.Merge(m, src)
-}
-
-func (m *Snapshot) XXX_Size() int {
-	return m.Size()
-}
-
-func (m *Snapshot) XXX_DiscardUnknown() {
-	xxx_messageInfo_Snapshot.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_Snapshot proto.InternalMessageInfo
 
 func init() {
 	proto.RegisterType((*Record)(nil), "walpb.Record")
@@ -150,82 +88,7 @@ var fileDescriptor_bf94fd919e302a1d = []byte{
 	0xff, 0xff, 0xc3, 0x36, 0x0c, 0xad, 0x1d, 0x01, 0x00, 0x00,
 }
 
-func (m *Record) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
 
-func (m *Record) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.XXX_unrecognized != nil {
-		i -= len(m.XXX_unrecognized)
-		copy(dAtA[i:], m.XXX_unrecognized)
-	}
-	if m.Data != nil {
-		i -= len(m.Data)
-		copy(dAtA[i:], m.Data)
-		i = encodeVarintRecord(dAtA, i, uint64(len(m.Data)))
-		i--
-		dAtA[i] = 0x1a
-	}
-	i = encodeVarintRecord(dAtA, i, uint64(m.Crc))
-	i--
-	dAtA[i] = 0x10
-	i = encodeVarintRecord(dAtA, i, uint64(m.Type))
-	i--
-	dAtA[i] = 0x8
-	return len(dAtA) - i, nil
-}
-
-func (m *Snapshot) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *Snapshot) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.XXX_unrecognized != nil {
-		i -= len(m.XXX_unrecognized)
-		copy(dAtA[i:], m.XXX_unrecognized)
-	}
-	if m.ConfState != nil {
-		{
-			size, err := m.ConfState.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintRecord(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x1a
-	}
-	i = encodeVarintRecord(dAtA, i, uint64(m.Term))
-	i--
-	dAtA[i] = 0x10
-	i = encodeVarintRecord(dAtA, i, uint64(m.Index))
-	i--
-	dAtA[i] = 0x8
-	return len(dAtA) - i, nil
-}
-
-func encodeVarintRecord(dAtA []byte, offset int, v uint64) int {
-	offset -= sovRecord(v)
-	base := offset
-	for v >= 1<<7 {
-		dAtA[offset] = uint8(v&0x7f | 0x80)
-		v >>= 7
-		offset++
-	}
-	dAtA[offset] = uint8(v)
-	return base
-}
 
 func (m *Record) Size() (n int) {
 	if m == nil {

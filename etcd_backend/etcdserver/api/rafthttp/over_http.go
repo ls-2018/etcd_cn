@@ -46,7 +46,7 @@ type writerToResponse interface {
 }
 
 // checkClusterCompatibilityFromHeader 检查集群版本的兼容性
-//。它检查本地成员的版本是否与报头中的版本兼容，以及本地成员的集群ID是否与报头中的ID一致。
+//.它检查本地成员的版本是否与报头中的版本兼容,以及本地成员的集群ID是否与报头中的ID一致.
 func checkClusterCompatibilityFromHeader(lg *zap.Logger, localID types.ID, header http.Header, cid types.ID) error {
 	remoteName := header.Get("X-Server-From")
 	remoteServer := serverVersion(header)

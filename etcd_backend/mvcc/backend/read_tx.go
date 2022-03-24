@@ -24,8 +24,8 @@ import (
 // IsSafeRangeBucket is a hack to avoid inadvertently reading duplicate keys;
 // overwrites on a bucket should only fetch with limit=1, but IsSafeRangeBucket
 // is known to never overwrite any key so range is safe.
-// IsSafeRangeBucket是一个黑科技，用来避免无意中读取重复的键。
-// 对一个桶的覆盖应该只在limit=1的情况下获取，但IsSafeRangeBucket是已知的，永远不会覆盖任何键，所以范围是安全的。
+// IsSafeRangeBucket是一个黑科技,用来避免无意中读取重复的键.
+// 对一个桶的覆盖应该只在limit=1的情况下获取,但IsSafeRangeBucket是已知的,永远不会覆盖任何键,所以范围是安全的.
 
 type ReadTx interface {
 	Lock()

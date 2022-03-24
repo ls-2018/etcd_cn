@@ -26,14 +26,12 @@ import (
 	"go.uber.org/zap"
 )
 
-// isConnectedToQuorumSince checks whether the local member is connected to the
-// quorum of the cluster since the given time.
+// isConnectedToQuorumSince 检查本地成员是否在给定的时间后连接到集群的法定人数.
 func isConnectedToQuorumSince(transport rafthttp.Transporter, since time.Time, self types.ID, members []*membership.Member) bool {
-	return numConnectedSince(transport, since, self, members) >= (len(members)/2)+1
+	return numConnectedSince(transport, since, self, members) >= (len(members)/2)+1  // 2.5
 }
 
-// isConnectedSince checks whether the local member is connected to the
-// remote member since the given time.
+// isConnectedSince 检查是否自给定时间以后,与该节点建立连接
 func isConnectedSince(transport rafthttp.Transporter, since time.Time, remote types.ID) bool {
 	t := transport.ActiveSince(remote)
 	return !t.IsZero() && t.Before(since)
@@ -45,8 +43,7 @@ func isConnectedFullySince(transport rafthttp.Transporter, since time.Time, self
 	return numConnectedSince(transport, since, self, members) == len(members)
 }
 
-// numConnectedSince counts how many members are connected to the local member
-// since the given time.
+// numConnectedSince 计算自给定时间以来有多少成员与本地成员相连.
 func numConnectedSince(transport rafthttp.Transporter, since time.Time, self types.ID, members []*membership.Member) int {
 	connectedNum := 0
 	for _, m := range members {

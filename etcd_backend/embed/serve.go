@@ -136,7 +136,7 @@ func (sctx *serveCtx) serve(s *etcdserver.EtcdServer, tlsinfo *transport.TLSInfo
 		go func() { errHandler(srvhttp.Serve(httpl)) }()
 
 		sctx.serversC <- &servers{grpc: gs, http: srvhttp}
-		sctx.lg.Info("以不安全的方式为客户流量提供服务；这是被强烈反对的.", zap.String("address", sctx.l.Addr().String()))
+		sctx.lg.Info("以不安全的方式为客户流量提供服务;这是被强烈反对的.", zap.String("address", sctx.l.Addr().String()))
 	}
 
 	if sctx.secure {
@@ -405,7 +405,7 @@ func (sctx *serveCtx) registerTrace() {
 
 // ----------------------------------------  OVER  --------------------------------------------------------------
 
-// grpcHandlerFunc 返回一个http.Handler，该Handler在接收到gRPC连接时委托给grpcServer，否则返回otherHandler。在gRPC文档中给出。
+// grpcHandlerFunc 返回一个http.Handler,该Handler在接收到gRPC连接时委托给grpcServer,否则返回otherHandler.在gRPC文档中给出.
 func grpcHandlerFunc(grpcServer *grpc.Server, otherHandler http.Handler) http.Handler {
 	if otherHandler == nil {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

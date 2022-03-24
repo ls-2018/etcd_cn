@@ -7,7 +7,6 @@ import (
 	context "context"
 	"encoding/json"
 	fmt "fmt"
-	io "io"
 	math "math"
 	math_bits "math/bits"
 
@@ -55,37 +54,6 @@ func (*LockRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_52389b3e2f253201, []int{0}
 }
 
-func (m *LockRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-
-func (m *LockRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_LockRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-
-func (m *LockRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_LockRequest.Merge(m, src)
-}
-
-func (m *LockRequest) XXX_Size() int {
-	return m.Size()
-}
-
-func (m *LockRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_LockRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_LockRequest proto.InternalMessageInfo
-
 func (m *LockRequest) GetName() []byte {
 	if m != nil {
 		return m.Name
@@ -118,37 +86,6 @@ func (*LockResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_52389b3e2f253201, []int{1}
 }
 
-func (m *LockResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-
-func (m *LockResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_LockResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-
-func (m *LockResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_LockResponse.Merge(m, src)
-}
-
-func (m *LockResponse) XXX_Size() int {
-	return m.Size()
-}
-
-func (m *LockResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_LockResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_LockResponse proto.InternalMessageInfo
-
 func (m *LockResponse) GetHeader() *etcdserverpb.ResponseHeader {
 	if m != nil {
 		return m.Header
@@ -178,37 +115,6 @@ func (*UnlockRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_52389b3e2f253201, []int{2}
 }
 
-func (m *UnlockRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-
-func (m *UnlockRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_UnlockRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-
-func (m *UnlockRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_UnlockRequest.Merge(m, src)
-}
-
-func (m *UnlockRequest) XXX_Size() int {
-	return m.Size()
-}
-
-func (m *UnlockRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_UnlockRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_UnlockRequest proto.InternalMessageInfo
-
 func (m *UnlockRequest) GetKey() []byte {
 	if m != nil {
 		return m.Key
@@ -229,37 +135,6 @@ func (*UnlockResponse) ProtoMessage()    {}
 func (*UnlockResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_52389b3e2f253201, []int{3}
 }
-
-func (m *UnlockResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-
-func (m *UnlockResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_UnlockResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-
-func (m *UnlockResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_UnlockResponse.Merge(m, src)
-}
-
-func (m *UnlockResponse) XXX_Size() int {
-	return m.Size()
-}
-
-func (m *UnlockResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_UnlockResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_UnlockResponse proto.InternalMessageInfo
 
 func (m *UnlockResponse) GetHeader() *etcdserverpb.ResponseHeader {
 	if m != nil {
@@ -440,146 +315,16 @@ func (m *LockRequest) Marshal() (dAtA []byte, err error) {
 	return json.Marshal(m)
 }
 
-func (m *LockRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *LockRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.XXX_unrecognized != nil {
-		i -= len(m.XXX_unrecognized)
-		copy(dAtA[i:], m.XXX_unrecognized)
-	}
-	if m.Lease != 0 {
-		i = encodeVarintV3Lock(dAtA, i, uint64(m.Lease))
-		i--
-		dAtA[i] = 0x10
-	}
-	if len(m.Name) > 0 {
-		i -= len(m.Name)
-		copy(dAtA[i:], m.Name)
-		i = encodeVarintV3Lock(dAtA, i, uint64(len(m.Name)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
 func (m *LockResponse) Marshal() (dAtA []byte, err error) {
 	return json.Marshal(m)
-}
-
-func (m *LockResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *LockResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.XXX_unrecognized != nil {
-		i -= len(m.XXX_unrecognized)
-		copy(dAtA[i:], m.XXX_unrecognized)
-	}
-	if len(m.Key) > 0 {
-		i -= len(m.Key)
-		copy(dAtA[i:], m.Key)
-		i = encodeVarintV3Lock(dAtA, i, uint64(len(m.Key)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if m.Header != nil {
-		{
-			size, err := m.Header.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintV3Lock(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
 }
 
 func (m *UnlockRequest) Marshal() (dAtA []byte, err error) {
 	return json.Marshal(m)
 }
 
-func (m *UnlockRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *UnlockRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.XXX_unrecognized != nil {
-		i -= len(m.XXX_unrecognized)
-		copy(dAtA[i:], m.XXX_unrecognized)
-	}
-	if len(m.Key) > 0 {
-		i -= len(m.Key)
-		copy(dAtA[i:], m.Key)
-		i = encodeVarintV3Lock(dAtA, i, uint64(len(m.Key)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
 func (m *UnlockResponse) Marshal() (dAtA []byte, err error) {
 	return json.Marshal(m)
-}
-
-func (m *UnlockResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *UnlockResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.XXX_unrecognized != nil {
-		i -= len(m.XXX_unrecognized)
-		copy(dAtA[i:], m.XXX_unrecognized)
-	}
-	if m.Header != nil {
-		{
-			size, err := m.Header.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintV3Lock(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func encodeVarintV3Lock(dAtA []byte, offset int, v uint64) int {
-	offset -= sovV3Lock(v)
-	base := offset
-	for v >= 1<<7 {
-		dAtA[offset] = uint8(v&0x7f | 0x80)
-		v >>= 7
-		offset++
-	}
-	dAtA[offset] = uint8(v)
-	return base
 }
 
 func (m *LockRequest) Size() (n int) {
@@ -657,10 +402,6 @@ func sovV3Lock(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
 
-func sozV3Lock(x uint64) (n int) {
-	return sovV3Lock(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-
 func (m *LockRequest) Unmarshal(dAtA []byte) error {
 	return json.Unmarshal(dAtA, m)
 }
@@ -675,85 +416,6 @@ func (m *UnlockRequest) Unmarshal(dAtA []byte) error {
 
 func (m *UnlockResponse) Unmarshal(dAtA []byte) error {
 	return json.Unmarshal(dAtA, m)
-}
-
-func skipV3Lock(dAtA []byte) (n int, err error) {
-	l := len(dAtA)
-	iNdEx := 0
-	depth := 0
-	for iNdEx < l {
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return 0, ErrIntOverflowV3Lock
-			}
-			if iNdEx >= l {
-				return 0, io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		wireType := int(wire & 0x7)
-		switch wireType {
-		case 0:
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return 0, ErrIntOverflowV3Lock
-				}
-				if iNdEx >= l {
-					return 0, io.ErrUnexpectedEOF
-				}
-				iNdEx++
-				if dAtA[iNdEx-1] < 0x80 {
-					break
-				}
-			}
-		case 1:
-			iNdEx += 8
-		case 2:
-			var length int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return 0, ErrIntOverflowV3Lock
-				}
-				if iNdEx >= l {
-					return 0, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				length |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if length < 0 {
-				return 0, ErrInvalidLengthV3Lock
-			}
-			iNdEx += length
-		case 3:
-			depth++
-		case 4:
-			if depth == 0 {
-				return 0, ErrUnexpectedEndOfGroupV3Lock
-			}
-			depth--
-		case 5:
-			iNdEx += 4
-		default:
-			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
-		}
-		if iNdEx < 0 {
-			return 0, ErrInvalidLengthV3Lock
-		}
-		if depth == 0 {
-			return iNdEx, nil
-		}
-	}
-	return 0, io.ErrUnexpectedEOF
 }
 
 var (

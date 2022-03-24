@@ -21,7 +21,7 @@ type Watcher interface {
 }
 
 type watcher struct {
-	eventChan  chan *Event // 注册之后，通过这个chan返回给监听者
+	eventChan  chan *Event // 注册之后,通过这个chan返回给监听者
 	stream     bool        // 是否是流观察、还是一次性观察
 	recursive  bool        // 是否是递归
 	sinceIndex uint64      // 从那个索引之后开始监听
@@ -39,16 +39,16 @@ func (w *watcher) StartIndex() uint64 {
 	return w.startIndex
 }
 
-// notify 函数通知观察者。如果观察者在给定的路径中感兴趣，该函数将返回true。
+// notify 函数通知观察者.如果观察者在给定的路径中感兴趣,该函数将返回true.
 func (w *watcher) notify(e *Event, originalPath bool, deleted bool) bool {
 	// originalPath 对应 1 ,deleted 对应 3
 
-	// 观察者在三种情况下和一个条件下对路径感兴趣,该条件是事件发生在观察者的sinceIndex之后。
-	// 1.事件发生的路径是观察者正在观察的路径。例如，如果观察者在"/foo "观察，而事件发生在"/foo"，观察者必须是对该事件感兴趣。
-	// 2.观察者是一个递归观察者，它对其观察路径之后发生的事件感兴趣。例如，如果观察者A在"/foo "处观察，并且它是一个递归观察者，它将对发生在"/foo/bar "的事件感兴趣。
-	// 3.当我们删除一个目录时，我们需要强制通知所有在我们需要删除的文件处观察的观察者。例如，一个观察者正在观察"/foo/bar"。而我们删除了"/foo"。即使"/foo "不是它正在监视的路径，该监视者也应该得到通知。
+	// 观察者在三种情况下和一个条件下对路径感兴趣,该条件是事件发生在观察者的sinceIndex之后.
+	// 1.事件发生的路径是观察者正在观察的路径.例如,如果观察者在"/foo "观察,而事件发生在"/foo",观察者必须是对该事件感兴趣.
+	// 2.观察者是一个递归观察者,它对其观察路径之后发生的事件感兴趣.例如,如果观察者A在"/foo "处观察,并且它是一个递归观察者,它将对发生在"/foo/bar "的事件感兴趣.
+	// 3.当我们删除一个目录时,我们需要强制通知所有在我们需要删除的文件处观察的观察者.例如,一个观察者正在观察"/foo/bar".而我们删除了"/foo".即使"/foo "不是它正在监视的路径,该监视者也应该得到通知.
 	if (w.recursive || originalPath || deleted) && e.Index() >= w.sinceIndex {
-		// 如果eventChan的容量已满，我们就不能在这里进行阻塞，否则etcd会挂起。当通知的速率高于我们的发送速率时，eventChan的容量就满了。如果发生这种情况，我们会关闭该通道。
+		// 如果eventChan的容量已满,我们就不能在这里进行阻塞,否则etcd会挂起.当通知的速率高于我们的发送速率时,eventChan的容量就满了.如果发生这种情况,我们会关闭该通道.
 		select {
 		case w.eventChan <- e:
 		default:

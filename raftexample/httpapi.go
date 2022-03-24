@@ -42,7 +42,7 @@ func (h *httpKVAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		h.store.Propose(key, string(v)) // 👌🏻
-		// 乐观——不用等待木筏上的ack。值还没有committed，因此后续的GET可以返回旧值
+		// 乐观——不用等待木筏上的ack.值还没有committed,因此后续的GET可以返回旧值
 		w.WriteHeader(http.StatusNoContent)
 	case r.Method == "GET":
 		if v, ok := h.store.Lookup(key); ok {
@@ -98,7 +98,7 @@ func (h *httpKVAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// serveHttpKVAPI 启动一个带有GET/PUT API的键值etcd并监听。
+// serveHttpKVAPI 启动一个带有GET/PUT API的键值etcd并监听.
 func serveHttpKVAPI(kv *kvstore, port int, confChangeC chan<- raftpb.ConfChangeV1, errorC <-chan error) {
 	srv := http.Server{
 		Addr: ":" + strconv.Itoa(port),

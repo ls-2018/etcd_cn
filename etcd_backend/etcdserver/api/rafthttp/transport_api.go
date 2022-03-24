@@ -63,11 +63,7 @@ type Transporter interface {
 	// It is the caller's responsibility to ensure the urls are all valid,
 	// or it panics.
 	UpdatePeer(id types.ID, urls []string)
-	// ActiveSince returns the time that the connection with the peer
-	// of the given id becomes active.
-	// If the connection is active since peer was added, it returns the adding time.
-	// If the connection is currently inactive, it returns zero time.
-	ActiveSince(id types.ID) time.Time
+	ActiveSince(id types.ID) time.Time // 返回与给定id的对等体的连接开始活动的时间
 	// ActivePeers returns the number of active peers.
 	ActivePeers() int
 	// Stop closes the connections and stops the transporter.
@@ -90,7 +86,7 @@ type Transport struct {
 	ID                 types.ID          // 本节点ID
 	URLs               types.URLs        // local peer URLs
 	ClusterID          types.ID          // 集群标识符
-	Raft               Raft              // raft状态机，Transport向其转发收到的信息并报告状态。
+	Raft               Raft              // raft状态机,Transport向其转发收到的信息并报告状态.
 	Snapshotter        *snap.Snapshotter
 	ServerStats        *stats.ServerStats // used to record general transportation statistics
 	// used to record transportation statistics with followers when
@@ -105,7 +101,7 @@ type Transport struct {
 	pipelineRt     http.RoundTripper    // roundTripper used by pipelines
 	mu             sync.RWMutex         // protect the remote and peer map
 	remotes        map[types.ID]*remote // 帮助新加入的成员赶上
-	peers          map[types.ID]Peer    // peers map
+	peers          map[types.ID]Peer    // peers map     不包含本节点
 	pipelineProber probing.Prober
 	streamProber   probing.Prober
 }

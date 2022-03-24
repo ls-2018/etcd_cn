@@ -4,12 +4,11 @@
 package raftpb
 
 import (
+	"encoding/json"
 	fmt "fmt"
-	math "math"
-	math_bits "math/bits"
-
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/golang/protobuf/proto"
+	math "math"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -166,7 +165,7 @@ func (MessageType) EnumDescriptor() ([]byte, []int) {
 // respect to joint consensus.
 type ConfChangeTransition int32
 
-// 指定关于联合共识的配置更改的行为。自动、显式、隐式
+// 指定关于联合共识的配置更改的行为.自动、显式、隐式
 const (
 	// Automatically use the simple protocol if possible, otherwise fall back
 	// to ConfChangeJointImplicit. Most applications will want to use this.
@@ -287,37 +286,6 @@ func (*Entry) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b042552c306ae59b, []int{0}
 }
 
-func (m *Entry) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-
-func (m *Entry) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_Entry.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-
-func (m *Entry) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Entry.Merge(m, src)
-}
-
-func (m *Entry) XXX_Size() int {
-	return m.Size()
-}
-
-func (m *Entry) XXX_DiscardUnknown() {
-	xxx_messageInfo_Entry.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_Entry proto.InternalMessageInfo
-
 type SnapshotMetadata struct {
 	ConfState ConfState `protobuf:"bytes,1,opt,name=conf_state,json=confState" json:"conf_state"`
 	Index     uint64    `protobuf:"varint,2,opt,name=index" json:"index"`
@@ -331,37 +299,6 @@ func (*SnapshotMetadata) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b042552c306ae59b, []int{1}
 }
 
-func (m *SnapshotMetadata) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-
-func (m *SnapshotMetadata) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_SnapshotMetadata.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-
-func (m *SnapshotMetadata) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SnapshotMetadata.Merge(m, src)
-}
-
-func (m *SnapshotMetadata) XXX_Size() int {
-	return m.Size()
-}
-
-func (m *SnapshotMetadata) XXX_DiscardUnknown() {
-	xxx_messageInfo_SnapshotMetadata.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_SnapshotMetadata proto.InternalMessageInfo
-
 type Snapshot struct {
 	Data     []byte           `protobuf:"bytes,1,opt,name=data" json:"data,omitempty"`
 	Metadata SnapshotMetadata `protobuf:"bytes,2,opt,name=metadata" json:"metadata"`
@@ -373,37 +310,6 @@ func (*Snapshot) ProtoMessage()    {}
 func (*Snapshot) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b042552c306ae59b, []int{2}
 }
-
-func (m *Snapshot) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-
-func (m *Snapshot) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_Snapshot.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-
-func (m *Snapshot) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Snapshot.Merge(m, src)
-}
-
-func (m *Snapshot) XXX_Size() int {
-	return m.Size()
-}
-
-func (m *Snapshot) XXX_DiscardUnknown() {
-	xxx_messageInfo_Snapshot.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_Snapshot proto.InternalMessageInfo
 
 // Message 消息格式
 // Raft协议时提到,节点之间传递的是消息(Message), 每条消息中可以携带多条Entry记录,每条Entry记录对应一个独立的操作.
@@ -445,37 +351,6 @@ func (*Message) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b042552c306ae59b, []int{3}
 }
 
-func (m *Message) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-
-func (m *Message) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_Message.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-
-func (m *Message) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Message.Merge(m, src)
-}
-
-func (m *Message) XXX_Size() int {
-	return m.Size()
-}
-
-func (m *Message) XXX_DiscardUnknown() {
-	xxx_messageInfo_Message.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_Message proto.InternalMessageInfo
-
 // HardState 封装了raft协议中规定的需要实时持久化的状态属性：当前选举周期、投票和已提交的Index
 type HardState struct {
 	Term   uint64 `protobuf:"varint,1,opt,name=term" json:"term"`
@@ -490,37 +365,6 @@ func (*HardState) ProtoMessage()    {}
 func (*HardState) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b042552c306ae59b, []int{4}
 }
-
-func (m *HardState) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-
-func (m *HardState) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_HardState.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-
-func (m *HardState) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_HardState.Merge(m, src)
-}
-
-func (m *HardState) XXX_Size() int {
-	return m.Size()
-}
-
-func (m *HardState) XXX_DiscardUnknown() {
-	xxx_messageInfo_HardState.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_HardState proto.InternalMessageInfo
 
 // ConfState tracker.Config的另一种体现形式
 type ConfState struct {
@@ -545,7 +389,7 @@ type ConfChangeV1 struct {
 	Type    ConfChangeType `protobuf:"varint,2,opt,name=type,enum=raftpb.ConfChangeType" json:"type"`
 	NodeID  uint64         `protobuf:"varint,3,opt,name=node_id,json=nodeId" json:"node_id"` // NodeID: 变更节点的id
 	Context string         `protobuf:"string,4,opt,name=context" json:"context,omitempty"`
-	// 这个字段只被etcd用来传播一个唯一的标识符。理想情况下，它应该真正使用Context来代替。在ConfChangeV2中没有对应的字段存在。
+	// 这个字段只被etcd用来传播一个唯一的标识符.理想情况下,它应该真正使用Context来代替.在ConfChangeV2中没有对应的字段存在.
 	ID uint64 `protobuf:"varint,1,opt,name=id" json:"id"` // 节点变更的次数
 }
 
@@ -563,45 +407,12 @@ func (*ConfState) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b042552c306ae59b, []int{5}
 }
 
-func (m *ConfState) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-
-func (m *ConfState) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_ConfState.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-
-func (m *ConfState) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ConfState.Merge(m, src)
-}
-
-func (m *ConfState) XXX_Size() int {
-	return m.Size()
-}
-
-func (m *ConfState) XXX_DiscardUnknown() {
-	xxx_messageInfo_ConfState.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ConfState proto.InternalMessageInfo
-
 func (m *ConfChangeV1) Reset()         { *m = ConfChangeV1{} }
 func (m *ConfChangeV1) String() string { return proto.CompactTextString(m) }
 func (*ConfChangeV1) ProtoMessage()    {}
 func (*ConfChangeV1) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b042552c306ae59b, []int{6}
 }
-
-var xxx_messageInfo_ConfChange proto.InternalMessageInfo
 
 // ConfChangeSingle is an individual configuration change operation. Multiple
 // such operations can be carried out atomically via a ConfChangeV2.
@@ -616,8 +427,6 @@ func (*ConfChangeSingle) ProtoMessage()    {}
 func (*ConfChangeSingle) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b042552c306ae59b, []int{7}
 }
-
-var xxx_messageInfo_ConfChangeSingle proto.InternalMessageInfo
 
 // ConfChangeV2 messages initiate configuration changes. They support both the
 // simple "one at a time" membership change protocol and full Joint Consensus
@@ -658,20 +467,6 @@ func (*ConfChangeV2) ProtoMessage()    {}
 func (*ConfChangeV2) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b042552c306ae59b, []int{8}
 }
-
-func (m *ConfChangeV2) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-
-func (m *ConfChangeV2) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ConfChangeV2.Merge(m, src)
-}
-
-func (m *ConfChangeV2) XXX_DiscardUnknown() {
-	xxx_messageInfo_ConfChangeV2.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ConfChangeV2 proto.InternalMessageInfo
 
 func init() {
 	proto.RegisterEnum("raftpb.EntryType", EntryType_name, EntryType_value)
@@ -760,385 +555,34 @@ var fileDescriptor_b042552c306ae59b = []byte{
 	0x00, 0x00,
 }
 
-func (m *Entry) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *Entry) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Data != nil {
-		i -= len(m.Data)
-		copy(dAtA[i:], m.Data)
-		i = encodeVarintRaft(dAtA, i, uint64(len(m.Data)))
-		i--
-		dAtA[i] = 0x22
-	}
-	i = encodeVarintRaft(dAtA, i, uint64(m.Index))
-	i--
-	dAtA[i] = 0x18
-	i = encodeVarintRaft(dAtA, i, uint64(m.Term))
-	i--
-	dAtA[i] = 0x10
-	i = encodeVarintRaft(dAtA, i, uint64(m.Type))
-	i--
-	dAtA[i] = 0x8
-	return len(dAtA) - i, nil
-}
-
-func (m *SnapshotMetadata) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *SnapshotMetadata) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	i = encodeVarintRaft(dAtA, i, uint64(m.Term))
-	i--
-	dAtA[i] = 0x18
-	i = encodeVarintRaft(dAtA, i, uint64(m.Index))
-	i--
-	dAtA[i] = 0x10
-	{
-		size, err := m.ConfState.MarshalToSizedBuffer(dAtA[:i])
-		if err != nil {
-			return 0, err
-		}
-		i -= size
-		i = encodeVarintRaft(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0xa
-	return len(dAtA) - i, nil
-}
-
-func (m *Snapshot) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *Snapshot) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	{
-		size, err := m.Metadata.MarshalToSizedBuffer(dAtA[:i])
-		if err != nil {
-			return 0, err
-		}
-		i -= size
-		i = encodeVarintRaft(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0x12
-	if m.Data != nil {
-		i -= len(m.Data)
-		copy(dAtA[i:], m.Data)
-		i = encodeVarintRaft(dAtA, i, uint64(len(m.Data)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *Message) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *Message) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Context != nil {
-		i -= len(m.Context)
-		copy(dAtA[i:], m.Context)
-		i = encodeVarintRaft(dAtA, i, uint64(len(m.Context)))
-		i--
-		dAtA[i] = 0x62
-	}
-	i = encodeVarintRaft(dAtA, i, uint64(m.RejectHint))
-	i--
-	dAtA[i] = 0x58
-	i--
-	if m.Reject {
-		dAtA[i] = 1
-	} else {
-		dAtA[i] = 0
-	}
-	i--
-	dAtA[i] = 0x50
-	{
-		size, err := m.Snapshot.MarshalToSizedBuffer(dAtA[:i])
-		if err != nil {
-			return 0, err
-		}
-		i -= size
-		i = encodeVarintRaft(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0x4a
-	i = encodeVarintRaft(dAtA, i, uint64(m.Commit))
-	i--
-	dAtA[i] = 0x40
-	if len(m.Entries) > 0 {
-		for iNdEx := len(m.Entries) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.Entries[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintRaft(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0x3a
-		}
-	}
-	i = encodeVarintRaft(dAtA, i, uint64(m.Index))
-	i--
-	dAtA[i] = 0x30
-	i = encodeVarintRaft(dAtA, i, uint64(m.LogTerm))
-	i--
-	dAtA[i] = 0x28
-	i = encodeVarintRaft(dAtA, i, uint64(m.Term))
-	i--
-	dAtA[i] = 0x20
-	i = encodeVarintRaft(dAtA, i, uint64(m.From))
-	i--
-	dAtA[i] = 0x18
-	i = encodeVarintRaft(dAtA, i, uint64(m.To))
-	i--
-	dAtA[i] = 0x10
-	i = encodeVarintRaft(dAtA, i, uint64(m.Type))
-	i--
-	dAtA[i] = 0x8
-	return len(dAtA) - i, nil
-}
-
-func (m *HardState) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *HardState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	i = encodeVarintRaft(dAtA, i, uint64(m.Commit))
-	i--
-	dAtA[i] = 0x18
-	i = encodeVarintRaft(dAtA, i, uint64(m.Vote))
-	i--
-	dAtA[i] = 0x10
-	i = encodeVarintRaft(dAtA, i, uint64(m.Term))
-	i--
-	dAtA[i] = 0x8
-	return len(dAtA) - i, nil
-}
-
-func (m *ConfState) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *ConfState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	i--
-	if m.AutoLeave {
-		dAtA[i] = 1
-	} else {
-		dAtA[i] = 0
-	}
-	i--
-	dAtA[i] = 0x28
-	if len(m.LearnersNext) > 0 {
-		for iNdEx := len(m.LearnersNext) - 1; iNdEx >= 0; iNdEx-- {
-			i = encodeVarintRaft(dAtA, i, uint64(m.LearnersNext[iNdEx]))
-			i--
-			dAtA[i] = 0x20
-		}
-	}
-	if len(m.VotersOutgoing) > 0 {
-		for iNdEx := len(m.VotersOutgoing) - 1; iNdEx >= 0; iNdEx-- {
-			i = encodeVarintRaft(dAtA, i, uint64(m.VotersOutgoing[iNdEx]))
-			i--
-			dAtA[i] = 0x18
-		}
-	}
-	if len(m.Learners) > 0 {
-		for iNdEx := len(m.Learners) - 1; iNdEx >= 0; iNdEx-- {
-			i = encodeVarintRaft(dAtA, i, uint64(m.Learners[iNdEx]))
-			i--
-			dAtA[i] = 0x10
-		}
-	}
-	if len(m.Voters) > 0 {
-		for iNdEx := len(m.Voters) - 1; iNdEx >= 0; iNdEx-- {
-			i = encodeVarintRaft(dAtA, i, uint64(m.Voters[iNdEx]))
-			i--
-			dAtA[i] = 0x8
-		}
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *ConfChangeSingle) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	i = encodeVarintRaft(dAtA, i, uint64(m.NodeID))
-	i--
-	dAtA[i] = 0x10
-	i = encodeVarintRaft(dAtA, i, uint64(m.Type))
-	i--
-	dAtA[i] = 0x8
-	return len(dAtA) - i, nil
-}
-
-func encodeVarintRaft(dAtA []byte, offset int, v uint64) int {
-	offset -= sovRaft(v)
-	base := offset
-	for v >= 1<<7 {
-		dAtA[offset] = uint8(v&0x7f | 0x80)
-		v >>= 7
-		offset++
-	}
-	dAtA[offset] = uint8(v)
-	return base
-}
-
 func (m *Entry) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovRaft(uint64(m.Type))
-	n += 1 + sovRaft(uint64(m.Term))
-	n += 1 + sovRaft(uint64(m.Index))
-	if m.Data != nil {
-		l = len(m.Data)
-		n += 1 + l + sovRaft(uint64(l))
-	}
-	return n
+	marshal, _ := json.Marshal(m)
+	return len(marshal)
 }
 
 func (m *SnapshotMetadata) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = m.ConfState.Size()
-	n += 1 + l + sovRaft(uint64(l))
-	n += 1 + sovRaft(uint64(m.Index))
-	n += 1 + sovRaft(uint64(m.Term))
-	return n
+	marshal, _ := json.Marshal(m)
+	return len(marshal)
 }
 
 func (m *Snapshot) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Data != nil {
-		l = len(m.Data)
-		n += 1 + l + sovRaft(uint64(l))
-	}
-	l = m.Metadata.Size()
-	n += 1 + l + sovRaft(uint64(l))
-	return n
+	marshal, _ := json.Marshal(m)
+	return len(marshal)
 }
 
 func (m *Message) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovRaft(uint64(m.Type))
-	n += 1 + sovRaft(uint64(m.To))
-	n += 1 + sovRaft(uint64(m.From))
-	n += 1 + sovRaft(uint64(m.Term))
-	n += 1 + sovRaft(uint64(m.LogTerm))
-	n += 1 + sovRaft(uint64(m.Index))
-	if len(m.Entries) > 0 {
-		for _, e := range m.Entries {
-			l = e.Size()
-			n += 1 + l + sovRaft(uint64(l))
-		}
-	}
-	n += 1 + sovRaft(uint64(m.Commit))
-	l = m.Snapshot.Size()
-	n += 1 + l + sovRaft(uint64(l))
-	n += 2
-	n += 1 + sovRaft(uint64(m.RejectHint))
-	if m.Context != nil {
-		l = len(m.Context)
-		n += 1 + l + sovRaft(uint64(l))
-	}
-	return n
+	marshal, _ := json.Marshal(m)
+	return len(marshal)
 }
 
 func (m *HardState) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovRaft(uint64(m.Term))
-	n += 1 + sovRaft(uint64(m.Vote))
-	n += 1 + sovRaft(uint64(m.Commit))
-	return n
+	marshal, _ := json.Marshal(m)
+	return len(marshal)
 }
 
 func (m *ConfState) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if len(m.Voters) > 0 {
-		for _, e := range m.Voters {
-			n += 1 + sovRaft(uint64(e))
-		}
-	}
-	if len(m.Learners) > 0 {
-		for _, e := range m.Learners {
-			n += 1 + sovRaft(uint64(e))
-		}
-	}
-	if len(m.VotersOutgoing) > 0 {
-		for _, e := range m.VotersOutgoing {
-			n += 1 + sovRaft(uint64(e))
-		}
-	}
-	if len(m.LearnersNext) > 0 {
-		for _, e := range m.LearnersNext {
-			n += 1 + sovRaft(uint64(e))
-		}
-	}
-	n += 2
-	return n
-}
-
-func sovRaft(x uint64) (n int) {
-	return (math_bits.Len64(x|1) + 6) / 7
+	marshal, _ := json.Marshal(m)
+	return len(marshal)
 }
 
 var (

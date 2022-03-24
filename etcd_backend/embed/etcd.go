@@ -586,10 +586,10 @@ func configureClientListeners(cfg *Config) (sctxs map[string]*serveCtx, err erro
 		sctx := newServeCtx(cfg.logger)
 		if u.Scheme == "http" || u.Scheme == "unix" {
 			if !cfg.ClientTLSInfo.Empty() {
-				cfg.logger.Warn("在钥匙和证书文件存在的情况下,方案为HTTP；忽略钥匙和证书文件", zap.String("client-url", u.String()))
+				cfg.logger.Warn("在钥匙和证书文件存在的情况下,方案为HTTP;忽略钥匙和证书文件", zap.String("client-url", u.String()))
 			}
 			if cfg.ClientTLSInfo.ClientCertAuth {
-				cfg.logger.Warn("方案是HTTP,同时启用了-客户证书认证；该URL忽略了客户证书认证.", zap.String("client-url", u.String()))
+				cfg.logger.Warn("方案是HTTP,同时启用了-客户证书认证;该URL忽略了客户证书认证.", zap.String("client-url", u.String()))
 			}
 		}
 		if (u.Scheme == "https" || u.Scheme == "unixs") && cfg.ClientTLSInfo.Empty() {

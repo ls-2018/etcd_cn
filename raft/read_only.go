@@ -24,7 +24,7 @@ import (
 // this state from ready, it's also caller's duty to differentiate if this
 // state is what it requests through RequestCtx, eg. given a unique id as
 // RequestCtx
-// 这个参数就是Node.ReadIndex()的结果回调。
+// 这个参数就是Node.ReadIndex()的结果回调.
 type ReadState struct {
 	Index      uint64
 	RequestCtx []byte
@@ -149,7 +149,7 @@ func (ro *readOnly) lastPendingRequestCtx() string {
 	return ro.readIndexQueue[len(ro.readIndexQueue)-1]
 }
 
-// bcastHeartbeat 发送RPC，没有日志给所有对等体。
+// bcastHeartbeat 发送RPC,没有日志给所有对等体.
 func (r *raft) bcastHeartbeat() {
 	lastCtx := r.readOnly.lastPendingRequestCtx()
 	if len(lastCtx) == 0 {

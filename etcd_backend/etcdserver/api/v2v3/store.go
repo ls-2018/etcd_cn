@@ -30,10 +30,10 @@ import (
 	"go.etcd.io/etcd/api/v3/mvccpb"
 )
 
-// store 使用v3客户端实现V2的存储接口。
+// store 使用v3客户端实现V2的存储接口.
 type v2v3Store struct {
 	c *clientv3.Client
-	// pfx 是应该存储钥匙的v3前缀。
+	// pfx 是应该存储钥匙的v3前缀.
 	pfx string
 	ctx context.Context
 }

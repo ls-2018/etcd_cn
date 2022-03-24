@@ -69,7 +69,7 @@ const (
 	ApplyV2storeOnly = ShouldApplyV3(false)
 )
 
-// Recover 接收到快照之后，会调用此函数
+// Recover 接收到快照之后,会调用此函数
 func (c *RaftCluster) Recover(onSet func(*zap.Logger, *semver.Version)) {
 	c.Lock()
 	defer c.Unlock()
@@ -136,8 +136,8 @@ func (c *RaftCluster) UpdateAttributes(id types.ID, attr Attributes, shouldApply
 	c.lg.Warn("移除的成员 不进行属性更新", zap.String("cluster-id", c.cid.String()), zap.String("local-member-id", c.localID.String()), zap.String("updated-peer-id", id.String()))
 }
 
-// ValidateClusterAndAssignIDs 通过匹配PeerURLs来验证本地集群与现有集群是否匹配。如果验证成功，它将把现有集群的IDs归入本地集群。
-// 如果验证失败，将返回一个错误。
+// ValidateClusterAndAssignIDs 通过匹配PeerURLs来验证本地集群与现有集群是否匹配.如果验证成功,它将把现有集群的IDs归入本地集群.
+// 如果验证失败,将返回一个错误.
 func ValidateClusterAndAssignIDs(lg *zap.Logger, local *RaftCluster, existing *RaftCluster) error {
 	ems := existing.Members()
 	lms := local.Members()
@@ -157,7 +157,7 @@ func ValidateClusterAndAssignIDs(lg *zap.Logger, local *RaftCluster, existing *R
 			}
 		}
 		if !ok {
-			return fmt.Errorf("PeerURLs: 没有找到匹配的现有成员（%v, %v），最后的解析器错误（%v）。", ems[i].ID, ems[i].PeerURLs, err)
+			return fmt.Errorf("PeerURLs: 没有找到匹配的现有成员（%v, %v）,最后的解析器错误（%v）.", ems[i].ID, ems[i].PeerURLs, err)
 		}
 	}
 	local.members = make(map[types.ID]*Member)
@@ -422,7 +422,7 @@ func clusterVersionFromBackend(lg *zap.Logger, be backend.Backend) *semver.Versi
 		return nil
 	}
 	if len(keys) != 1 {
-		lg.Panic("从后端获取集群版本时，键的数量超出预期", zap.Int("number-of-key", len(keys)))
+		lg.Panic("从后端获取集群版本时,键的数量超出预期", zap.Int("number-of-key", len(keys)))
 	}
 	return semver.Must(semver.NewVersion(string(vals[0])))
 }
@@ -518,7 +518,7 @@ func (c *RaftCluster) SetDowngradeInfo(d *DowngradeInfo, shouldApplyV3 ShouldApp
 	}
 }
 
-// PushMembershipToStorage 是覆盖集群成员的存储信息，使其完全反映RaftCluster的内部存储。
+// PushMembershipToStorage 是覆盖集群成员的存储信息,使其完全反映RaftCluster的内部存储.
 func (c *RaftCluster) PushMembershipToStorage() {
 	if c.be != nil {
 		TrimMembershipFromBackend(c.lg, c.be)
@@ -545,9 +545,9 @@ func clusterVersionFromStore(lg *zap.Logger, st v2store.Store) *semver.Version {
 	return semver.Must(semver.NewVersion(*e.NodeExtern.Value))
 }
 
-// IsValidVersionChange 检查两种情况下的版本变更是否有效。
-// 1.降级：集群版本比本地版本高一个小版本。集群版本应该改变。
-// 2.集群启动：当不是所有成员的版本都可用时，集群版本被设置为MinVersion(3.0)，当所有成员都在较高版本时，集群版本低于本地版本时，簇的版本应该改变。
+// IsValidVersionChange 检查两种情况下的版本变更是否有效.
+// 1.降级：集群版本比本地版本高一个小版本.集群版本应该改变.
+// 2.集群启动：当不是所有成员的版本都可用时,集群版本被设置为MinVersion(3.0),当所有成员都在较高版本时,集群版本低于本地版本时,簇的版本应该改变.
 func IsValidVersionChange(cv *semver.Version, lv *semver.Version) bool {
 	// 集群版本
 	cv = &semver.Version{Major: cv.Major, Minor: cv.Minor}
@@ -560,7 +560,7 @@ func IsValidVersionChange(cv *semver.Version, lv *semver.Version) bool {
 	return false
 }
 
-// ValidateConfigurationChange  验证接受 提议的ConfChange 并确保它仍然有效。
+// ValidateConfigurationChange  验证接受 提议的ConfChange 并确保它仍然有效.
 func (c *RaftCluster) ValidateConfigurationChange(cc raftpb.ConfChangeV1) error {
 	members, removed := membersFromStore(c.lg, c.v2store) // 从v2store中获取所有成员
 	// members 包括leader、follower、learner、候选者
@@ -619,7 +619,7 @@ func (c *RaftCluster) ValidateConfigurationChange(cc raftpb.ConfChangeV1) error 
 		}
 
 	case raftpb.ConfChangeUpdateNode:
-		// 有这个成员，且peer地址不存在
+		// 有这个成员,且peer地址不存在
 		if members[id] == nil {
 			return ErrIDNotFound
 		}

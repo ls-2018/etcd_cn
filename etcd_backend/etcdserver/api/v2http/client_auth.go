@@ -84,7 +84,7 @@ func userFromClientCertificate(lg *zap.Logger, sec v2auth.Store, r *http.Request
 
 func hasRootAccess(lg *zap.Logger, sec v2auth.Store, r *http.Request, clientCertAuthEnabled bool) bool {
 	if sec == nil {
-		// 没有store意味着没有可用的认证，例如，测试。
+		// 没有store意味着没有可用的认证,例如,测试.
 		return true
 	}
 	if !sec.AuthEnabled() {

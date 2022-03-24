@@ -21,7 +21,7 @@ import (
 	"github.com/ls-2018/etcd_cn/raft/tracker"
 )
 
-// ErrStepLocalMsg 当尝试步入一个本地raft信息时，会返回
+// ErrStepLocalMsg 当尝试步入一个本地raft信息时,会返回
 var ErrStepLocalMsg = errors.New("raft: cannot step raft local message")
 
 // ErrStepPeerNotFound is returned when try to step a response message
@@ -38,7 +38,7 @@ type RawNode struct {
 }
 
 // NewRawNode 从给定的配置中实例化一个RawNode.
-// 参见Bootstrap()来引导一个初始状态；它取代了这个方法以前的'peers'参数(具有相同的行为).
+// 参见Bootstrap()来引导一个初始状态;它取代了这个方法以前的'peers'参数(具有相同的行为).
 // 然而,建议应用程序不要调用Bootstrap,而是通过设置一个第一索引大于1的存储空间,并将所需的ConfState作为其InitialState来手动引导其状态.
 func NewRawNode(config *Config) (*RawNode, error) {
 	r := newRaft(config) // ✅
@@ -124,7 +124,7 @@ func (rn *RawNode) Ready() Ready {
 	return rd
 }
 
-// readyWithoutAccept 计算状态变化；返回ready结构体
+// readyWithoutAccept 计算状态变化;返回ready结构体
 func (rn *RawNode) readyWithoutAccept() Ready {
 	return newReady(rn.raft, rn.prevSoftSt, rn.prevHardSt) // 计算状态变化
 }
@@ -163,7 +163,7 @@ func (rn *RawNode) HasReady() bool {
 	return false
 }
 
-// Advance 通知RawNode应用程序已经应用并保存了最后一个Ready结果的进度。
+// Advance 通知RawNode应用程序已经应用并保存了最后一个Ready结果的进度.
 func (rn *RawNode) Advance(rd Ready) {
 	if !IsEmptyHardState(rd.HardState) {
 		rn.prevHardSt = rd.HardState

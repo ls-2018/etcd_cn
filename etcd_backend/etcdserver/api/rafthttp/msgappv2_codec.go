@@ -15,9 +15,11 @@
 package rafthttp
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"time"
 
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
@@ -30,37 +32,9 @@ const (
 	msgTypeLinkHeartbeat uint8 = 0
 	msgTypeAppEntries    uint8 = 1
 	msgTypeApp           uint8 = 2
-
-	msgAppV2BufSize = 1024 * 1024
+	msgAppV2BufSize            = 1024 * 1024
 )
 
-// msgappv2 stream sends three types of message: linkHeartbeatMessage,
-// AppEntries and MsgApp. AppEntries is the MsgApp that is sent in
-// replicate state in raft, whose index and term are fully predictable.
-//
-// Data format of linkHeartbeatMessage:
-// | offset | bytes | description |
-// +--------+-------+-------------+
-// | 0      | 1     | \x00        |
-//
-// Data format of AppEntries:
-// | offset | bytes | description |
-// +--------+-------+-------------+
-// | 0      | 1     | \x01        |
-// | 1      | 8     | length of entries |
-// | 9      | 8     | length of first entry |
-// | 17     | n1    | first entry |
-// ...
-// | x      | 8     | length of k-th entry data |
-// | x+8    | nk    | k-th entry data |
-// | x+8+nk | 8     | commit index |
-//
-// Data format of MsgApp:
-// | offset | bytes | description |
-// +--------+-------+-------------+
-// | 0      | 1     | \x02        |
-// | 1      | 8     | length of encoded message |
-// | 9      | n     | encoded message |
 type msgAppV2Encoder struct {
 	w  io.Writer
 	fs *stats.FollowerStats
@@ -101,13 +75,14 @@ func (enc *msgAppV2Encoder) encode(m *raftpb.Message) error {
 			return err
 		}
 		for i := 0; i < len(m.Entries); i++ {
-			// write length of entry
 			binary.BigEndian.PutUint64(enc.uint64buf, uint64(m.Entries[i].Size()))
 			if _, err := enc.w.Write(enc.uint64buf); err != nil {
 				return err
 			}
 			if n := m.Entries[i].Size(); n < msgAppV2BufSize {
-				if _, err := m.Entries[i].MarshalTo(enc.buf); err != nil {
+				temp, err := m.Entries[i].Marshal()
+				enc.buf = append(enc.buf, temp...)
+				if err != nil {
 					return err
 				}
 				if _, err := enc.w.Write(enc.buf[:n]); err != nil {
@@ -176,6 +151,8 @@ func (dec *msgAppV2Decoder) decode() (raftpb.Message, error) {
 		m   raftpb.Message
 		typ uint8
 	)
+	xxx ,_:= ioutil.ReadAll(dec.r)
+	dec.r = bytes.NewReader(xxx)
 	if _, err := io.ReadFull(dec.r, dec.uint8buf); err != nil {
 		return m, err
 	}

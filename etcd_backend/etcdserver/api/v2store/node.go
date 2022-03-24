@@ -33,7 +33,7 @@ const (
 	CompareNotMatch             // 不匹配
 )
 
-var Permanent time.Time // 永久性时间，默认零值
+var Permanent time.Time // 永久性时间,默认零值
 
 // node is the basic element in the store system.
 // A key-value pair will have a string value
@@ -42,11 +42,11 @@ type node struct {
 	Path          string
 	CreatedIndex  uint64
 	ModifiedIndex uint64
-	Parent        *node `json:"-"` // 不应该对这个字段进行编码！避免循环依赖。
+	Parent        *node `json:"-"` // 不应该对这个字段进行编码！避免循环依赖.
 	ExpireTime    time.Time
 	Value         string           // 键值对
 	Children      map[string]*node // 目录
-	store         *store           // 对该节点所连接的商店的引用。
+	store         *store           // 对该节点所连接的商店的引用.
 }
 
 // newKV creates a Key-Value pair
@@ -267,7 +267,7 @@ func (n *node) Add(child *node) *v2error.Error {
 	return nil
 }
 
-// Repr 递归的 封信过期时间、剩余时间，跳过隐藏节点
+// Repr 递归的 封信过期时间、剩余时间,跳过隐藏节点
 func (n *node) Repr(recursive, sorted bool, clock clockwork.Clock) *NodeExtern {
 	if n.IsDir() {
 		node := &NodeExtern{
@@ -342,9 +342,9 @@ func (n *node) IsHidden() bool {
 	return name[0] == '_'
 }
 
-// IsPermanent 函数检查该节点是否为永久节点。
+// IsPermanent 函数检查该节点是否为永久节点.
 func (n *node) IsPermanent() bool {
-	// 我们使用一个未初始化的time.Time来表示该节点是一个永久的节点。 未初始化的time.Time应该等于0。
+	// 我们使用一个未初始化的time.Time来表示该节点是一个永久的节点. 未初始化的time.Time应该等于0.
 	return n.ExpireTime.IsZero()
 }
 

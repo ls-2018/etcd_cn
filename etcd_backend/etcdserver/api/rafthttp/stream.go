@@ -257,7 +257,7 @@ func (cw *streamWriter) run() {
 			if closed {
 				if cw.lg != nil {
 					cw.lg.Warn(
-						"closed TCP streaming connection with remote peer",
+						"关闭与远端节点的TCP链接",
 						zap.String("stream-writer-type", t.String()),
 						zap.String("local-member-id", cw.localID.String()),
 						zap.String("remote-peer-id", cw.peerID.String()),
@@ -266,7 +266,7 @@ func (cw *streamWriter) run() {
 			}
 			if cw.lg != nil {
 				cw.lg.Info(
-					"established TCP streaming connection with remote peer",
+					"与远端节点建立了TCP链接",
 					zap.String("stream-writer-type", t.String()),
 					zap.String("local-member-id", cw.localID.String()),
 					zap.String("remote-peer-id", cw.peerID.String()),
@@ -278,7 +278,7 @@ func (cw *streamWriter) run() {
 			if cw.close() {
 				if cw.lg != nil {
 					cw.lg.Warn(
-						"closed TCP streaming connection with remote peer",
+						"关闭与远端节点的TCP链接",
 						zap.String("stream-writer-type", t.String()),
 						zap.String("remote-peer-id", cw.peerID.String()),
 					)
@@ -286,7 +286,7 @@ func (cw *streamWriter) run() {
 			}
 			if cw.lg != nil {
 				cw.lg.Info(
-					"stopped TCP streaming connection with remote peer",
+					"停止与远端节点的TCP链接",
 					zap.String("stream-writer-type", t.String()),
 					zap.String("remote-peer-id", cw.peerID.String()),
 				)

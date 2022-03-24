@@ -23,8 +23,8 @@ import (
 
 type Cluster interface {
 	ID() types.ID                  // 集群ID
-	ClientURLs() []string          // 返回该集群正在监听客户端请求的所有URL的集合。
-	Members() []*membership.Member // 集群成员，排序之后的
+	ClientURLs() []string          // 返回该集群正在监听客户端请求的所有URL的集合.
+	Members() []*membership.Member // 集群成员,排序之后的
 	Member(id types.ID) *membership.Member
 	Version() *semver.Version
 }
