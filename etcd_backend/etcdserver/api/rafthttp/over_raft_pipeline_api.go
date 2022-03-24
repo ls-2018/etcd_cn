@@ -50,28 +50,18 @@ func (h *pipelineHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	addRemoteFromRequest(h.tr, r)
 
-	// Limit the data size that could be read from the request body, which ensures that read from
-	// connection will not time out accidentally due to possible blocking in underlying implementation.
-	limitedr := pioutil.NewLimitedBufferReader(r.Body, connReadLimitByte)
+	limitedr := pioutil.NewLimitedBufferReader(r.Body, connReadLimitByte) // 限制返回的数据大小  64K
 	b, err := ioutil.ReadAll(limitedr)
 	if err != nil {
-		h.lg.Warn(
-			"failed to read Raft message",
-			zap.String("local-member-id", h.localID.String()),
-			zap.Error(err),
-		)
-		http.Error(w, "error reading raft message", http.StatusBadRequest)
+		h.lg.Warn("读取raft消息失败", zap.String("local-member-id", h.localID.String()), zap.Error(err))
+		http.Error(w, "读取raft消息失败", http.StatusBadRequest)
 		return
 	}
 
 	var m raftpb.Message
 	if err := m.Unmarshal(b); err != nil {
-		h.lg.Warn(
-			"failed to unmarshal Raft message",
-			zap.String("local-member-id", h.localID.String()),
-			zap.Error(err),
-		)
-		http.Error(w, "error unmarshalling raft message", http.StatusBadRequest)
+		h.lg.Warn("发序列化raft消息失败", zap.String("local-member-id", h.localID.String()), zap.Error(err))
+		http.Error(w, "发序列化raft消息失败", http.StatusBadRequest)
 		return
 	}
 
@@ -80,20 +70,14 @@ func (h *pipelineHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		case writerToResponse:
 			v.WriteTo(w)
 		default:
-			h.lg.Warn(
-				"failed to process Raft message",
-				zap.String("local-member-id", h.localID.String()),
-				zap.Error(err),
-			)
-			http.Error(w, "error processing raft message", http.StatusInternalServerError)
+			h.lg.Warn("处理raft消息错误", zap.String("local-member-id", h.localID.String()), zap.Error(err))
+			http.Error(w, "处理raft消息错误", http.StatusInternalServerError)
 			w.(http.Flusher).Flush()
-			// disconnect the http stream
+			// 断开http流的连接
 			panic(err)
 		}
 		return
 	}
 
-	// Write StatusNoContent header after the message has been processed by
-	// raft, which facilitates the client to report MsgSnap status.
 	w.WriteHeader(http.StatusNoContent)
 }

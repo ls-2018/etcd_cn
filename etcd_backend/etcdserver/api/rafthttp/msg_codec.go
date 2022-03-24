@@ -37,7 +37,6 @@ func (enc *messageEncoder) encode(m *raftpb.Message) error {
 	return err
 }
 
-// messageDecoder is a decoder that can decode all kinds of messages.
 type messageDecoder struct {
 	r io.Reader
 }

@@ -28,10 +28,9 @@ import (
 	"go.uber.org/zap"
 )
 
-var ErrNoDBSnapshot = errors.New("snap: snapshot file doesn't exist")
+var ErrNoDBSnapshot = errors.New("snap: 快照文件不存在")
 
-// SaveDBFrom saves snapshot of the database from the given reader. It
-// guarantees the save operation is atomic.
+// SaveDBFrom 从给定的reader中保存数据库的快照。它保证 save操作是原子性的。
 func (s *Snapshotter) SaveDBFrom(r io.Reader, id uint64) (int64, error) {
 	f, err := ioutil.TempFile(s.dir, "tmp")
 	if err != nil {
@@ -59,7 +58,7 @@ func (s *Snapshotter) SaveDBFrom(r io.Reader, id uint64) (int64, error) {
 	}
 
 	s.lg.Info(
-		"saved database snapshot to disk",
+		"保存快照到硬盘",
 		zap.String("path", fn),
 		zap.Int64("bytes", n),
 		zap.String("size", humanize.Bytes(uint64(n))),
@@ -68,8 +67,7 @@ func (s *Snapshotter) SaveDBFrom(r io.Reader, id uint64) (int64, error) {
 	return n, nil
 }
 
-// DBFilePath returns the file path for the snapshot of the database with
-// given id. If the snapshot does not exist, it returns error.
+// DBFilePath 返回给定id的数据库快照的文件路径。如果该快照不存在，则返回错误。
 func (s *Snapshotter) DBFilePath(id uint64) (string, error) {
 	if _, err := fileutil.ReadDir(s.dir); err != nil {
 		return "", err
@@ -80,7 +78,7 @@ func (s *Snapshotter) DBFilePath(id uint64) (string, error) {
 	}
 	if s.lg != nil {
 		s.lg.Warn(
-			"failed to find [SNAPSHOT-INDEX].snap.db",
+			"查找快照失败 [SNAPSHOT-INDEX].snap.db",
 			zap.Uint64("snapshot-index", id),
 			zap.String("snapshot-file-path", fn),
 			zap.Error(ErrNoDBSnapshot),

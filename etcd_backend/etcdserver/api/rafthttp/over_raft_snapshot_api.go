@@ -39,14 +39,9 @@ func newSnapshotHandler(t *Transport, r Raft, snapshotter *snap.Snapshotter, cid
 }
 
 // ServeHTTP serves HTTP request to receive and process snapshot message.
-//
-// If request sender dies without closing underlying TCP connection,
-// the handler will keep waiting for the request body until TCP keepalive
-// finds out that the connection is broken after several minutes.
-// This is acceptable because
-// 1. snapshot messages sent through other TCP connections could still be
-// received and processed.
-// 2. this case should happen rarely, so no further optimization is done.
+// 如果请求发送者在没有关闭基础TCP连接的情况下死亡。处理程序将继续等待请求主体，直到TCP keepalive发现连接在几分钟后被破坏。
+// 这是可接受的，因为通过其他 TCP 连接发送的快照信息仍然可以被接收和处理。接收和处理。
+// 2. 这种情况应该很少发生，所以不做进一步优化。
 func (h *snapshotHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 
@@ -66,17 +61,12 @@ func (h *snapshotHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	addRemoteFromRequest(h.tr, r)
 
 	dec := &messageDecoder{r: r.Body}
-	// let snapshots be very large since they can exceed 512MB for large installations
-	m, err := dec.decodeLimit(snapshotLimitByte)
+	// 快照可能超过512MB。
+	m, err := dec.decodeLimit(snapshotLimitByte) // 8字节[消息长度]+消息+snap
 	from := types.ID(m.From).String()
 	if err != nil {
-		msg := fmt.Sprintf("failed to decode raft message (%v)", err)
-		h.lg.Warn(
-			"failed to decode Raft message",
-			zap.String("local-member-id", h.localID.String()),
-			zap.String("remote-snapshot-sender-id", from),
-			zap.Error(err),
-		)
+		msg := fmt.Sprintf("解码raft消息失败 (%v)", err)
+		h.lg.Warn("解码raft消息失败", zap.String("local-member-id", h.localID.String()), zap.String("remote-snapshot-sender-id", from), zap.Error(err))
 		http.Error(w, msg, http.StatusBadRequest)
 		return
 	}
@@ -85,17 +75,17 @@ func (h *snapshotHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if m.Type != raftpb.MsgSnap {
 		h.lg.Warn(
-			"unexpected Raft message type",
+			"不期待的消息类型",
 			zap.String("local-member-id", h.localID.String()),
 			zap.String("remote-snapshot-sender-id", from),
 			zap.String("message-type", m.Type.String()),
 		)
-		http.Error(w, "wrong raft message type", http.StatusBadRequest)
+		http.Error(w, "不期待的消息类型", http.StatusBadRequest)
 		return
 	}
 
 	h.lg.Info(
-		"receiving database snapshot",
+		"开始接受快照",
 		zap.String("local-member-id", h.localID.String()),
 		zap.String("remote-snapshot-sender-id", from),
 		zap.Uint64("incoming-snapshot-index", m.Snapshot.Metadata.Index),
@@ -103,13 +93,11 @@ func (h *snapshotHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		zap.String("incoming-snapshot-message-size", humanize.Bytes(uint64(msgSize))),
 	)
 
-	// save incoming database snapshot.
-
 	n, err := h.snapshotter.SaveDBFrom(r.Body, m.Snapshot.Metadata.Index)
 	if err != nil {
-		msg := fmt.Sprintf("failed to save KV snapshot (%v)", err)
+		msg := fmt.Sprintf("保存快照失败 (%v)", err)
 		h.lg.Warn(
-			"failed to save incoming database snapshot",
+			"保存快照失败",
 			zap.String("local-member-id", h.localID.String()),
 			zap.String("remote-snapshot-sender-id", from),
 			zap.Uint64("incoming-snapshot-index", m.Snapshot.Metadata.Index),
@@ -132,15 +120,11 @@ func (h *snapshotHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.r.Process(context.TODO(), m); err != nil {
 		switch v := err.(type) {
-		// Process may return writerToResponse error when doing some
-		// additional checks before calling raft.RaftNodeInterFace.Step.
 		case writerToResponse:
 			v.WriteTo(w)
 		default:
-			msg := fmt.Sprintf("failed to process raft message (%v)", err)
-			h.lg.Warn(
-				"failed to process Raft message",
-				zap.String("local-member-id", h.localID.String()),
+			msg := fmt.Sprintf("处理消息失败 (%v)", err)
+			h.lg.Warn("处理消息失败", zap.String("local-member-id", h.localID.String()),
 				zap.String("remote-snapshot-sender-id", from),
 				zap.Error(err),
 			)
@@ -148,8 +132,5 @@ func (h *snapshotHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-
-	// Write StatusNoContent header after the message has been processed by
-	// raft, which facilitates the client to report MsgSnap status.
 	w.WriteHeader(http.StatusNoContent)
 }

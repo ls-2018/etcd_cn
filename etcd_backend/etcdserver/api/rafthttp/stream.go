@@ -383,11 +383,10 @@ func (cr *streamReader) start() {
 }
 
 func (cr *streamReader) run() {
-	t := cr.typ
+	t := cr.typ // msgappv2
 
 	if cr.lg != nil {
-		cr.lg.Info(
-			"started stream reader with remote peer",
+		cr.lg.Info("开始与远程节点进行流式阅读",
 			zap.String("stream-reader-type", t.String()),
 			zap.String("local-member-id", cr.tr.ID.String()),
 			zap.String("remote-peer-id", cr.peerID.String()),
@@ -403,27 +402,16 @@ func (cr *streamReader) run() {
 		} else {
 			cr.status.activate()
 			if cr.lg != nil {
-				cr.lg.Info(
-					"established TCP streaming connection with remote peer",
-					zap.String("stream-reader-type", cr.typ.String()),
-					zap.String("local-member-id", cr.tr.ID.String()),
-					zap.String("remote-peer-id", cr.peerID.String()),
-				)
+				cr.lg.Info("已建立的TCP流媒体连接与远程节点", zap.String("stream-reader-type", cr.typ.String()), zap.String("local-member-id", cr.tr.ID.String()), zap.String("remote-peer-id", cr.peerID.String()))
 			}
 			err = cr.decodeLoop(rc, t)
 			if cr.lg != nil {
-				cr.lg.Warn(
-					"lost TCP streaming connection with remote peer",
-					zap.String("stream-reader-type", cr.typ.String()),
-					zap.String("local-member-id", cr.tr.ID.String()),
-					zap.String("remote-peer-id", cr.peerID.String()),
-					zap.Error(err),
-				)
+				cr.lg.Warn("丢失TCP流媒体连接与远程节点", zap.String("stream-reader-type", cr.typ.String()), zap.String("local-member-id", cr.tr.ID.String()), zap.String("remote-peer-id", cr.peerID.String()), zap.Error(err))
 			}
 			switch {
-			// all data is read out
+			// 读取了所有数据
 			case err == io.EOF:
-			// connection is closed by the remote
+			// 远端节点关闭了链接
 			case transport.IsClosedConnError(err):
 			default:
 				cr.status.deactivate(failureType{source: t.String(), action: "read"}, err.Error())

@@ -138,7 +138,7 @@ func setPeerURLsHeader(req *http.Request, urls types.URLs) {
 	req.Header.Set("X-PeerURLs", strings.Join(peerURLs, ","))
 }
 
-// addRemoteFromRequest adds a remote peer according to an http request header
+// addRemoteFromRequest 根据http请求头添加一个远程对等体
 func addRemoteFromRequest(tr Transporter, r *http.Request) {
 	if from, err := types.IDFromString(r.Header.Get("X-Server-From")); err == nil {
 		if urls := r.Header.Get("X-PeerURLs"); urls != "" {

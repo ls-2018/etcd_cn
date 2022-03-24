@@ -30,6 +30,7 @@ require (
 	github.com/hexfusion/schwag v0.0.0-20170606222847-b7d0fc9aadaa
 	github.com/jonboulle/clockwork v0.2.2
 	github.com/json-iterator/go v1.1.11
+	github.com/mattn/goreman v0.3.11 // indirect
 	github.com/mdempsky/unconvert v0.0.0-20200228143138-95ecdbfc0b5f
 	github.com/mgechev/revive v1.0.2
 	github.com/mikefarah/yq/v3 v3.0.0-20201125113350-f42728eef735
@@ -58,7 +59,7 @@ require (
 	go.uber.org/zap v1.17.0
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
 	golang.org/x/net v0.0.0-20211008194852-3b03d305991f
-	golang.org/x/sys v0.0.0-20220209214540-3681064d5158
+	golang.org/x/sys v0.0.0-20220307203707-22a9840ba4d7
 	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba
 	google.golang.org/genproto v0.0.0-20210624195500-8bfb893ecb84
 	google.golang.org/grpc v1.38.0

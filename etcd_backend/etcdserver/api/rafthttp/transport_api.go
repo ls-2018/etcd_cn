@@ -44,11 +44,6 @@ type Transporter interface {
 	// Start starts the given Transporter.
 	// Start必须是called before calling other functions in the interface.
 	Start() error
-	// Handler returns the HTTP handler of the transporter.
-	// A transporter HTTP handler handles the HTTP requests
-	// from remote peers.
-	// The handler必须是used to handle RaftPrefix(/raft)
-	// endpoint.
 	Handler() http.Handler
 	// Send sends out the given messages to the remote peers.
 	// Each message has a To field, which is an id that maps
@@ -59,11 +54,6 @@ type Transporter interface {
 	// SendSnapshot sends out the given snapshot message to a remote peer.
 	// The behavior of SendSnapshot is similar to Send.
 	SendSnapshot(m snap.Message)
-	// AddRemote adds a remote with given peer urls into the transport.
-	// A remote helps newly joined member to catch up the progress of cluster,
-	// and will not be used after that.
-	// It is the caller's responsibility to ensure the urls are all valid,
-	// or it panics.
 	AddRemote(id types.ID, urls []string)
 	AddPeer(id types.ID, urls []string) // 链接远端的节点
 	RemovePeer(id types.ID)             // 移除远端节点的链接
@@ -153,8 +143,8 @@ func (t *Transport) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.Handle(RaftPrefix, pipelineHandler)         // /raft
 	mux.Handle(RaftStreamPrefix+"/", streamHandler) // /raft/stream/
-	mux.Handle(RaftSnapshotPrefix, snapHandler)     // /raft/snapshot
-	mux.Handle(ProbingPrefix, probing.NewHandler()) // /raft/probing
+	mux.Handle(RaftSnapshotPrefix, snapHandler)     // /raft/snapshot   // ✅
+	mux.Handle(ProbingPrefix, probing.NewHandler()) // /raft/probing    // ✅
 	return mux
 }
 
@@ -250,6 +240,7 @@ func (t *Transport) MendPeer(id types.ID) {
 	}
 }
 
+//AddRemote 添加远程节点
 func (t *Transport) AddRemote(id types.ID, us []string) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
@@ -274,8 +265,7 @@ func (t *Transport) AddRemote(id types.ID, us []string) {
 	t.remotes[id] = startRemote(t, urls, id)
 
 	if t.Logger != nil {
-		t.Logger.Info(
-			"添加一个远端节点的通信地址",
+		t.Logger.Info("添加一个远端节点的通信地址",
 			zap.String("local-member-id", t.ID.String()),
 			zap.String("remote-peer-id", id.String()),
 			zap.Strings("remote-peer-urls", us),
@@ -283,6 +273,7 @@ func (t *Transport) AddRemote(id types.ID, us []string) {
 	}
 }
 
+// AddPeer 添加伙伴节点
 func (t *Transport) AddPeer(id types.ID, us []string) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
