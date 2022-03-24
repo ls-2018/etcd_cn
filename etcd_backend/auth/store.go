@@ -167,26 +167,15 @@ type AuthStore interface {
 	// Revision gets current revision of authStore
 	Revision() uint64
 
-	// CheckPassword checks a given pair of username and password is correct
-	CheckPassword(username, password string) (uint64, error)
-
-	// Close does cleanup of AuthStore
-	Close() error
-
-	// AuthInfoFromCtx gets AuthInfo from gRPC's context
-	AuthInfoFromCtx(ctx context.Context) (*AuthInfo, error)
-
-	// AuthInfoFromTLS gets AuthInfo from TLS info of gRPC's context
-	AuthInfoFromTLS(ctx context.Context) *AuthInfo
+	CheckPassword(username, password string) (uint64, error) // 检查给定的一对用户名和密码是否正确
+	Close() error                                            // 清理AuthStore
+	AuthInfoFromCtx(ctx context.Context) (*AuthInfo, error)  // 从grpc上下文获取认证信息
+	AuthInfoFromTLS(ctx context.Context) *AuthInfo           // 从grpc证书上下文获取认证信息
 
 	// WithRoot generates and installs a token that can be used as a root credential
 	WithRoot(ctx context.Context) context.Context
-
-	// HasRole checks that user has role
-	HasRole(user, role string) bool
-
-	// BcryptCost gets strength of hashing bcrypted auth password
-	BcryptCost() int
+	HasRole(user, role string) bool // 检查用户是否有该角色
+	BcryptCost() int                // 获取加密认证密码的散列强度
 }
 
 type TokenProvider interface {

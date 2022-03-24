@@ -25,7 +25,6 @@ import (
 	"os"
 	"path"
 	"regexp"
-	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -53,7 +52,6 @@ import (
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v3compactor"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/cindex"
 	"github.com/ls-2018/etcd_cn/etcd_backend/lease"
-	"github.com/ls-2018/etcd_cn/etcd_backend/lease/leasehttp"
 	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc"
 	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc/backend"
 	"github.com/ls-2018/etcd_cn/etcd_backend/wal"
@@ -81,7 +79,7 @@ const (
 	StoreClusterPrefix = "/0"
 	StoreKeysPrefix    = "/1"
 
-	// HealthInterval is the minimum time the cluster should be healthy
+	// HealthInterval is the minimum time the cluster should backend healthy
 	// before accepting add member requests.
 	HealthInterval = 5 * time.Second
 
@@ -104,8 +102,8 @@ const (
 )
 
 var (
-	// monitorVersionInterval should be smaller than the timeout
-	// on the connection. Or we will not be able to reuse the connection
+	// monitorVersionInterval should backend smaller than the timeout
+	// on the connection. Or we will not backend able to reuse the connection
 	// (since it will timeout).
 	monitorVersionInterval = rafthttp.ConnWriteTimeout - time.Second
 
@@ -200,8 +198,8 @@ type EtcdServer struct {
 	applyWait         wait.WaitTime           // apply的等待队列,等待某个index的日志apply完成
 	kv                mvcc.WatchableKV        // v3用的kv存储
 	lessor            lease.Lessor            // v3用,作用是实现过期时间
-	bemu              sync.Mutex              // 守护后端存储的锁,改变后端存储和获取后端存储是使用
-	be                backend.Backend         // 后端存储
+	backendLock       sync.Mutex              // 守护后端存储的锁,改变后端存储和获取后端存储是使用
+	backend           backend.Backend         // 后端存储
 	beHooks           *backendHooks           // 存储钩子
 	authStore         auth.AuthStore          // 存储鉴权数据
 	alarmStore        *v3alarm.AlarmStore     // 存储告警数据
@@ -216,7 +214,7 @@ type EtcdServer struct {
 	// wg is used to wait for the goroutines that depends on the etcd state
 	// to exit when stopping the etcd.
 	wg sync.WaitGroup
-	// ctx is used for etcd-initiated requests that may need to be canceled
+	// ctx is used for etcd-initiated requests that may need to backend canceled
 	// on etcd etcd shutdown.
 	ctx                 context.Context
 	cancel              context.CancelFunc
@@ -428,7 +426,7 @@ func MySelfStartRaft(cfg config.ServerConfig) (temp *Temp, err error) {
 		if err != nil {
 			return nil, err
 		}
-		// snapshot files can be orphaned if etcd crashes after writing them but before writing the corresponding
+		// snapshot files can backend orphaned if etcd crashes after writing them but before writing the corresponding
 		// wal log entries
 		temp.Snapshot, err = temp.SS.LoadNewestAvailable(walSnaps)
 		if err != nil && err != snap.ErrNoSnapshot {
@@ -498,8 +496,8 @@ func MySelfStartRaft(cfg config.ServerConfig) (temp *Temp, err error) {
 func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 	temp := &Temp{}
 	temp, err = MySelfStartRaft(cfg) // 逻辑时钟初始化
-	sstats := stats.NewServerStats(cfg.Name, temp.ID.String())
-	lstats := stats.NewLeaderStats(cfg.Logger, temp.ID.String())
+	serverStats := stats.NewServerStats(cfg.Name, temp.ID.String())
+	leaderStats := stats.NewLeaderStats(cfg.Logger, temp.ID.String())
 
 	heartbeat := time.Duration(cfg.TickMs) * time.Millisecond
 	srv = &EtcdServer{
@@ -523,8 +521,8 @@ func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 		id:                 temp.ID,
 		attributes:         membership.Attributes{Name: cfg.Name, ClientURLs: cfg.ClientURLs.StringSlice()},
 		cluster:            temp.CL,
-		stats:              sstats,
-		lstats:             lstats,
+		stats:              serverStats,
+		lstats:             leaderStats,
 		SyncTicker:         time.NewTicker(500 * time.Millisecond),
 		peerRt:             temp.Prt,
 		reqIDGen:           idutil.NewGenerator(uint16(temp.ID), time.Now()),
@@ -534,13 +532,13 @@ func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 	}
 	srv.applyV2 = NewApplierV2(cfg.Logger, srv.v2store, srv.cluster)
 
-	srv.be = temp.BE
+	srv.backend = temp.BE
 	srv.beHooks = temp.BeHooks
 	minTTL := time.Duration((3*cfg.ElectionTicks)/2) * heartbeat
 
 	// always recover lessor before kv. When we recover the mvcc.KV it will reattach keys to its leases.
 	// If we recover mvcc.KV first, it will attach the keys to the wrong lessor before it recovers.
-	srv.lessor = lease.NewLessor(srv.Logger(), srv.be, srv.cluster, lease.LessorConfig{
+	srv.lessor = lease.NewLessor(srv.Logger(), srv.backend, srv.cluster, lease.LessorConfig{
 		MinLeaseTTL:                int64(math.Ceil(minTTL.Seconds())),
 		CheckpointInterval:         cfg.LeaseCheckpointInterval,
 		CheckpointPersist:          cfg.LeaseCheckpointPersist,
@@ -557,7 +555,7 @@ func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 		cfg.Logger.Warn("failed to create token provider", zap.Error(err))
 		return nil, err
 	}
-	srv.kv = mvcc.New(srv.Logger(), srv.be, srv.lessor, mvcc.StoreConfig{CompactionBatchLimit: cfg.CompactionBatchLimit})
+	srv.kv = mvcc.New(srv.Logger(), srv.backend, srv.lessor, mvcc.StoreConfig{CompactionBatchLimit: cfg.CompactionBatchLimit})
 
 	kvindex := temp.CI.ConsistentIndex()
 	srv.lg.Debug("restore consistentIndex", zap.Uint64("index", kvindex))
@@ -575,7 +573,7 @@ func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 		}
 	}
 
-	srv.authStore = auth.NewAuthStore(srv.Logger(), srv.be, tp, int(cfg.BcryptCost))
+	srv.authStore = auth.NewAuthStore(srv.Logger(), srv.backend, tp, int(cfg.BcryptCost)) // BcryptCost 为散列身份验证密码指定bcrypt算法的成本/强度 ,默认10
 
 	newSrv := srv // since srv == nil in defer if srv is returned as nil
 	defer func() {
@@ -616,8 +614,8 @@ func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 		ClusterID:   temp.CL.ID(),
 		Raft:        srv,
 		Snapshotter: temp.SS,
-		ServerStats: sstats,
-		LeaderStats: lstats,
+		ServerStats: serverStats,
+		LeaderStats: leaderStats,
 		ErrorC:      srv.errorc,
 	}
 	if err = tr.Start(); err != nil {
@@ -732,7 +730,7 @@ func (s *EtcdServer) adjustTicks() {
 // Start performs any initialization of the Server necessary for it to
 // begin serving requests. It必须是called before Do or Process.
 // Start必须是non-blocking; any long-running etcd functionality
-// should be implemented in goroutines.
+// should backend implemented in goroutines.
 func (s *EtcdServer) Start() {
 	s.start()
 	s.GoAttach(func() { s.adjustTicks() })
@@ -832,19 +830,10 @@ func (s *EtcdServer) purgeFile() {
 	}
 }
 
-func (s *EtcdServer) ApplyWait() <-chan struct{} { return s.applyWait.Wait(s.getCommittedIndex()) }
-
 type ServerPeer interface {
 	ServerV2
 	RaftHandler() http.Handler
 	LeaseHandler() http.Handler
-}
-
-func (s *EtcdServer) LeaseHandler() http.Handler {
-	if s.lessor == nil {
-		return nil
-	}
-	return leasehttp.NewHandler(s.lessor, s.ApplyWait)
 }
 
 func (s *EtcdServer) RaftHandler() http.Handler {
@@ -855,50 +844,6 @@ type ServerPeerV2 interface {
 	ServerPeer
 	HashKVHandler() http.Handler
 	DowngradeEnabledHandler() http.Handler
-}
-
-func (s *EtcdServer) DowngradeInfo() *membership.DowngradeInfo { return s.cluster.DowngradeInfo() }
-
-type downgradeEnabledHandler struct {
-	lg      *zap.Logger
-	cluster api.Cluster
-	server  *EtcdServer
-}
-
-func (s *EtcdServer) DowngradeEnabledHandler() http.Handler {
-	return &downgradeEnabledHandler{
-		lg:      s.Logger(),
-		cluster: s.cluster,
-		server:  s,
-	}
-}
-
-func (h *downgradeEnabledHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		w.Header().Set("Allow", http.MethodGet)
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	w.Header().Set("X-Etcd-Cluster-ID", h.cluster.ID().String())
-
-	if r.URL.Path != DowngradeEnabledPath {
-		http.Error(w, "bad path", http.StatusBadRequest)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), h.server.Cfg.ReqTimeout())
-	defer cancel()
-
-	// serve with linearized downgrade info
-	if err := h.server.linearizableReadNotify(ctx); err != nil {
-		http.Error(w, fmt.Sprintf("failed linearized read: %v", err),
-			http.StatusInternalServerError)
-		return
-	}
-	enabled := h.server.DowngradeInfo().Enabled
-	w.Header().Set("Content-Type", "text/plain")
-	w.Write([]byte(strconv.FormatBool(enabled)))
 }
 
 // Process 接收一个raft信息并将其应用于etcd的raft状态机,使用ctx的超时.
@@ -921,7 +866,9 @@ func (s *EtcdServer) Process(ctx context.Context, m raftpb.Message) error {
 	return s.r.Step(ctx, m)
 }
 
-func (s *EtcdServer) ReportUnreachable(id uint64) { s.r.ReportUnreachable(id) }
+func (s *EtcdServer) ReportUnreachable(id uint64) {
+	s.r.ReportUnreachable(id)
+}
 
 // ReportSnapshot reports snapshot sent status to the raft state machine,
 // and clears the used snapshot from the snapshot store.
@@ -936,7 +883,7 @@ type etcdProgress struct {
 	appliedi  uint64
 }
 
-// raftReadyHandler contains a set of EtcdServer operations to be called by raftNode,
+// raftReadyHandler contains a set of EtcdServer operations to backend called by raftNode,
 // and helps decouple state machine logic from Raft algorithms.
 // TODO: add a state machine interface to apply the commit entries and do snapshot/recover
 type raftReadyHandler struct {
@@ -1102,7 +1049,7 @@ func (s *EtcdServer) run() {
 // Cleanup removes allocated objects by EtcdServer.NewServer in
 // situation that EtcdServer::Start was not called (that takes care of cleanup).
 func (s *EtcdServer) Cleanup() {
-	// kv, lessor and backend can be nil if running without v3 enabled
+	// kv, lessor and backend can backend nil if running without v3 enabled
 	// or running unit tests.
 	if s.lessor != nil {
 		s.lessor.Stop()
@@ -1113,8 +1060,8 @@ func (s *EtcdServer) Cleanup() {
 	if s.authStore != nil {
 		s.authStore.Close()
 	}
-	if s.be != nil {
-		s.be.Close()
+	if s.backend != nil {
+		s.backend.Close()
 	}
 	if s.compactor != nil {
 		s.compactor.Stop()
@@ -1128,8 +1075,8 @@ func (s *EtcdServer) applyAll(ep *etcdProgress, apply *apply) {
 	s.applyWait.Trigger(ep.appliedi)
 
 	// wait for the raft routine to finish the disk writes before triggering a
-	// snapshot. or applied index might be greater than the last index in raft
-	// storage, since the raft routine might be slower than apply routine.
+	// snapshot. or applied index might backend greater than the last index in raft
+	// storage, since the raft routine might backend slower than apply routine.
 	<-apply.notifyc
 
 	s.triggerSnapshot(ep)
@@ -1202,8 +1149,8 @@ func (s *EtcdServer) applySnapshot(ep *etcdProgress, apply *apply) {
 	// Closing old backend might block until all the txns
 	// on the backend are finished.
 	// We do not want to wait on closing the old backend.
-	s.bemu.Lock()
-	oldbe := s.be
+	s.backendLock.Lock()
+	oldbe := s.backend
 	go func() {
 		lg.Info("closing old backend file")
 		defer func() {
@@ -1214,8 +1161,8 @@ func (s *EtcdServer) applySnapshot(ep *etcdProgress, apply *apply) {
 		}
 	}()
 
-	s.be = newbe
-	s.bemu.Unlock()
+	s.backend = newbe
+	s.backendLock.Unlock()
 
 	lg.Info("restoring alarm store")
 
@@ -1405,11 +1352,11 @@ func (s *EtcdServer) HardStop() {
 }
 
 // Stop stops the etcd gracefully, and shuts down the running goroutine.
-// Stop should be called after a Start(s), otherwise it will block forever.
+// Stop should backend called after a Start(s), otherwise it will block forever.
 // When stopping leader, Stop transfers its leadership to one of its peers
 // before stopping the etcd.
 // Stop terminates the Server and performs any necessary finalization.
-// Do and Process cannot be called after Stop has been invoked.
+// Do and Process cannot backend called after Stop has been invoked.
 func (s *EtcdServer) Stop() {
 	lg := s.Logger()
 	if err := s.TransferLeadership(); err != nil {
@@ -1473,7 +1420,7 @@ func (s *EtcdServer) checkMembershipOperationPermission(ctx context.Context) err
 
 // check whether the learner catches up with leader or not.
 // Note: it will return nil if member is not found in cluster or if member is not learner.
-// These two conditions will be checked before apply phase later.
+// These two conditions will backend checked before apply phase later.
 func (s *EtcdServer) isLearnerReady(id uint64) error {
 	rs := s.raftStatus()
 
@@ -1549,30 +1496,13 @@ func (s *EtcdServer) mayRemoveMember(id types.ID) error {
 	return nil
 }
 
-func (s *EtcdServer) UpdateMember(ctx context.Context, memb membership.Member) ([]*membership.Member, error) {
-	b, merr := json.Marshal(memb)
-	if merr != nil {
-		return nil, merr
-	}
-
-	if err := s.checkMembershipOperationPermission(ctx); err != nil {
-		return nil, err
-	}
-	cc := raftpb.ConfChangeV1{
-		Type:    raftpb.ConfChangeUpdateNode,
-		NodeID:  uint64(memb.ID),
-		Context: string(b),
-	}
-	return s.configure(ctx, cc)
-}
-
 func (s *EtcdServer) LeaderChangedNotify() <-chan struct{} {
 	s.leaderChangedMu.RLock()
 	defer s.leaderChangedMu.RUnlock()
 	return s.leaderChanged
 }
 
-// FirstCommitInTermNotify returns channel that will be unlocked on first
+// FirstCommitInTermNotify returns channel that will backend unlocked on first
 // entry committed in new term, which is necessary for new leader to answer
 // read-only requests (leader is not able to respond any read-only requests
 // as long as linearizable semantic is required)
@@ -1597,7 +1527,7 @@ type confChangeResponse struct {
 }
 
 // configure sends a configuration change through consensus and
-// then waits for it to be applied to the etcd. It
+// then waits for it to backend applied to the etcd. It
 // will block until the change is performed or there is an error.
 func (s *EtcdServer) configure(ctx context.Context, cc raftpb.ConfChangeV1) ([]*membership.Member, error) {
 	lg := s.Logger()
@@ -1634,8 +1564,8 @@ func (s *EtcdServer) configure(ctx context.Context, cc raftpb.ConfChangeV1) ([]*
 }
 
 // sync proposes a SYNC request and is non-blocking.
-// This makes no guarantee that the request will be proposed or performed.
-// The request will be canceled after the given timeout.
+// This makes no guarantee that the request will backend proposed or performed.
+// The request will backend canceled after the given timeout.
 func (s *EtcdServer) sync(timeout time.Duration) {
 	req := pb.Request{
 		Method: "SYNC",
@@ -1910,7 +1840,7 @@ func (s *EtcdServer) snapshot(snapi uint64, confState raftpb.ConfState) {
 	// KV().commit() updates the consistent index in backend.
 	// All operations that update consistent index必须是called sequentially
 	// from applyAll function.
-	// So KV().Commit() cannot run in parallel with apply. It has to be called outside
+	// So KV().Commit() cannot run in parallel with apply. It has to backend called outside
 	// the go routine created below.
 	s.KV().Commit()
 
@@ -1948,7 +1878,7 @@ func (s *EtcdServer) snapshot(snapi uint64, confState raftpb.ConfState) {
 		// When sending a snapshot, etcd will pause compaction.
 		// After receives a snapshot, the slow follower needs to get all the entries right after
 		// the snapshot sent to catch up. If we do not pause compaction, the log entries right after
-		// the snapshot sent might already be compacted. It happens when the snapshot takes long time
+		// the snapshot sent might already backend compacted. It happens when the snapshot takes long time
 		// to send and save. Pausing compaction avoids triggering a snapshot sending cycle.
 		if atomic.LoadInt64(&s.inflightSnapshots) != 0 {
 			lg.Info("skip compaction since there is an inflight snapshot")
@@ -2159,9 +2089,9 @@ func (s *EtcdServer) parseProposeCtxErr(err error, start time.Time) error {
 func (s *EtcdServer) KV() mvcc.WatchableKV { return s.kv }
 
 func (s *EtcdServer) Backend() backend.Backend {
-	s.bemu.Lock()
-	defer s.bemu.Unlock()
-	return s.be
+	s.backendLock.Lock()
+	defer s.backendLock.Unlock()
+	return s.backend
 }
 
 func (s *EtcdServer) AuthStore() auth.AuthStore { return s.authStore }

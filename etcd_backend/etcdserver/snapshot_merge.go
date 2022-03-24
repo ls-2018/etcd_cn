@@ -39,7 +39,7 @@ func (s *EtcdServer) createMergedSnapshotMessage(m raftpb.Message, snapt, snapi 
 
 	// commit kv to write metadata(for example: consistent index).
 	s.KV().Commit()
-	dbsnap := s.be.Snapshot()
+	dbsnap := s.backend.Snapshot()
 	// get a snapshot of v3 KV as readCloser
 	rc := newSnapshotReaderCloser(lg, dbsnap)
 

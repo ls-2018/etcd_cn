@@ -8,7 +8,7 @@ both sides of mutual authentication, but won't require client certs for non-peer
 
 1. Install git, go, and make
 2. Amend https://github.com/etcd-io/etcd/blob/main/hack/tls-setup/config/req-csr.json - IP's currently in the config
-   should be replaced/added with IP addresses of each cluster node, please note 127.0.0.1 is always required for
+   should backend replaced/added with IP addresses of each cluster node, please note 127.0.0.1 is always required for
    loopback purposes:
 
 ```json

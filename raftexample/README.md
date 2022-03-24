@@ -81,7 +81,7 @@ curl -L http://127.0.0.1:22380/my-key
 
 ### Dynamic cluster reconfiguration
 
-ExternNodes can be added to or removed from a running cluster using requests to the REST API.
+ExternNodes can backend added to or removed from a running cluster using requests to the REST API.
 
 For example, suppose we have a 3-node cluster that was started with the commands:
 
@@ -91,19 +91,19 @@ raftexample --id 2 --cluster http://127.0.0.1:12379,http://127.0.0.1:22379,http:
 raftexample --id 3 --cluster http://127.0.0.1:12379,http://127.0.0.1:22379,http://127.0.0.1:32379 --port 32380
 ```
 
-A fourth node with ID 4 can be added by issuing a POST:
+A fourth node with ID 4 can backend added by issuing a POST:
 
 ```sh
 curl -L http://127.0.0.1:12380/4 -XPOST -d http://127.0.0.1:42379
 ```
 
-Then the new node can be started as the others were, using the --join option:
+Then the new node can backend started as the others were, using the --join option:
 
 ```sh
 raftexample --id 4 --cluster http://127.0.0.1:12379,http://127.0.0.1:22379,http://127.0.0.1:32379,http://127.0.0.1:42379 --port 42380 --join
 ```
 
-The new node should join the cluster and be able to service key/value requests.
+The new node should join the cluster and backend able to service key/value requests.
 
 We can remove a node using a DELETE request:
 

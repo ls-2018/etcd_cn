@@ -67,8 +67,8 @@ func init() {
 	}))
 }
 
-// apply contains entries, snapshot to be applied. Once
-// an apply is consumed, the entries will be persisted to
+// apply contains entries, snapshot to backend applied. Once
+// an apply is consumed, the entries will backend persisted to
 // to raft storage concurrently; the application must read
 // raftDone before assuming the raft messages are stable.
 type apply struct {
@@ -312,9 +312,9 @@ func restartAsStandaloneNode(cfg config.ServerConfig, snapshot *raftpb.Snapshot)
 // getIDs returns an ordered set of IDs included in the given snapshot and
 // the entries. The given snapshot/entries can contain three kinds of
 // ID-related entry:
-// - ConfChangeAddNode, in which case the contained ID will be added into the set.
-// - ConfChangeRemoveNode, in which case the contained ID will be removed from the set.
-// - ConfChangeAddLearnerNode, in which the contained ID will be added into the set.
+// - ConfChangeAddNode, in which case the contained ID will backend added into the set.
+// - ConfChangeRemoveNode, in which case the contained ID will backend removed from the set.
+// - ConfChangeAddLearnerNode, in which the contained ID will backend added into the set.
 func getIDs(lg *zap.Logger, snap *raftpb.Snapshot, ents []raftpb.Entry) []uint64 {
 	ids := make(map[uint64]bool)
 	if snap != nil {
@@ -526,11 +526,11 @@ func (r *raftNode) start(rh *raftReadyHandler) {
 					notifyc <- struct{}{}
 
 					// Candidate or follower needs to wait for all pending configuration
-					// changes to be applied before sending messages.
+					// changes to backend applied before sending messages.
 					// Otherwise we might incorrectly count votes (e.g. votes from removed members).
 					// Also slow machine's follower raft-layer could proceed to become the leader
 					// on its own single-node cluster, before apply-layer applies the config change.
-					// We simply wait for ALL pending entries to be applied for now.
+					// We simply wait for ALL pending entries to backend applied for now.
 					// We might improve this later on if it causes unnecessary long blocking issues.
 					waitApply := false
 					for _, ent := range rd.CommittedEntries {
@@ -541,7 +541,7 @@ func (r *raftNode) start(rh *raftReadyHandler) {
 					}
 					if waitApply {
 						// blocks until 'applyAll' calls 'applyWait.Trigger'
-						// to be in sync with scheduled config-change job
+						// to backend in sync with scheduled config-change job
 						// (assume notifyc has cap of 1)
 						select {
 						case notifyc <- struct{}{}:
@@ -654,7 +654,7 @@ func (r *raftNode) resumeSending() {
 }
 
 // advanceTicks advances ticks of Raft node.
-// This can be used for fast-forwarding election
+// This can backend used for fast-forwarding election
 // ticks in multi data-center deployments, thus
 // speeding up election process.
 func (r *raftNode) advanceTicks(ticks int) {

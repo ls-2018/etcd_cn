@@ -16,6 +16,8 @@ package v3rpc
 
 import (
 	"context"
+	"encoding/json"
+	"go.uber.org/zap"
 	"sync"
 	"time"
 
@@ -43,16 +45,19 @@ type streamsMap struct {
 
 func newUnaryInterceptor(s *etcdserver.EtcdServer) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-		if !api.IsCapabilityEnabled(api.V3rpcCapability) {
+		if !api.IsCapabilityEnabled(api.V3rpcCapability) { // 是否启用了v3rpc
 			return nil, rpctypes.ErrGRPCNotCapable
 		}
-
+		// 集群包含自己,自己是learner,
 		if s.IsMemberExist(s.ID()) && s.IsLearner() && !isRPCSupportedForLearner(req) {
 			return nil, rpctypes.ErrGPRCNotSupportedForLearner
 		}
 
 		md, ok := metadata.FromIncomingContext(ctx)
 		if ok {
+			data, _ := json.Marshal(md)
+			s.Logger().Info("-", zap.String("metadata", string(data)))
+			// hasleader
 			if ks := md[rpctypes.MetadataRequireLeaderKey]; len(ks) > 0 && ks[0] == rpctypes.MetadataHasLeader {
 				if s.Leader() == types.ID(raft.None) {
 					return nil, rpctypes.ErrGRPCNoLeader

@@ -426,7 +426,7 @@ func (a *applierV3backend) Txn(ctx context.Context, rt *pb.TxnRequest) (*pb.TxnR
 	// When executing mutable txn ops, etcd must hold the txn lock so
 	// readers do not see any intermediate results. Since writes are
 	// serialized on the raft loop, the revision in the read view will
-	// be the revision of the write txn.
+	// backend the revision of the write txn.
 	if isWrite {
 		txn.End()
 		txn = a.s.KV().Write(trace)

@@ -1185,7 +1185,7 @@ func (*HashRequest) Descriptor() ([]byte, []int) {
 }
 
 type HashKVRequest struct {
-	// revision is the key-value store revision for the hash operation.
+	// revision是哈希操作的键值存储修订版。
 	Revision             int64    `protobuf:"varint,1,opt,name=revision,proto3" json:"revision,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -4025,27 +4025,15 @@ func (c *kVClient) Compact(ctx context.Context, in *CompactionRequest, opts ...g
 	return out, nil
 }
 
-// KVServer is the server API for KV service.
+// KVServer k,v服务
 type KVServer interface {
-	// Range gets the keys in the range from the key-value store.
-	Range(context.Context, *RangeRequest) (*RangeResponse, error)
-	// Put puts the given key into the key-value store.
-	// A put request increments the revision of the key-value store
-	// and generates one event in the event history.
-	Put(context.Context, *PutRequest) (*PutResponse, error)
-	// DeleteRange deletes the given range from the key-value store.
-	// A delete request increments the revision of the key-value store
-	// and generates a delete event in the event history for every deleted key.
-	DeleteRange(context.Context, *DeleteRangeRequest) (*DeleteRangeResponse, error)
-	// Txn processes multiple requests in a single transaction.
-	// A txn request increments the revision of the key-value store
-	// and generates events with the same revision for every completed request.
-	// It is not allowed to modify the same key several times within one txn.
+	Range(context.Context, *RangeRequest) (*RangeResponse, error)                   // 范围查询
+	Put(context.Context, *PutRequest) (*PutResponse, error)                         // 更新、创建
+	DeleteRange(context.Context, *DeleteRangeRequest) (*DeleteRangeResponse, error) // 范围删除
+	// Txn 在一个事务中处理多个请求。一个txn请求会增加键值存储的版本，并为每个完成的请求生成具有相同版本的事件。不允许在一个txn中多次修改同一个键。
 	Txn(context.Context, *TxnRequest) (*TxnResponse, error)
-	// Compact compacts the event history in the etcd key-value store. The key-value
-	// store should be periodically compacted or the event history will continue to grow
-	// indefinitely.
-	Compact(context.Context, *CompactionRequest) (*CompactionResponse, error)
+	// Compact 压缩 etcd 键值存储中的事件历史。该键值 存储器应定期压缩，否则事件历史将继续无限地增长。
+	Compact(context.Context, *CompactionRequest) (*CompactionResponse, error) // 压缩
 }
 
 // UnimplementedKVServer can be embedded to have forward compatible implementations.
@@ -4401,21 +4389,12 @@ func (c *leaseClient) LeaseLeases(ctx context.Context, in *LeaseLeasesRequest, o
 	return out, nil
 }
 
-// LeaseServer is the server API for Lease service.
 type LeaseServer interface {
-	// LeaseGrant creates a lease which expires if the server does not receive a keepAlive
-	// within a given time to live period. All keys attached to the lease will be expired and
-	// deleted if the lease expires. Each expired key generates a delete event in the event history.
-	LeaseGrant(context.Context, *LeaseGrantRequest) (*LeaseGrantResponse, error)
-	// LeaseRevoke revokes a lease. All keys attached to the lease will expire and be deleted.
-	LeaseRevoke(context.Context, *LeaseRevokeRequest) (*LeaseRevokeResponse, error)
-	// LeaseKeepAlive keeps the lease alive by streaming keep alive requests from the client
-	// to the server and streaming keep alive responses from the server to the client.
-	LeaseKeepAlive(Lease_LeaseKeepAliveServer) error
-	// LeaseTimeToLive retrieves lease information.
-	LeaseTimeToLive(context.Context, *LeaseTimeToLiveRequest) (*LeaseTimeToLiveResponse, error)
-	// LeaseLeases lists all existing leases.
-	LeaseLeases(context.Context, *LeaseLeasesRequest) (*LeaseLeasesResponse, error)
+	LeaseGrant(context.Context, *LeaseGrantRequest) (*LeaseGrantResponse, error)                // 创建租约
+	LeaseRevoke(context.Context, *LeaseRevokeRequest) (*LeaseRevokeResponse, error)             // 移除租约
+	LeaseKeepAlive(Lease_LeaseKeepAliveServer) error                                            // 租约 续租
+	LeaseTimeToLive(context.Context, *LeaseTimeToLiveRequest) (*LeaseTimeToLiveResponse, error) // 检索租约信息
+	LeaseLeases(context.Context, *LeaseLeasesRequest) (*LeaseLeasesResponse, error)             // 显示所有存在的租约
 }
 
 // UnimplementedLeaseServer can be embedded to have forward compatible implementations.

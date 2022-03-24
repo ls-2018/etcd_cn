@@ -152,3 +152,22 @@ func (ls *LeaseServer) leaseKeepAlive(stream pb.Lease_LeaseKeepAliveServer) erro
 		}
 	}
 }
+
+type quotaLeaseServer struct {
+	pb.LeaseServer
+	qa quotaAlarmer
+}
+
+func (s *quotaLeaseServer) LeaseGrant(ctx context.Context, cr *pb.LeaseGrantRequest) (*pb.LeaseGrantResponse, error) {
+	if err := s.qa.check(ctx, cr); err != nil {
+		return nil, err
+	}
+	return s.LeaseServer.LeaseGrant(ctx, cr)
+}
+
+func NewQuotaLeaseServer(s *etcdserver.EtcdServer) pb.LeaseServer {
+	return &quotaLeaseServer{
+		NewLeaseServer(s),
+		quotaAlarmer{etcdserver.NewBackendQuota(s, "lease"), s, s.ID()},
+	}
+}

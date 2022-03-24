@@ -56,58 +56,23 @@ const (
 type UserAddOptions authpb.UserAddOptions
 
 type Auth interface {
-	// Authenticate login and get token
 	Authenticate(ctx context.Context, name string, password string) (*AuthenticateResponse, error)
-
-	// AuthEnable enables auth of an etcd cluster.
 	AuthEnable(ctx context.Context) (*AuthEnableResponse, error)
-
-	// AuthDisable disables auth of an etcd cluster.
 	AuthDisable(ctx context.Context) (*AuthDisableResponse, error)
-
-	// AuthStatus returns the status of auth of an etcd cluster.
 	AuthStatus(ctx context.Context) (*AuthStatusResponse, error)
-
-	// UserAdd adds a new user to an etcd cluster.
 	UserAdd(ctx context.Context, name string, password string) (*AuthUserAddResponse, error)
-
-	// UserAddWithOptions adds a new user to an etcd cluster with some options.
 	UserAddWithOptions(ctx context.Context, name string, password string, opt *UserAddOptions) (*AuthUserAddResponse, error)
-
-	// UserDelete deletes a user from an etcd cluster.
 	UserDelete(ctx context.Context, name string) (*AuthUserDeleteResponse, error)
-
-	// UserChangePassword changes a password of a user.
 	UserChangePassword(ctx context.Context, name string, password string) (*AuthUserChangePasswordResponse, error)
-
-	// UserGrantRole grants a role to a user.
 	UserGrantRole(ctx context.Context, user string, role string) (*AuthUserGrantRoleResponse, error)
-
-	// UserGet gets a detailed information of a user.
 	UserGet(ctx context.Context, name string) (*AuthUserGetResponse, error)
-
-	// UserList gets a list of all users.
 	UserList(ctx context.Context) (*AuthUserListResponse, error)
-
-	// UserRevokeRole revokes a role of a user.
 	UserRevokeRole(ctx context.Context, name string, role string) (*AuthUserRevokeRoleResponse, error)
-
-	// RoleAdd adds a new role to an etcd cluster.
 	RoleAdd(ctx context.Context, name string) (*AuthRoleAddResponse, error)
-
-	// RoleGrantPermission grants a permission to a role.
 	RoleGrantPermission(ctx context.Context, name string, key, rangeEnd string, permType PermissionType) (*AuthRoleGrantPermissionResponse, error)
-
-	// RoleGet gets a detailed information of a role.
 	RoleGet(ctx context.Context, role string) (*AuthRoleGetResponse, error)
-
-	// RoleList gets a list of all roles.
 	RoleList(ctx context.Context) (*AuthRoleListResponse, error)
-
-	// RoleRevokePermission revokes a permission from a role.
 	RoleRevokePermission(ctx context.Context, role string, key, rangeEnd string) (*AuthRoleRevokePermissionResponse, error)
-
-	// RoleDelete deletes a role.
 	RoleDelete(ctx context.Context, role string) (*AuthRoleDeleteResponse, error)
 }
 

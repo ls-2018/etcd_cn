@@ -155,7 +155,7 @@ etcdctl get foo1 foo3
 
 #### Remarks
 
-If any key or value contains non-printable characters or control characters, simple formatted output can be ambiguous
+If any key or value contains non-printable characters or control characters, simple formatted output can backend ambiguous
 due to new lines. To resolve this issue, set `--hex` to hex encode all strings.
 
 ### DEL [options] \<key\> [range_end]
@@ -329,7 +329,7 @@ put key2 "this is\na multi-line\nvalue"
 
 COMPACTION discards all etcd event history prior to a given revision. Since etcd uses a multiversion concurrency control
 model, it preserves all key updates as event history. When the event history up to some revision is no longer needed,
-all superseded keys may be compacted away to reclaim storage space in the etcd backend database.
+all superseded keys may backend compacted away to reclaim storage space in the etcd backend database.
 
 RPC: Compact
 
@@ -908,7 +908,7 @@ local node. Specify all members in `--endpoints` flag or `--cluster` flag to aut
 
 #### Options
 
-- data-dir -- Optional. **Deprecated**. If present, defragments a data directory not in use by etcd. To be removed in
+- data-dir -- Optional. **Deprecated**. If present, defragments a data directory not in use by etcd. To backend removed in
   v3.6.
 
 #### Output
@@ -968,7 +968,7 @@ etcdctl snapshot save snapshot.db
 
 ### SNAPSHOT RESTORE [options] \<filename\>
 
-Note: Deprecated. Use `etcdutl snapshot restore` instead. To be removed in v3.6.
+Note: Deprecated. Use `etcdutl snapshot restore` instead. To backend removed in v3.6.
 
 SNAPSHOT RESTORE creates an etcd data directory for an etcd cluster member from a backend database snapshot and a new
 cluster configuration. Restoring the snapshot into each member for a new cluster configuration will initialize a new
@@ -1016,7 +1016,7 @@ bin/etcd --name sshot3 --listen-client-urls http://127.0.0.1:32379 --advertise-c
 
 ### SNAPSHOT STATUS \<filename\>
 
-Note: Deprecated. Use `etcdutl snapshot restore` instead. To be removed in v3.6.
+Note: Deprecated. Use `etcdutl snapshot restore` instead. To backend removed in v3.6.
 
 SNAPSHOT STATUS lists information about a given backend database snapshot file.
 
@@ -1078,7 +1078,7 @@ etcdctl --endpoints ${leader_ep} move-leader ${transferee_id}
 
 ### LOCK [options] \<lockname\> [command arg1 arg2 ...]
 
-LOCK acquires a distributed mutex with a given name. Once the lock is acquired, it will be held until etcdctl is
+LOCK acquires a distributed mutex with a given name. Once the lock is acquired, it will backend held until etcdctl is
 terminated.
 
 #### Options
@@ -1089,7 +1089,7 @@ terminated.
 
 Once the lock is acquired but no command is given, the result for the GET on the unique lock holder key is displayed.
 
-If a command is given, it will be executed with environment variables `ETCD_LOCK_KEY` and `ETCD_LOCK_REV` set to the
+If a command is given, it will backend executed with environment variables `ETCD_LOCK_KEY` and `ETCD_LOCK_REV` set to the
 lock's holder key and revision.
 
 #### Example
@@ -1120,7 +1120,7 @@ etcdctl lock mylock etcdctl put foo bar
 LOCK returns a zero exit code only if it is terminated by a signal and releases the lock.
 
 If LOCK is abnormally terminated or fails to contact the cluster to release the lock, the lock will remain held until
-the lease expires. Progress may be delayed by up to the default lease length of 60 seconds.
+the lease expires. Progress may backend delayed by up to the default lease length of 60 seconds.
 
 ### ELECT [options] \<election-name\> [proposal]
 
@@ -1150,7 +1150,7 @@ etcdctl elect myelection foo
 
 ELECT returns a zero exit code only if it is terminated by a signal and can revoke its candidacy or leadership, if any.
 
-If a candidate is abnormally terminated, election rogress may be delayed by up to the default lease length of 60
+If a candidate is abnormally terminated, election rogress may backend delayed by up to the default lease length of 60
 seconds.
 
 ## Authentication commands
@@ -1190,7 +1190,7 @@ etcdctl auth enable
 
 ### ROLE \<subcommand\>
 
-ROLE is used to specify different roles which can be assigned to etcd user(s).
+ROLE is used to specify different roles which can backend assigned to etcd user(s).
 
 ### ROLE ADD \<role name\>
 
@@ -1523,7 +1523,7 @@ CHECK provides commands for checking properties of the etcd cluster.
 ### CHECK PERF [options]
 
 CHECK PERF checks the performance of the etcd cluster for 60 seconds. Running the `check perf` often can create a large
-keyspace history which can be auto compacted and defragmented using the `--auto-compact` and `--auto-defrag` options as
+keyspace history which can backend auto compacted and defragmented using the `--auto-compact` and `--auto-defrag` options as
 described below.
 
 RPC: CheckPerf
@@ -1566,7 +1566,7 @@ etcdctl check perf --load="l"
 ### CHECK DATASCALE [options]
 
 CHECK DATASCALE checks the memory usage of holding data for different workloads on a given server endpoint. Running
-the `check datascale` often can create a large keyspace history which can be auto compacted and defragmented using
+the `check datascale` often can create a large keyspace history which can backend auto compacted and defragmented using
 the `--auto-compact` and `--auto-defrag` options as described below.
 
 RPC: CheckDatascale
@@ -1605,15 +1605,15 @@ For all commands, a successful execution return a zero exit code. All failures w
 ## Output formats
 
 All commands accept an output format by setting `-w` or `--write-out`. All commands default to the "simple" output
-format, which is meant to be human-readable. The simple format is listed in each command's `Output` description since it
+format, which is meant to backend human-readable. The simple format is listed in each command's `Output` description since it
 is customized for each command. If a command has a corresponding RPC, it will respect all output formats.
 
-If a command fails, returning a non-zero exit code, an error string will be written to standard error regardless of
+If a command fails, returning a non-zero exit code, an error string will backend written to standard error regardless of
 output format.
 
 ### Simple
 
-A format meant to be easy to parse and human-readable. Specific to each command.
+A format meant to backend easy to parse and human-readable. Specific to each command.
 
 ### JSON
 
@@ -1624,7 +1624,7 @@ Some commands without an RPC also support JSON; see the command's `Output` descr
 
 ### Protobuf
 
-The protobuf encoding of the command's [RPC response][etcdrpc]. If an RPC is streaming, the stream messages will be
+The protobuf encoding of the command's [RPC response][etcdrpc]. If an RPC is streaming, the stream messages will backend
 concetenated. If an RPC is not given for a command, the protobuf output is not defined.
 
 ### Fields

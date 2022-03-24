@@ -71,9 +71,9 @@ func (aa *authApplierV3) Put(ctx context.Context, txn mvcc.TxnWrite, r *pb.PutRe
 
 	if err := aa.checkLeasePuts(lease.LeaseID(r.Lease)); err != nil {
 		// The specified lease is already attached with a key that cannot
-		// be written by this user. It means the user cannot revoke the
+		// backend written by this user. It means the user cannot revoke the
 		// lease so attaching the lease to the newly written key should
-		// be forbidden.
+		// backend forbidden.
 		return nil, nil, err
 	}
 

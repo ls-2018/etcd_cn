@@ -113,9 +113,9 @@ func (sctx *serveCtx) serve(s *etcdserver.EtcdServer, tlsinfo *transport.TLSInfo
 		if sctx.serviceRegister != nil {
 			sctx.serviceRegister(gs)
 		}
-		grpcl := m.Match(cmux.HTTP2())
+		grpcListener := m.Match(cmux.HTTP2()) //
 
-		go func() { errHandler(gs.Serve(grpcl)) }()
+		go func() { errHandler(gs.Serve(grpcListener)) }()
 
 		var gwmux *gw.ServeMux
 		// 启用grpc网关,将 http 转换成 grpc / true

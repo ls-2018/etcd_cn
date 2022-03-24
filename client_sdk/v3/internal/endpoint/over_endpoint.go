@@ -120,8 +120,7 @@ func translateEndpoint(ep string) (addr string, serverName string, requireCreds 
 	return ep, extractHostFromHostPort(ep), CREDS_OPTIONAL
 }
 
-// RequiresCredentials returns whether given endpoint requires
-// credentials/certificates for connection.
+// RequiresCredentials 127.0.0.1:2379
 func RequiresCredentials(ep string) CredsRequirement {
 	_, _, requireCreds := translateEndpoint(ep)
 	return requireCreds

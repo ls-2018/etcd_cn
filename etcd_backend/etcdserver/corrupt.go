@@ -15,13 +15,8 @@
 package etcdserver
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
-	"strings"
 	"time"
 
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
@@ -127,11 +122,7 @@ func (s *EtcdServer) monitorKVHash() {
 	}
 
 	lg := s.Logger()
-	lg.Info(
-		"enabled corruption checking",
-		zap.String("local-member-id", s.ID().String()),
-		zap.Duration("interval", t),
-	)
+	lg.Info("启用损坏检查", zap.String("local-member-id", s.ID().String()), zap.Duration("interval", t))
 
 	for {
 		select {
@@ -335,108 +326,4 @@ func (a *applierV3Corrupt) LeaseGrant(lc *pb.LeaseGrantRequest) (*pb.LeaseGrantR
 
 func (a *applierV3Corrupt) LeaseRevoke(lc *pb.LeaseRevokeRequest) (*pb.LeaseRevokeResponse, error) {
 	return nil, ErrCorrupt
-}
-
-const PeerHashKVPath = "/members/hashkv"
-
-type hashKVHandler struct {
-	lg     *zap.Logger
-	server *EtcdServer
-}
-
-func (s *EtcdServer) HashKVHandler() http.Handler {
-	return &hashKVHandler{lg: s.Logger(), server: s}
-}
-
-func (h *hashKVHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		w.Header().Set("Allow", http.MethodGet)
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-		return
-	}
-	if r.URL.Path != PeerHashKVPath {
-		http.Error(w, "bad path", http.StatusBadRequest)
-		return
-	}
-
-	defer r.Body.Close()
-	b, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, "error reading body", http.StatusBadRequest)
-		return
-	}
-
-	req := &pb.HashKVRequest{}
-	if err := json.Unmarshal(b, req); err != nil {
-		h.lg.Warn("failed to unmarshal request", zap.Error(err))
-		http.Error(w, "error unmarshalling request", http.StatusBadRequest)
-		return
-	}
-	hash, rev, compactRev, err := h.server.KV().HashByRev(req.Revision)
-	if err != nil {
-		h.lg.Warn(
-			"failed to get hashKV",
-			zap.Int64("requested-revision", req.Revision),
-			zap.Error(err),
-		)
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	resp := &pb.HashKVResponse{Header: &pb.ResponseHeader{Revision: rev}, Hash: hash, CompactRevision: compactRev}
-	respBytes, err := json.Marshal(resp)
-	if err != nil {
-		h.lg.Warn("failed to marshal hashKV response", zap.Error(err))
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("X-Etcd-Cluster-ID", h.server.Cluster().ID().String())
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(respBytes)
-}
-
-// getPeerHashKVHTTP fetch hash of kv store at the given rev via http call to the given url
-func (s *EtcdServer) getPeerHashKVHTTP(ctx context.Context, url string, rev int64) (*pb.HashKVResponse, error) {
-	cc := &http.Client{Transport: s.peerRt}
-	hashReq := &pb.HashKVRequest{Revision: rev}
-	hashReqBytes, err := json.Marshal(hashReq)
-	if err != nil {
-		return nil, err
-	}
-	requestUrl := url + PeerHashKVPath
-	req, err := http.NewRequest(http.MethodGet, requestUrl, bytes.NewReader(hashReqBytes))
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	req.Header.Set("Content-Type", "application/json")
-	req.Cancel = ctx.Done()
-
-	resp, err := cc.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	if resp.StatusCode == http.StatusBadRequest {
-		if strings.Contains(string(b), mvcc.ErrCompacted.Error()) {
-			return nil, rpctypes.ErrCompacted
-		}
-		if strings.Contains(string(b), mvcc.ErrFutureRev.Error()) {
-			return nil, rpctypes.ErrFutureRev
-		}
-	}
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unknown error: %s", string(b))
-	}
-
-	hashResp := &pb.HashKVResponse{}
-	if err := json.Unmarshal(b, hashResp); err != nil {
-		return nil, err
-	}
-	return hashResp, nil
 }

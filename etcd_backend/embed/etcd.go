@@ -74,18 +74,14 @@ type Etcd struct {
 	Peers   []*peerListener
 	Clients []net.Listener
 	// 本机节点监听本地网卡的map     例如   localhost:2379   127.0.0.1:2379  0.0.0.0:2379 等等
-	sctxs            map[string]*serveCtx
-	metricsListeners []net.Listener
-
+	sctxs                   map[string]*serveCtx
+	metricsListeners        []net.Listener
 	tracingExporterShutdown func()
-
-	Server *etcdserver.EtcdServer
-
-	cfg   Config
-	stopc chan struct{} // raft 停止,消息通道
-	errc  chan error    // 接收运行过程中产生的err
-
-	closeOnce sync.Once
+	Server                  *etcdserver.EtcdServer
+	cfg                     Config
+	stopc                   chan struct{} // raft 停止,消息通道
+	errc                    chan error    // 接收运行过程中产生的err
+	closeOnce               sync.Once
 }
 
 // 每个server的Listener
@@ -526,10 +522,11 @@ func (e *Etcd) servePeers() (err error) {
 	}
 
 	for _, p := range e.Peers {
+
 		u := p.Listener.Addr().String()
 		grpcServer := v3rpc.Server(e.Server, peerTLScfg, nil)
 		m := cmux.New(p.Listener)
-		go grpcServer.Serve(m.Match(cmux.HTTP2())) // 基于http2
+		go grpcServer.Serve(m.Match(cmux.HTTP2())) // 基于http2 tcp://127.0.0.1:2380
 
 		httpServer := &http.Server{
 			Handler:     grpcHandlerFunc(grpcServer, httpHandler),

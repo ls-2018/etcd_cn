@@ -28,7 +28,7 @@ import (
 
 // isConnectedToQuorumSince 检查本地成员是否在给定的时间后连接到集群的法定人数.
 func isConnectedToQuorumSince(transport rafthttp.Transporter, since time.Time, self types.ID, members []*membership.Member) bool {
-	return numConnectedSince(transport, since, self, members) >= (len(members)/2)+1  // 2.5
+	return numConnectedSince(transport, since, self, members) >= (len(members)/2)+1 // 2.5
 }
 
 // isConnectedSince 检查是否自给定时间以后,与该节点建立连接
@@ -41,17 +41,6 @@ func isConnectedSince(transport rafthttp.Transporter, since time.Time, remote ty
 // members in the cluster since the given time.
 func isConnectedFullySince(transport rafthttp.Transporter, since time.Time, self types.ID, members []*membership.Member) bool {
 	return numConnectedSince(transport, since, self, members) == len(members)
-}
-
-// numConnectedSince 计算自给定时间以来有多少成员与本地成员相连.
-func numConnectedSince(transport rafthttp.Transporter, since time.Time, self types.ID, members []*membership.Member) int {
-	connectedNum := 0
-	for _, m := range members {
-		if m.ID == self || isConnectedSince(transport, since, m.ID) {
-			connectedNum++
-		}
-	}
-	return connectedNum
 }
 
 // longestConnected chooses the member with longest active-since-time.
@@ -114,4 +103,15 @@ func warnOfFailedRequest(lg *zap.Logger, now time.Time, reqStringer fmt.Stringer
 
 func isNil(msg proto.Message) bool {
 	return msg == nil || reflect.ValueOf(msg).IsNil()
+}
+
+// numConnectedSince 计算自给定时间以来有多少成员与本地成员相连.
+func numConnectedSince(transport rafthttp.Transporter, since time.Time, self types.ID, members []*membership.Member) int {
+	connectedNum := 0
+	for _, m := range members {
+		if m.ID == self || isConnectedSince(transport, since, m.ID) {
+			connectedNum++
+		}
+	}
+	return connectedNum
 }

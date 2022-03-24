@@ -111,7 +111,7 @@ sudo mv /tmp/my-etcd-3.service /etc/systemd/system/my-etcd-3.service
 
 ## Start the service
 
-The service needs to be enabled first, in case of system reboot:
+The service needs to backend enabled first, in case of system reboot:
 
 ```
 sudo systemctl daemon-reload

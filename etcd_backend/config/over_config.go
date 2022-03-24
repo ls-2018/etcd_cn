@@ -66,22 +66,19 @@ type ServerConfig struct {
 	AutoCompactionMode      string
 
 	CompactionBatchLimit int
-	QuotaBackendBytes    int64
-	MaxTxnOps            uint // 事务中允许的最大操作数
+	QuotaBackendBytes    int64 // bolt.db 存储上限 【字节】
+	MaxTxnOps            uint  // 事务中允许的最大操作数
 
 	// MaxRequestBytes raft发送的最大数据量
 	MaxRequestBytes uint
 
 	WarningApplyDuration time.Duration
 
-	StrictReconfigCheck bool
-
-	// ClientCertAuthEnabled 客户端证书被client CA签名过就是true
-	ClientCertAuthEnabled bool
-
-	AuthToken  string
-	BcryptCost uint
-	TokenTTL   uint
+	StrictReconfigCheck   bool
+	ClientCertAuthEnabled bool // 验证客户端证书是不是服务器CA签署的
+	AuthToken             string
+	BcryptCost            uint // 为散列身份验证密码指定bcrypt算法的成本/强度 ,默认10
+	TokenTTL              uint
 
 	// InitialCorruptCheck is true to check data corruption on boot
 	// before serving any peer/client traffic.

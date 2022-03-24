@@ -26,44 +26,20 @@ var (
 	// where etcd indicates it did not process the data. gRPC default is default is "WaitForReady(false)"
 	// but for etcd we default to "WaitForReady(true)" to minimize client request error responses due to
 	// transient failures.
-	defaultWaitForReady = grpc.WaitForReady(true)
-
-	// client-side request send limit, gRPC default is math.MaxInt32
-	// Make sure that "client-side send limit < etcd-side default send/recv limit"
-	// Same value as "embed.DefaultMaxRequestBytes" plus gRPC overhead bytes
-	defaultMaxCallSendMsgSize = grpc.MaxCallSendMsgSize(2 * 1024 * 1024)
-
-	// client-side response receive limit, gRPC default is 4MB
-	// Make sure that "client-side receive limit >= etcd-side default send/recv limit"
-	// because range response can easily exceed request send limits
-	// Default to math.MaxInt32; writes exceeding etcd-side send limit fails anyway
-	defaultMaxCallRecvMsgSize = grpc.MaxCallRecvMsgSize(math.MaxInt32)
-
-	// client-side non-streaming retry limit, only applied to requests where etcd responds with
-	// a error code clearly indicating it was unable to process the request such as codes.Unavailable.
-	// If set to 0, retry is disabled.
-	defaultUnaryMaxRetries uint = 100
-
-	// client-side streaming retry limit, only applied to requests where etcd responds with
-	// a error code clearly indicating it was unable to process the request such as codes.Unavailable.
-	// If set to 0, retry is disabled.
-	defaultStreamMaxRetries = ^uint(0) // max uint
-
-	// client-side retry backoff wait between requests.
-	defaultBackoffWaitBetween = 25 * time.Millisecond
+	defaultWaitForReady            = grpc.WaitForReady(true)
+	defaultMaxCallSendMsgSize      = grpc.MaxCallSendMsgSize(2 * 1024 * 1024)
+	defaultMaxCallRecvMsgSize      = grpc.MaxCallRecvMsgSize(math.MaxInt32)
+	defaultUnaryMaxRetries    uint = 100
+	defaultStreamMaxRetries        = ^uint(0)              // max uint
+	defaultBackoffWaitBetween      = 25 * time.Millisecond // 重试间隔
 
 	// client-side retry backoff default jitter fraction.
 	defaultBackoffJitterFraction = 0.10
 )
 
-// defaultCallOpts defines a list of default "gRPC.CallOption".
-// Some options are exposed to "clientv3.Config".
-// Defaults will be overridden by the settings in "clientv3.Config".
+// "clientv3.Config" 默认的 "gRPC.CallOption".
 var defaultCallOpts = []grpc.CallOption{
 	defaultWaitForReady,
 	defaultMaxCallSendMsgSize,
 	defaultMaxCallRecvMsgSize,
 }
-
-// MaxLeaseTTL is the maximum lease TTL value
-const MaxLeaseTTL = 9000000000

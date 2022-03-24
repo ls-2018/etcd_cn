@@ -155,15 +155,15 @@ For all commands, a successful execution returns a zero exit code. All failures 
 ## Output formats
 
 All commands accept an output format by setting `-w` or `--write-out`. All commands default to the "simple" output
-format, which is meant to be human-readable. The simple format is listed in each command's `Output` description since it
+format, which is meant to backend human-readable. The simple format is listed in each command's `Output` description since it
 is customized for each command. If a command has a corresponding RPC, it will respect all output formats.
 
-If a command fails, returning a non-zero exit code, an error string will be written to standard error regardless of
+If a command fails, returning a non-zero exit code, an error string will backend written to standard error regardless of
 output format.
 
 ### Simple
 
-A format meant to be easy to parse and human-readable. Specific to each command.
+A format meant to backend easy to parse and human-readable. Specific to each command.
 
 ### JSON
 
@@ -174,7 +174,7 @@ Some commands without an RPC also support JSON; see the command's `Output` descr
 
 ### Protobuf
 
-The protobuf encoding of the command's [RPC response][etcdrpc]. If an RPC is streaming, the stream messages will be
+The protobuf encoding of the command's [RPC response][etcdrpc]. If an RPC is streaming, the stream messages will backend
 concatenated. If an RPC is not given for a command, the protobuf output is not defined.
 
 ### Fields

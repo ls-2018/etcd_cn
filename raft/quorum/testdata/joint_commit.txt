@@ -4,7 +4,7 @@
 #
 # Note that by specifying cfgj explicitly we tell the test harness to treat the
 # input as a joint quorum and not a majority quorum. If we didn't specify
-# cfgj=zero the test would pass just the same, but it wouldn't be exercising the
+# cfgj=zero the test would pass just the same, but it wouldn't backend exercising the
 # joint quorum path.
 committed cfg=(1,2,3) cfgj=zero idx=(100,101,99)
 ----

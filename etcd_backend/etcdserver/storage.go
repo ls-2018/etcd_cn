@@ -102,7 +102,7 @@ func readWAL(lg *zap.Logger, waldir string, snap walpb.Snapshot, unsafeNoFsync b
 			w.Close()
 			// we can only repair ErrUnexpectedEOF and we never repair twice.
 			if repaired || err != io.ErrUnexpectedEOF {
-				lg.Fatal("failed to read WAL, cannot be repaired", zap.Error(err))
+				lg.Fatal("failed to read WAL, cannot backend repaired", zap.Error(err))
 			}
 			if !wal.Repair(lg, waldir) {
 				lg.Fatal("failed to repair WAL", zap.Error(err))

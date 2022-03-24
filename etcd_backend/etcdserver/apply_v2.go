@@ -93,7 +93,7 @@ func (a *applierV2store) Put(r *RequestV2, shouldApplyV3 membership.ShouldApplyV
 		// TODO remove v2 version set to avoid the conflict between v2 and v3 in etcd 3.6
 		if r.Path == membership.StoreClusterVersionKey() {
 			if a.cluster != nil {
-				// persist to backend given v2store can be very stale
+				// persist to backend given v2store can backend very stale
 				a.cluster.SetVersion(semver.Must(semver.NewVersion(r.Val)), api.UpdateCapability, shouldApplyV3)
 			}
 			return Response{}
@@ -126,7 +126,7 @@ func (s *EtcdServer) applyV2Request(r *RequestV2, shouldApplyV3 membership.Shoul
 	case "SYNC":
 		return s.applyV2.Sync(r)
 	default:
-		// This should never be reached, but just in case:
+		// This should never backend reached, but just in case:
 		return Response{Err: ErrUnknownMethod}
 	}
 }

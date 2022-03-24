@@ -429,7 +429,7 @@ func (s *v3Manager) saveWALAndSnap() (*raftpb.HardState, error) {
 		cc := raftpb.ConfChangeV1{
 			Type:    raftpb.ConfChangeAddNode,
 			NodeID:  p.ID,
-			Context: p.Context,
+			Context: string(p.Context),
 		}
 		d, err := cc.Marshal()
 		if err != nil {

@@ -25,8 +25,6 @@ const (
 	Schema = "etcd-endpoints"
 )
 
-// EtcdManualResolver is a Resolver (and resolver.Builder) that can be updated
-// using SetEndpoints.
 type EtcdManualResolver struct {
 	*manual.Resolver
 	endpoints     []string
@@ -34,11 +32,10 @@ type EtcdManualResolver struct {
 }
 
 func New(endpoints ...string) *EtcdManualResolver {
-	r := manual.NewBuilderWithScheme(Schema)
+	r := manual.NewBuilderWithScheme(Schema) // etcd-endpoints
 	return &EtcdManualResolver{Resolver: r, endpoints: endpoints, serviceConfig: nil}
 }
 
-// Build returns itself for Resolver, because it's both a builder and a resolver.
 func (r *EtcdManualResolver) Build(target resolver.Target, cc resolver.ClientConn, opts resolver.BuildOptions) (resolver.Resolver, error) {
 	r.serviceConfig = cc.ParseServiceConfig(`{"loadBalancingPolicy": "round_robin"}`)
 	if r.serviceConfig.Err != nil {
@@ -48,7 +45,7 @@ func (r *EtcdManualResolver) Build(target resolver.Target, cc resolver.ClientCon
 	if err != nil {
 		return nil, err
 	}
-	// Populates endpoints stored in r into ClientConn (cc).
+	// 将存储在r中的端点填充到ClientConn (cc)中。
 	r.updateState()
 	return res, nil
 }

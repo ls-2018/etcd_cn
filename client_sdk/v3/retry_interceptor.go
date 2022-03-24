@@ -19,6 +19,7 @@ package clientv3
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"sync"
 	"time"
@@ -31,10 +32,6 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// unaryClientInterceptor returns a new retrying unary client interceptor.
-//
-// The default configuration of the interceptor is to not retry *at all*. This behaviour can be
-// changed through options (e.g. WithMax) on creation of the interceptor or on call (through grpc.CallOptions).
 func (c *Client) unaryClientInterceptor(optFuncs ...retryOption) grpc.UnaryClientInterceptor {
 	intOpts := reuseOrNewWithCallOptions(defaultOptions, optFuncs)
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
@@ -55,16 +52,13 @@ func (c *Client) unaryClientInterceptor(optFuncs ...retryOption) grpc.UnaryClien
 				zap.String("target", cc.Target()),
 				zap.Uint("attempt", attempt),
 			)
+			fmt.Println(req)    // key:"a" value:"b"
+			fmt.Println(method) // /etcdserverpb.KV/Put
 			lastErr = invoker(ctx, method, req, reply, cc, grpcOpts...)
 			if lastErr == nil {
 				return nil
 			}
-			c.GetLogger().Warn(
-				"retrying of unary invoker failed",
-				zap.String("target", cc.Target()),
-				zap.Uint("attempt", attempt),
-				zap.Error(lastErr),
-			)
+			c.GetLogger().Warn("重试一元调用失败", zap.String("target", cc.Target()), zap.Uint("attempt", attempt), zap.Error(lastErr))
 			if isContextError(lastErr) {
 				if ctx.Err() != nil {
 					// its the context deadline or cancellation.

@@ -68,11 +68,11 @@ Entry types (ConfigChange,IRRCompaction) count is : 5
 #### etcd-dump-logs -stream-decoder <EXECUTABLE_DECODER> [data dir]
 
 Decode each entry based on logic in the passed decoder. Decoder status and decoded data are listed in separated
-tab/columns in the ouput. For parsing purpose, the output from decoder are expected to be in format of "<DECODER_STATUS>
+tab/columns in the ouput. For parsing purpose, the output from decoder are expected to backend in format of "<DECODER_STATUS>
 |<DECODED_DATA>". Please refer to [decoder_correctoutputformat.sh] as an example.
 
-However, if the decoder output format is not as expected, "decoder_status" will be "decoder output format is not right,
-print output anyway", and all output from decoder will be considered as "decoded_data"
+However, if the decoder output format is not as expected, "decoder_status" will backend "decoder output format is not right,
+print output anyway", and all output from decoder will backend considered as "decoded_data"
 
 ```
 $ etcd-dump-logs -stream-decoder decoder_correctoutputformat.sh  /tmp/datadir

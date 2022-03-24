@@ -36,11 +36,11 @@ import (
 )
 
 var (
-	ErrNoAvailableEndpoints = errors.New("etcdclient: no available endpoints")
-	ErrOldCluster           = errors.New("etcdclient: old cluster version")
+	ErrNoAvailableEndpoints = errors.New("etcdclient: 端点不可用")
+	ErrOldCluster           = errors.New("etcdclient: 旧的集群版本")
 )
 
-// Client provides and manages an etcd v3 client session.
+// Client 提供并管理一个etcd v3客户端会话。
 type Client struct {
 	Cluster
 	KV
@@ -48,30 +48,22 @@ type Client struct {
 	Watcher
 	Auth
 	Maintenance
-
-	conn *grpc.ClientConn
-
-	cfg      Config
-	creds    grpccredentials.TransportCredentials
-	resolver *resolver.EtcdManualResolver
-	mu       *sync.RWMutex
-
-	ctx    context.Context
-	cancel context.CancelFunc
-
-	// Username is a user name for authentication.
-	Username string
-	// Password is a password for authentication.
+	conn            *grpc.ClientConn
+	cfg             Config                               // 配置信息
+	creds           grpccredentials.TransportCredentials // 证书信息
+	resolver        *resolver.EtcdManualResolver
+	mu              *sync.RWMutex
+	ctx             context.Context    // 上下文
+	cancel          context.CancelFunc // 上下文 cancel func
+	Username        string
 	Password        string
 	authTokenBundle credentials.Bundle
-
-	callOpts []grpc.CallOption
-
-	lgMu *sync.RWMutex
-	lg   *zap.Logger
+	callOpts        []grpc.CallOption
+	lgMu            *sync.RWMutex
+	lg              *zap.Logger
 }
 
-// New creates a new etcdv3 client from a given configuration.
+// New 创建一个client用于与etcd server 通信
 func New(cfg Config) (*Client, error) {
 	if len(cfg.Endpoints) == 0 {
 		return nil, ErrNoAvailableEndpoints
@@ -157,16 +149,6 @@ func (c *Client) Close() error {
 // canceled on client Close().
 func (c *Client) Ctx() context.Context { return c.ctx }
 
-// Endpoints lists the registered endpoints for the client.
-func (c *Client) Endpoints() []string {
-	// copy the slice; protect original endpoints from being changed
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	eps := make([]string, len(c.cfg.Endpoints))
-	copy(eps, c.cfg.Endpoints)
-	return eps
-}
-
 // SetEndpoints updates client's endpoints.
 func (c *Client) SetEndpoints(eps ...string) {
 	c.mu.Lock()
@@ -210,7 +192,7 @@ func (c *Client) autoSync() {
 	}
 }
 
-// dialSetupOpts gives the dial opts prior to any authentication.
+// dialSetupOpts 链接参数
 func (c *Client) dialSetupOpts(creds grpccredentials.TransportCredentials, dopts ...grpc.DialOption) (opts []grpc.DialOption, err error) {
 	if c.cfg.DialKeepAliveTime > 0 {
 		params := keepalive.ClientParameters{
@@ -251,8 +233,9 @@ func (c *Client) Dial(ep string) (*grpc.ClientConn, error) {
 	return c.dial(creds, grpc.WithResolvers(resolver.New(ep)))
 }
 
+// OK
 func (c *Client) getToken(ctx context.Context) error {
-	var err error // return last error in a case of fail
+	var err error
 
 	if c.Username == "" || c.Password == "" {
 		return nil
@@ -269,19 +252,18 @@ func (c *Client) getToken(ctx context.Context) error {
 	return nil
 }
 
-// dialWithBalancer dials the client's current load balanced resolver group.  The scheme of the host
-// of the provided endpoint determines the scheme used for all endpoints of the client connection.
+// OK
 func (c *Client) dialWithBalancer(dopts ...grpc.DialOption) (*grpc.ClientConn, error) {
-	creds := c.credentialsForEndpoint(c.Endpoints()[0])
+	creds := c.credentialsForEndpoint(c.Endpoints()[0]) // 根据第一个判断是不需要证书
 	opts := append(dopts, grpc.WithResolvers(c.resolver))
 	return c.dial(creds, opts...)
 }
 
-// dial configures and dials any grpc balancer target.
+// OK
 func (c *Client) dial(creds grpccredentials.TransportCredentials, dopts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	opts, err := c.dialSetupOpts(creds, dopts...)
 	if err != nil {
-		return nil, fmt.Errorf("failed to configure dialer: %v", err)
+		return nil, fmt.Errorf("配置dialer失败: %v", err)
 	}
 	if c.Username != "" && c.Password != "" {
 		c.authTokenBundle = credentials.NewBundle(credentials.Config{})
@@ -294,7 +276,7 @@ func (c *Client) dial(creds grpccredentials.TransportCredentials, dopts ...grpc.
 	if c.cfg.DialTimeout > 0 {
 		var cancel context.CancelFunc
 		dctx, cancel = context.WithTimeout(c.ctx, c.cfg.DialTimeout)
-		defer cancel() // TODO: Is this right for cases where grpc.WithBlock() is not set on the dial options?
+		defer cancel()
 	}
 	target := fmt.Sprintf("%s://%p/%s", resolver.Schema, c, authority(c.Endpoints()[0]))
 	conn, err := grpc.DialContext(dctx, target, opts...)
@@ -304,6 +286,7 @@ func (c *Client) dial(creds grpccredentials.TransportCredentials, dopts ...grpc.
 	return conn, nil
 }
 
+// 返回地址
 func authority(endpoint string) string {
 	spl := strings.SplitN(endpoint, "://", 2)
 	if len(spl) < 2 {
@@ -318,8 +301,9 @@ func authority(endpoint string) string {
 	return spl[1]
 }
 
+// OK
 func (c *Client) credentialsForEndpoint(ep string) grpccredentials.TransportCredentials {
-	r := endpoint.RequiresCredentials(ep)
+	r := endpoint.RequiresCredentials(ep) // 127.0.0.1:2379
 	switch r {
 	case endpoint.CREDS_DROP:
 		return nil
@@ -335,6 +319,7 @@ func (c *Client) credentialsForEndpoint(ep string) grpccredentials.TransportCred
 	}
 }
 
+// 创建一个client用于与etcd server 通信
 func newClient(cfg *Config) (*Client, error) {
 	if cfg == nil {
 		cfg = &Config{}
@@ -344,7 +329,7 @@ func newClient(cfg *Config) (*Client, error) {
 		creds = credentials.NewBundle(credentials.Config{TLSConfig: cfg.TLS}).TransportCredentials()
 	}
 
-	// use a temporary skeleton client to bootstrap first connection
+	// 使用一个临时的客户端来启动第一个连接
 	baseCtx := context.TODO()
 	if cfg.Context != nil {
 		baseCtx = cfg.Context
@@ -380,7 +365,7 @@ func newClient(cfg *Config) (*Client, error) {
 	}
 	if cfg.MaxCallSendMsgSize > 0 || cfg.MaxCallRecvMsgSize > 0 {
 		if cfg.MaxCallRecvMsgSize > 0 && cfg.MaxCallSendMsgSize > cfg.MaxCallRecvMsgSize {
-			return nil, fmt.Errorf("gRPC message recv limit (%d bytes)必须是greater than send limit (%d bytes)", cfg.MaxCallRecvMsgSize, cfg.MaxCallSendMsgSize)
+			return nil, fmt.Errorf("gRPC消息接收大小 (%d bytes)必须是大于发送的 (%d bytes)", cfg.MaxCallRecvMsgSize, cfg.MaxCallSendMsgSize)
 		}
 		callOpts := []grpc.CallOption{
 			defaultWaitForReady,
@@ -395,20 +380,17 @@ func newClient(cfg *Config) (*Client, error) {
 		}
 		client.callOpts = callOpts
 	}
-
 	client.resolver = resolver.New(cfg.Endpoints...)
 
 	if len(cfg.Endpoints) < 1 {
 		client.cancel()
-		return nil, fmt.Errorf("at least one Endpoint is required in client config")
+		return nil, fmt.Errorf("至少需要一个端点")
 	}
-	// Use a provided endpoint target so that for https:// without any tls config given, then
-	// grpc will assume the certificate etcd name is the endpoint host.
+
 	conn, err := client.dialWithBalancer()
 	if err != nil {
 		client.cancel()
 		client.resolver.Close()
-		// TODO: Error like `fmt.Errorf(dialing [%s] failed: %v, strings.Join(cfg.Endpoints, ";"), err)` would help with debugging a lot.
 		return nil, err
 	}
 	client.conn = conn
@@ -420,7 +402,7 @@ func newClient(cfg *Config) (*Client, error) {
 	client.Auth = NewAuth(client)
 	client.Maintenance = NewMaintenance(client)
 
-	// get token with established connection
+	// 获得已建立连接的令牌
 	ctx, cancel = client.ctx, func() {}
 	if client.cfg.DialTimeout > 0 {
 		ctx, cancel = context.WithTimeout(ctx, client.cfg.DialTimeout)
@@ -429,12 +411,10 @@ func newClient(cfg *Config) (*Client, error) {
 	if err != nil {
 		client.Close()
 		cancel()
-		// TODO: Consider fmt.Errorf("communicating with [%s] failed: %v", strings.Join(cfg.Endpoints, ";"), err)
 		return nil, err
 	}
 	cancel()
-
-	if cfg.RejectOldCluster {
+	if cfg.RejectOldCluster { // false
 		if err := client.checkVersion(); err != nil {
 			client.Close()
 			return nil, err
@@ -461,6 +441,7 @@ func (c *Client) roundRobinQuorumBackoff(waitBetween time.Duration, jitterFracti
 	}
 }
 
+// 检查服务端版本
 func (c *Client) checkVersion() (err error) {
 	var wg sync.WaitGroup
 
@@ -474,7 +455,7 @@ func (c *Client) checkVersion() (err error) {
 
 	wg.Add(len(eps))
 	for _, ep := range eps {
-		// if cluster is current, any endpoint gives a recent version
+		// 如果集群是当前的，任何端点都会给出一个最新的版本
 		go func(e string) {
 			defer wg.Done()
 			resp, rerr := c.Status(ctx, e)
@@ -482,7 +463,7 @@ func (c *Client) checkVersion() (err error) {
 				errc <- rerr
 				return
 			}
-			vs := strings.Split(resp.Version, ".")
+			vs := strings.Split(resp.Version, ".") // [3 5 2]
 			maj, min := 0, 0
 			if len(vs) >= 2 {
 				var serr error
@@ -495,13 +476,13 @@ func (c *Client) checkVersion() (err error) {
 					return
 				}
 			}
+			// 3.2版本以下
 			if maj < 3 || (maj == 3 && min < 2) {
 				rerr = ErrOldCluster
 			}
 			errc <- rerr
 		}(ep)
 	}
-	// wait for success
 	for range eps {
 		if err = <-errc; err == nil {
 			break
@@ -602,4 +583,12 @@ func IsConnCanceled(err error) bool {
 
 	// <= gRPC v1.7.x returns 'errors.New("grpc: the client connection is closing")'
 	return strings.Contains(err.Error(), "grpc: the client connection is closing")
+}
+
+func (c *Client) Endpoints() []string {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	eps := make([]string, len(c.cfg.Endpoints))
+	copy(eps, c.cfg.Endpoints)
+	return eps
 }

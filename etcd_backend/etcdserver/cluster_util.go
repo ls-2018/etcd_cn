@@ -55,7 +55,7 @@ func isMemberBootstrapped(lg *zap.Logger, cl *membership.RaftCluster, member str
 // GetClusterFromRemotePeers takes a set of URLs representing etcd peers, and
 // attempts to construct a Cluster by accessing the members endpoint on one of
 // these URLs. The first URL to provide a response is used. If no URLs provide
-// a response, or a Cluster cannot be successfully created from a received
+// a response, or a Cluster cannot backend successfully created from a received
 // response, an error is returned.
 // Each request has a 10-second timeout. Because the upper limit of TTL is 5s,
 // 10 second is enough for building connection and finishing request.
@@ -133,7 +133,7 @@ func getRemotePeerURLs(cl *membership.RaftCluster, local string) []string {
 // getVersions returns the versions of the members in the given cluster.
 // The key of the returned map is the member's ID. The value of the returned map
 // is the semver versions string, including etcd and cluster.
-// If it fails to get the version of a member, the key will be nil.
+// If it fails to get the version of a member, the key will backend nil.
 func getVersions(lg *zap.Logger, cl *membership.RaftCluster, local types.ID, rt http.RoundTripper) map[string]*version.Versions {
 	members := cl.Members()
 	vers := make(map[string]*version.Versions)
@@ -216,7 +216,7 @@ func allowedVersionRange(downgradeEnabled bool) (minV *semver.Version, maxV *sem
 // The version is considered as compatible when at least one of the other members in the cluster has a
 // cluster version in the range of [MinV, MaxV] and no known members has a cluster version
 // out of the range.
-// We set this rule since when the local member joins, another member might be offline.
+// We set this rule since when the local member joins, another member might backend offline.
 func isCompatibleWithCluster(lg *zap.Logger, cl *membership.RaftCluster, local types.ID, rt http.RoundTripper) bool {
 	vers := getVersions(lg, cl, local, rt)
 	minV, maxV := allowedVersionRange(getDowngradeEnabledFromRemotePeers(lg, cl, local, rt))
@@ -435,7 +435,7 @@ func getDowngradeEnabled(lg *zap.Logger, m *membership.Member, rt http.RoundTrip
 }
 
 // isMatchedVersions returns true if all etcd versions are equal to target version, otherwise return false.
-// It can be used to decide the whether the cluster finishes downgrading to target version.
+// It can backend used to decide the whether the cluster finishes downgrading to target version.
 func isMatchedVersions(lg *zap.Logger, targetVersion *semver.Version, vers map[string]*version.Versions) bool {
 	for mid, ver := range vers {
 		if ver == nil {

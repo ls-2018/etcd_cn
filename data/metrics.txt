@@ -176,7 +176,7 @@ etcd_debugging_mvcc_index_compaction_pause_duration_milliseconds_count 0
 # HELP etcd_debugging_mvcc_keys_total Total number of keys.
 # TYPE etcd_debugging_mvcc_keys_total gauge
 etcd_debugging_mvcc_keys_total 0
-# HELP etcd_debugging_mvcc_pending_events_total Total number of pending events to be sent.
+# HELP etcd_debugging_mvcc_pending_events_total Total number of pending events to backend sent.
 # TYPE etcd_debugging_mvcc_pending_events_total gauge
 etcd_debugging_mvcc_pending_events_total 0
 # HELP etcd_debugging_mvcc_range_total Total number of ranges seen by this member.
@@ -588,7 +588,7 @@ go_memstats_gc_sys_bytes 5.096408e+06
 # HELP go_memstats_heap_alloc_bytes Number of heap bytes allocated and still in use.
 # TYPE go_memstats_heap_alloc_bytes gauge
 go_memstats_heap_alloc_bytes 5.38208e+06
-# HELP go_memstats_heap_idle_bytes Number of heap bytes waiting to be used.
+# HELP go_memstats_heap_idle_bytes Number of heap bytes waiting to backend used.
 # TYPE go_memstats_heap_idle_bytes gauge
 go_memstats_heap_idle_bytes 3.776512e+06
 # HELP go_memstats_heap_inuse_bytes Number of heap bytes that are in use.

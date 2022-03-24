@@ -66,19 +66,19 @@ etcd client might return three types of errors.
 
 - context error
 
-Each API call has its first parameter as `context`. A context can be canceled or have an attached deadline. If the
-context is canceled or reaches its deadline, the responding context error will be returned no matter what internal
+Each API call has its first parameter as `context`. A context can backend canceled or have an attached deadline. If the
+context is canceled or reaches its deadline, the responding context error will backend returned no matter what internal
 errors the API call has already encountered.
 
 - cluster error
 
 Each API call tries to send request to the cluster endpoints one by one until it successfully gets a response. If a
-requests to an endpoint fails, due to exceeding per request timeout or connection issues, the error will be added into a
-list of errors. If all possible endpoints fail, a cluster error that includes all encountered errors will be returned.
+requests to an endpoint fails, due to exceeding per request timeout or connection issues, the error will backend added into a
+list of errors. If all possible endpoints fail, a cluster error that includes all encountered errors will backend returned.
 
 - response error
 
-If the response gets from the cluster is invalid, a plain string error will be returned. For example, it might be a
+If the response gets from the cluster is invalid, a plain string error will backend returned. For example, it might backend a
 invalid JSON error.
 
 Here is the example code to handle client errors:

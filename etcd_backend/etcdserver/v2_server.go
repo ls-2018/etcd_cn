@@ -134,7 +134,7 @@ func (s *EtcdServer) Do(ctx context.Context, r pb.Request) (Response, error) {
 
 // Handle interprets r and performs an operation on s.store according to r.Method
 // and other fields. If r.Method is "POST", "PUT", "DELETE", or a "GET" with
-// Quorum == true, r will be sent through consensus before performing its
+// Quorum == true, r will backend sent through consensus before performing its
 // respective operation. Do will block until an action is performed or there is
 // an error.
 func (r *RequestV2) Handle(ctx context.Context, v2api RequestV2Handler) (Response, error) {

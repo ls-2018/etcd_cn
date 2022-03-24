@@ -34,37 +34,13 @@ type (
 )
 
 type Maintenance interface {
-	// AlarmList gets all active alarms.
-	AlarmList(ctx context.Context) (*AlarmResponse, error)
-
-	// AlarmDisarm disarms a given alarm.
-	AlarmDisarm(ctx context.Context, m *AlarmMember) (*AlarmResponse, error)
-
-	// Defragment releases wasted space from internal fragmentation on a given etcd member.
-	// Defragment is only needed when deleting a large number of keys and want to reclaim
-	// the resources.
-	// Defragment is an expensive operation. User should avoid defragmenting multiple members
-	// at the same time.
-	// To defragment multiple members in the cluster, user need to call defragment multiple
-	// times with different endpoints.
-	Defragment(ctx context.Context, endpoint string) (*DefragmentResponse, error)
-
-	// Status gets the status of the endpoint.
-	Status(ctx context.Context, endpoint string) (*StatusResponse, error)
-
-	// HashKV returns a hash of the KV state at the time of the RPC.
-	// If revision is zero, the hash is computed on all keys. If the revision
-	// is non-zero, the hash is computed on all keys at or below the given revision.
-	HashKV(ctx context.Context, endpoint string, rev int64) (*HashKVResponse, error)
-
-	// Snapshot provides a reader for a point-in-time snapshot of etcd.
-	// If the context "ctx" is canceled or timed out, reading from returned
-	// "io.ReadCloser" would error out (e.g. context.Canceled, context.DeadlineExceeded).
-	Snapshot(ctx context.Context) (io.ReadCloser, error)
-
-	// MoveLeader requests current leader to transfer its leadership to the transferee.
-	// Request必须是made to the leader.
-	MoveLeader(ctx context.Context, transfereeID uint64) (*MoveLeaderResponse, error)
+	AlarmList(ctx context.Context) (*AlarmResponse, error)                            // 获取目前所有的警报
+	AlarmDisarm(ctx context.Context, m *AlarmMember) (*AlarmResponse, error)          // 解除警报
+	Defragment(ctx context.Context, endpoint string) (*DefragmentResponse, error)     // 碎片整理[etcd 内存里的数据]
+	Status(ctx context.Context, endpoint string) (*StatusResponse, error)             // 获取端点的状态
+	HashKV(ctx context.Context, endpoint string, rev int64) (*HashKVResponse, error)  //
+	Snapshot(ctx context.Context) (io.ReadCloser, error)                              // 返回一个快照
+	MoveLeader(ctx context.Context, transfereeID uint64) (*MoveLeaderResponse, error) // leader 转移
 }
 
 type maintenance struct {

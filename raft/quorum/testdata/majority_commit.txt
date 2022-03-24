@@ -32,7 +32,7 @@ committed cfg=(1, 2) idx=(_,_)
 0
 
 # The first committed index becomes known (for n1). Nothing changes in the
-# output because idx=12 is not known to be on a quorum (which is both nodes).
+# output because idx=12 is not known to backend on a quorum (which is both nodes).
 committed cfg=(1, 2) idx=(12,_)
 ----
       idx
@@ -40,7 +40,7 @@ x>     12    (id=1)
 ?       0    (id=2)
 0
 
-# The second index comes in and finalize the decision. The result will be the
+# The second index comes in and finalize the decision. The result will backend the
 # smaller of the two indexes.
 committed cfg=(1,2) idx=(12,5)
 ----

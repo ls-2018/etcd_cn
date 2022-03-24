@@ -24,48 +24,17 @@ import (
 )
 
 type Config struct {
-	// Endpoints is a list of URLs.
-	Endpoints []string `json:"endpoints"`
-
-	// AutoSyncInterval is the interval to update endpoints with its latest members.
-	// 0 disables auto-sync. By default auto-sync is disabled.
-	AutoSyncInterval time.Duration `json:"auto-sync-interval"`
-
-	// DialTimeout is the timeout for failing to establish a connection.
-	DialTimeout time.Duration `json:"dial-timeout"`
-
-	// DialKeepAliveTime is the time after which client pings the etcd to see if
-	// transport is alive.
-	DialKeepAliveTime time.Duration `json:"dial-keep-alive-time"`
-
-	// DialKeepAliveTimeout is the time that the client waits for a response for the
-	// keep-alive probe. If the response is not received in this time, the connection is closed.
-	DialKeepAliveTimeout time.Duration `json:"dial-keep-alive-timeout"`
-
-	// MaxCallSendMsgSize is the client-side request send limit in bytes.
-	// If 0, it defaults to 2.0 MiB (2 * 1024 * 1024).
-	// Make sure that "MaxCallSendMsgSize" < etcd-side default send/recv limit.
-	// ("--max-request-bytes" flag to etcd or "embed.Config.MaxRequestBytes").
-	MaxCallSendMsgSize int
-
-	// MaxCallRecvMsgSize is the client-side response receive limit.
-	// If 0, it defaults to "math.MaxInt32", because range response can
-	// easily exceed request send limits.
-	// Make sure that "MaxCallRecvMsgSize" >= etcd-side default send/recv limit.
-	// ("--max-request-bytes" flag to etcd or "embed.Config.MaxRequestBytes").
-	MaxCallRecvMsgSize int
-
-	// TLS holds the client secure credentials, if any.
-	TLS *tls.Config
-
-	// Username is a user name for authentication.
-	Username string `json:"username"`
-
-	// Password is a password for authentication.
-	Password string `json:"password"`
-
-	// RejectOldCluster when set will refuse to create a client against an outdated cluster.
-	RejectOldCluster bool `json:"reject-old-cluster"`
+	Endpoints            []string      `json:"endpoints"`               // etcd client --> etcd 的地址
+	AutoSyncInterval     time.Duration `json:"auto-sync-interval"`      // 是用其最新成员更新端点的时间间隔。0禁止自动同步。默认情况下，自动同步被禁用。
+	DialTimeout          time.Duration `json:"dial-timeout"`            // 建立链接的超时时间
+	DialKeepAliveTime    time.Duration `json:"dial-keep-alive-time"`    // client 向服务端发送发包，确保链接存活
+	DialKeepAliveTimeout time.Duration `json:"dial-keep-alive-timeout"` // 长时间没有接收到响应，关闭链接
+	MaxCallSendMsgSize   int           // 默认2MB
+	MaxCallRecvMsgSize   int
+	TLS                  *tls.Config // 客户端sdk证书
+	Username             string      `json:"username"`
+	Password             string      `json:"password"`
+	RejectOldCluster     bool        `json:"reject-old-cluster"` // 是否拒绝老版本服务器
 
 	// DialOptions is a list of dial options for the grpc client (e.g., for interceptors).
 	// For example, pass "grpc.WithBlock()" to block until the underlying connection is up.
@@ -74,15 +43,8 @@ type Config struct {
 
 	// Context is the default client context; it can be used to cancel grpc dial out and
 	// other operations that do not have an explicit context.
-	Context context.Context
-
-	// Logger sets client-side logger.
-	// If nil, fallback to building LogConfig.
-	Logger *zap.Logger
-
-	// LogConfig configures client-side logger.
-	// If nil, use the default logger.
-	// TODO: configure gRPC logger
+	Context   context.Context
+	Logger    *zap.Logger
 	LogConfig *zap.Config
 
 	// PermitWithoutStream when set will allow client to send keepalive pings to etcd without any active streams(RPCs).

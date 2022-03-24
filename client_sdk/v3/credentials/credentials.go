@@ -26,18 +26,17 @@ import (
 	grpccredentials "google.golang.org/grpc/credentials"
 )
 
-// Config defines gRPC credential configuration.
 type Config struct {
 	TLSConfig *tls.Config
 }
 
-// Bundle defines gRPC credential interface.
+// Bundle grpc认证接口
 type Bundle interface {
 	grpccredentials.Bundle
 	UpdateAuthToken(token string)
 }
 
-// NewBundle constructs a new gRPC credential bundle.
+// NewBundle 构造一个新的gRPC凭据包。
 func NewBundle(cfg Config) Bundle {
 	return &bundle{
 		tc: newTransportCredential(cfg.TLSConfig),

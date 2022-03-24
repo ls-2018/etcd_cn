@@ -103,11 +103,12 @@ func NewBackendQuota(s *EtcdServer, name string) Quota {
 	return &backendQuota{s, s.Cfg.QuotaBackendBytes}
 }
 
+// Available 粗略计算是否可以存储
 func (b *backendQuota) Available(v interface{}) bool {
-	// TODO: maybe optimize backend.Size()
 	return b.s.Backend().Size()+int64(b.Cost(v)) < b.maxBackendBytes
 }
 
+// Cost 操作的开销
 func (b *backendQuota) Cost(v interface{}) int {
 	switch r := v.(type) {
 	case *pb.PutRequest:
