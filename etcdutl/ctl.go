@@ -35,15 +35,13 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&etcdutl.OutputFormat, "write-out", "w", "simple", "set the output format (fields, json, protobuf, simple, table)")
 
 	rootCmd.AddCommand(
-		etcdutl.NewBackupCommand(),
-		etcdutl.NewDefragCommand(),
-		etcdutl.NewSnapshotCommand(),
-		etcdutl.NewVersionCommand(),
+		etcdutl.NewBackupCommand(),   // 备份
+		etcdutl.NewDefragCommand(),   // 清理内存碎片
+		etcdutl.NewSnapshotCommand(), // 快照
 	)
 }
 
 func Start() error {
-	// Make help just show the usage
 	rootCmd.SetHelpTemplate(`{{.UsageString}}`)
 	return rootCmd.Execute()
 }

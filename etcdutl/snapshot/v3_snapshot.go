@@ -15,7 +15,6 @@
 package snapshot
 
 import (
-	"context"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
@@ -30,8 +29,6 @@ import (
 
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/fileutil"
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
-	"github.com/ls-2018/etcd_cn/client_sdk/v3"
-	"github.com/ls-2018/etcd_cn/client_sdk/v3/snapshot"
 	"github.com/ls-2018/etcd_cn/etcd_backend/config"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/membership"
@@ -48,27 +45,12 @@ import (
 	"go.uber.org/zap"
 )
 
-// Manager defines snapshot methods.
 type Manager interface {
-	// Save fetches snapshot from remote etcd etcd and saves data
-	// to target path. If the context "ctx" is canceled or timed out,
-	// snapshot save stream will error out (e.g. context.Canceled,
-	// context.DeadlineExceeded). Make sure to specify only one endpoint
-	// in client configuration. Snapshot API必须是requested to a
-	// selected node, and saved snapshot is the point-in-time state of
-	// the selected node.
-	Save(ctx context.Context, cfg clientv3.Config, dbPath string) error
-
-	// Status returns the snapshot file information.
-	Status(dbPath string) (Status, error)
-
-	// Restore restores a new etcd data directory from given snapshot
-	// file. It returns an error if specified data directory already
-	// exists, to prevent unintended data directory overwrites.
+	Status(dbPath string) (Status, error)                               // 快照信息
 	Restore(cfg RestoreConfig) error
 }
 
-// NewV3 returns a new snapshot Manager for v3.x snapshot.
+// NewV3 v3版本的快照管理
 func NewV3(lg *zap.Logger) Manager {
 	if lg == nil {
 		lg = zap.NewExample()
@@ -88,86 +70,10 @@ type v3Manager struct {
 	skipHashCheck bool
 }
 
-// hasChecksum returns "true" if the file size "n"
-// has appended sha256 hash digest.
 func hasChecksum(n int64) bool {
-	// 512 is chosen because it's a minimum disk sector size
-	// smaller than (and multiplies to) OS page size in most systems
 	return (n % 512) == sha256.Size
 }
 
-// Save fetches snapshot from remote etcd etcd and saves data to target path.
-func (s *v3Manager) Save(ctx context.Context, cfg clientv3.Config, dbPath string) error {
-	return snapshot.Save(ctx, s.lg, cfg, dbPath)
-}
-
-// Status is the snapshot file status.
-type Status struct {
-	Hash      uint32 `json:"hash"`
-	Revision  int64  `json:"revision"`
-	TotalKey  int    `json:"totalKey"`
-	TotalSize int64  `json:"totalSize"`
-}
-
-// Status returns the snapshot file information.
-func (s *v3Manager) Status(dbPath string) (ds Status, err error) {
-	if _, err = os.Stat(dbPath); err != nil {
-		return ds, err
-	}
-
-	db, err := bolt.Open(dbPath, 0o400, &bolt.Options{ReadOnly: true})
-	if err != nil {
-		return ds, err
-	}
-	defer db.Close()
-
-	h := crc32.New(crc32.MakeTable(crc32.Castagnoli))
-
-	if err = db.View(func(tx *bolt.Tx) error {
-		// check snapshot file integrity first
-		var dbErrStrings []string
-		for dbErr := range tx.Check() {
-			dbErrStrings = append(dbErrStrings, dbErr.Error())
-		}
-		if len(dbErrStrings) > 0 {
-			return fmt.Errorf("snapshot file integrity check failed. %d errors found.\n"+strings.Join(dbErrStrings, "\n"), len(dbErrStrings))
-		}
-		ds.TotalSize = tx.Size()
-		c := tx.Cursor()
-		for next, _ := c.First(); next != nil; next, _ = c.Next() {
-			b := tx.Bucket(next)
-			if b == nil {
-				return fmt.Errorf("cannot get hash of bucket %s", string(next))
-			}
-			if _, err := h.Write(next); err != nil {
-				return fmt.Errorf("cannot write bucket %s : %v", string(next), err)
-			}
-			iskeyb := (string(next) == "key")
-			if err := b.ForEach(func(k, v []byte) error {
-				if _, err := h.Write(k); err != nil {
-					return fmt.Errorf("cannot write to bucket %s", err.Error())
-				}
-				if _, err := h.Write(v); err != nil {
-					return fmt.Errorf("cannot write to bucket %s", err.Error())
-				}
-				if iskeyb {
-					rev := bytesToRev(k)
-					ds.Revision = rev.main
-				}
-				ds.TotalKey++
-				return nil
-			}); err != nil {
-				return fmt.Errorf("cannot write bucket %s : %v", string(next), err)
-			}
-		}
-		return nil
-	}); err != nil {
-		return ds, err
-	}
-
-	ds.Hash = h.Sum32()
-	return ds, nil
-}
 
 // RestoreConfig configures snapshot restore operation.
 type RestoreConfig struct {
@@ -289,7 +195,7 @@ func (s *v3Manager) outDbPath() string {
 	return filepath.Join(s.snapDir, "db")
 }
 
-// saveDB copies the database snapshot to the snapshot directory
+// saveDB 将数据库快照复制到快照目录中。
 func (s *v3Manager) saveDB() error {
 	err := s.copyAndVerifyDB()
 	if err != nil {
@@ -314,7 +220,7 @@ func (s *v3Manager) copyAndVerifyDB() error {
 	}
 	defer srcf.Close()
 
-	// get snapshot integrity hash
+	// 获取快照完整性哈希值
 	if _, err := srcf.Seek(-sha256.Size, io.SeekEnd); err != nil {
 		return err
 	}
@@ -483,3 +389,75 @@ func (s *v3Manager) updateCIndex(commit uint64, term uint64) error {
 	cindex.UpdateConsistentIndex(be.BatchTx(), commit, term, false)
 	return nil
 }
+
+// ----------------------------------------  OVER  ----------------------------------------v----------
+
+type Status struct {
+	Hash      uint32 `json:"hash"`      // bolt.db哈希值
+	Revision  int64  `json:"revision"`  // 修订版本
+	TotalKey  int    `json:"totalKey"`  // 总key数
+	TotalSize int64  `json:"totalSize"` // 实际存储大小
+}
+
+// Status 返回blot.db信息
+func (s *v3Manager) Status(dbPath string) (ds Status, err error) {
+	if _, err = os.Stat(dbPath); err != nil {
+		return ds, err
+	}
+
+	db, err := bolt.Open(dbPath, 0o400, &bolt.Options{ReadOnly: true})
+	if err != nil {
+		return ds, err
+	}
+	defer db.Close()
+
+	h := crc32.New(crc32.MakeTable(crc32.Castagnoli))
+	// 只读事务
+	// Bolt 将其key以字节排序的顺序存储在存储桶中。这使得对这些键的顺序迭代非常快。要遍历键，我们将使用光标
+	if err = db.View(func(tx *bolt.Tx) error {
+		// 首先检查快照文件的完整性
+		var dbErrStrings []string
+		for dbErr := range tx.Check() {
+			dbErrStrings = append(dbErrStrings, dbErr.Error())
+		}
+		if len(dbErrStrings) > 0 {
+			return fmt.Errorf("快照文件完整性检查失败。发现%d错误.\n"+strings.Join(dbErrStrings, "\n"), len(dbErrStrings))
+		}
+		ds.TotalSize = tx.Size()
+		c := tx.Cursor()
+		for next, _ := c.First(); next != nil; next, _ = c.Next() {
+			b := tx.Bucket(next)
+			if b == nil {
+				return fmt.Errorf("无法获得桶的哈希值 %s", string(next))
+			}
+			if _, err := h.Write(next); err != nil {
+				return fmt.Errorf("不能写入bucket %s : %v", string(next), err)
+			}
+			iskeyb := string(next) == "key"
+			if err := b.ForEach(func(k, v []byte) error {
+				if _, err := h.Write(k); err != nil {
+					return fmt.Errorf("cannot write to bucket %s", err.Error())
+				}
+				if _, err := h.Write(v); err != nil {
+					return fmt.Errorf("cannot write to bucket %s", err.Error())
+				}
+				if iskeyb {
+					rev := bytesToRev(k)
+					ds.Revision = rev.main
+				}
+				ds.TotalKey++
+				return nil
+			}); err != nil {
+				return fmt.Errorf("不能写入bucket %s : %v", string(next), err)
+			}
+		}
+		return nil
+	}); err != nil {
+		return ds, err
+	}
+
+	ds.Hash = h.Sum32()
+	return ds, nil
+}
+
+

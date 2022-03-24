@@ -46,35 +46,17 @@ func NewSnapshotCommand() *cobra.Command {
 		Use:   "snapshot <subcommand>",
 		Short: "Manages etcd node snapshots",
 	}
-	cmd.AddCommand(NewSnapshotSaveCommand())
-	cmd.AddCommand(NewSnapshotRestoreCommand())
-	cmd.AddCommand(newSnapshotStatusCommand())
+	cmd.AddCommand(NewSnapshotRestoreCommand()) // restore
+	cmd.AddCommand(newSnapshotStatusCommand())  // status
 	return cmd
-}
-
-func NewSnapshotSaveCommand() *cobra.Command {
-	return &cobra.Command{
-		Use:                   "save <filename>",
-		Short:                 "Stores an etcd node backend snapshot to a given file",
-		Hidden:                true,
-		DisableFlagsInUseLine: true,
-		Run: func(cmd *cobra.Command, args []string) {
-			cobrautl.ExitWithError(cobrautl.ExitBadArgs,
-				fmt.Errorf("In order to download snapshot use: "+
-					"`etcdctl snapshot save ...`"))
-		},
-		Deprecated: "Use `etcdctl snapshot save` to download snapshot",
-	}
 }
 
 func newSnapshotStatusCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "status <filename>",
 		Short: "Gets backend snapshot status of a given file",
-		Long: `When --write-out is set to simple, this command prints out comma-separated status lists for each endpoint.
-The items in the lists are hash, revision, total keys, total size.
-`,
-		Run: SnapshotStatusCommandFunc,
+		Long:  ``,
+		Run:   SnapshotStatusCommandFunc,
 	}
 }
 
@@ -114,8 +96,7 @@ func SnapshotStatusCommandFunc(cmd *cobra.Command, args []string) {
 }
 
 func snapshotRestoreCommandFunc(_ *cobra.Command, args []string) {
-	SnapshotRestoreCommandFunc(restoreCluster, restoreClusterToken, restoreDataDir, restoreWalDir,
-		restorePeerURLs, restoreName, skipHashCheck, args)
+	SnapshotRestoreCommandFunc(restoreCluster, restoreClusterToken, restoreDataDir, restoreWalDir, restorePeerURLs, restoreName, skipHashCheck, args)
 }
 
 func SnapshotRestoreCommandFunc(restoreCluster string,

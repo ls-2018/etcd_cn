@@ -24,3 +24,8 @@ func main() {
 		cobrautl.ExitWithError(cobrautl.ExitError, err)
 	}
 }
+
+
+
+// snapshot status ../default.etcd/member/snap/bolt.db  --write-out=table
+// snapshot restore ./123
