@@ -170,7 +170,7 @@ func mustClientCfgFromCmd(cmd *cobra.Command) *clientv3.Config {
 }
 
 func mustClientFromCmd(cmd *cobra.Command) *clientv3.Client {
-	cfg := clientConfigFromCmd(cmd)
+	cfg := clientConfigFromCmd(cmd) // ok
 	return cfg.mustClient()
 }
 
@@ -379,55 +379,6 @@ func authCfgFromCmd(cmd *cobra.Command) *authCfg {
 	return &cfg
 }
 
-func insecureDiscoveryFromCmd(cmd *cobra.Command) bool {
-	discovery, err := cmd.Flags().GetBool("insecure-discovery")
-	if err != nil {
-		cobrautl.ExitWithError(cobrautl.ExitError, err)
-	}
-	return discovery
-}
-
-func discoverySrvFromCmd(cmd *cobra.Command) string {
-	domainStr, err := cmd.Flags().GetString("discovery-srv")
-	if err != nil {
-		cobrautl.ExitWithError(cobrautl.ExitBadArgs, err)
-	}
-	return domainStr
-}
-
-func discoveryDNSClusterServiceNameFromCmd(cmd *cobra.Command) string {
-	serviceNameStr, err := cmd.Flags().GetString("discovery-srv-name")
-	if err != nil {
-		cobrautl.ExitWithError(cobrautl.ExitBadArgs, err)
-	}
-	return serviceNameStr
-}
-
-func discoveryCfgFromCmd(cmd *cobra.Command) *discoveryCfg {
-	return &discoveryCfg{
-		domain:      discoverySrvFromCmd(cmd),
-		insecure:    insecureDiscoveryFromCmd(cmd),
-		serviceName: discoveryDNSClusterServiceNameFromCmd(cmd),
-	}
-}
-
-func endpointsFromCmd(cmd *cobra.Command) ([]string, error) {
-	eps, err := endpointsFromFlagValue(cmd)
-	if err != nil {
-		return nil, err
-	}
-	// If domain discovery returns no endpoints, check endpoints flag
-	if len(eps) == 0 {
-		eps, err = cmd.Flags().GetStringSlice("endpoints")
-		if err == nil {
-			for i, ip := range eps {
-				eps[i] = strings.TrimSpace(ip)
-			}
-		}
-	}
-	return eps, err
-}
-
 func endpointsFromFlagValue(cmd *cobra.Command) ([]string, error) {
 	discoveryCfg := discoveryCfgFromCmd(cmd)
 
@@ -454,4 +405,53 @@ func endpointsFromFlagValue(cmd *cobra.Command) ([]string, error) {
 		ret = append(ret, ep)
 	}
 	return ret, err
+}
+
+func endpointsFromCmd(cmd *cobra.Command) ([]string, error) {
+	eps, err := endpointsFromFlagValue(cmd) // 获取endpoints
+	if err != nil {
+		return nil, err
+	}
+	// If domain discovery returns no endpoints, check endpoints flag
+	if len(eps) == 0 {
+		eps, err = cmd.Flags().GetStringSlice("endpoints")
+		if err == nil {
+			for i, ip := range eps {
+				eps[i] = strings.TrimSpace(ip)
+			}
+		}
+	}
+	return eps, err
+}
+
+func insecureDiscoveryFromCmd(cmd *cobra.Command) bool {
+	discovery, err := cmd.Flags().GetBool("insecure-discovery")
+	if err != nil {
+		cobrautl.ExitWithError(cobrautl.ExitError, err)
+	}
+	return discovery
+}
+
+func discoverySrvFromCmd(cmd *cobra.Command) string {
+	domainStr, err := cmd.Flags().GetString("discovery-srv")
+	if err != nil {
+		cobrautl.ExitWithError(cobrautl.ExitBadArgs, err)
+	}
+	return domainStr
+}
+
+func discoveryDNSClusterServiceNameFromCmd(cmd *cobra.Command) string {
+	serviceNameStr, err := cmd.Flags().GetString("discovery-srv-name")
+	if err != nil {
+		cobrautl.ExitWithError(cobrautl.ExitBadArgs, err)
+	}
+	return serviceNameStr
+}
+
+func discoveryCfgFromCmd(cmd *cobra.Command) *discoveryCfg {
+	return &discoveryCfg{
+		domain:      discoverySrvFromCmd(cmd),                   // string
+		insecure:    insecureDiscoveryFromCmd(cmd),              // bool
+		serviceName: discoveryDNSClusterServiceNameFromCmd(cmd), // string
+	}
 }

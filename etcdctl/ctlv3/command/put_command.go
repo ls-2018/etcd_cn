@@ -65,7 +65,6 @@ will store the content of the file to <key>.
 	return cmd
 }
 
-// putCommandFunc executes the "put" command.
 func putCommandFunc(cmd *cobra.Command, args []string) {
 	key, value, opts := getPutOp(args)
 

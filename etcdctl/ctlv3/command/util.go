@@ -76,14 +76,6 @@ func argify(s string) []string {
 	return args
 }
 
-func commandCtx(cmd *cobra.Command) (context.Context, context.CancelFunc) {
-	timeOut, err := cmd.Flags().GetDuration("command-timeout")
-	if err != nil {
-		cobrautl.ExitWithError(cobrautl.ExitError, err)
-	}
-	return context.WithTimeout(context.Background(), timeOut)
-}
-
 func isCommandTimeoutFlagSet(cmd *cobra.Command) bool {
 	commandTimeoutFlag := cmd.Flags().Lookup("command-timeout")
 	if commandTimeoutFlag == nil {
@@ -165,4 +157,13 @@ func defrag(c *v3.Client, ep string) {
 		cobrautl.ExitWithError(cobrautl.ExitError, err)
 	}
 	fmt.Printf("Defragmented %q\n", ep)
+}
+
+// 超时上下文,默认5s
+func commandCtx(cmd *cobra.Command) (context.Context, context.CancelFunc) {
+	timeOut, err := cmd.Flags().GetDuration("command-timeout")
+	if err != nil {
+		cobrautl.ExitWithError(cobrautl.ExitError, err)
+	}
+	return context.WithTimeout(context.Background(), timeOut)
 }

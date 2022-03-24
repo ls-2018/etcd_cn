@@ -16,25 +16,9 @@
 package main
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/ls-2018/etcd_cn/etcdctl/ctlv3"
 )
 
-const (
-	apiEnv = "ETCDCTL_API"
-)
-
 func main() {
-	apiv := os.Getenv(apiEnv)
-
-	os.Unsetenv(apiEnv)
-	if len(apiv) == 0 || apiv == "3" {
-		ctlv3.MustStart()
-		return
-	}
-
-	fmt.Fprintf(os.Stderr, "unsupported API version: %v\n", apiv)
-	os.Exit(1)
+	ctlv3.MustStart()
 }
