@@ -291,7 +291,7 @@ func print(lg *zap.Logger, ec Config, sc config.ServerConfig, memberInitialized 
 		quota = etcdserver.DefaultQuotaBytes
 	}
 
-	fmt.Println(
+	fmt.Println("------->",
 		zap.String("etcd-version", version.Version),
 		zap.String("git-sha", version.GitSHA),
 		zap.String("go-version", runtime.Version()),

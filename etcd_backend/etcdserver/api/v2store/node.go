@@ -15,7 +15,6 @@
 package v2store
 
 import (
-	"fmt"
 	"path"
 	"sort"
 	"time"
@@ -251,7 +250,6 @@ func (n *node) GetChild(name string) (*node, *v2error.Error) {
 
 // Add 添加一个子节点
 func (n *node) Add(child *node) *v2error.Error {
-	fmt.Println("add node")
 	if !n.IsDir() { // /0/members/8e9e05c52164694d
 		return v2error.NewError(v2error.EcodeNotDir, "", n.store.CurrentIndex)
 	}

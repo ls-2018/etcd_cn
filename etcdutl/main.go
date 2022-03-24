@@ -29,3 +29,4 @@ func main() {
 
 // snapshot status ../default.etcd/member/snap/bolt.db  --write-out=table
 // snapshot restore ./123
+// defrag --data-dir ../default.etcd

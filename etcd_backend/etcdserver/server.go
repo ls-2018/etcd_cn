@@ -227,7 +227,7 @@ type EtcdServer struct {
 
 // 后端存储钩子
 type backendHooks struct {
-	indexer   cindex.ConsistentIndexer
+	indexer   cindex.ConsistentIndexer // 一致性存储的索引
 	lg        *zap.Logger
 	confState raftpb.ConfState // 集群当前的配置信息
 	// first write changes it to 'dirty'. false by default, so

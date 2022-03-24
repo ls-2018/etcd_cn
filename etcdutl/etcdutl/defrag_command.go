@@ -27,14 +27,13 @@ import (
 
 var defragDataDir string
 
-// NewDefragCommand returns the cobra command for "Defrag".
 func NewDefragCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "defrag",
-		Short: "Defragments the storage of the etcd",
+		Short: "清理etcd内存碎片",
 		Run:   defragCommandFunc,
 	}
-	cmd.Flags().StringVar(&defragDataDir, "data-dir", "", "Required. Defragments a data directory not in use by etcd.")
+	cmd.Flags().StringVar(&defragDataDir, "data-dir", "", "")
 	cmd.MarkFlagRequired("data-dir")
 	return cmd
 }
@@ -42,8 +41,7 @@ func NewDefragCommand() *cobra.Command {
 func defragCommandFunc(cmd *cobra.Command, args []string) {
 	err := DefragData(defragDataDir)
 	if err != nil {
-		cobrautl.ExitWithError(cobrautl.ExitError,
-			fmt.Errorf("Failed to defragment etcd data[%s] (%v)", defragDataDir, err))
+		cobrautl.ExitWithError(cobrautl.ExitError, fmt.Errorf("对etcd数据进行碎片整理失败[%s] (%v)", defragDataDir, err))
 	}
 }
 
@@ -62,8 +60,7 @@ func DefragData(dataDir string) error {
 	select {
 	case <-bch:
 	case <-time.After(time.Second):
-		fmt.Fprintf(os.Stderr, "waiting for etcd to close and release its lock on %q. "+
-			"To defrag a running etcd instance, omit --data-dir.\n", dbDir)
+		fmt.Fprintf(os.Stderr, "等待etcd关闭并释放其对%q的锁定。要对正在运行的etcd实例进行碎片整理，请省略-data-dir。 \n", dbDir)
 		<-bch
 	}
 	return be.Defrag()

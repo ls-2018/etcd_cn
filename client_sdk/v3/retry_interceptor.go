@@ -52,8 +52,8 @@ func (c *Client) unaryClientInterceptor(optFuncs ...retryOption) grpc.UnaryClien
 				zap.String("target", cc.Target()),
 				zap.Uint("attempt", attempt),
 			)
-			fmt.Println(req)    // key:"a" value:"b"
-			fmt.Println(method) // /etcdserverpb.KV/Put
+			fmt.Println("--->:", req)    // key:"a" value:"b"
+			fmt.Println("--->:", method) // /etcdserverpb.KV/Put
 			lastErr = invoker(ctx, method, req, reply, cc, grpcOpts...)
 			if lastErr == nil {
 				return nil
