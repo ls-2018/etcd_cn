@@ -1,8 +1,9 @@
 package etcdserver
 
 import (
-	"github.com/ls-2018/etcd_cn/etcd_backend/lease/leasehttp"
 	"net/http"
+
+	"github.com/ls-2018/etcd_cn/etcd_backend/lease/leasehttp"
 )
 
 func (s *EtcdServer) LeaseHandler() http.Handler {

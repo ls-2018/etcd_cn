@@ -17,9 +17,10 @@ package v3rpc
 import (
 	"context"
 	"encoding/json"
-	"go.uber.org/zap"
 	"sync"
 	"time"
+
+	"go.uber.org/zap"
 
 	"github.com/ls-2018/etcd_cn/raft"
 

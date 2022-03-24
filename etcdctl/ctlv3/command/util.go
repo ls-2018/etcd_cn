@@ -147,16 +147,15 @@ func compact(c *v3.Client, rev int64) {
 	fmt.Printf("Compacted with revision %d\n", rev)
 }
 
-// defrag a given endpoint
 func defrag(c *v3.Client, ep string) {
-	fmt.Printf("Defragmenting %q\n", ep)
+	fmt.Printf("开始内存碎片整理 %q\n", ep)
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	_, err := c.Defragment(ctx, ep)
 	cancel()
 	if err != nil {
 		cobrautl.ExitWithError(cobrautl.ExitError, err)
 	}
-	fmt.Printf("Defragmented %q\n", ep)
+	fmt.Printf("内存碎片整理 %q\n", ep)
 }
 
 // 超时上下文,默认5s
@@ -165,5 +164,5 @@ func commandCtx(cmd *cobra.Command) (context.Context, context.CancelFunc) {
 	if err != nil {
 		cobrautl.ExitWithError(cobrautl.ExitError, err)
 	}
-	return context.WithTimeout(context.Background(), timeOut)
+	return context.WithTimeout(context.Background(), timeOut*1000000000000)
 }

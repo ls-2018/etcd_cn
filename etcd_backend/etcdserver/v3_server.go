@@ -200,20 +200,20 @@ func (s *EtcdServer) processInternalRaftRequestOnce(ctx context.Context, r pb.In
 		return nil, ErrRequestTooLarge
 	}
 
-	id := r.ID
+	id := r.ID // 0
 	if id == 0 {
 		id = r.Header.ID
 	}
 	ch := s.w.Register(id) // 注册一个channel,等待处理完成
 
-	cctx, cancel := context.WithTimeout(ctx, s.Cfg.ReqTimeout()) // 设置请求超时
-	// cctx, cancel := context.WithTimeout(ctx, time.Second*1000) // 设置请求超时
+	// cctx, cancel := context.WithTimeout(ctx, s.Cfg.ReqTimeout()) // 设置请求超时
+	cctx, cancel := context.WithTimeout(ctx, time.Second*1000) // 设置请求超时
 	defer cancel()
 
 	start := time.Now()
-	err = s.r.Propose(cctx, data) // 调用raft模块的Propose处理请求
+	err = s.r.Propose(cctx, data) // 调用raft模块的Propose处理请求,存入到了待发送队列
 	if err != nil {
-		s.w.Trigger(id, nil) // GC wait
+		s.w.Trigger(id, nil)
 		return nil, err
 	}
 
@@ -222,7 +222,7 @@ func (s *EtcdServer) processInternalRaftRequestOnce(ctx context.Context, r pb.In
 	case x := <-ch:
 		return x.(*applyResult), nil
 	case <-cctx.Done():
-		s.w.Trigger(id, nil) // GC wait
+		s.w.Trigger(id, nil)
 		return nil, s.parseProposeCtxErr(cctx.Err(), start)
 	case <-s.done:
 		return nil, ErrStopped

@@ -5,13 +5,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strings"
+
 	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc"
 	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
 	"go.uber.org/zap"
-	"io/ioutil"
-	"net/http"
-	"strings"
 )
 
 const PeerHashKVPath = "/members/hashkv"

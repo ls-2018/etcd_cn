@@ -151,7 +151,7 @@ func (dec *msgAppV2Decoder) decode() (raftpb.Message, error) {
 		m   raftpb.Message
 		typ uint8
 	)
-	xxx ,_:= ioutil.ReadAll(dec.r)
+	xxx, _ := ioutil.ReadAll(dec.r)
 	dec.r = bytes.NewReader(xxx)
 	if _, err := io.ReadFull(dec.r, dec.uint8buf); err != nil {
 		return m, err

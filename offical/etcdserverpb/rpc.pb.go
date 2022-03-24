@@ -6022,10 +6022,12 @@ func (m *WatchRequest_CreateRequest) Size() (n int) {
 	marshal, _ := json.Marshal(m)
 	return len(marshal)
 }
+
 func (m *WatchRequest_CancelRequest) Size() (n int) {
 	marshal, _ := json.Marshal(m)
 	return len(marshal)
 }
+
 func (m *WatchRequest_ProgressRequest) Size() (n int) {
 	marshal, _ := json.Marshal(m)
 	return len(marshal)
@@ -6095,6 +6097,7 @@ func (m *AuthRoleGrantPermissionRequest) Size() (n int) {
 	marshal, _ := json.Marshal(m)
 	return len(marshal)
 }
+
 func (m *AuthRoleRevokePermissionRequest) Size() (n int) {
 	marshal, _ := json.Marshal(m)
 	return len(marshal)
@@ -6110,10 +6113,12 @@ func (m *AuthUserChangePasswordResponse) Size() (n int) {
 	marshal, _ := json.Marshal(m)
 	return len(marshal)
 }
+
 func (m *AuthUserGrantRoleResponse) Size() (n int) {
 	marshal, _ := json.Marshal(m)
 	return len(marshal)
 }
+
 func (m *AuthUserRevokeRoleResponse) Size() (n int) {
 	marshal, _ := json.Marshal(m)
 	return len(marshal)
@@ -6127,6 +6132,7 @@ func (m *AuthRoleGrantPermissionResponse) Size() (n int) {
 	marshal, _ := json.Marshal(m)
 	return len(marshal)
 }
+
 func (m *AuthRoleRevokePermissionResponse) Size() (n int) {
 	marshal, _ := json.Marshal(m)
 	return len(marshal)
@@ -6240,6 +6246,7 @@ func (m *AuthRoleDeleteResponse) Unmarshal(dAtA []byte) error         { return j
 func (m *AuthRoleGrantPermissionResponse) Unmarshal(dAtA []byte) error {
 	return json.Unmarshal(dAtA, m)
 }
+
 func (m *AuthRoleRevokePermissionResponse) Unmarshal(dAtA []byte) error {
 	return json.Unmarshal(dAtA, m)
 }

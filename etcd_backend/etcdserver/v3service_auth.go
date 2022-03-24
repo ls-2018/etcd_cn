@@ -3,6 +3,7 @@ package etcdserver
 import (
 	"context"
 	"encoding/base64"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/ls-2018/etcd_cn/etcd_backend/auth"
 	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
@@ -223,23 +224,3 @@ func (s *EtcdServer) RoleDelete(ctx context.Context, r *pb.AuthRoleDeleteRequest
 	}
 	return resp.(*pb.AuthRoleDeleteResponse), nil
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

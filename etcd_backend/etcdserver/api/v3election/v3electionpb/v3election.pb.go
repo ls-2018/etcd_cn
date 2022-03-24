@@ -56,8 +56,6 @@ func (*CampaignRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_c9b1f26cc432a035, []int{0}
 }
 
-
-
 func (m *CampaignRequest) GetName() []byte {
 	if m != nil {
 		return m.Name
@@ -227,8 +225,6 @@ func (*ResignRequest) ProtoMessage()    {}
 func (*ResignRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_c9b1f26cc432a035, []int{5}
 }
-
-
 
 func (m *ResignRequest) GetLeader() *LeaderKey {
 	if m != nil {
@@ -641,11 +637,9 @@ func (m *CampaignRequest) Marshal() (dAtA []byte, err error) {
 	return json.Marshal(m)
 }
 
-
 func (m *CampaignResponse) Marshal() (dAtA []byte, err error) {
 	return json.Marshal(m)
 }
-
 
 func (m *LeaderKey) Marshal() (dAtA []byte, err error) {
 	return json.Marshal(m)
@@ -659,24 +653,21 @@ func (m *LeaderResponse) Marshal() (dAtA []byte, err error) {
 	return json.Marshal(m)
 }
 
-
 func (m *ResignRequest) Marshal() (dAtA []byte, err error) {
 	return json.Marshal(m)
 }
+
 func (m *ResignResponse) Marshal() (dAtA []byte, err error) {
 	return json.Marshal(m)
 }
-
 
 func (m *ProclaimRequest) Marshal() (dAtA []byte, err error) {
 	return json.Marshal(m)
 }
 
-
 func (m *ProclaimResponse) Marshal() (dAtA []byte, err error) {
 	return json.Marshal(m)
 }
-
 
 func (m *CampaignRequest) Size() (n int) {
 	if m == nil {

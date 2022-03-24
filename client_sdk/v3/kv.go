@@ -149,7 +149,7 @@ func (kv *kv) Do(ctx context.Context, op Op) (OpResponse, error) {
 			return OpResponse{txn: (*TxnResponse)(resp)}, nil
 		}
 	default:
-		panic("Unknown op")
+		panic("未知的操作")
 	}
 	return OpResponse{}, toErr(ctx, err)
 }

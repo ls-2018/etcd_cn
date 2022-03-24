@@ -64,7 +64,7 @@ type pipeline struct {
 func (p *pipeline) start() {
 	p.stopc = make(chan struct{})
 	p.msgc = make(chan raftpb.Message, pipelineBufSize) // 64
-	p.wg.Add(connPerPipeline) // 4
+	p.wg.Add(connPerPipeline)                           // 4
 	for i := 0; i < connPerPipeline; i++ {
 		go p.handle()
 	}

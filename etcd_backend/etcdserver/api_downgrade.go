@@ -3,11 +3,12 @@ package etcdserver
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"strconv"
+
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/membership"
 	"go.uber.org/zap"
-	"net/http"
-	"strconv"
 )
 
 func (s *EtcdServer) DowngradeEnabledHandler() http.Handler {

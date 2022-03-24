@@ -6,12 +6,13 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"time"
+
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/membership"
 	"github.com/ls-2018/etcd_cn/pkg/traceutil"
 	"github.com/ls-2018/etcd_cn/raft/raftpb"
 	"go.uber.org/zap"
-	"strconv"
-	"time"
 
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
 )

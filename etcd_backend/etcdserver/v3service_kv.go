@@ -2,10 +2,11 @@ package etcdserver
 
 import (
 	"context"
+	"time"
+
 	"github.com/ls-2018/etcd_cn/etcd_backend/auth"
 	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
 	"github.com/ls-2018/etcd_cn/pkg/traceutil"
-	"time"
 )
 
 type RaftKV interface {
@@ -145,5 +146,3 @@ func (s *EtcdServer) Compact(ctx context.Context, r *pb.CompactionRequest) (*pb.
 	trace.AddField(traceutil.Field{Key: "response_revision", Value: resp.Header.Revision})
 	return resp, nil
 }
-
-

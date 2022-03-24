@@ -236,7 +236,7 @@ func (t *Transport) MendPeer(id types.ID) {
 	}
 }
 
-//AddRemote 添加远程节点
+// AddRemote 添加远程节点
 func (t *Transport) AddRemote(id types.ID, us []string) {
 	t.mu.Lock()
 	defer t.mu.Unlock()

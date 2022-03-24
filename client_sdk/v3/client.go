@@ -90,16 +90,6 @@ func NewCtxClient(ctx context.Context, opts ...Option) *Client {
 // Option is a function type that can be passed as argument to NewCtxClient to configure client
 type Option func(*Client)
 
-// NewFromURL creates a new etcdv3 client from a URL.
-func NewFromURL(url string) (*Client, error) {
-	return New(Config{Endpoints: []string{url}})
-}
-
-// NewFromURLs creates a new etcdv3 client from URLs.
-func NewFromURLs(urls []string) (*Client, error) {
-	return New(Config{Endpoints: urls})
-}
-
 // WithZapLogger is a NewCtxClient option that overrides the logger
 func WithZapLogger(lg *zap.Logger) Option {
 	return func(c *Client) {
@@ -144,21 +134,43 @@ func (c *Client) Close() error {
 	return c.ctx.Err()
 }
 
-// Ctx is a context for "out of band" messages (e.g., for sending
-// "clean up" message when another context is canceled). It is
-// canceled on client Close().
 func (c *Client) Ctx() context.Context { return c.ctx }
 
-// SetEndpoints updates client's endpoints.
+// Dial connects to a single endpoint using the client's config.
+func (c *Client) Dial(ep string) (*grpc.ClientConn, error) {
+	creds := c.credentialsForEndpoint(ep)
+
+	// Using ad-hoc created resolver, to guarantee only explicitly given
+	// endpoint is used.
+	return c.dial(creds, grpc.WithResolvers(resolver.New(ep)))
+}
+
+// roundRobinQuorumBackoff retries against quorum between each backoff.
+// This is intended for use with a round robin load balancer.
+func (c *Client) roundRobinQuorumBackoff(waitBetween time.Duration, jitterFraction float64) backoffFunc {
+	return func(attempt uint) time.Duration {
+		// after each round robin across quorum, backoff for our wait between duration
+		n := uint(len(c.Endpoints()))
+		quorum := (n/2 + 1)
+		if attempt%quorum == 0 {
+			c.lg.Debug("backoff", zap.Uint("attempt", attempt), zap.Uint("quorum", quorum), zap.Duration("waitBetween", waitBetween), zap.Float64("jitterFraction", jitterFraction))
+			return jitterUp(waitBetween, jitterFraction)
+		}
+		c.lg.Debug("backoff skipped", zap.Uint("attempt", attempt), zap.Uint("quorum", quorum))
+		return 0
+	}
+}
+
+// ---------------------------------------------  OVER  ------------------------------------------------------------
+
 func (c *Client) SetEndpoints(eps ...string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.cfg.Endpoints = eps
-
 	c.resolver.SetEndpoints(eps)
 }
 
-// Sync synchronizes client's endpoints with the known endpoints from the etcd membership.
+// Sync 将客户端的端点与来自etcd成员的已知端点进行同步。
 func (c *Client) Sync(ctx context.Context) error {
 	mresp, err := c.MemberList(ctx)
 	if err != nil {
@@ -224,13 +236,148 @@ func (c *Client) dialSetupOpts(creds grpccredentials.TransportCredentials, dopts
 	return opts, nil
 }
 
-// Dial connects to a single endpoint using the client's config.
-func (c *Client) Dial(ep string) (*grpc.ClientConn, error) {
-	creds := c.credentialsForEndpoint(ep)
+// 检查服务端版本
+func (c *Client) checkVersion() (err error) {
+	var wg sync.WaitGroup
 
-	// Using ad-hoc created resolver, to guarantee only explicitly given
-	// endpoint is used.
-	return c.dial(creds, grpc.WithResolvers(resolver.New(ep)))
+	eps := c.Endpoints()
+	errc := make(chan error, len(eps))
+	ctx, cancel := context.WithCancel(c.ctx)
+	if c.cfg.DialTimeout > 0 {
+		cancel()
+		ctx, cancel = context.WithTimeout(c.ctx, c.cfg.DialTimeout)
+	}
+
+	wg.Add(len(eps))
+	for _, ep := range eps {
+		// 如果集群是当前的，任何端点都会给出一个最新的版本
+		go func(e string) {
+			defer wg.Done()
+			resp, rerr := c.Status(ctx, e)
+			if rerr != nil {
+				errc <- rerr
+				return
+			}
+			vs := strings.Split(resp.Version, ".") // [3 5 2]
+			maj, min := 0, 0
+			if len(vs) >= 2 {
+				var serr error
+				if maj, serr = strconv.Atoi(vs[0]); serr != nil {
+					errc <- serr
+					return
+				}
+				if min, serr = strconv.Atoi(vs[1]); serr != nil {
+					errc <- serr
+					return
+				}
+			}
+			// 3.2版本以下
+			if maj < 3 || (maj == 3 && min < 2) {
+				rerr = ErrOldCluster
+			}
+			errc <- rerr
+		}(ep)
+	}
+	for range eps {
+		if err = <-errc; err == nil {
+			break
+		}
+	}
+	cancel()
+	wg.Wait()
+	return err
+}
+
+func (c *Client) ActiveConnection() *grpc.ClientConn { return c.conn }
+
+// isHaltErr 如果给定的错误和上下文表明无法取得进展，甚至在重新连接后，返回true。
+func isHaltErr(ctx context.Context, err error) bool {
+	if ctx != nil && ctx.Err() != nil {
+		return true
+	}
+	if err == nil {
+		return false
+	}
+	ev, _ := status.FromError(err)
+	return ev.Code() != codes.Unavailable && ev.Code() != codes.Internal
+}
+
+// isUnavailableErr 返回错误是不是 不可用 类型
+func isUnavailableErr(ctx context.Context, err error) bool {
+	if ctx != nil && ctx.Err() != nil {
+		return false
+	}
+	if err == nil {
+		return false
+	}
+	ev, ok := status.FromError(err)
+	if ok {
+		// Unavailable codes mean the system will be right back.
+		// (e.g., can't connect, lost leader)
+		return ev.Code() == codes.Unavailable
+	}
+	return false
+}
+
+func toErr(ctx context.Context, err error) error {
+	if err == nil {
+		return nil
+	}
+	err = rpctypes.Error(err)
+	if _, ok := err.(rpctypes.EtcdError); ok {
+		return err
+	}
+	if ev, ok := status.FromError(err); ok {
+		code := ev.Code()
+		switch code {
+		case codes.DeadlineExceeded:
+			fallthrough
+		case codes.Canceled:
+			if ctx.Err() != nil {
+				err = ctx.Err()
+			}
+		}
+	}
+	return err
+}
+
+func canceledByCaller(stopCtx context.Context, err error) bool {
+	if stopCtx.Err() == nil || err == nil {
+		return false
+	}
+
+	return err == context.Canceled || err == context.DeadlineExceeded
+}
+
+// IsConnCanceled returns true, if error is from a closed gRPC connection.
+// ref. https://github.com/grpc/grpc-go/pull/1854
+func IsConnCanceled(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	// >= gRPC v1.23.x
+	s, ok := status.FromError(err)
+	if ok {
+		// connection is canceled or etcd has already closed the connection
+		return s.Code() == codes.Canceled || s.Message() == "transport is closing"
+	}
+
+	// >= gRPC v1.10.x
+	if err == context.Canceled {
+		return true
+	}
+
+	// <= gRPC v1.7.x returns 'errors.New("grpc: the client connection is closing")'
+	return strings.Contains(err.Error(), "grpc: the client connection is closing")
+}
+
+func (c *Client) Endpoints() []string {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	eps := make([]string, len(c.cfg.Endpoints))
+	copy(eps, c.cfg.Endpoints)
+	return eps
 }
 
 // OK
@@ -423,172 +570,4 @@ func newClient(cfg *Config) (*Client, error) {
 
 	go client.autoSync()
 	return client, nil
-}
-
-// roundRobinQuorumBackoff retries against quorum between each backoff.
-// This is intended for use with a round robin load balancer.
-func (c *Client) roundRobinQuorumBackoff(waitBetween time.Duration, jitterFraction float64) backoffFunc {
-	return func(attempt uint) time.Duration {
-		// after each round robin across quorum, backoff for our wait between duration
-		n := uint(len(c.Endpoints()))
-		quorum := (n/2 + 1)
-		if attempt%quorum == 0 {
-			c.lg.Debug("backoff", zap.Uint("attempt", attempt), zap.Uint("quorum", quorum), zap.Duration("waitBetween", waitBetween), zap.Float64("jitterFraction", jitterFraction))
-			return jitterUp(waitBetween, jitterFraction)
-		}
-		c.lg.Debug("backoff skipped", zap.Uint("attempt", attempt), zap.Uint("quorum", quorum))
-		return 0
-	}
-}
-
-// 检查服务端版本
-func (c *Client) checkVersion() (err error) {
-	var wg sync.WaitGroup
-
-	eps := c.Endpoints()
-	errc := make(chan error, len(eps))
-	ctx, cancel := context.WithCancel(c.ctx)
-	if c.cfg.DialTimeout > 0 {
-		cancel()
-		ctx, cancel = context.WithTimeout(c.ctx, c.cfg.DialTimeout)
-	}
-
-	wg.Add(len(eps))
-	for _, ep := range eps {
-		// 如果集群是当前的，任何端点都会给出一个最新的版本
-		go func(e string) {
-			defer wg.Done()
-			resp, rerr := c.Status(ctx, e)
-			if rerr != nil {
-				errc <- rerr
-				return
-			}
-			vs := strings.Split(resp.Version, ".") // [3 5 2]
-			maj, min := 0, 0
-			if len(vs) >= 2 {
-				var serr error
-				if maj, serr = strconv.Atoi(vs[0]); serr != nil {
-					errc <- serr
-					return
-				}
-				if min, serr = strconv.Atoi(vs[1]); serr != nil {
-					errc <- serr
-					return
-				}
-			}
-			// 3.2版本以下
-			if maj < 3 || (maj == 3 && min < 2) {
-				rerr = ErrOldCluster
-			}
-			errc <- rerr
-		}(ep)
-	}
-	for range eps {
-		if err = <-errc; err == nil {
-			break
-		}
-	}
-	cancel()
-	wg.Wait()
-	return err
-}
-
-// ActiveConnection returns the current in-use connection
-func (c *Client) ActiveConnection() *grpc.ClientConn { return c.conn }
-
-// isHaltErr returns true if the given error and context indicate no forward
-// progress can be made, even after reconnecting.
-func isHaltErr(ctx context.Context, err error) bool {
-	if ctx != nil && ctx.Err() != nil {
-		return true
-	}
-	if err == nil {
-		return false
-	}
-	ev, _ := status.FromError(err)
-	// Unavailable codes mean the system will be right back.
-	// (e.g., can't connect, lost leader)
-	// Treat Internal codes as if something failed, leaving the
-	// system in an inconsistent state, but retrying could make progress.
-	// (e.g., failed in middle of send, corrupted frame)
-	// TODO: are permanent Internal errors possible from grpc?
-	return ev.Code() != codes.Unavailable && ev.Code() != codes.Internal
-}
-
-// isUnavailableErr returns true if the given error is an unavailable error
-func isUnavailableErr(ctx context.Context, err error) bool {
-	if ctx != nil && ctx.Err() != nil {
-		return false
-	}
-	if err == nil {
-		return false
-	}
-	ev, ok := status.FromError(err)
-	if ok {
-		// Unavailable codes mean the system will be right back.
-		// (e.g., can't connect, lost leader)
-		return ev.Code() == codes.Unavailable
-	}
-	return false
-}
-
-func toErr(ctx context.Context, err error) error {
-	if err == nil {
-		return nil
-	}
-	err = rpctypes.Error(err)
-	if _, ok := err.(rpctypes.EtcdError); ok {
-		return err
-	}
-	if ev, ok := status.FromError(err); ok {
-		code := ev.Code()
-		switch code {
-		case codes.DeadlineExceeded:
-			fallthrough
-		case codes.Canceled:
-			if ctx.Err() != nil {
-				err = ctx.Err()
-			}
-		}
-	}
-	return err
-}
-
-func canceledByCaller(stopCtx context.Context, err error) bool {
-	if stopCtx.Err() == nil || err == nil {
-		return false
-	}
-
-	return err == context.Canceled || err == context.DeadlineExceeded
-}
-
-// IsConnCanceled returns true, if error is from a closed gRPC connection.
-// ref. https://github.com/grpc/grpc-go/pull/1854
-func IsConnCanceled(err error) bool {
-	if err == nil {
-		return false
-	}
-
-	// >= gRPC v1.23.x
-	s, ok := status.FromError(err)
-	if ok {
-		// connection is canceled or etcd has already closed the connection
-		return s.Code() == codes.Canceled || s.Message() == "transport is closing"
-	}
-
-	// >= gRPC v1.10.x
-	if err == context.Canceled {
-		return true
-	}
-
-	// <= gRPC v1.7.x returns 'errors.New("grpc: the client connection is closing")'
-	return strings.Contains(err.Error(), "grpc: the client connection is closing")
-}
-
-func (c *Client) Endpoints() []string {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	eps := make([]string, len(c.cfg.Endpoints))
-	copy(eps, c.cfg.Endpoints)
-	return eps
 }

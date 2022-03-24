@@ -112,7 +112,6 @@ func (m *LeaseInternalResponse) Marshal() (dAtA []byte, err error) {
 	return json.Marshal(m)
 }
 
-
 func (m *Lease) Size() (n int) {
 	if m == nil {
 		return 0
@@ -170,7 +169,6 @@ func sovLease(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
 
-
 func (m *Lease) Unmarshal(dAtA []byte) error {
 	return json.Unmarshal(dAtA, m)
 }
@@ -182,7 +180,6 @@ func (m *LeaseInternalRequest) Unmarshal(dAtA []byte) error {
 func (m *LeaseInternalResponse) Unmarshal(dAtA []byte) error {
 	return json.Unmarshal(dAtA, m)
 }
-
 
 var (
 	ErrInvalidLengthLease        = fmt.Errorf("proto: negative length found during unmarshaling")

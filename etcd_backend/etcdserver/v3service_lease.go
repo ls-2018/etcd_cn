@@ -2,10 +2,11 @@ package etcdserver
 
 import (
 	"context"
+	"time"
+
 	"github.com/ls-2018/etcd_cn/etcd_backend/lease"
 	"github.com/ls-2018/etcd_cn/etcd_backend/lease/leasehttp"
 	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
-	"time"
 )
 
 // 租约 续租
@@ -137,8 +138,8 @@ func (s *EtcdServer) LeaseLeases(ctx context.Context, r *pb.LeaseLeasesRequest) 
 	return &pb.LeaseLeasesResponse{Header: newHeader(s), Leases: lss}, nil
 }
 
-//EtcdServer.LeaseGrant
-//EtcdServer.LeaseRevoke
-//EtcdServer.LeaseRenew
-//EtcdServer.LeaseTimeToLive
-//EtcdServer.LeaseLeases
+// EtcdServer.LeaseGrant
+// EtcdServer.LeaseRevoke
+// EtcdServer.LeaseRenew
+// EtcdServer.LeaseTimeToLive
+// EtcdServer.LeaseLeases
