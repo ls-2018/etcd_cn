@@ -125,13 +125,11 @@ func (s *EtcdServer) raftRequestOnce(ctx context.Context, r pb.InternalRaftReque
 	if result.err != nil {
 		return nil, result.err
 	}
+	// startTime
 	if startTime, ok := ctx.Value(traceutil.StartTimeKey).(time.Time); ok && result.trace != nil {
 		applyStart := result.trace.GetStartTime()
-		// The trace object is created in apply. Here reset the start time to trace
-		// the raft request time by the difference between the request start time
-		// and apply start time
 		result.trace.SetStartTime(startTime)
-		result.trace.InsertStep(0, applyStart, "process raft request")
+		result.trace.InsertStep(0, applyStart, "处理raft请求")
 	}
 	return result.resp, nil
 }
@@ -206,11 +204,12 @@ func (s *EtcdServer) processInternalRaftRequestOnce(ctx context.Context, r pb.In
 	}
 	ch := s.w.Register(id) // 注册一个channel,等待处理完成
 
-	// cctx, cancel := context.WithTimeout(ctx, s.Cfg.ReqTimeout()) // 设置请求超时
-	cctx, cancel := context.WithTimeout(ctx, time.Second*1000) // 设置请求超时
+	cctx, cancel := context.WithTimeout(ctx, s.Cfg.ReqTimeout()) // 设置请求超时
+	//cctx, cancel := context.WithTimeout(ctx, time.Second*1000) // 设置请求超时
 	defer cancel()
 
 	start := time.Now()
+	_ = s.applyEntryNormal
 	err = s.r.Propose(cctx, data) // 调用raft模块的Propose处理请求,存入到了待发送队列
 	if err != nil {
 		s.w.Trigger(id, nil)
@@ -253,7 +252,7 @@ func (s *EtcdServer) sendReadIndex(requestIndex uint64) error {
 	}
 	if err != nil {
 		lg := s.Logger()
-		lg.Warn("failed to get read index from Raft", zap.Error(err))
+		lg.Warn("未能从Raft获取读取索引", zap.Error(err))
 		return err
 	}
 	return nil
@@ -264,7 +263,7 @@ func (s *EtcdServer) linearizableReadNotify(ctx context.Context) error {
 	nc := s.readNotifier
 	s.readMu.RUnlock()
 
-	// signal linearizable loop for current notify if it hasn't been already
+	//  linearizable loop 没有准备好，就发送此信号
 	select {
 	case s.readwaitc <- struct{}{}:
 	default:

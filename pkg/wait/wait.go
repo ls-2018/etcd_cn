@@ -31,7 +31,7 @@ const (
 // Wait 是一个接口，提供等待和触发与ID相关的事件的能力。
 type Wait interface {
 	Register(id uint64) <-chan interface{} // waits返回一个在给定ID上等待的chan。当Trigger以相同的ID被调用时，这个chan将被触发。
-	Trigger(id uint64, x interface{})      // 触发具有给定ID的等待通道。
+	Trigger(id uint64, x interface{})      // 触发具有给定ID的等待通道。设置结果
 	IsRegistered(id uint64) bool
 }
 

@@ -283,7 +283,7 @@ func (n *localNode) TransferLeadership(ctx context.Context, lead, transferee uin
 }
 
 func (n *localNode) ReadIndex(ctx context.Context, rctx []byte) error {
-	return n.step(ctx, pb.Message{Type: pb.MsgReadIndex, Entries: []pb.Entry{{Data: rctx}}}) // ok
+	return n.step(ctx, pb.Message{Type: pb.MsgReadIndex, Entries: []pb.Entry{{Data: rctx}}}) // ok  data是requestIndex[生成的]
 }
 
 // ------------------------------------------	over --------------------------------------------------------------

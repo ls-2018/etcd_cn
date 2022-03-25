@@ -73,14 +73,7 @@ func (m *InternalRaftRequest) Marshal() (dAtA []byte, err error) {
 			PrevKv      bool
 			IgnoreValue bool
 			IgnoreLease bool
-		}{
-			Key:         string(m.Put.Key),
-			Value:       string(m.Put.Value),
-			Lease:       m.Put.Lease,
-			PrevKv:      m.Put.PrevKv,
-			IgnoreValue: m.Put.IgnoreValue,
-			IgnoreLease: m.Put.IgnoreLease,
-		},
+		}{},
 		Header:                   m.Header,
 		ID:                       m.ID,
 		V2:                       m.V2,
@@ -110,6 +103,15 @@ func (m *InternalRaftRequest) Marshal() (dAtA []byte, err error) {
 		ClusterMemberAttrSet:     m.ClusterMemberAttrSet,
 		DowngradeInfoSet:         m.DowngradeInfoSet,
 	}
+	if m.Put != nil {
+		a.Put.Key = string(m.Put.Key)
+		a.Put.Value = string(m.Put.Value)
+		a.Put.Lease = m.Put.Lease
+		a.Put.PrevKv = m.Put.PrevKv
+		a.Put.IgnoreValue = m.Put.IgnoreValue
+		a.Put.IgnoreLease = m.Put.IgnoreLease
+	}
+
 	return json.Marshal(a)
 }
 

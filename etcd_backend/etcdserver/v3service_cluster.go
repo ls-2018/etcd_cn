@@ -215,12 +215,12 @@ func (s *EtcdServer) linearizableReadLoop() {
 		case <-leaderChangedNotifier:
 			continue
 		case <-s.readwaitc:
+			fmt.Println("linearizableReadLoop not ready")
 		case <-s.stopping:
 			return
 		}
 
-		// as a single loop is can unlock multiple reads, it is not very useful
-		// to propagate the trace from Txn or Range.
+		// 因为一个循环可以解锁多个读数，所以从Txn或Range传播追踪不是很有用。
 		trace := traceutil.New("linearizableReadLoop", s.Logger())
 
 		nextnr := newNotifier()
@@ -258,7 +258,7 @@ func (s *EtcdServer) linearizableReadLoop() {
 
 	}
 }
-
+// 请求当前索引
 func (s *EtcdServer) requestCurrentIndex(leaderChangedNotifier <-chan struct{}, requestId uint64) (uint64, error) {
 	err := s.sendReadIndex(requestId)
 	if err != nil {

@@ -16,6 +16,7 @@ package etcdserver
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/membership"
@@ -104,18 +105,21 @@ func (a *reqV2HandlerEtcdServer) processRaftRequest(ctx context.Context, r *Requ
 
 	start := time.Now()
 	a.s.r.Propose(ctx, data)
-
+	_=a.s.applyEntryNormal
 	select {
 	case x := <-ch:
 		resp := x.(Response)
 		return resp, resp.Err
 	case <-ctx.Done():
-		a.s.w.Trigger(r.ID, nil) // GC wait
+		a.s.w.Trigger(r.ID, nil)
 		return Response{}, a.s.parseProposeCtxErr(ctx.Err(), start)
-	case <-a.s.stopping:
+	case x := <-a.s.stopping:
+		fmt.Println("<-a.s.stopping", x)
 	}
 	return Response{}, ErrStopped
 }
+
+// ---------------  over ------------------------
 
 func (s *EtcdServer) Do(ctx context.Context, r pb.Request) (Response, error) {
 	r.ID = s.reqIDGen.Next()
@@ -132,11 +136,6 @@ func (s *EtcdServer) Do(ctx context.Context, r pb.Request) (Response, error) {
 	return resp, err
 }
 
-// Handle interprets r and performs an operation on s.store according to r.Method
-// and other fields. If r.Method is "POST", "PUT", "DELETE", or a "GET" with
-// Quorum == true, r will backend sent through consensus before performing its
-// respective operation. Do will block until an action is performed or there is
-// an error.
 func (r *RequestV2) Handle(ctx context.Context, v2api RequestV2Handler) (Response, error) {
 	if r.Method == "GET" && r.Quorum {
 		r.Method = "QGET"

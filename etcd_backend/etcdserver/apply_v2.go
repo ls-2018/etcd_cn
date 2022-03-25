@@ -28,7 +28,6 @@ import (
 	"go.uber.org/zap"
 )
 
-// ApplierV2 is the interface for processing V2 raft messages
 type ApplierV2 interface {
 	Delete(r *RequestV2) Response
 	Post(r *RequestV2) Response

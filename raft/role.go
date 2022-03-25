@@ -529,14 +529,14 @@ func stepFollower(r *raft, m pb.Message) error {
 		r.hup(campaignTransfer)
 	case pb.MsgReadIndex:
 		if r.lead == None {
-			r.logger.Infof("%x no leader at term %d; dropping index reading msg", r.id, r.Term)
+			r.logger.Infof("%x 当前任期没有leader %d; 跳过读索引", r.id, r.Term)
 			return nil
 		}
 		m.To = r.lead
 		r.send(m)
 	case pb.MsgReadIndexResp:
 		if len(m.Entries) != 1 {
-			r.logger.Errorf("%x invalid format of MsgReadIndexResp from %x, entries count: %d", r.id, m.From, len(m.Entries))
+			r.logger.Errorf("%x  来自 %x的 MsgReadIndexResp 格式无效, 日志条数: %d", r.id, m.From, len(m.Entries))
 			return nil
 		}
 		r.readStates = append(r.readStates, ReadState{Index: m.Index, RequestCtx: m.Entries[0].Data})

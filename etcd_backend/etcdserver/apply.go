@@ -38,16 +38,13 @@ import (
 )
 
 type applyResult struct {
-	resp proto.Message
-	err  error
-	// physc signals the physical effect of the request has completed in addition
-	// to being logically reflected by the node. Currently only used for
-	// Compaction requests.
-	physc <-chan struct{}
+	resp  proto.Message
+	err   error
+	physc <-chan struct{} // disk、内存都写好数据了
 	trace *traceutil.Trace
 }
 
-// applierV3Internal is the interface for processing internal V3 raft request
+// applierV3Internal 内部v3 raft 请求
 type applierV3Internal interface {
 	ClusterVersionSet(r *membershippb.ClusterVersionSetRequest, shouldApplyV3 membership.ShouldApplyV3)
 	ClusterMemberAttrSet(r *membershippb.ClusterMemberAttrSetRequest, shouldApplyV3 membership.ShouldApplyV3)

@@ -180,11 +180,11 @@ type EtcdServer struct {
 	readMu            sync.RWMutex // 下面3个结果都是为了实现linearizable 读使用的
 	readwaitc         chan struct{}
 	readNotifier      *notifier
-	stop              chan struct{} // 停止通道
-	stopping          chan struct{} // 停止时关闭这个通道
-	done              chan struct{} // etcd的start函数中的循环退出,会关闭这个通道
-	leaderChanged     chan struct{} // leader变换后 通知linearizable read loop   drop掉旧的读请求
-	leaderChangedMu   sync.RWMutex
+	stop              chan struct{}           // 停止通道
+	stopping          chan struct{}           // 停止时关闭这个通道
+	done              chan struct{}           // etcd的start函数中的循环退出,会关闭这个通道
+	leaderChanged     chan struct{}           // leader变换后 通知linearizable read loop   drop掉旧的读请求
+	leaderChangedMu   sync.RWMutex            //
 	errorc            chan error              // 错误通道,用以传入不可恢复的错误,关闭raft状态机.
 	id                types.ID                // etcd实例id
 	attributes        membership.Attributes   // etcd实例属性
@@ -213,15 +213,13 @@ type EtcdServer struct {
 	wgMu sync.RWMutex
 	// wg is used to wait for the goroutines that depends on the etcd state
 	// to exit when stopping the etcd.
-	wg sync.WaitGroup
-	// ctx is used for etcd-initiated requests that may need to backend canceled
-	// on etcd etcd shutdown.
-	ctx                 context.Context
+	wg                  sync.WaitGroup
+	ctx                 context.Context // 用于由etcd发起的请求，这些请求可能需要在etcd关机时被后端取消。
 	cancel              context.CancelFunc
 	leadTimeMu          sync.RWMutex
 	leadElectedTime     time.Time
 	firstCommitInTermMu sync.RWMutex
-	firstCommitInTermC  chan struct{}
+	firstCommitInTermC  chan struct{} // 任期内的第一次commit时创建的
 	*AccessController
 }
 
@@ -727,15 +725,9 @@ func (s *EtcdServer) adjustTicks() {
 	}
 }
 
-// Start performs any initialization of the Server necessary for it to
-// begin serving requests. It必须是called before Do or Process.
-// Start必须是non-blocking; any long-running etcd functionality
-// should backend implemented in goroutines.
 func (s *EtcdServer) Start() {
 	s.start()
 	s.GoAttach(func() { s.adjustTicks() })
-	// TODO: Switch to publishV3 in 3.6.
-	// Support for cluster_member_set_attr was added in 3.5.
 	s.GoAttach(func() { s.publish(s.Cfg.ReqTimeout()) })
 	s.GoAttach(s.purgeFile)
 	s.GoAttach(s.monitorVersions)
@@ -744,15 +736,12 @@ func (s *EtcdServer) Start() {
 	s.GoAttach(s.monitorDowngrade)
 }
 
-// start prepares and starts etcd in a new goroutine. It is no longer safe to
-// modify a etcd's fields after it has been sent to Start.
-// This function is just used for testing.
 func (s *EtcdServer) start() {
 	lg := s.Logger()
 
 	if s.Cfg.SnapshotCount == 0 { // 触发一次磁盘快照的提交事务的次数
 		lg.Info(
-			"updating snapshot-count to default",
+			"更新快照数量为默认值",
 			zap.Uint64("given-snapshot-count", s.Cfg.SnapshotCount), // 触发一次磁盘快照的提交事务的次数
 			zap.Uint64("updated-snapshot-count", DefaultSnapshotCount),
 		)
@@ -760,7 +749,7 @@ func (s *EtcdServer) start() {
 	}
 	if s.Cfg.SnapshotCatchUpEntries == 0 {
 		lg.Info(
-			"updating snapshot catch-up entries to default",
+			"将快照追赶条目更新为默认条目",
 			zap.Uint64("given-snapshot-catchup-entries", s.Cfg.SnapshotCatchUpEntries),
 			zap.Uint64("updated-snapshot-catchup-entries", DefaultSnapshotCatchUpEntries),
 		)
@@ -784,16 +773,13 @@ func (s *EtcdServer) start() {
 			zap.String("cluster-version", version.Cluster(s.ClusterVersion().String())),
 		)
 	} else {
-		lg.Info(
-			"starting etcd etcd",
+		lg.Info("启动etcd",
 			zap.String("local-member-id", s.ID().String()),
 			zap.String("local-etcd-version", version.Version),
 			zap.String("cluster-version", "to_be_decided"),
 		)
 	}
 
-	// TODO: if this is an empty log, writes all peer infos
-	// into the first entry
 	go s.run()
 }
 
@@ -1496,12 +1482,6 @@ func (s *EtcdServer) mayRemoveMember(id types.ID) error {
 	return nil
 }
 
-func (s *EtcdServer) LeaderChangedNotify() <-chan struct{} {
-	s.leaderChangedMu.RLock()
-	defer s.leaderChangedMu.RUnlock()
-	return s.leaderChanged
-}
-
 // FirstCommitInTermNotify returns channel that will backend unlocked on first
 // entry committed in new term, which is necessary for new leader to answer
 // read-only requests (leader is not able to respond any read-only requests
@@ -1728,108 +1708,6 @@ func (s *EtcdServer) apply(es []raftpb.Entry, confState *raftpb.ConfState) (appl
 	return appliedt, appliedi, shouldStop
 }
 
-// applyEntryNormal apples an EntryNormal type raftpb request to the EtcdServer
-func (s *EtcdServer) applyEntryNormal(e *raftpb.Entry) {
-	shouldApplyV3 := membership.ApplyV2storeOnly
-	index := s.consistIndex.ConsistentIndex()
-	if e.Index > index {
-		// set the consistent index of current executing entry
-		s.consistIndex.SetConsistentIndex(e.Index, e.Term)
-		shouldApplyV3 = membership.ApplyBoth
-	}
-	s.lg.Debug("apply entry normal",
-		zap.Uint64("consistent-index", index),
-		zap.Uint64("entry-index", e.Index),
-		zap.Bool("should-applyV3", bool(shouldApplyV3)))
-
-	// raft state machine may generate noop entry when leader confirmation.
-	// skip it in advance to avoid some potential bug in the future
-	if len(e.Data) == 0 {
-		s.notifyAboutFirstCommitInTerm()
-
-		// promote lessor when the local member is leader and finished
-		// applying all entries from the last term.
-		if s.isLeader() {
-			s.lessor.Promote(s.Cfg.ElectionTimeout())
-		}
-		return
-	}
-
-	var raftReq pb.InternalRaftRequest
-	if !pbutil.MaybeUnmarshal(&raftReq, e.Data) { // 向后兼容
-		// {"ID":7587861231285799684,"Method":"PUT","Path":"/0/version","Val":"3.5.0","Dir":false,"PrevValue":"","PrevIndex":0,"Expiration":0,"Wait":false,"Since":0,"Recursive":false,"Sorted":false,"Quorum":false,"Time":0,"Stream":false}
-		var r pb.Request
-		rp := &r
-		pbutil.MustUnmarshal(rp, e.Data)
-		s.lg.Debug("applyEntryNormal", zap.Stringer("V2request", rp))
-		s.w.Trigger(r.ID, s.applyV2Request((*RequestV2)(rp), shouldApplyV3))
-		return
-	}
-	//{"header":{"ID":7587861231285799685},"put":{"key":"YQ==","value":"Yg=="}}
-	s.lg.Debug("applyEntryNormal", zap.Stringer("raftReq", &raftReq))
-
-	if raftReq.V2 != nil {
-		req := (*RequestV2)(raftReq.V2)
-		s.w.Trigger(req.ID, s.applyV2Request(req, shouldApplyV3))
-		return
-	}
-
-	id := raftReq.ID
-	if id == 0 {
-		id = raftReq.Header.ID
-	}
-
-	var ar *applyResult
-	needResult := s.w.IsRegistered(id)
-	if needResult || !noSideEffect(&raftReq) {
-		if !needResult && raftReq.Txn != nil {
-			removeNeedlessRangeReqs(raftReq.Txn)
-		}
-		ar = s.applyV3.Apply(&raftReq, shouldApplyV3)
-	}
-
-	// do not re-apply applied entries.
-	if !shouldApplyV3 {
-		return
-	}
-
-	if ar == nil {
-		return
-	}
-
-	if ar.err != ErrNoSpace || len(s.alarmStore.Get(pb.AlarmType_NOSPACE)) > 0 {
-		s.w.Trigger(id, ar)
-		return
-	}
-
-	lg := s.Logger()
-	lg.Warn(
-		"message exceeded backend quota; raising alarm",
-		zap.Int64("quota-size-bytes", s.Cfg.QuotaBackendBytes),
-		zap.String("quota-size", humanize.Bytes(uint64(s.Cfg.QuotaBackendBytes))),
-		zap.Error(ar.err),
-	)
-
-	s.GoAttach(func() {
-		a := &pb.AlarmRequest{
-			MemberID: uint64(s.ID()),
-			Action:   pb.AlarmRequest_ACTIVATE,
-			Alarm:    pb.AlarmType_NOSPACE,
-		}
-		s.raftRequest(s.ctx, pb.InternalRaftRequest{Alarm: a})
-		s.w.Trigger(id, ar)
-	})
-}
-
-func (s *EtcdServer) notifyAboutFirstCommitInTerm() {
-	newNotifier := make(chan struct{})
-	s.firstCommitInTermMu.Lock()
-	notifierToClose := s.firstCommitInTermC
-	s.firstCommitInTermC = newNotifier
-	s.firstCommitInTermMu.Unlock()
-	close(notifierToClose)
-}
-
 // TODO: non-blocking snapshot
 func (s *EtcdServer) snapshot(snapi uint64, confState raftpb.ConfState) {
 	clone := s.v2store.Clone()
@@ -1980,18 +1858,10 @@ func (s *EtcdServer) monitorVersions() {
 
 func (s *EtcdServer) updateClusterVersionV2(ver string) {
 	lg := s.Logger()
-
 	if s.cluster.Version() == nil {
-		lg.Info(
-			"使用v2 API 设置初始集群版本",
-			zap.String("cluster-version", version.Cluster(ver)),
-		)
+		lg.Info("使用v2 API 设置初始集群版本", zap.String("cluster-version", version.Cluster(ver)))
 	} else {
-		lg.Info(
-			"使用v2 API 更新初始集群版本",
-			zap.String("from", version.Cluster(s.cluster.Version().String())),
-			zap.String("to", version.Cluster(ver)),
-		)
+		lg.Info("使用v2 API 更新初始集群版本", zap.String("from", version.Cluster(s.cluster.Version().String())), zap.String("to", version.Cluster(ver)))
 	}
 
 	req := pb.Request{
@@ -2001,7 +1871,10 @@ func (s *EtcdServer) updateClusterVersionV2(ver string) {
 	}
 
 	ctx, cancel := context.WithTimeout(s.ctx, s.Cfg.ReqTimeout())
+	fmt.Println("start", time.Now())
 	_, err := s.Do(ctx, req)
+	fmt.Println("end", time.Now())
+
 	cancel()
 
 	switch err {
@@ -2075,6 +1948,7 @@ func (s *EtcdServer) parseProposeCtxErr(err error, start time.Time) error {
 				return ErrTimeoutDueToConnectionLost
 			}
 		default:
+			// 检查是否自给定时间以后,与该节点建立连接
 			if !isConnectedSince(s.r.transport, start, lead) {
 				return ErrTimeoutDueToConnectionLost
 			}
@@ -2112,21 +1986,21 @@ func (s *EtcdServer) restoreAlarms() error {
 	return nil
 }
 
-// GoAttach creates a goroutine on a given function and tracks it using
-// the etcdserver waitgroup.
-// The passed function should interrupt on s.StoppingNotify().
+// ----------------------------------------- OVER  --------------------------------------------------------------
+
+// GoAttach 启动一个协程干活
 func (s *EtcdServer) GoAttach(f func()) {
-	s.wgMu.RLock() // this blocks with ongoing close(s.stopping)
+	s.wgMu.RLock() // stopping 关闭 是加锁操作
 	defer s.wgMu.RUnlock()
 	select {
 	case <-s.stopping:
 		lg := s.Logger()
-		lg.Warn("etcd has stopped; skipping GoAttach")
+		lg.Warn("etcd 已停止; 跳过 GoAttach")
 		return
 	default:
 	}
 
-	// now safe to add since waitgroup wait has not started yet
+	// 现在可以安全添加，因为等待组的等待还没有开始。
 	s.wg.Add(1)
 	go func() {
 		defer s.wg.Done()
@@ -2134,7 +2008,100 @@ func (s *EtcdServer) GoAttach(f func()) {
 	}()
 }
 
-// ----------------------------------------- OVER  --------------------------------------------------------------
+// applyEntryNormal 将日志应用到raft内部
+func (s *EtcdServer) applyEntryNormal(e *raftpb.Entry) {
+	shouldApplyV3 := membership.ApplyV2storeOnly
+	index := s.consistIndex.ConsistentIndex()
+	if e.Index > index {
+		// 设置当前entry的一致性索引
+		s.consistIndex.SetConsistentIndex(e.Index, e.Term)
+		shouldApplyV3 = membership.ApplyBoth // v2store 、bolt.db 都存储数据
+	}
+	s.lg.Debug("应用日志", zap.Uint64("consistent-index", index),
+		zap.Uint64("entry-index", e.Index),
+		zap.Bool("should-applyV3", bool(shouldApplyV3)))
+
+	// 当leader确认时，raft状态机可能会产生noop条目。 提前跳过它，以避免将来出现一些潜在的错误。
+	if len(e.Data) == 0 {
+		s.notifyAboutFirstCommitInTerm() // 被任期内 第一次commit更新channel
+		// 当本地成员是leader 并完成了上一任期的所有条目时，促进follower。
+		if s.isLeader() {
+			// TODO
+			s.lessor.Promote(s.Cfg.ElectionTimeout())
+		}
+		return
+	}
+	// e.Data 是由 pb.InternalRaftRequest、 序列化得到的
+	var raftReq pb.InternalRaftRequest
+	if !pbutil.MaybeUnmarshal(&raftReq, e.Data) { // 向后兼容
+		// {"ID":7587861231285799684,"Method":"PUT","Path":"/0/version","Val":"3.5.0","Dir":false,"PrevValue":"","PrevIndex":0,"Expiration":0,"Wait":false,"Since":0,"Recursive":false,"Sorted":false,"Quorum":false,"Time":0,"Stream":false}
+		var r pb.Request
+		rp := &r
+		pbutil.MustUnmarshal(rp, e.Data)
+		s.w.Trigger(r.ID, s.applyV2Request((*RequestV2)(rp), shouldApplyV3))
+		return
+	}
+
+	//{"header":{"ID":7587861231285799685},"put":{"key":"YQ==","value":"Yg=="}}
+	if raftReq.V2 != nil {
+		req := (*RequestV2)(raftReq.V2)
+		s.w.Trigger(req.ID, s.applyV2Request(req, shouldApplyV3))
+		return
+	}
+
+	id := raftReq.ID
+	if id == 0 {
+		id = raftReq.Header.ID
+	}
+
+	var ar *applyResult
+	needResult := s.w.IsRegistered(id)
+	if needResult || !noSideEffect(&raftReq) {
+		if !needResult && raftReq.Txn != nil {
+			removeNeedlessRangeReqs(raftReq.Txn)
+		}
+		ar = s.applyV3.Apply(&raftReq, shouldApplyV3)
+	}
+
+	if !shouldApplyV3 { //  是否存储到bolt.db
+		return
+	}
+
+	if ar == nil {
+		return
+	}
+
+	if ar.err != ErrNoSpace || len(s.alarmStore.Get(pb.AlarmType_NOSPACE)) > 0 {
+		s.w.Trigger(id, ar)
+		return
+	}
+
+	lg := s.Logger()
+	lg.Warn("消息超过了后端配额；发出警报", zap.Int64("quota-size-bytes", s.Cfg.QuotaBackendBytes),
+		zap.String("quota-size", humanize.Bytes(uint64(s.Cfg.QuotaBackendBytes))),
+		zap.Error(ar.err),
+	)
+
+	s.GoAttach(func() {
+		a := &pb.AlarmRequest{
+			MemberID: uint64(s.ID()),
+			Action:   pb.AlarmRequest_ACTIVATE, // 激活警报
+			Alarm:    pb.AlarmType_NOSPACE,
+		}
+		s.raftRequest(s.ctx, pb.InternalRaftRequest{Alarm: a})
+		s.w.Trigger(id, ar)
+	})
+}
+
+// 通知关于任期内的第一次commit
+func (s *EtcdServer) notifyAboutFirstCommitInTerm() {
+	newNotifier := make(chan struct{})
+	s.firstCommitInTermMu.Lock()
+	notifierToClose := s.firstCommitInTermC
+	s.firstCommitInTermC = newNotifier
+	s.firstCommitInTermMu.Unlock()
+	close(notifierToClose)
+}
 
 // IsLearner 当前节点是不是 raft learner
 func (s *EtcdServer) IsLearner() bool {
@@ -2283,3 +2250,9 @@ func (s *EtcdServer) getLead() uint64 {
 func (s *EtcdServer) IsIDRemoved(id uint64) bool { return s.cluster.IsIDRemoved(types.ID(id)) }
 
 func (s *EtcdServer) Cluster() api.Cluster { return s.cluster }
+
+func (s *EtcdServer) LeaderChangedNotify() <-chan struct{} {
+	s.leaderChangedMu.RLock()
+	defer s.leaderChangedMu.RUnlock()
+	return s.leaderChanged
+}

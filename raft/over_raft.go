@@ -117,7 +117,7 @@ type raft struct {
 	// current term. Those will be handled as fast as first log is committed in
 	// current term.
 	pendingReadIndexMessages []pb.Message
-	readStates               []ReadState //
+	readStates               []ReadState // follower读取的响应
 	readOnly                 *readOnly
 }
 

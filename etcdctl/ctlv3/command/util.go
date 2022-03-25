@@ -164,5 +164,5 @@ func commandCtx(cmd *cobra.Command) (context.Context, context.CancelFunc) {
 	if err != nil {
 		cobrautl.ExitWithError(cobrautl.ExitError, err)
 	}
-	return context.WithTimeout(context.Background(), timeOut*1000000000000)
+	return context.WithTimeout(context.Background(), timeOut)
 }
