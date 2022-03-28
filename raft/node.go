@@ -218,7 +218,7 @@ func (n *localNode) run() {
 			_, okBefore := r.prstrack.Progress[r.id] // 获取本节点的信息
 			cs := r.applyConfChange(cc)
 			// 如果localNode被移除,则阻止传入的变化.请注意,我们只在localNode之前在配置中时才这样做.
-			// 节点可能在不知道这一点的情况下成为组的成员（当他们在追赶日志时,没有最新的配置）,在这种情况下,我们不希望阻止提案通道.
+			// 节点可能在不知道这一点的情况下成为组的成员(当他们在追赶日志时,没有最新的配置),在这种情况下,我们不希望阻止提案通道.
 			// NB：当领导者发生变化时,propc会被重置,如果我们了解到这一点,就有点暗示我们被读取了,也许？这并不 这不是很合理,而且很可能有bug.
 			if _, okAfter := r.prstrack.Progress[r.id]; okBefore && !okAfter {
 				// 变更前有自己,变更后没有自己

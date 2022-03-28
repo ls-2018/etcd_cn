@@ -214,7 +214,7 @@ type EtcdServer struct {
 	// wg is used to wait for the goroutines that depends on the etcd state
 	// to exit when stopping the etcd.
 	wg                  sync.WaitGroup
-	ctx                 context.Context // 用于由etcd发起的请求，这些请求可能需要在etcd关机时被后端取消。
+	ctx                 context.Context // 用于由etcd发起的请求这些请求可能需要在etcd关机时被后端取消.
 	cancel              context.CancelFunc
 	leadTimeMu          sync.RWMutex
 	leadElectedTime     time.Time
@@ -571,7 +571,7 @@ func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 		}
 	}
 
-	srv.authStore = auth.NewAuthStore(srv.Logger(), srv.backend, tp, int(cfg.BcryptCost)) // BcryptCost 为散列身份验证密码指定bcrypt算法的成本/强度 ,默认10
+	srv.authStore = auth.NewAuthStore(srv.Logger(), srv.backend, tp, int(cfg.BcryptCost)) // BcryptCost 为散列身份验证密码指定bcrypt算法的成本/强度默认10
 
 	newSrv := srv // since srv == nil in defer if srv is returned as nil
 	defer func() {
@@ -2000,7 +2000,7 @@ func (s *EtcdServer) GoAttach(f func()) {
 	default:
 	}
 
-	// 现在可以安全添加，因为等待组的等待还没有开始。
+	// 现在可以安全添加因为等待组的等待还没有开始.
 	s.wg.Add(1)
 	go func() {
 		defer s.wg.Done()
@@ -2021,10 +2021,10 @@ func (s *EtcdServer) applyEntryNormal(e *raftpb.Entry) {
 		zap.Uint64("entry-index", e.Index),
 		zap.Bool("should-applyV3", bool(shouldApplyV3)))
 
-	// 当leader确认时，raft状态机可能会产生noop条目。 提前跳过它，以避免将来出现一些潜在的错误。
+	// 当leader确认时raft状态机可能会产生noop条目. 提前跳过它以避免将来出现一些潜在的错误.
 	if len(e.Data) == 0 {
 		s.notifyAboutFirstCommitInTerm() // 被任期内 第一次commit更新channel
-		// 当本地成员是leader 并完成了上一任期的所有条目时，促进follower。
+		// 当本地成员是leader 并完成了上一任期的所有条目时促进follower.
 		if s.isLeader() {
 			// TODO
 			s.lessor.Promote(s.Cfg.ElectionTimeout())
@@ -2033,7 +2033,9 @@ func (s *EtcdServer) applyEntryNormal(e *raftpb.Entry) {
 	}
 	// e.Data 是由 pb.InternalRaftRequest、 序列化得到的
 	var raftReq pb.InternalRaftRequest
-	if !pbutil.MaybeUnmarshal(&raftReq, e.Data) { // 向后兼容
+	if pbutil.MaybeUnmarshal(&raftReq, e.Data) {
+	} else {
+		// 如果不能不能反序列化
 		// {"ID":7587861231285799684,"Method":"PUT","Path":"/0/version","Val":"3.5.0","Dir":false,"PrevValue":"","PrevIndex":0,"Expiration":0,"Wait":false,"Since":0,"Recursive":false,"Sorted":false,"Quorum":false,"Time":0,"Stream":false}
 		var r pb.Request
 		rp := &r
@@ -2041,7 +2043,7 @@ func (s *EtcdServer) applyEntryNormal(e *raftpb.Entry) {
 		s.w.Trigger(r.ID, s.applyV2Request((*RequestV2)(rp), shouldApplyV3))
 		return
 	}
-
+	// 如果能
 	//{"header":{"ID":7587861231285799685},"put":{"key":"YQ==","value":"Yg=="}}
 	if raftReq.V2 != nil {
 		req := (*RequestV2)(raftReq.V2)

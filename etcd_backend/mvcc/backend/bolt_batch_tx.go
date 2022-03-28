@@ -27,7 +27,7 @@ import (
 type BucketID int
 
 type Bucket interface {
-	ID() BucketID // ID返回一个水桶的唯一标识符。该ID必须不被持久化，并且可以在内存地图中作为轻量级的标识符使用。
+	ID() BucketID // ID返回一个水桶的唯一标识符.该ID必须不被持久化并且可以在内存地图中作为轻量级的标识符使用.
 	Name() []byte
 	String() string
 
@@ -37,7 +37,7 @@ type Bucket interface {
 	IsSafeRangeBucket() bool
 }
 
-//负责读请求
+// 负责读请求
 type BatchTx interface {
 	ReadTx
 	UnsafeCreateBucket(bucket Bucket)

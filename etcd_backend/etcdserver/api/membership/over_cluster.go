@@ -157,7 +157,7 @@ func ValidateClusterAndAssignIDs(lg *zap.Logger, local *RaftCluster, existing *R
 			}
 		}
 		if !ok {
-			return fmt.Errorf("PeerURLs: 没有找到匹配的现有成员（%v, %v）,最后的解析器错误（%v）.", ems[i].ID, ems[i].PeerURLs, err)
+			return fmt.Errorf("PeerURLs: 没有找到匹配的现有成员(%v, %v),最后的解析器错误(%v).", ems[i].ID, ems[i].PeerURLs, err)
 		}
 	}
 	local.members = make(map[types.ID]*Member)

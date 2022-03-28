@@ -205,7 +205,7 @@ func newConfig() *config {
 	fs.StringVar(&cfg.ec.ClientTLSInfo.CRLFile, "client-crl-file", "", "客户端证书吊销列表文件的路径.")
 	fs.StringVar(&cfg.ec.ClientTLSInfo.AllowedHostname, "client-cert-allowed-hostname", "", "允许客户端证书认证使用TLS主机名.")
 	fs.StringVar(&cfg.ec.ClientTLSInfo.TrustedCAFile, "trusted-ca-file", "", "客户端etcd通信 的可信CA证书文件")
-	fs.BoolVar(&cfg.ec.ClientAutoTLS, "auto-tls", false, "客户端TLS使用生成的证书")
+	fs.BoolVar(&cfg.ec.ClientAutoTLS, "auto-tls", false, "客户端TLS使用自动生成的证书")
 	// etcd通信之间的证书配置
 	fs.StringVar(&cfg.ec.PeerTLSInfo.CertFile, "peer-cert-file", "", "证书路径")
 	fs.StringVar(&cfg.ec.PeerTLSInfo.KeyFile, "peer-key-file", "", "私钥路径")
@@ -379,7 +379,7 @@ func (cfg *config) configFromCmdLine() error {
 		cfg.ec.ACUrls = nil
 	}
 
-	// 如果设置了discovery ,则禁用默认初始集群
+	// 如果设置了discovery则禁用默认初始集群
 	if (cfg.ec.Durl != "" || cfg.ec.DNSCluster != "" || cfg.ec.DNSClusterServiceName != "") && !flags.IsSet(cfg.cf.flagSet, "initial-cluster") {
 		cfg.ec.InitialCluster = ""
 	}

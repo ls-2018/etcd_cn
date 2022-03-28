@@ -60,7 +60,7 @@ func DefragData(dataDir string) error {
 	select {
 	case <-bch:
 	case <-time.After(time.Second):
-		fmt.Fprintf(os.Stderr, "等待etcd关闭并释放其对%q的锁定。要对正在运行的etcd实例进行碎片整理，请省略-data-dir。 \n", dbDir)
+		fmt.Fprintf(os.Stderr, "等待etcd关闭并释放其对%q的锁定.要对正在运行的etcd实例进行碎片整理请省略-data-dir. \n", dbDir)
 		<-bch
 	}
 	return be.Defrag()

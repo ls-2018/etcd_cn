@@ -125,7 +125,7 @@ func insertionSort(sl []uint64) {
 func (c MajorityConfig) CommittedIndex(l AckedIndexer) Index {
 	n := len(c)
 	if n == 0 {
-		// 这里很有意思,当没有任何peer的时候返回值居然是无穷大（64位无符号范围内）,如果都没有任何
+		// 这里很有意思,当没有任何peer的时候返回值居然是无穷大(64位无符号范围内),如果都没有任何
 		// peer,0不是更合适？其实这跟JoinConfig类型有关,此处先放一放,后面会给出解释.
 		return math.MaxUint64
 	}

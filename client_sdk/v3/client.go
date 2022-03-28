@@ -40,7 +40,7 @@ var (
 	ErrOldCluster           = errors.New("etcdclient: 旧的集群版本")
 )
 
-// Client 提供并管理一个etcd v3客户端会话。
+// Client 提供并管理一个etcd v3客户端会话.
 type Client struct {
 	Cluster
 	KV
@@ -170,7 +170,7 @@ func (c *Client) SetEndpoints(eps ...string) {
 	c.resolver.SetEndpoints(eps)
 }
 
-// Sync 将客户端的端点与来自etcd成员的已知端点进行同步。
+// Sync 将客户端的端点与来自etcd成员的已知端点进行同步.
 func (c *Client) Sync(ctx context.Context) error {
 	mresp, err := c.MemberList(ctx)
 	if err != nil {
@@ -250,7 +250,7 @@ func (c *Client) checkVersion() (err error) {
 
 	wg.Add(len(eps))
 	for _, ep := range eps {
-		// 如果集群是当前的，任何端点都会给出一个最新的版本
+		// 如果集群是当前的任何端点都会给出一个最新的版本
 		go func(e string) {
 			defer wg.Done()
 			resp, rerr := c.Status(ctx, e)
@@ -290,7 +290,7 @@ func (c *Client) checkVersion() (err error) {
 
 func (c *Client) ActiveConnection() *grpc.ClientConn { return c.conn }
 
-// isHaltErr 如果给定的错误和上下文表明无法取得进展，甚至在重新连接后，返回true。
+// isHaltErr 如果给定的错误和上下文表明无法取得进展甚至在重新连接后返回true.
 func isHaltErr(ctx context.Context, err error) bool {
 	if ctx != nil && ctx.Err() != nil {
 		return true

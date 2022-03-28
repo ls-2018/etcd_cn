@@ -49,10 +49,10 @@ const (
 	ReadOnlySafe ReadOnlyOption = iota
 	ReadOnlyLeaseBased
 	// 1、 ReadOnlySafe
-	//	该线性读模式,每次 Follower 进行读请求时,需要和 Leader 同步日志提交位点信息,而 Leader ,需要向过半的 Follower 发起证明自己是 Leader 的轻量的 RPC 请求,
+	//	该线性读模式,每次 Follower 进行读请求时,需要和 Leader 同步日志提交位点信息,而 Leader需要向过半的 Follower 发起证明自己是 Leader 的轻量的 RPC 请求,
 	//	相当于一个 Follower 读,至少需要 1 +(n/2)+ 1 次的 RPC 请求.
 	// 2、ReadOnlyLeaseBased
-	// 该线性读模式,每次 Follower 进行读请求时, Leader 只需要判断自己的 Leader 租约是否过期了,如果没有过期,直接可以回复 Follower 自己是 Leader ,
+	// 该线性读模式,每次 Follower 进行读请求时, Leader 只需要判断自己的 Leader 租约是否过期了,如果没有过期,直接可以回复 Follower 自己是 Leader
 	// 但是该机制对于机器时钟要求很严格,如果有做时钟同步的话,可以考虑使用该线性读模式.
 	// 如果说对于配置的发布、修改操作比较频繁,可以将 Raft 快照的时间适当的进行调整,避免新节点加入或者节点重启时,由于 Raft 日志回放操作数太多导致节点可开始对外服务的时间过长.
 )
@@ -94,7 +94,7 @@ type raft struct {
 	maxMsgSize                uint64                  // 每次发送消息的最大大小[多条日志]
 	maxUncommittedSize        uint64                  // 每条日志最大消息体
 	prstrack                  tracker.ProgressTracker // 跟踪Follower节点的状态,比如日志复制的matchIndex
-	state                     StateType               // 当前节点的状态 ,可选值分为StateFollower、StateCandidate、 StateLeader和StatePreCandidat巳四种状态.
+	state                     StateType               // 当前节点的状态可选值分为StateFollower、StateCandidate、 StateLeader和StatePreCandidat巳四种状态.
 	isLearner                 bool                    // 本节点是不是learner角色
 	msgs                      []pb.Message            // 缓存了当前节点等待发送的消息.
 	lead                      uint64                  // 当前leaderID
@@ -105,7 +105,7 @@ type raft struct {
 	preVote                   bool                    // PreVote 是否启用PreVote
 	electionElapsed           int                     // 选举计时器的指针,其单位是逻辑时钟的刻度,逻辑时钟每推进一次,该字段值就会增加1.
 	heartbeatElapsed          int                     // 心跳计时器的指针,其单位也是逻辑时钟的刻度,逻辑时钟每推进一次,该字段值就会增加1 .
-	heartbeatTimeout          int                     // 心跳间隔    ,上限     heartbeatTimeout是当前距离上次心跳的时间
+	heartbeatTimeout          int                     // 心跳间隔   上限     heartbeatTimeout是当前距离上次心跳的时间
 	electionTimeout           int                     // 选举超时时间,当electionE!apsed 宇段值到达该值时,就会触发新一轮的选举.
 	randomizedElectionTimeout int                     // 随机选举超时
 	disableProposalForwarding bool                    // 禁止将请求转发到leader,默认FALSE
@@ -446,7 +446,7 @@ func (r *raft) maybeSendAppend(to uint64, sendIfEmpty bool) bool {
 			// 在StateReplicate中,乐观地增加
 			case tracker.StateReplicate:
 				last := m.Entries[n-1].Index
-				pr.OptimisticUpdate(last) // 新目标节点对应的Next值（这里不会更新Match）
+				pr.OptimisticUpdate(last) // 新目标节点对应的Next值(这里不会更新Match)
 				pr.Inflights.Add(last)    // 记录已发送但是未收到响应的消息
 			case tracker.StateProbe:
 				// 消息发送后,就将Progress.Paused字段设置成true,暂停后续消息的发送
@@ -576,7 +576,7 @@ func (r *raft) increaseUncommittedSize(ents []pb.Entry) bool {
 	return true
 }
 
-// 日志新增, 加日志放入unstable , 没有落盘
+// 日志新增, 加日志放入unstable 没有落盘
 func (r *raft) appendEntry(es ...pb.Entry) (accepted bool) {
 	// 1. 获取raft节点当前最后一条日志条目的index
 	li := r.raftLog.lastIndex()
@@ -614,7 +614,7 @@ func (r *raft) hup(t CampaignType) {
 		return
 	}
 
-	// 获取raftLog中已提交但未apply（ lip applied～committed） 的Entry记录
+	// 获取raftLog中已提交但未apply( lip applied～committed) 的Entry记录
 	ents, err := r.raftLog.slice(r.raftLog.applied+1, r.raftLog.committed+1, noLimit)
 	if err != nil {
 		r.logger.Panicf("获取没有apply日志时出现错误(%v)", err)
@@ -655,7 +655,7 @@ func (r *raft) campaign(t CampaignType) {
 	//		单机 : 那么此时给自己投一票,res是VoteWon
 	// 		多机:此时是VotePending
 	if _, _, res := r.poll(r.id, voteRespMsgType(voteMsg), true); res == quorum.VoteWon {
-		// 我们在为自己投票后赢得了选举（这肯定意味着 这是一个单一的本地节点集群）.推进到下一个状态.
+		// 我们在为自己投票后赢得了选举(这肯定意味着 这是一个单一的本地节点集群).推进到下一个状态.
 		if t == campaignPreElection {
 			r.campaign(campaignElection)
 		} else {

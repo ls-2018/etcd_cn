@@ -77,7 +77,7 @@ type ServerConfig struct {
 	StrictReconfigCheck   bool
 	ClientCertAuthEnabled bool // 验证客户端证书是不是服务器CA签署的
 	AuthToken             string
-	BcryptCost            uint // 为散列身份验证密码指定bcrypt算法的成本/强度 ,默认10
+	BcryptCost            uint // 为散列身份验证密码指定bcrypt算法的成本/强度默认10
 	TokenTTL              uint
 
 	// InitialCorruptCheck is true to check data corruption on boot

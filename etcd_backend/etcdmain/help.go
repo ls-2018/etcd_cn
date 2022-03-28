@@ -101,7 +101,7 @@ Clustering:
   --initial-cluster-token 'etcd-cluster'
     创建集群的 token.这个值每个集群保持唯一.
   --advertise-client-urls 'http://localhost:2379'
-    List of this member's client URLs to advertise to the public.
+    监听client的请求
     The client URLs advertised should be accessible to machines that talk to etcd cluster. etcd client libraries parse these URLs to connect to the cluster.
   --discovery ''
     用于引导群集的发现URL.

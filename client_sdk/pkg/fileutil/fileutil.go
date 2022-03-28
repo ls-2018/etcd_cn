@@ -98,7 +98,7 @@ func DirEmpty(name string) bool {
 // ZeroToEnd 清空当前之后的数据,并固定分配文件空间
 func ZeroToEnd(f *os.File) error {
 	// offset是从0开始的, 可以比当前的文件内容长度大,多出的部分会用空(0)来代替
-	off, err := f.Seek(0, io.SeekCurrent) // 返回当前的偏移量（相对开头）
+	off, err := f.Seek(0, io.SeekCurrent) // 返回当前的偏移量(相对开头)
 	if err != nil {
 		return err
 	}
@@ -106,7 +106,7 @@ func ZeroToEnd(f *os.File) error {
 	if lerr != nil {
 		return lerr
 	}
-	// 删除后面的内容,不管当前的偏移量在哪儿,都是从头开始截取 ,不会影响当前的偏移量;改变文件的大小
+	// 删除后面的内容,不管当前的偏移量在哪儿,都是从头开始截取不会影响当前的偏移量;改变文件的大小
 	if err = f.Truncate(off); err != nil {
 		return err
 	}

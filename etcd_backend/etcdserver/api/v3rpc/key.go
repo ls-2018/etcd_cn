@@ -66,6 +66,8 @@ func (s *kvServer) Put(ctx context.Context, r *pb.PutRequest) (*pb.PutResponse, 
 	return resp, nil
 }
 
+// DeleteRange 从键值存储中删除给定的范围
+// 删除请求增加键值存储的revision ,并在事件历史中为每个被删除的key生成一个删除事件
 func (s *kvServer) DeleteRange(ctx context.Context, r *pb.DeleteRangeRequest) (*pb.DeleteRangeResponse, error) {
 	if err := checkDeleteRequest(r); err != nil {
 		return nil, err
@@ -80,6 +82,8 @@ func (s *kvServer) DeleteRange(ctx context.Context, r *pb.DeleteRangeRequest) (*
 	return resp, nil
 }
 
+// Txn 在单个事务中处理多个请求一个事务中请求增加键值存储的z evisio n ,并为每个完成的请求生成一个带有相同
+//revision 的事件不允许在一个txn 中多次修改同一个key.
 func (s *kvServer) Txn(ctx context.Context, r *pb.TxnRequest) (*pb.TxnResponse, error) {
 	if err := checkTxnRequest(r, int(s.maxTxnOps)); err != nil {
 		return nil, err
@@ -101,6 +105,8 @@ func (s *kvServer) Txn(ctx context.Context, r *pb.TxnRequest) (*pb.TxnResponse, 
 	return resp, nil
 }
 
+// Compact 压缩在etcd键值存储中的事件历史
+// 键值存储应该定期压缩,否则事件历史会无限制地持续增长,消耗系统的大量磁盘空间
 func (s *kvServer) Compact(ctx context.Context, r *pb.CompactionRequest) (*pb.CompactionResponse, error) {
 	resp, err := s.kv.Compact(ctx, r)
 	if err != nil {

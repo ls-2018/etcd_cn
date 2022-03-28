@@ -11,7 +11,9 @@ import (
 	"go.uber.org/zap"
 )
 
-// newPipelineHandler
+// newPipelineHandler Pipeline 类型通道用于处理数据量大的消息例如 Snapshot .这种类型的
+// 消息需要与心跳等消息分开处理否则会阻塞心跳包的传输进而影响集群的稳定性.使用Pipeline 类型通道进行通信时点到点之间不维护HTTP 长链接
+// 它只通过短链接传输数据用完即关闭.
 func newPipelineHandler(t *Transport, r Raft, cid types.ID) http.Handler {
 	h := &pipelineHandler{
 		lg:      t.Logger,

@@ -5,14 +5,11 @@
       <configuration sdkName="Python 3.9" />
     </facet>
   </component>
-  <component name="Go" enabled="true">
-    <buildTags>
-      <option name="os" value="linux" />
-    </buildTags>
-  </component>
+  <component name="Go" enabled="true" />
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$" />
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="Python 3.9 interpreter library" level="application" />
   </component>
 </module>

@@ -1,6 +1,7 @@
 package etcdserverpb
 
 import (
+	"encoding/json"
 	fmt "fmt"
 	math "math"
 	math_bits "math/bits"
@@ -24,26 +25,23 @@ var (
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 type Request struct {
-	ID                   uint64   `protobuf:"varint,1,opt,name=ID" json:"ID"`
-	Method               string   `protobuf:"bytes,2,opt,name=Method" json:"Method"`
-	Path                 string   `protobuf:"bytes,3,opt,name=Path" json:"Path"`
-	Val                  string   `protobuf:"bytes,4,opt,name=Val" json:"Val"`
-	Dir                  bool     `protobuf:"varint,5,opt,name=Dir" json:"Dir"`
-	PrevValue            string   `protobuf:"bytes,6,opt,name=PrevValue" json:"PrevValue"`
-	PrevIndex            uint64   `protobuf:"varint,7,opt,name=PrevIndex" json:"PrevIndex"`
-	PrevExist            *bool    `protobuf:"varint,8,opt,name=PrevExist" json:"PrevExist,omitempty"`
-	Expiration           int64    `protobuf:"varint,9,opt,name=Expiration" json:"Expiration"`
-	Wait                 bool     `protobuf:"varint,10,opt,name=Wait" json:"Wait"`
-	Since                uint64   `protobuf:"varint,11,opt,name=Since" json:"Since"`
-	Recursive            bool     `protobuf:"varint,12,opt,name=Recursive" json:"Recursive"`
-	Sorted               bool     `protobuf:"varint,13,opt,name=Sorted" json:"Sorted"`
-	Quorum               bool     `protobuf:"varint,14,opt,name=Quorum" json:"Quorum"`
-	Time                 int64    `protobuf:"varint,15,opt,name=Time" json:"Time"`
-	Stream               bool     `protobuf:"varint,16,opt,name=Stream" json:"Stream"`
-	Refresh              *bool    `protobuf:"varint,17,opt,name=Refresh" json:"Refresh,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	ID         uint64 `protobuf:"varint,1,opt,name=ID" json:"ID"`
+	Method     string `protobuf:"bytes,2,opt,name=Method" json:"Method"`
+	Path       string `protobuf:"bytes,3,opt,name=Path" json:"Path"`
+	Val        string `protobuf:"bytes,4,opt,name=Val" json:"Val"`
+	Dir        bool   `protobuf:"varint,5,opt,name=Dir" json:"Dir"`
+	PrevValue  string `protobuf:"bytes,6,opt,name=PrevValue" json:"PrevValue"`
+	PrevIndex  uint64 `protobuf:"varint,7,opt,name=PrevIndex" json:"PrevIndex"`
+	PrevExist  *bool  `protobuf:"varint,8,opt,name=PrevExist" json:"PrevExist,omitempty"`
+	Expiration int64  `protobuf:"varint,9,opt,name=Expiration" json:"Expiration"`
+	Wait       bool   `protobuf:"varint,10,opt,name=Wait" json:"Wait"`
+	Since      uint64 `protobuf:"varint,11,opt,name=Since" json:"Since"`
+	Recursive  bool   `protobuf:"varint,12,opt,name=Recursive" json:"Recursive"`
+	Sorted     bool   `protobuf:"varint,13,opt,name=Sorted" json:"Sorted"`
+	Quorum     bool   `protobuf:"varint,14,opt,name=Quorum" json:"Quorum"`
+	Time       int64  `protobuf:"varint,15,opt,name=Time" json:"Time"`
+	Stream     bool   `protobuf:"varint,16,opt,name=Stream" json:"Stream"`
+	Refresh    *bool  `protobuf:"varint,17,opt,name=Refresh" json:"Refresh,omitempty"`
 }
 
 func (m *Request) Reset()         { *m = Request{} }
@@ -54,11 +52,8 @@ func (*Request) Descriptor() ([]byte, []int) {
 }
 
 type Metadata struct {
-	NodeID               uint64   `protobuf:"varint,1,opt,name=NodeID" json:"NodeID"`
-	ClusterID            uint64   `protobuf:"varint,2,opt,name=ClusterID" json:"ClusterID"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	NodeID    uint64 `protobuf:"varint,1,opt,name=NodeID" json:"NodeID"`
+	ClusterID uint64 `protobuf:"varint,2,opt,name=ClusterID" json:"ClusterID"`
 }
 
 func (m *Metadata) Reset()         { *m = Metadata{} }
@@ -104,54 +99,13 @@ var fileDescriptor_09ffbeb3bebbce7e = []byte{
 }
 
 func (m *Request) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovEtcdserver(uint64(m.ID))
-	l = len(m.Method)
-	n += 1 + l + sovEtcdserver(uint64(l))
-	l = len(m.Path)
-	n += 1 + l + sovEtcdserver(uint64(l))
-	l = len(m.Val)
-	n += 1 + l + sovEtcdserver(uint64(l))
-	n += 2
-	l = len(m.PrevValue)
-	n += 1 + l + sovEtcdserver(uint64(l))
-	n += 1 + sovEtcdserver(uint64(m.PrevIndex))
-	if m.PrevExist != nil {
-		n += 2
-	}
-	n += 1 + sovEtcdserver(uint64(m.Expiration))
-	n += 2
-	n += 1 + sovEtcdserver(uint64(m.Since))
-	n += 2
-	n += 2
-	n += 2
-	n += 1 + sovEtcdserver(uint64(m.Time))
-	n += 3
-	if m.Refresh != nil {
-		n += 3
-	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
-	return n
+	marshal, _ := json.Marshal(m)
+	return len(marshal)
 }
 
 func (m *Metadata) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovEtcdserver(uint64(m.NodeID))
-	n += 1 + sovEtcdserver(uint64(m.ClusterID))
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
-	return n
+	marshal, _ := json.Marshal(m)
+	return len(marshal)
 }
 
 func sovEtcdserver(x uint64) (n int) {

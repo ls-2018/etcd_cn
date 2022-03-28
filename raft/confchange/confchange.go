@@ -129,7 +129,7 @@ func joint(cfg tracker.Config) bool {
 	return len(outgoing(cfg.Voters)) > 0
 }
 
-// 节点未发生变更时,节点信息存储在JointConfig[0] ,即incoming的指向的集合中.
+// 节点未发生变更时,节点信息存储在JointConfig[0]即incoming的指向的集合中.
 // 当EnterJoint时,将老节点拷贝至outgoing中,变更节点拷贝至incoming中.
 // LeaveJoint时,删除下线的节点,合并在线的节点并合并至incoming中,完成节点变更过程.
 func incoming(voters quorum.JointConfig) quorum.MajorityConfig      { return voters[0] }
@@ -382,8 +382,8 @@ func symdiff(l, r map[uint64]struct{}) int {
 	return n
 }
 
-// Simple 进行一系列的配置改变,（总的来说）使传入的多数配置Voters[0]最多变化一个.
-// 如果不是这样,如果响应数:quorum为零,或者如果配置处于联合状态（即如果有一个传出的配置）,这个方法将返回一个错误.
+// Simple 进行一系列的配置改变,(总的来说)使传入的多数配置Voters[0]最多变化一个.
+// 如果不是这样,如果响应数:quorum为零,或者如果配置处于联合状态(即如果有一个传出的配置),这个方法将返回一个错误.
 func (c Changer) Simple(ccs ...pb.ConfChangeSingle) (tracker.Config, tracker.ProgressMap, error) {
 	cfg, prs, err := c.checkAndCopy() // cfg是深拷贝,prs是浅拷贝;获取当前的配置,确保配置和进度是相互兼容的
 	if err != nil {

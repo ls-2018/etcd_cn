@@ -17,6 +17,8 @@ package transport
 import (
 	"net"
 	"time"
+
+	"github.com/ls-2018/etcd_cn/code_debug/conn"
 )
 
 // NewTimeoutListener returns a listener that listens on the given address.
@@ -37,6 +39,7 @@ func (rwln *rwTimeoutListener) Accept() (net.Conn, error) {
 	if err != nil {
 		return nil, err
 	}
+	conn.PrintConn("rwTimeoutListener",c)
 	return timeoutConn{
 		Conn:         c,
 		writeTimeout: rwln.writeTimeout,

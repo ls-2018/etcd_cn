@@ -67,7 +67,7 @@ var ErrRevisionNotFound = errors.New("mvcc: revision not found")
 //    {empty} -> key SHOULD be removed.
 type keyIndex struct {
 	key         []byte
-	modified    revision // the main rev of the last modification
+	modified    revision // 一个key 最后一次修改的revision .
 	generations []generation
 }
 

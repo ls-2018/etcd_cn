@@ -209,7 +209,7 @@ func Read(lg *zap.Logger, snapname string) (*raftpb.Snapshot, error) {
 	return &snap, nil
 }
 
-// snapNames 返回快照的文件名,按逻辑时间顺序（从最新到最旧）.如果没有可用的快照,将返回ErrNoSnapshot.
+// snapNames 返回快照的文件名,按逻辑时间顺序(从最新到最旧).如果没有可用的快照,将返回ErrNoSnapshot.
 func (s *Snapshotter) snapNames() ([]string, error) {
 	dir, err := os.Open(s.dir) // ./raftexample/db/raftexample-1-snap
 	if err != nil {

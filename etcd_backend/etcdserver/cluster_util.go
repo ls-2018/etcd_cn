@@ -38,7 +38,7 @@ func isMemberBootstrapped(lg *zap.Logger, cl *membership.RaftCluster, member str
 	// 获取非本机的peer urls
 	rcl, err := getClusterFromRemotePeers(lg, getRemotePeerURLs(cl, member), timeout, false, rt) // 从远端节点获取到的集群节点信息
 	if err != nil {
-		// 初始化时,会有err ,此时member 是节点名字,而cl.member里的是hash之后的值
+		// 初始化时,会有err此时member 是节点名字,而cl.member里的是hash之后的值
 		return false
 	}
 	id := cl.MemberByName(member).ID

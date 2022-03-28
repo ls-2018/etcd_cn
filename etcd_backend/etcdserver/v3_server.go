@@ -17,6 +17,8 @@ package etcdserver
 import (
 	"context"
 	"encoding/binary"
+	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/ls-2018/etcd_cn/raft"
@@ -110,7 +112,16 @@ func (s *EtcdServer) waitLeader(ctx context.Context) (*membership.Member, error)
 }
 
 func (s *EtcdServer) Alarm(ctx context.Context, r *pb.AlarmRequest) (*pb.AlarmResponse, error) {
-	resp, err := s.raftRequestOnce(ctx, pb.InternalRaftRequest{Alarm: r})
+	// {"Header":{"ID":7587861472305649414},"ID":0,"V2":null,"Put":{"Key":"","Value":"","Lease":0,"PrevKv":false,"IgnoreValue":false,"IgnoreLease":false},"DeleteRange":null,"AuthRoleRevokePermission":null,"AuthRoleGet":null,"AuthRoleDelete":null,
+	// "AuthUserList":null,"AuthUserChangePassword":null,"AuthStatus":null,"LeaseCheckpoint":null,
+	// "Alarm":{},"AuthDisable":null,"LeaseRevoke":null,"AuthEnable":null,
+	//"AuthUserDelete":null,"Authenticate":null,"AuthUserGet":null,"AuthUserRevokeRole":null,
+	//"LeaseGrant":null,"Compaction":null,"AuthRoleList":null,"AuthRoleAdd":null,
+	//"AuthUserGrantRole":null,"AuthUserAdd":null,"ClusterVersionSet":null,"ClusterMemberAttrSet":null,"DowngradeInfoSet":null}
+	req := pb.InternalRaftRequest{Alarm: r}
+	marshal, _ := json.Marshal(req)
+	fmt.Println(string(marshal))
+	resp, err := s.raftRequestOnce(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -205,7 +216,7 @@ func (s *EtcdServer) processInternalRaftRequestOnce(ctx context.Context, r pb.In
 	ch := s.w.Register(id) // 注册一个channel,等待处理完成
 
 	cctx, cancel := context.WithTimeout(ctx, s.Cfg.ReqTimeout()) // 设置请求超时
-	//cctx, cancel := context.WithTimeout(ctx, time.Second*1000) // 设置请求超时
+	// cctx, cancel := context.WithTimeout(ctx, time.Second*1000) // 设置请求超时
 	defer cancel()
 
 	start := time.Now()
@@ -263,7 +274,7 @@ func (s *EtcdServer) linearizableReadNotify(ctx context.Context) error {
 	nc := s.readNotifier
 	s.readMu.RUnlock()
 
-	//  linearizable loop 没有准备好，就发送此信号
+	//  linearizable loop 没有准备好就发送此信号
 	select {
 	case s.readwaitc <- struct{}{}:
 	default:

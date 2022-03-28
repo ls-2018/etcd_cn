@@ -209,7 +209,7 @@ type IntervalTree interface {
 	Union(inIvt IntervalTree, ivl Interval)
 }
 
-// NewIntervalTree returns a new interval tree.
+// NewIntervalTree 线段树（ interval tree ）来支持范围查询、前缀查询等.
 func NewIntervalTree() IntervalTree {
 	sentinel := &intervalNode{
 		iv:     IntervalValue{},
@@ -225,6 +225,7 @@ func NewIntervalTree() IntervalTree {
 		sentinel: sentinel,
 	}
 }
+// gorm
 
 type intervalTree struct {
 	root  *intervalNode

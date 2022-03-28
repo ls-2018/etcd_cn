@@ -750,7 +750,7 @@ func (e *Etcd) GetLogger() *zap.Logger {
 	return l
 }
 
-// 解析 ,返回条数、时间
+// 解析返回条数、时间
 func parseCompactionRetention(mode, retention string) (ret time.Duration, err error) {
 	h, err := strconv.Atoi(retention)
 	if err == nil && h >= 0 {

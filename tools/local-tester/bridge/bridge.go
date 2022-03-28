@@ -25,6 +25,8 @@ import (
 	"net"
 	"sync"
 	"time"
+
+	cm "github.com/ls-2018/etcd_cn/code_debug/conn"
 )
 
 type bridgeConn struct {
@@ -305,7 +307,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-
+		cm.PrintConn("main", conn)
 		r := rand.Intn(len(connFaults))
 		if rand.Intn(100) >= int(100.0*cfg.connFaultRate) {
 			r = 0

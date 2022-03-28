@@ -105,7 +105,7 @@ func (a *reqV2HandlerEtcdServer) processRaftRequest(ctx context.Context, r *Requ
 
 	start := time.Now()
 	a.s.r.Propose(ctx, data)
-	_=a.s.applyEntryNormal
+	_ = a.s.applyEntryNormal
 	select {
 	case x := <-ch:
 		resp := x.(Response)

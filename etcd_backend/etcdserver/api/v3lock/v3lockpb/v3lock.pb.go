@@ -41,10 +41,7 @@ type LockRequest struct {
 	// the lock is automatically released. Calls to Lock with the same lease will
 	// be treated as a single acquisition; locking twice with the same lease is a
 	// no-op.
-	Lease                int64    `protobuf:"varint,2,opt,name=lease,proto3" json:"lease,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Lease int64 `protobuf:"varint,2,opt,name=lease,proto3" json:"lease,omitempty"`
 }
 
 func (m *LockRequest) Reset()         { *m = LockRequest{} }
@@ -73,10 +70,7 @@ type LockResponse struct {
 	// key is a key that will exist on etcd for the duration that the Lock caller
 	// owns the lock. Users should not modify this key or the lock may exhibit
 	// undefined behavior.
-	Key                  []byte   `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Key []byte `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
 }
 
 func (m *LockResponse) Reset()         { *m = LockResponse{} }
@@ -102,10 +96,7 @@ func (m *LockResponse) GetKey() []byte {
 
 type UnlockRequest struct {
 	// key is the lock ownership key granted by Lock.
-	Key                  []byte   `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Key []byte `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 }
 
 func (m *UnlockRequest) Reset()         { *m = UnlockRequest{} }
@@ -328,74 +319,23 @@ func (m *UnlockResponse) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *LockRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Name)
-	if l > 0 {
-		n += 1 + l + sovV3Lock(uint64(l))
-	}
-	if m.Lease != 0 {
-		n += 1 + sovV3Lock(uint64(m.Lease))
-	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
-	return n
+	marshal, _ := json.Marshal(m)
+	return len(marshal)
 }
 
 func (m *LockResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Header != nil {
-		l = m.Header.Size()
-		n += 1 + l + sovV3Lock(uint64(l))
-	}
-	l = len(m.Key)
-	if l > 0 {
-		n += 1 + l + sovV3Lock(uint64(l))
-	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
-	return n
+	marshal, _ := json.Marshal(m)
+	return len(marshal)
 }
 
 func (m *UnlockRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Key)
-	if l > 0 {
-		n += 1 + l + sovV3Lock(uint64(l))
-	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
-	return n
+	marshal, _ := json.Marshal(m)
+	return len(marshal)
 }
 
 func (m *UnlockResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Header != nil {
-		l = m.Header.Size()
-		n += 1 + l + sovV3Lock(uint64(l))
-	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
-	return n
+	marshal, _ := json.Marshal(m)
+	return len(marshal)
 }
 
 func sovV3Lock(x uint64) (n int) {

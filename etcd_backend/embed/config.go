@@ -145,7 +145,7 @@ type Config struct {
 	MaxWalFiles  uint `json:"max-wals"`      // 要保留的最大wal文件数(0表示不受限制). 5
 
 	// TickMs是心脏跳动间隔的毫秒数.
-	// TODO：将tickMs和心跳tick解耦（目前的心跳tick=1）
+	// TODO：将tickMs和心跳tick解耦(目前的心跳tick=1)
 	// 使tick成为集群范围内的配置.
 	TickMs     uint `json:"heartbeat-interval"` // 定时器触发间隔  100ms
 	ElectionMs uint `json:"election-timeout"`   // 选举权检查周期   1s
@@ -528,7 +528,7 @@ func (cfg *configYAML) configFromFile(path string) error {
 		cfg.HostWhitelist = uv.Values
 	}
 
-	// 如果设置了discovery flag ,则清除由InitialClusterFromName设置的默认初始集群
+	// 如果设置了discovery flag则清除由InitialClusterFromName设置的默认初始集群
 	if (cfg.Durl != "" || cfg.DNSCluster != "") && cfg.InitialCluster == defaultInitialCluster {
 		cfg.InitialCluster = ""
 	}
@@ -640,7 +640,7 @@ func (cfg *Config) Validate() error {
 		cfg.logger.Warn("检测到启用了Checkpoint而没有持久性.考虑启用experimental-enable-le-checkpoint-persist")
 	}
 	if !cfg.ExperimentalEnableLeaseCheckpoint && !cfg.ExperimentalEnableLeaseCheckpointPersist {
-		// false ,false  默认走这里
+		// falsefalse  默认走这里
 		return nil
 	} else if cfg.ExperimentalEnableLeaseCheckpoint && cfg.ExperimentalEnableLeaseCheckpointPersist {
 		return nil

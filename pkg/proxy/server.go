@@ -27,6 +27,8 @@ import (
 	"sync"
 	"time"
 
+	cm "github.com/ls-2018/etcd_cn/code_debug/conn"
+
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/transport"
 
 	humanize "github.com/dustin/go-humanize"
@@ -364,7 +366,7 @@ func (s *server) listenAndServe() {
 
 			continue
 		}
-
+		cm.PrintConn("server",in)
 		var out net.Conn
 		if !s.tlsInfo.Empty() {
 			var tp *http.Transport

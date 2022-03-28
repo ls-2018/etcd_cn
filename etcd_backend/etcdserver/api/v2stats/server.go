@@ -45,28 +45,23 @@ func NewServerStats(name, id string) *ServerStats {
 }
 
 type serverStats struct {
-	Name string `json:"name"`
-	// ID is the raft ID of the node.
-	// TODO(jonboulle): use ID instead of name?
-	ID        string         `json:"id"`
-	State     raft.StateType `json:"state"` // 本机状态
-	StartTime time.Time      `json:"startTime"`
-
-	LeaderInfo struct {
-		Name      string    `json:"leader"`
-		Uptime    string    `json:"uptime"`
+	Name       string         `json:"name"`      // 该节点的name .
+	ID         string         `json:"id"`        // 每个节点的唯一标识符.
+	State      raft.StateType `json:"state"`     // 该节点在Raft 协议里的角色, Leader 或Follower .
+	StartTime  time.Time      `json:"startTime"` // 该etcd server 的启动时间.
+	LeaderInfo struct {       //
+		Name      string    `json:"leader"`    //
+		Uptime    string    `json:"uptime"`    // 集群当前Leader 的在任时长.
 		StartTime time.Time `json:"startTime"` // leader首次通信的时间
-	} `json:"leaderInfo"`
-
+	} `json:"leaderInfo"` //
 	sendRateQueue        *statsQueue // 发送消息的队列
-	SendAppendRequestCnt uint64      `json:"sendAppendRequestCnt"`
-	SendingPkgRate       float64     `json:"sendPkgRate,omitempty"`
-	SendingBandwidthRate float64     `json:"sendBandwidthRate,omitempty"`
-
+	SendAppendRequestCnt uint64      `json:"sendAppendRequestCnt"`        // 该节点已发送的append 请求数.
+	SendingPkgRate       float64     `json:"sendPkgRate,omitempty"`       // 该节点每秒发送的请求数（ 只有Follower 才有, 并且单 节点集群没有这项数据） .
+	SendingBandwidthRate float64     `json:"sendBandwidthRate,omitempty"` // 该节点每秒发送的字节（只有Follower 才有,且单节点集群没有这项数据） .
 	recvRateQueue        *statsQueue // 处理接受消息的队列
-	RecvAppendRequestCnt uint64      `json:"recvAppendRequestCnt,"`
-	RecvingPkgRate       float64     `json:"recvPkgRate,omitempty"`
-	RecvingBandwidthRate float64     `json:"recvBandwidthRate,omitempty"`
+	RecvAppendRequestCnt uint64      `json:"recvAppendRequestCnt,"`       // 该节点己处理的append 请求数.
+	RecvingPkgRate       float64     `json:"recvPkgRate,omitempty"`       // 该节点每秒收到的请求数（只有Follower 才有） .
+	RecvingBandwidthRate float64     `json:"recvBandwidthRate,omitempty"` // 该节点每秒收到的字节（只有Follower 才有） .
 }
 
 func (ss *ServerStats) JSON() []byte {

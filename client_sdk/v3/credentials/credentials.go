@@ -36,7 +36,7 @@ type Bundle interface {
 	UpdateAuthToken(token string)
 }
 
-// NewBundle 构造一个新的gRPC凭据包。
+// NewBundle 构造一个新的gRPC凭据包.
 func NewBundle(cfg Config) Bundle {
 	return &bundle{
 		tc: newTransportCredential(cfg.TLSConfig),

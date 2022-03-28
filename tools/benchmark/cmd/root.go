@@ -24,7 +24,6 @@ import (
 	"gopkg.in/cheggaaa/pb.v1"
 )
 
-// This represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
 	Use:   "benchmark",
 	Short: "A low-level benchmark tool for etcd3",

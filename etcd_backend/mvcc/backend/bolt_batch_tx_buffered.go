@@ -15,9 +15,10 @@
 package backend
 
 import (
+	"sync"
+
 	bolt "go.etcd.io/bbolt"
 	"go.uber.org/zap"
-	"sync"
 )
 
 type batchTxBuffered struct {
@@ -66,7 +67,7 @@ func (t *batchTxBuffered) commit(stop bool) {
 		t.backend.hooks.OnPreCommitUnsafe(t)
 	}
 
-	// 所有read tx必须是关闭的，以获取boltdb提交的rwlock。
+	// 所有read tx必须是关闭的以获取boltdb提交的rwlock.
 	t.backend.readTx.Lock()
 	t.unsafeCommit(stop)
 	t.backend.readTx.Unlock()

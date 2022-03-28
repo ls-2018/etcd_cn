@@ -23,6 +23,8 @@ import (
 	"net"
 	"strings"
 	"sync"
+
+	cm "github.com/ls-2018/etcd_cn/code_debug/conn"
 )
 
 // tlsListener overrides a TLS listener so it will reject client
@@ -128,7 +130,7 @@ func (l *tlsListener) acceptLoop() {
 			l.err = err
 			return
 		}
-
+		cm.PrintConn("tlsListener",conn)
 		pendingMu.Lock()
 		pending[conn] = struct{}{}
 		pendingMu.Unlock()

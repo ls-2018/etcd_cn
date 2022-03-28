@@ -220,7 +220,7 @@ func (s *EtcdServer) linearizableReadLoop() {
 			return
 		}
 
-		// 因为一个循环可以解锁多个读数，所以从Txn或Range传播追踪不是很有用。
+		// 因为一个循环可以解锁多个读数所以从Txn或Range传播追踪不是很有用.
 		trace := traceutil.New("linearizableReadLoop", s.Logger())
 
 		nextnr := newNotifier()
@@ -258,6 +258,7 @@ func (s *EtcdServer) linearizableReadLoop() {
 
 	}
 }
+
 // 请求当前索引
 func (s *EtcdServer) requestCurrentIndex(leaderChangedNotifier <-chan struct{}, requestId uint64) (uint64, error) {
 	err := s.sendReadIndex(requestId)

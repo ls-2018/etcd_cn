@@ -34,7 +34,7 @@ type Ready struct {
 	// 值一个是硬盘值,这样就比较好理解了.
 	pb.HardState
 
-	// ReadState是包含索引和rctx（就是ReadIndex()函数的参数）的结构,意义是某一时刻的集群
+	// ReadState是包含索引和rctx(就是ReadIndex()函数的参数)的结构,意义是某一时刻的集群
 	// 最大提交索引.至于这个时刻使用者用于实现linearizable read就是另一回事了,其中rctx就是
 	// 某一时刻的唯一标识.一句话概括：
 	ReadStates []ReadState // 这个参数就是Node.ReadIndex()的结果回调.

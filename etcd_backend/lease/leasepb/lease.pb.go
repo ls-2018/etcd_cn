@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	fmt "fmt"
 	math "math"
-	math_bits "math/bits"
 
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/golang/protobuf/proto"
@@ -29,12 +28,9 @@ var (
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 type Lease struct {
-	ID                   int64    `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
-	TTL                  int64    `protobuf:"varint,2,opt,name=TTL,proto3" json:"TTL,omitempty"`
-	RemainingTTL         int64    `protobuf:"varint,3,opt,name=RemainingTTL,proto3" json:"RemainingTTL,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	ID           int64 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	TTL          int64 `protobuf:"varint,2,opt,name=TTL,proto3" json:"TTL,omitempty"`
+	RemainingTTL int64 `protobuf:"varint,3,opt,name=RemainingTTL,proto3" json:"RemainingTTL,omitempty"`
 }
 
 func (m *Lease) Reset()         { *m = Lease{} }
@@ -113,60 +109,18 @@ func (m *LeaseInternalResponse) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *Lease) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.ID != 0 {
-		n += 1 + sovLease(uint64(m.ID))
-	}
-	if m.TTL != 0 {
-		n += 1 + sovLease(uint64(m.TTL))
-	}
-	if m.RemainingTTL != 0 {
-		n += 1 + sovLease(uint64(m.RemainingTTL))
-	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
-	return n
+	marshal, _ := json.Marshal(m)
+	return len(marshal)
 }
 
 func (m *LeaseInternalRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.LeaseTimeToLiveRequest != nil {
-		l = m.LeaseTimeToLiveRequest.Size()
-		n += 1 + l + sovLease(uint64(l))
-	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
-	return n
+	marshal, _ := json.Marshal(m)
+	return len(marshal)
 }
 
 func (m *LeaseInternalResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.LeaseTimeToLiveResponse != nil {
-		l = m.LeaseTimeToLiveResponse.Size()
-		n += 1 + l + sovLease(uint64(l))
-	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
-	return n
-}
-
-func sovLease(x uint64) (n int) {
-	return (math_bits.Len64(x|1) + 6) / 7
+	marshal, _ := json.Marshal(m)
+	return len(marshal)
 }
 
 func (m *Lease) Unmarshal(dAtA []byte) error {

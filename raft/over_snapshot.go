@@ -36,7 +36,7 @@ func (r *raft) restore(s pb.Snapshot) bool {
 	}
 
 	// 更多的深度防御：如果收件人不在配置中,就扔掉快照.
-	// 这不应该发生（在写这篇文章的时候）,但这里和那里的很多代码都假定r.id在进度跟踪器中.
+	// 这不应该发生(在写这篇文章的时候),但这里和那里的很多代码都假定r.id在进度跟踪器中.
 	found := false
 	cs := s.Metadata.ConfState
 	for _, set := range [][]uint64{
@@ -70,7 +70,7 @@ func (r *raft) restore(s pb.Snapshot) bool {
 	// 自身没有这一部分数据
 	r.raftLog.restore(s)
 
-	// 重置配置并重新添加（可能更新的）对等体.
+	// 重置配置并重新添加(可能更新的)对等体.
 	r.prstrack = tracker.MakeProgressTracker(r.prstrack.MaxInflight) // 相当于重置prs信息
 	cfg, prs, err := confchange.Restore(confchange.Changer{
 		Tracker:   r.prstrack,

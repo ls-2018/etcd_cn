@@ -6,7 +6,6 @@ import (
 	context "context"
 	"encoding/json"
 	fmt "fmt"
-	io "io"
 	math "math"
 	math_bits "math/bits"
 
@@ -43,10 +42,7 @@ type CampaignRequest struct {
 	Lease int64 `protobuf:"varint,2,opt,name=lease,proto3" json:"lease,omitempty"`
 	// value is the initial proclaimed value set when the campaigner wins the
 	// election.
-	Value                []byte   `protobuf:"bytes,3,opt,name=value,proto3" json:"value,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Value []byte `protobuf:"bytes,3,opt,name=value,proto3" json:"value,omitempty"`
 }
 
 func (m *CampaignRequest) Reset()         { *m = CampaignRequest{} }
@@ -118,10 +114,7 @@ type LeaderKey struct {
 	// matches rev.
 	Rev int64 `protobuf:"varint,3,opt,name=rev,proto3" json:"rev,omitempty"`
 	// lease is the lease ID of the election leader.
-	Lease                int64    `protobuf:"varint,4,opt,name=lease,proto3" json:"lease,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Lease int64 `protobuf:"varint,4,opt,name=lease,proto3" json:"lease,omitempty"`
 }
 
 func (m *LeaderKey) Reset()         { *m = LeaderKey{} }
@@ -161,10 +154,7 @@ func (m *LeaderKey) GetLease() int64 {
 
 type LeaderRequest struct {
 	// name is the election identifier for the leadership information.
-	Name                 []byte   `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Name []byte `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 }
 
 func (m *LeaderRequest) Reset()         { *m = LeaderRequest{} }
@@ -258,10 +248,7 @@ type ProclaimRequest struct {
 	// leader is the leadership hold on the election.
 	Leader *LeaderKey `protobuf:"bytes,1,opt,name=leader,proto3" json:"leader,omitempty"`
 	// value is an update meant to overwrite the leader's current value.
-	Value                []byte   `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Value []byte `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
 }
 
 func (m *ProclaimRequest) Reset()         { *m = ProclaimRequest{} }
@@ -670,176 +657,48 @@ func (m *ProclaimResponse) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *CampaignRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Name)
-	if l > 0 {
-		n += 1 + l + sovV3Election(uint64(l))
-	}
-	if m.Lease != 0 {
-		n += 1 + sovV3Election(uint64(m.Lease))
-	}
-	l = len(m.Value)
-	if l > 0 {
-		n += 1 + l + sovV3Election(uint64(l))
-	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
-	return n
+	marshal, _ := json.Marshal(m)
+	return len(marshal)
 }
 
 func (m *CampaignResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Header != nil {
-		l = m.Header.Size()
-		n += 1 + l + sovV3Election(uint64(l))
-	}
-	if m.Leader != nil {
-		l = m.Leader.Size()
-		n += 1 + l + sovV3Election(uint64(l))
-	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
-	return n
+	marshal, _ := json.Marshal(m)
+	return len(marshal)
 }
 
 func (m *LeaderKey) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Name)
-	if l > 0 {
-		n += 1 + l + sovV3Election(uint64(l))
-	}
-	l = len(m.Key)
-	if l > 0 {
-		n += 1 + l + sovV3Election(uint64(l))
-	}
-	if m.Rev != 0 {
-		n += 1 + sovV3Election(uint64(m.Rev))
-	}
-	if m.Lease != 0 {
-		n += 1 + sovV3Election(uint64(m.Lease))
-	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
-	return n
+	marshal, _ := json.Marshal(m)
+	return len(marshal)
 }
 
 func (m *LeaderRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Name)
-	if l > 0 {
-		n += 1 + l + sovV3Election(uint64(l))
-	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
-	return n
+	marshal, _ := json.Marshal(m)
+	return len(marshal)
 }
 
 func (m *LeaderResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Header != nil {
-		l = m.Header.Size()
-		n += 1 + l + sovV3Election(uint64(l))
-	}
-	if m.Kv != nil {
-		l = m.Kv.Size()
-		n += 1 + l + sovV3Election(uint64(l))
-	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
-	return n
+	marshal, _ := json.Marshal(m)
+	return len(marshal)
 }
 
 func (m *ResignRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Leader != nil {
-		l = m.Leader.Size()
-		n += 1 + l + sovV3Election(uint64(l))
-	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
-	return n
+	marshal, _ := json.Marshal(m)
+	return len(marshal)
 }
 
 func (m *ResignResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Header != nil {
-		l = m.Header.Size()
-		n += 1 + l + sovV3Election(uint64(l))
-	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
-	return n
+	marshal, _ := json.Marshal(m)
+	return len(marshal)
 }
 
 func (m *ProclaimRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Leader != nil {
-		l = m.Leader.Size()
-		n += 1 + l + sovV3Election(uint64(l))
-	}
-	l = len(m.Value)
-	if l > 0 {
-		n += 1 + l + sovV3Election(uint64(l))
-	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
-	return n
+	marshal, _ := json.Marshal(m)
+	return len(marshal)
 }
 
 func (m *ProclaimResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Header != nil {
-		l = m.Header.Size()
-		n += 1 + l + sovV3Election(uint64(l))
-	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
-	return n
+	marshal, _ := json.Marshal(m)
+	return len(marshal)
 }
 
 func sovV3Election(x uint64) (n int) {
@@ -880,85 +739,6 @@ func (m *ProclaimRequest) Unmarshal(dAtA []byte) error {
 
 func (m *ProclaimResponse) Unmarshal(dAtA []byte) error {
 	return json.Unmarshal(dAtA, m)
-}
-
-func skipV3Election(dAtA []byte) (n int, err error) {
-	l := len(dAtA)
-	iNdEx := 0
-	depth := 0
-	for iNdEx < l {
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return 0, ErrIntOverflowV3Election
-			}
-			if iNdEx >= l {
-				return 0, io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		wireType := int(wire & 0x7)
-		switch wireType {
-		case 0:
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return 0, ErrIntOverflowV3Election
-				}
-				if iNdEx >= l {
-					return 0, io.ErrUnexpectedEOF
-				}
-				iNdEx++
-				if dAtA[iNdEx-1] < 0x80 {
-					break
-				}
-			}
-		case 1:
-			iNdEx += 8
-		case 2:
-			var length int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return 0, ErrIntOverflowV3Election
-				}
-				if iNdEx >= l {
-					return 0, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				length |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if length < 0 {
-				return 0, ErrInvalidLengthV3Election
-			}
-			iNdEx += length
-		case 3:
-			depth++
-		case 4:
-			if depth == 0 {
-				return 0, ErrUnexpectedEndOfGroupV3Election
-			}
-			depth--
-		case 5:
-			iNdEx += 4
-		default:
-			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
-		}
-		if iNdEx < 0 {
-			return 0, ErrInvalidLengthV3Election
-		}
-		if depth == 0 {
-			return iNdEx, nil
-		}
-	}
-	return 0, io.ErrUnexpectedEOF
 }
 
 var (

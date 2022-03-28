@@ -153,7 +153,7 @@ func startNode(cfg config.ServerConfig, cl *membership.RaftCluster, ids []types.
 	if w, err = wal.Create(cfg.Logger, cfg.WALDir(), metadata); err != nil {
 		cfg.Logger.Panic("创建WAL失败", zap.Error(err))
 	}
-	if cfg.UnsafeNoFsync { // 非安全存储 默认是 false    ,
+	if cfg.UnsafeNoFsync { // 非安全存储 默认是 false
 		w.SetUnsafeNoFsync()
 	}
 	peers := make([]raft.Peer, len(ids))

@@ -73,10 +73,10 @@ func (h *hashKVHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Write(respBytes)
 }
 
-// getPeerHashKVHTTP 通过对给定网址的http调用，在给定的rev中获取kv存储的哈希值。
+// getPeerHashKVHTTP 通过对给定网址的http调用在给定的rev中获取kv存储的哈希值.
 func (s *EtcdServer) getPeerHashKVHTTP(ctx context.Context, url string, rev int64) (*pb.HashKVResponse, error) {
 	cc := &http.Client{Transport: s.peerRt}
-	hashReq := &pb.HashKVRequest{Revision: rev} // revision是哈希操作的键值存储修订版。
+	hashReq := &pb.HashKVRequest{Revision: rev} // revision是哈希操作的键值存储修订版.
 	hashReqBytes, err := json.Marshal(hashReq)
 	if err != nil {
 		return nil, err

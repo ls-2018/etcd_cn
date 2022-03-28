@@ -19,8 +19,8 @@ import pb "github.com/ls-2018/etcd_cn/raft/raftpb"
 // 使用内存数组维护其中所有的Entry记录,对于Leader节点而言,它维护了客户端请求对应的Entry记录;
 // 对于Follower节点而言,它维护的是从Leader节点复制来的Entry记录.
 // 无论是Leader节点还是Follower节点,对于刚刚接收到的Entry记录首先都会被存储在unstable中.
-// 然后按照Raft协议将unstable中缓存的这些Entry记录交给上层模块进行处理,上层模块会将这些Entry记录发送到集群其他节点或进行保存（写入Storage中）.
-// 之后,上层模块会调用Advance（）方法通知底层的raft模块将unstable 中对应的Entry记录删除（因为己经保存到了Storage中）
+// 然后按照Raft协议将unstable中缓存的这些Entry记录交给上层模块进行处理,上层模块会将这些Entry记录发送到集群其他节点或进行保存(写入Storage中).
+// 之后,上层模块会调用Advance()方法通知底层的raft模块将unstable 中对应的Entry记录删除(因为己经保存到了Storage中)
 //
 type unstable struct {
 	snapshot *pb.Snapshot // 快照数据,该快照数据也是未写入Storage中的.
@@ -114,7 +114,7 @@ func (u *unstable) truncateAndAppend(ents []pb.Entry) {
 	}
 }
 
-// 截取（lo,hi]的日志
+// 截取(lo,hi]的日志
 func (u *unstable) slice(lo uint64, hi uint64) []pb.Entry {
 	u.mustCheckOutOfBounds(lo, hi)
 	return u.entries[lo-u.offset : hi-u.offset]

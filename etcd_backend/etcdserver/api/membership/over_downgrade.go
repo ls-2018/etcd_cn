@@ -56,7 +56,7 @@ func AllowedDowngradeVersion(ver *semver.Version) *semver.Version {
 	return &semver.Version{Major: ver.Major, Minor: ver.Minor - 1}
 }
 
-// isValidDowngrade 验证集群是否可以从verFrom降级到verTo , 小版本差1
+// isValidDowngrade 验证集群是否可以从verFrom降级到verTo 小版本差1
 func isValidDowngrade(verFrom *semver.Version, verTo *semver.Version) bool {
 	return verTo.Equal(*AllowedDowngradeVersion(verFrom))
 }

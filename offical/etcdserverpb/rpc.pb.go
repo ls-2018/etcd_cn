@@ -280,10 +280,7 @@ type ResponseHeader struct {
 	// header.revision number.
 	Revision int64 `protobuf:"varint,3,opt,name=revision,proto3" json:"revision,omitempty"`
 	// raft_term is the raft term when the request was applied.
-	RaftTerm             uint64   `protobuf:"varint,4,opt,name=raft_term,json=raftTerm,proto3" json:"raft_term,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	RaftTerm uint64 `protobuf:"varint,4,opt,name=raft_term,json=raftTerm,proto3" json:"raft_term,omitempty"`
 }
 
 func (m *ResponseHeader) Reset()         { *m = ResponseHeader{} }
@@ -341,17 +338,14 @@ type RangeRequest struct {
 	SortOrder RangeRequest_SortOrder `protobuf:"varint,5,opt,name=sort_order,json=sortOrder,proto3,enum=etcdserverpb.RangeRequest_SortOrder" json:"sort_order,omitempty"`
 	// sort_target is the key-value field to use for sorting.
 	SortTarget RangeRequest_SortTarget `protobuf:"varint,6,opt,name=sort_target,json=sortTarget,proto3,enum=etcdserverpb.RangeRequest_SortTarget" json:"sort_target,omitempty"`
-	// serializable sets the range request to use serializable member-local reads.
-	// Range requests are linearizable by default; linearizable requests have higher
-	// latency and lower throughput than serializable requests but reflect the current
-	// consensus of the cluster. For better performance, in exchange for possible stale reads,
-	// a serializable range request is served locally without needing to reach consensus
-	// with other nodes in the cluster.
+	// 表示设置range请求通过可串行化（ serializable)的方式从接受请求的节点读取本地数据.默认情况下, range 请求是可
+	//线性化的,它反映了当前集群的一致性.为了获得更好的性能和可用
+	//性,可以考虑使用可串行化的读,以有一定的概率读到过期数据为代
+	//价,不需要经过一致性协议与集群中其他节点的协同,而是直接从本地
+	//节点读数据.
 	Serializable bool `protobuf:"varint,7,opt,name=serializable,proto3" json:"serializable,omitempty"`
-	// keys_only when set returns only the keys and not the values.
-	KeysOnly bool `protobuf:"varint,8,opt,name=keys_only,json=keysOnly,proto3" json:"keys_only,omitempty"`
-	// count_only when set returns only the count of the keys in the range.
-	CountOnly bool `protobuf:"varint,9,opt,name=count_only,json=countOnly,proto3" json:"count_only,omitempty"`
+	KeysOnly     bool `protobuf:"varint,8,opt,name=keys_only,json=keysOnly,proto3" json:"keys_only,omitempty"`    // 表示是否只返回key 而不返回value
+	CountOnly    bool `protobuf:"varint,9,opt,name=count_only,json=countOnly,proto3" json:"count_only,omitempty"` // ,表示是否只返回range 请求返回的key 的数量.
 	// min_mod_revision is the lower bound for returned key mod revisions; all keys with
 	// lesser mod revisions will be filtered away.
 	MinModRevision int64 `protobuf:"varint,10,opt,name=min_mod_revision,json=minModRevision,proto3" json:"min_mod_revision,omitempty"`
@@ -363,10 +357,7 @@ type RangeRequest struct {
 	MinCreateRevision int64 `protobuf:"varint,12,opt,name=min_create_revision,json=minCreateRevision,proto3" json:"min_create_revision,omitempty"`
 	// max_create_revision is the upper bound for returned key create revisions; all keys with
 	// greater create revisions will be filtered away.
-	MaxCreateRevision    int64    `protobuf:"varint,13,opt,name=max_create_revision,json=maxCreateRevision,proto3" json:"max_create_revision,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	MaxCreateRevision int64 `protobuf:"varint,13,opt,name=max_create_revision,json=maxCreateRevision,proto3" json:"max_create_revision,omitempty"`
 }
 
 func (m *RangeRequest) Reset()         { *m = RangeRequest{} }
@@ -468,17 +459,10 @@ func (m *RangeRequest) GetMaxCreateRevision() int64 {
 }
 
 type RangeResponse struct {
-	Header *ResponseHeader `protobuf:"bytes,1,opt,name=header,proto3" json:"header,omitempty"`
-	// kvs is the list of key-value pairs matched by the range request.
-	// kvs is empty when count is requested.
-	Kvs []*mvccpb.KeyValue `protobuf:"bytes,2,rep,name=kvs,proto3" json:"kvs,omitempty"`
-	// more indicates if there are more keys to return in the requested range.
-	More bool `protobuf:"varint,3,opt,name=more,proto3" json:"more,omitempty"`
-	// count is set to the number of keys within the range when requested.
-	Count                int64    `protobuf:"varint,4,opt,name=count,proto3" json:"count,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Header *ResponseHeader    `protobuf:"bytes,1,opt,name=header,proto3" json:"header,omitempty"`
+	Kvs    []*mvccpb.KeyValue `protobuf:"bytes,2,rep,name=kvs,proto3" json:"kvs,omitempty"`      // 表示符合range 请求的key-value 对列表.如果Count_Only 设置为true ,则kvs 就为空.
+	More   bool               `protobuf:"varint,3,opt,name=more,proto3" json:"more,omitempty"`   // 是否还有更多的数据,没有返回
+	Count  int64              `protobuf:"varint,4,opt,name=count,proto3" json:"count,omitempty"` // 符合条件的总数
 }
 
 func (m *RangeResponse) Reset()         { *m = RangeResponse{} }
@@ -532,10 +516,7 @@ type PutRequest struct {
 	IgnoreValue bool `protobuf:"varint,5,opt,name=ignore_value,json=ignoreValue,proto3" json:"ignore_value,omitempty"`
 	// If ignore_lease is set, etcd updates the key using its current lease.
 	// Returns an error if the key does not exist.
-	IgnoreLease          bool     `protobuf:"varint,6,opt,name=ignore_lease,json=ignoreLease,proto3" json:"ignore_lease,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	IgnoreLease bool `protobuf:"varint,6,opt,name=ignore_lease,json=ignoreLease,proto3" json:"ignore_lease,omitempty"`
 }
 
 func (m *PutRequest) Reset()         { *m = PutRequest{} }
@@ -628,10 +609,7 @@ type DeleteRangeRequest struct {
 	RangeEnd []byte `protobuf:"bytes,2,opt,name=range_end,json=rangeEnd,proto3" json:"range_end,omitempty"`
 	// If prev_kv is set, etcd gets the previous key-value pairs before deleting it.
 	// The previous key-value pairs will be returned in the delete response.
-	PrevKv               bool     `protobuf:"varint,3,opt,name=prev_kv,json=prevKv,proto3" json:"prev_kv,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	PrevKv bool `protobuf:"varint,3,opt,name=prev_kv,json=prevKv,proto3" json:"prev_kv,omitempty"`
 }
 
 func (m *DeleteRangeRequest) Reset()         { *m = DeleteRangeRequest{} }
@@ -895,10 +873,7 @@ type Compare struct {
 	TargetUnion isCompare_TargetUnion `protobuf_oneof:"target_union"`
 	// range_end compares the given target to all keys in the range [key, range_end).
 	// See RangeRequest for more details on key ranges.
-	RangeEnd             []byte   `protobuf:"bytes,64,opt,name=range_end,json=rangeEnd,proto3" json:"range_end,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	RangeEnd []byte `protobuf:"bytes,64,opt,name=range_end,json=rangeEnd,proto3" json:"range_end,omitempty"`
 }
 
 func (m *Compare) Reset()         { *m = Compare{} }
@@ -1123,10 +1098,7 @@ type CompactionRequest struct {
 	// physical is set so the RPC will wait until the compaction is physically
 	// applied to the local database such that compacted entries are totally
 	// removed from the backend database.
-	Physical             bool     `protobuf:"varint,2,opt,name=physical,proto3" json:"physical,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Physical bool `protobuf:"varint,2,opt,name=physical,proto3" json:"physical,omitempty"`
 }
 
 func (m *CompactionRequest) Reset()         { *m = CompactionRequest{} }
@@ -1171,11 +1143,7 @@ func (m *CompactionResponse) GetHeader() *ResponseHeader {
 	return nil
 }
 
-type HashRequest struct {
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
+type HashRequest struct{}
 
 func (m *HashRequest) Reset()         { *m = HashRequest{} }
 func (m *HashRequest) String() string { return proto.CompactTextString(m) }
@@ -1185,11 +1153,8 @@ func (*HashRequest) Descriptor() ([]byte, []int) {
 }
 
 type HashKVRequest struct {
-	// revision是哈希操作的键值存储修订版。
-	Revision             int64    `protobuf:"varint,1,opt,name=revision,proto3" json:"revision,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	// revision是哈希操作的键值存储修订版.
+	Revision int64 `protobuf:"varint,1,opt,name=revision,proto3" json:"revision,omitempty"`
 }
 
 func (m *HashKVRequest) Reset()         { *m = HashKVRequest{} }
@@ -1211,10 +1176,7 @@ type HashKVResponse struct {
 	// hash is the hash value computed from the responding member's MVCC keys up to a given revision.
 	Hash uint32 `protobuf:"varint,2,opt,name=hash,proto3" json:"hash,omitempty"`
 	// compact_revision is the compacted revision of key-value store when hash begins.
-	CompactRevision      int64    `protobuf:"varint,3,opt,name=compact_revision,json=compactRevision,proto3" json:"compact_revision,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	CompactRevision int64 `protobuf:"varint,3,opt,name=compact_revision,json=compactRevision,proto3" json:"compact_revision,omitempty"`
 }
 
 func (m *HashKVResponse) Reset()         { *m = HashKVResponse{} }
@@ -1248,10 +1210,7 @@ func (m *HashKVResponse) GetCompactRevision() int64 {
 type HashResponse struct {
 	Header *ResponseHeader `protobuf:"bytes,1,opt,name=header,proto3" json:"header,omitempty"`
 	// hash is the hash value computed from the responding member's KV's backend.
-	Hash                 uint32   `protobuf:"varint,2,opt,name=hash,proto3" json:"hash,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Hash uint32 `protobuf:"varint,2,opt,name=hash,proto3" json:"hash,omitempty"`
 }
 
 func (m *HashResponse) Reset()         { *m = HashResponse{} }
@@ -1275,11 +1234,7 @@ func (m *HashResponse) GetHash() uint32 {
 	return 0
 }
 
-type SnapshotRequest struct {
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
+type SnapshotRequest struct{}
 
 func (m *SnapshotRequest) Reset()         { *m = SnapshotRequest{} }
 func (m *SnapshotRequest) String() string { return proto.CompactTextString(m) }
@@ -1295,10 +1250,7 @@ type SnapshotResponse struct {
 	// remaining_bytes is the number of blob bytes to be sent after this message
 	RemainingBytes uint64 `protobuf:"varint,2,opt,name=remaining_bytes,json=remainingBytes,proto3" json:"remaining_bytes,omitempty"`
 	// blob contains the next chunk of the snapshot in the snapshot stream.
-	Blob                 []byte   `protobuf:"bytes,3,opt,name=blob,proto3" json:"blob,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Blob []byte `protobuf:"bytes,3,opt,name=blob,proto3" json:"blob,omitempty"`
 }
 
 func (m *SnapshotResponse) Reset()         { *m = SnapshotResponse{} }
@@ -1433,10 +1385,7 @@ type WatchCreateRequest struct {
 	// use on the stream will cause an error to be returned.
 	WatchId int64 `protobuf:"varint,7,opt,name=watch_id,json=watchId,proto3" json:"watch_id,omitempty"`
 	// fragment enables splitting large revisions into multiple watch responses.
-	Fragment             bool     `protobuf:"varint,8,opt,name=fragment,proto3" json:"fragment,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Fragment bool `protobuf:"varint,8,opt,name=fragment,proto3" json:"fragment,omitempty"`
 }
 
 func (m *WatchCreateRequest) Reset()         { *m = WatchCreateRequest{} }
@@ -1504,10 +1453,7 @@ func (m *WatchCreateRequest) GetFragment() bool {
 
 type WatchCancelRequest struct {
 	// watch_id is the watcher id to cancel so that no more events are transmitted.
-	WatchId              int64    `protobuf:"varint,1,opt,name=watch_id,json=watchId,proto3" json:"watch_id,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	WatchId int64 `protobuf:"varint,1,opt,name=watch_id,json=watchId,proto3" json:"watch_id,omitempty"`
 }
 
 func (m *WatchCancelRequest) Reset()         { *m = WatchCancelRequest{} }
@@ -1526,11 +1472,7 @@ func (m *WatchCancelRequest) GetWatchId() int64 {
 
 // Requests the a watch stream progress status be sent in the watch response stream as soon as
 // possible.
-type WatchProgressRequest struct {
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
+type WatchProgressRequest struct{}
 
 func (m *WatchProgressRequest) Reset()         { *m = WatchProgressRequest{} }
 func (m *WatchProgressRequest) String() string { return proto.CompactTextString(m) }
@@ -1637,10 +1579,7 @@ type LeaseGrantRequest struct {
 	// TTL is the advisory time-to-live in seconds. Expired lease will return -1.
 	TTL int64 `protobuf:"varint,1,opt,name=TTL,proto3" json:"TTL,omitempty"`
 	// ID is the requested ID for the lease. If ID is set to 0, the lessor chooses an ID.
-	ID                   int64    `protobuf:"varint,2,opt,name=ID,proto3" json:"ID,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	ID int64 `protobuf:"varint,2,opt,name=ID,proto3" json:"ID,omitempty"`
 }
 
 func (m *LeaseGrantRequest) Reset()         { *m = LeaseGrantRequest{} }
@@ -1669,11 +1608,8 @@ type LeaseGrantResponse struct {
 	// ID is the lease ID for the granted lease.
 	ID int64 `protobuf:"varint,2,opt,name=ID,proto3" json:"ID,omitempty"`
 	// TTL is the server chosen lease time-to-live in seconds.
-	TTL                  int64    `protobuf:"varint,3,opt,name=TTL,proto3" json:"TTL,omitempty"`
-	Error                string   `protobuf:"bytes,4,opt,name=error,proto3" json:"error,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	TTL   int64  `protobuf:"varint,3,opt,name=TTL,proto3" json:"TTL,omitempty"`
+	Error string `protobuf:"bytes,4,opt,name=error,proto3" json:"error,omitempty"`
 }
 
 func (m *LeaseGrantResponse) Reset()         { *m = LeaseGrantResponse{} }
@@ -1713,10 +1649,7 @@ func (m *LeaseGrantResponse) GetError() string {
 
 type LeaseRevokeRequest struct {
 	// ID is the lease ID to revoke. When the ID is revoked, all associated keys will be deleted.
-	ID                   int64    `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	ID int64 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
 }
 
 func (m *LeaseRevokeRequest) Reset()         { *m = LeaseRevokeRequest{} }
@@ -1758,10 +1691,7 @@ type LeaseCheckpoint struct {
 	// ID is the lease ID to checkpoint.
 	ID int64 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
 	// Remaining_TTL is the remaining time until expiry of the lease.
-	Remaining_TTL        int64    `protobuf:"varint,2,opt,name=remaining_TTL,json=remainingTTL,proto3" json:"remaining_TTL,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Remaining_TTL int64 `protobuf:"varint,2,opt,name=remaining_TTL,json=remainingTTL,proto3" json:"remaining_TTL,omitempty"`
 }
 
 func (m *LeaseCheckpoint) Reset()         { *m = LeaseCheckpoint{} }
@@ -1829,10 +1759,7 @@ func (m *LeaseCheckpointResponse) GetHeader() *ResponseHeader {
 
 type LeaseKeepAliveRequest struct {
 	// ID is the lease ID for the lease to keep alive.
-	ID                   int64    `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	ID int64 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
 }
 
 func (m *LeaseKeepAliveRequest) Reset()         { *m = LeaseKeepAliveRequest{} }
@@ -1854,10 +1781,7 @@ type LeaseKeepAliveResponse struct {
 	// ID is the lease ID from the keep alive request.
 	ID int64 `protobuf:"varint,2,opt,name=ID,proto3" json:"ID,omitempty"`
 	// TTL is the new time-to-live for the lease.
-	TTL                  int64    `protobuf:"varint,3,opt,name=TTL,proto3" json:"TTL,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	TTL int64 `protobuf:"varint,3,opt,name=TTL,proto3" json:"TTL,omitempty"`
 }
 
 func (m *LeaseKeepAliveResponse) Reset()         { *m = LeaseKeepAliveResponse{} }
@@ -1892,10 +1816,7 @@ type LeaseTimeToLiveRequest struct {
 	// ID is the lease ID for the lease.
 	ID int64 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
 	// keys is true to query all the keys attached to this lease.
-	Keys                 bool     `protobuf:"varint,2,opt,name=keys,proto3" json:"keys,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Keys bool `protobuf:"varint,2,opt,name=keys,proto3" json:"keys,omitempty"`
 }
 
 func (m *LeaseTimeToLiveRequest) Reset()         { *m = LeaseTimeToLiveRequest{} }
@@ -1928,10 +1849,7 @@ type LeaseTimeToLiveResponse struct {
 	// GrantedTTL is the initial granted time in seconds upon lease creation/renewal.
 	GrantedTTL int64 `protobuf:"varint,4,opt,name=grantedTTL,proto3" json:"grantedTTL,omitempty"`
 	// Keys is the list of keys attached to this lease.
-	Keys                 [][]byte `protobuf:"bytes,5,rep,name=keys,proto3" json:"keys,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Keys [][]byte `protobuf:"bytes,5,rep,name=keys,proto3" json:"keys,omitempty"`
 }
 
 func (m *LeaseTimeToLiveResponse) Reset()         { *m = LeaseTimeToLiveResponse{} }
@@ -1976,11 +1894,7 @@ func (m *LeaseTimeToLiveResponse) GetKeys() [][]byte {
 	return nil
 }
 
-type LeaseLeasesRequest struct {
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
+type LeaseLeasesRequest struct{}
 
 func (m *LeaseLeasesRequest) Reset()         { *m = LeaseLeasesRequest{} }
 func (m *LeaseLeasesRequest) String() string { return proto.CompactTextString(m) }
@@ -1990,10 +1904,7 @@ func (*LeaseLeasesRequest) Descriptor() ([]byte, []int) {
 }
 
 type LeaseStatus struct {
-	ID                   int64    `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	ID int64 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
 }
 
 func (m *LeaseStatus) Reset()         { *m = LeaseStatus{} }
@@ -2049,10 +1960,7 @@ type Member struct {
 	// clientURLs is the list of URLs the member exposes to clients for communication. If the member is not started, clientURLs will be empty.
 	ClientURLs []string `protobuf:"bytes,4,rep,name=clientURLs,proto3" json:"clientURLs,omitempty"`
 	// isLearner indicates if the member is raft learner.
-	IsLearner            bool     `protobuf:"varint,5,opt,name=isLearner,proto3" json:"isLearner,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	IsLearner bool `protobuf:"varint,5,opt,name=isLearner,proto3" json:"isLearner,omitempty"`
 }
 
 func (m *Member) Reset()         { *m = Member{} }
@@ -2099,11 +2007,8 @@ func (m *Member) GetIsLearner() bool {
 
 type MemberAddRequest struct {
 	// peerURLs是新增成员用来与集群通信的URL列表.
-	PeerURLs             []string `protobuf:"bytes,1,rep,name=peerURLs,proto3" json:"peerURLs,omitempty"`
-	IsLearner            bool     `protobuf:"varint,2,opt,name=isLearner,proto3" json:"isLearner,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	PeerURLs  []string `protobuf:"bytes,1,rep,name=peerURLs,proto3" json:"peerURLs,omitempty"`
+	IsLearner bool     `protobuf:"varint,2,opt,name=isLearner,proto3" json:"isLearner,omitempty"`
 }
 
 func (m *MemberAddRequest) Reset()         { *m = MemberAddRequest{} }
@@ -2168,10 +2073,7 @@ func (m *MemberAddResponse) GetMembers() []*Member {
 
 type MemberRemoveRequest struct {
 	// ID is the member ID of the member to remove.
-	ID                   uint64   `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	ID uint64 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
 }
 
 func (m *MemberRemoveRequest) Reset()         { *m = MemberRemoveRequest{} }
@@ -2222,10 +2124,7 @@ type MemberUpdateRequest struct {
 	// ID is the member ID of the member to update.
 	ID uint64 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
 	// peerURLs is the new list of URLs the member will use to communicate with the cluster.
-	PeerURLs             []string `protobuf:"bytes,2,rep,name=peerURLs,proto3" json:"peerURLs,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	PeerURLs []string `protobuf:"bytes,2,rep,name=peerURLs,proto3" json:"peerURLs,omitempty"`
 }
 
 func (m *MemberUpdateRequest) Reset()         { *m = MemberUpdateRequest{} }
@@ -2280,10 +2179,7 @@ func (m *MemberUpdateResponse) GetMembers() []*Member {
 }
 
 type MemberListRequest struct {
-	Linearizable         bool     `protobuf:"varint,1,opt,name=linearizable,proto3" json:"linearizable,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Linearizable bool `protobuf:"varint,1,opt,name=linearizable,proto3" json:"linearizable,omitempty"`
 }
 
 func (m *MemberListRequest) Reset()         { *m = MemberListRequest{} }
@@ -2332,10 +2228,7 @@ func (m *MemberListResponse) GetMembers() []*Member {
 
 type MemberPromoteRequest struct {
 	// ID is the member ID of the member to promote.
-	ID                   uint64   `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	ID uint64 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
 }
 
 func (m *MemberPromoteRequest) Reset()         { *m = MemberPromoteRequest{} }
@@ -2382,11 +2275,7 @@ func (m *MemberPromoteResponse) GetMembers() []*Member {
 	return nil
 }
 
-type DefragmentRequest struct {
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
+type DefragmentRequest struct{}
 
 func (m *DefragmentRequest) Reset()         { *m = DefragmentRequest{} }
 func (m *DefragmentRequest) String() string { return proto.CompactTextString(m) }
@@ -2418,10 +2307,7 @@ func (m *DefragmentResponse) GetHeader() *ResponseHeader {
 
 type MoveLeaderRequest struct {
 	// targetID is the node ID for the new leader.
-	TargetID             uint64   `protobuf:"varint,1,opt,name=targetID,proto3" json:"targetID,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	TargetID uint64 `protobuf:"varint,1,opt,name=targetID,proto3" json:"targetID,omitempty"`
 }
 
 func (m *MoveLeaderRequest) Reset()         { *m = MoveLeaderRequest{} }
@@ -2569,10 +2455,7 @@ type DowngradeRequest struct {
 	// or CANCEL the current downgrading job.
 	Action DowngradeRequest_DowngradeAction `protobuf:"varint,1,opt,name=action,proto3,enum=etcdserverpb.DowngradeRequest_DowngradeAction" json:"action,omitempty"`
 	// version is the target version to downgrade.
-	Version              string   `protobuf:"bytes,2,opt,name=version,proto3" json:"version,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Version string `protobuf:"bytes,2,opt,name=version,proto3" json:"version,omitempty"`
 }
 
 func (m *DowngradeRequest) Reset()         { *m = DowngradeRequest{} }
@@ -2599,10 +2482,7 @@ func (m *DowngradeRequest) GetVersion() string {
 type DowngradeResponse struct {
 	Header *ResponseHeader `protobuf:"bytes,1,opt,name=header,proto3" json:"header,omitempty"`
 	// version is the current cluster version.
-	Version              string   `protobuf:"bytes,2,opt,name=version,proto3" json:"version,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Version string `protobuf:"bytes,2,opt,name=version,proto3" json:"version,omitempty"`
 }
 
 func (m *DowngradeResponse) Reset()         { *m = DowngradeResponse{} }
@@ -2626,11 +2506,7 @@ func (m *DowngradeResponse) GetVersion() string {
 	return ""
 }
 
-type StatusRequest struct {
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
+type StatusRequest struct{}
 
 func (m *StatusRequest) Reset()         { *m = StatusRequest{} }
 func (m *StatusRequest) String() string { return proto.CompactTextString(m) }
@@ -2658,10 +2534,7 @@ type StatusResponse struct {
 	// dbSizeInUse is the size of the backend database logically in use, in bytes, of the responding member.
 	DbSizeInUse int64 `protobuf:"varint,9,opt,name=dbSizeInUse,proto3" json:"dbSizeInUse,omitempty"`
 	// isLearner indicates if the member is raft learner.
-	IsLearner            bool     `protobuf:"varint,10,opt,name=isLearner,proto3" json:"isLearner,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	IsLearner bool `protobuf:"varint,10,opt,name=isLearner,proto3" json:"isLearner,omitempty"`
 }
 
 func (m *StatusResponse) Reset()         { *m = StatusResponse{} }
@@ -2741,11 +2614,7 @@ func (m *StatusResponse) GetIsLearner() bool {
 	return false
 }
 
-type AuthEnableRequest struct {
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
+type AuthEnableRequest struct{}
 
 func (m *AuthEnableRequest) Reset()         { *m = AuthEnableRequest{} }
 func (m *AuthEnableRequest) String() string { return proto.CompactTextString(m) }
@@ -2754,11 +2623,7 @@ func (*AuthEnableRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_77a6da22d6a3feb1, []int{61}
 }
 
-type AuthDisableRequest struct {
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
+type AuthDisableRequest struct{}
 
 func (m *AuthDisableRequest) Reset()         { *m = AuthDisableRequest{} }
 func (m *AuthDisableRequest) String() string { return proto.CompactTextString(m) }
@@ -2767,11 +2632,7 @@ func (*AuthDisableRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_77a6da22d6a3feb1, []int{62}
 }
 
-type AuthStatusRequest struct {
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
+type AuthStatusRequest struct{}
 
 func (m *AuthStatusRequest) Reset()         { *m = AuthStatusRequest{} }
 func (m *AuthStatusRequest) String() string { return proto.CompactTextString(m) }
@@ -2781,11 +2642,8 @@ func (*AuthStatusRequest) Descriptor() ([]byte, []int) {
 }
 
 type AuthenticateRequest struct {
-	Name                 string   `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Password             string   `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Name     string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Password string `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
 }
 
 func (m *AuthenticateRequest) Reset()         { *m = AuthenticateRequest{} }
@@ -2855,10 +2713,7 @@ func (m *AuthUserAddRequest) GetHashedPassword() string {
 }
 
 type AuthUserGetRequest struct {
-	Name                 string   `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 }
 
 func (m *AuthUserGetRequest) Reset()         { *m = AuthUserGetRequest{} }
@@ -2877,10 +2732,7 @@ func (m *AuthUserGetRequest) GetName() string {
 
 type AuthUserDeleteRequest struct {
 	// name is the name of the user to delete.
-	Name                 string   `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 }
 
 func (m *AuthUserDeleteRequest) Reset()         { *m = AuthUserDeleteRequest{} }
@@ -2903,10 +2755,7 @@ type AuthUserChangePasswordRequest struct {
 	// password is the new password for the user. Note that this field will be removed in the API layer.
 	Password string `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
 	// hashedPassword is the new password for the user. Note that this field will be initialized in the API layer.
-	HashedPassword       string   `protobuf:"bytes,3,opt,name=hashedPassword,proto3" json:"hashedPassword,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	HashedPassword string `protobuf:"bytes,3,opt,name=hashedPassword,proto3" json:"hashedPassword,omitempty"`
 }
 
 func (m *AuthUserChangePasswordRequest) Reset()         { *m = AuthUserChangePasswordRequest{} }
@@ -2941,10 +2790,7 @@ type AuthUserGrantRoleRequest struct {
 	// user is the name of the user which should be granted a given role.
 	User string `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
 	// role is the name of the role to grant to the user.
-	Role                 string   `protobuf:"bytes,2,opt,name=role,proto3" json:"role,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Role string `protobuf:"bytes,2,opt,name=role,proto3" json:"role,omitempty"`
 }
 
 func (m *AuthUserGrantRoleRequest) Reset()         { *m = AuthUserGrantRoleRequest{} }
@@ -2969,11 +2815,8 @@ func (m *AuthUserGrantRoleRequest) GetRole() string {
 }
 
 type AuthUserRevokeRoleRequest struct {
-	Name                 string   `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Role                 string   `protobuf:"bytes,2,opt,name=role,proto3" json:"role,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Role string `protobuf:"bytes,2,opt,name=role,proto3" json:"role,omitempty"`
 }
 
 func (m *AuthUserRevokeRoleRequest) Reset()         { *m = AuthUserRevokeRoleRequest{} }
@@ -2999,10 +2842,7 @@ func (m *AuthUserRevokeRoleRequest) GetRole() string {
 
 type AuthRoleAddRequest struct {
 	// name is the name of the role to add to the authentication system.
-	Name                 string   `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 }
 
 func (m *AuthRoleAddRequest) Reset()         { *m = AuthRoleAddRequest{} }
@@ -3020,10 +2860,7 @@ func (m *AuthRoleAddRequest) GetName() string {
 }
 
 type AuthRoleGetRequest struct {
-	Role                 string   `protobuf:"bytes,1,opt,name=role,proto3" json:"role,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Role string `protobuf:"bytes,1,opt,name=role,proto3" json:"role,omitempty"`
 }
 
 func (m *AuthRoleGetRequest) Reset()         { *m = AuthRoleGetRequest{} }
@@ -3040,11 +2877,7 @@ func (m *AuthRoleGetRequest) GetRole() string {
 	return ""
 }
 
-type AuthUserListRequest struct {
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
+type AuthUserListRequest struct{}
 
 func (m *AuthUserListRequest) Reset()         { *m = AuthUserListRequest{} }
 func (m *AuthUserListRequest) String() string { return proto.CompactTextString(m) }
@@ -3053,11 +2886,7 @@ func (*AuthUserListRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_77a6da22d6a3feb1, []int{73}
 }
 
-type AuthRoleListRequest struct {
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
+type AuthRoleListRequest struct{}
 
 func (m *AuthRoleListRequest) Reset()         { *m = AuthRoleListRequest{} }
 func (m *AuthRoleListRequest) String() string { return proto.CompactTextString(m) }
@@ -3067,10 +2896,7 @@ func (*AuthRoleListRequest) Descriptor() ([]byte, []int) {
 }
 
 type AuthRoleDeleteRequest struct {
-	Role                 string   `protobuf:"bytes,1,opt,name=role,proto3" json:"role,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Role string `protobuf:"bytes,1,opt,name=role,proto3" json:"role,omitempty"`
 }
 
 func (m *AuthRoleDeleteRequest) Reset()         { *m = AuthRoleDeleteRequest{} }
@@ -3119,12 +2945,9 @@ func (m *AuthRoleGrantPermissionRequest) GetPerm() *authpb.Permission {
 }
 
 type AuthRoleRevokePermissionRequest struct {
-	Role                 string   `protobuf:"bytes,1,opt,name=role,proto3" json:"role,omitempty"`
-	Key                  []byte   `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
-	RangeEnd             []byte   `protobuf:"bytes,3,opt,name=range_end,json=rangeEnd,proto3" json:"range_end,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Role     string `protobuf:"bytes,1,opt,name=role,proto3" json:"role,omitempty"`
+	Key      []byte `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
+	RangeEnd []byte `protobuf:"bytes,3,opt,name=range_end,json=rangeEnd,proto3" json:"range_end,omitempty"`
 }
 
 func (m *AuthRoleRevokePermissionRequest) Reset()         { *m = AuthRoleRevokePermissionRequest{} }
@@ -3201,10 +3024,7 @@ type AuthStatusResponse struct {
 	Header  *ResponseHeader `protobuf:"bytes,1,opt,name=header,proto3" json:"header,omitempty"`
 	Enabled bool            `protobuf:"varint,2,opt,name=enabled,proto3" json:"enabled,omitempty"`
 	// authRevision is the current revision of auth store
-	AuthRevision         uint64   `protobuf:"varint,3,opt,name=authRevision,proto3" json:"authRevision,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	AuthRevision uint64 `protobuf:"varint,3,opt,name=authRevision,proto3" json:"authRevision,omitempty"`
 }
 
 func (m *AuthStatusResponse) Reset()         { *m = AuthStatusResponse{} }
@@ -3238,10 +3058,7 @@ func (m *AuthStatusResponse) GetAuthRevision() uint64 {
 type AuthenticateResponse struct {
 	Header *ResponseHeader `protobuf:"bytes,1,opt,name=header,proto3" json:"header,omitempty"`
 	// token is an authorized token that can be used in succeeding RPCs
-	Token                string   `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Token string `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
 }
 
 func (m *AuthenticateResponse) Reset()         { *m = AuthenticateResponse{} }
@@ -4030,9 +3847,9 @@ type KVServer interface {
 	Range(context.Context, *RangeRequest) (*RangeResponse, error)                   // 范围查询
 	Put(context.Context, *PutRequest) (*PutResponse, error)                         // 更新、创建
 	DeleteRange(context.Context, *DeleteRangeRequest) (*DeleteRangeResponse, error) // 范围删除
-	// Txn 在一个事务中处理多个请求。一个txn请求会增加键值存储的版本，并为每个完成的请求生成具有相同版本的事件。不允许在一个txn中多次修改同一个键。
+	// Txn 在一个事务中处理多个请求.一个txn请求会增加键值存储的版本并为每个完成的请求生成具有相同版本的事件.不允许在一个txn中多次修改同一个键.
 	Txn(context.Context, *TxnRequest) (*TxnResponse, error)
-	// Compact 压缩 etcd 键值存储中的事件历史。该键值 存储器应定期压缩，否则事件历史将继续无限地增长。
+	// Compact 压缩 etcd 键值存储中的事件历史.该键值 存储器应定期压缩否则事件历史将继续无限地增长.
 	Compact(context.Context, *CompactionRequest) (*CompactionResponse, error) // 压缩
 }
 

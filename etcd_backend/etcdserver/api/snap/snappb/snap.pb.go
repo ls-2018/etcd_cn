@@ -4,6 +4,7 @@
 package snappb
 
 import (
+	"encoding/json"
 	fmt "fmt"
 	math "math"
 	math_bits "math/bits"
@@ -27,11 +28,8 @@ var (
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 type Snapshot struct {
-	Crc                  uint32   `protobuf:"varint,1,opt,name=crc" json:"crc"`
-	Data                 []byte   `protobuf:"bytes,2,opt,name=data" json:"data,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Crc  uint32 `protobuf:"varint,1,opt,name=crc" json:"crc"`
+	Data []byte `protobuf:"bytes,2,opt,name=data" json:"data,omitempty"`
 }
 
 func (m *Snapshot) Reset()         { *m = Snapshot{} }
@@ -60,20 +58,8 @@ var fileDescriptor_f2e3c045ebf84d00 = []byte{
 }
 
 func (m *Snapshot) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovSnap(uint64(m.Crc))
-	if m.Data != nil {
-		l = len(m.Data)
-		n += 1 + l + sovSnap(uint64(l))
-	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
-	return n
+	marshal, _ := json.Marshal(m)
+	return len(marshal)
 }
 
 func sovSnap(x uint64) (n int) {

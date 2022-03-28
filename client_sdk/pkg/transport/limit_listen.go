@@ -21,6 +21,8 @@ import (
 	"net"
 	"sync"
 	"time"
+
+	"github.com/ls-2018/etcd_cn/code_debug/conn"
 )
 
 var ErrNotTCP = errors.New("only tcp connections have keepalive")
@@ -46,6 +48,7 @@ func (l *limitListener) Accept() (net.Conn, error) {
 		l.release()
 		return nil, err
 	}
+	conn.PrintConn("limitListener",c)
 	return &limitListenerConn{Conn: c, release: l.release}, nil
 }
 

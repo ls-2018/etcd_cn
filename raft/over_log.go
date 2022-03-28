@@ -320,7 +320,7 @@ func (l *raftLog) term(i uint64) (uint64, error) {
 }
 
 // isUpToDate Follower节点在接收到Candidate节点的选举请求之后,会通过比较Candidate节点的本地日志与自身本地日志的新旧程度,从而决定是否投票.
-// raftLog提供了isUpToDat巳（）方法用于比较日志的新旧程度.
+// raftLog提供了isUpToDat巳()方法用于比较日志的新旧程度.
 func (l *raftLog) isUpToDate(lasti, term uint64) bool {
 	return term > l.lastTerm() || (term == l.lastTerm() && lasti >= l.lastIndex())
 }

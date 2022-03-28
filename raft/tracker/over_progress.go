@@ -24,7 +24,7 @@ import (
 // NB(tbg).Progress基本上是一个状态机
 type Progress struct {
 	Match uint64 // 对应Follower节点当前己经成功复制的Entry记录的索引值.
-	// Next-Match-1 就是还在飞行中或者还在路上的日志数量（Inflights）
+	// Next-Match-1 就是还在飞行中或者还在路上的日志数量(Inflights)
 	Next uint64 // 对应Follower节点下一个待复制的Entry记录的索引值
 	// State 对应Follower节点的复制状态
 	// 当处于StateProbe状态时,leader在每个心跳间隔内最多发送一条复制消息.它也会探测follower的实际进度.
@@ -69,7 +69,7 @@ func (pr *Progress) MaybeDecrTo(rejected, matchHint uint64) bool {
 			return false
 		}
 		// 根据前面对MsgApp消息发送过程的分析,处于ProgressStateReplicate状态时,发送MsgApp
-		// 消息的同时会直接调用Progress.optimisticUpdate（）方法增加Next,这就使得Next可能会
+		// 消息的同时会直接调用Progress.optimisticUpdate()方法增加Next,这就使得Next可能会
 		// 比Match大很多,这里回退Next至Match位置,并在后面重新发送MsgApp消息进行尝试
 
 		// 在复制状态下Leader会发送多个日志信息给Peer再等待Peer的回复,例如：Match+1,Match+2,Match+3,Match+4,
@@ -91,7 +91,7 @@ func (pr *Progress) MaybeDecrTo(rejected, matchHint uint64) bool {
 	// 发送的探测消息中呢？所以探测消息一次只发送一条日志就能做到了,因为这个日志的索引肯定是Next-1.
 
 	// 出现过时的MsgAppResp消息直接忽略
-	// 只有拒绝比当前大,才会重新      一般都是当前记录了A ,给follower发送了A+1,[leader会将Next设为A+2] ,被拒绝了   此时 rejected=A+1
+	// 只有拒绝比当前大,才会重新      一般都是当前记录了A给follower发送了A+1,[leader会将Next设为A+2]被拒绝了   此时 rejected=A+1
 	if pr.Next-1 != rejected {
 		return false
 	}
@@ -178,7 +178,7 @@ func (pr *Progress) BecomeReplicate() {
 	pr.Next = pr.Match + 1
 }
 
-// BecomeSnapshot 正在发送快照 ,snapshoti 为快照的最新日志索引
+// BecomeSnapshot 正在发送快照snapshoti 为快照的最新日志索引
 func (pr *Progress) BecomeSnapshot(snapshoti uint64) {
 	// 除了复位一下状态就是设置快照的索引,此处为什么不需要调整Next？因为这个状态无需在发日志给
 	// peer,直到快照完成后才能继续

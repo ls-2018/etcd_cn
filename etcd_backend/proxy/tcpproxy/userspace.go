@@ -22,6 +22,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ls-2018/etcd_cn/code_debug/conn"
+
 	"go.uber.org/zap"
 )
 
@@ -93,7 +95,7 @@ func (tp *TCPProxy) Run() error {
 		if err != nil {
 			return err
 		}
-
+		conn.PrintConn("TCPProxy",in)
 		go tp.serve(in)
 	}
 }

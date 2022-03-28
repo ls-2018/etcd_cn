@@ -31,7 +31,7 @@ type Config struct {
 	Learners  map[uint64]struct{} // Learners 当前配置中的learner ID
 	// 当我们在联合共识转换过程中把voter变成learner时,我们不能在进入联合状态时直接增加learner.
 	// 这是因为这将违反voter和learner的交集是空的这一不变性.例如,假设一个voter被移除,并立即重新添加为learner
-	// （或者换句话说,它被降级）.
+	// (或者换句话说,它被降级).
 	//
 	// 最初,配置将是
 	//   voters:   {1 2 3}
@@ -41,7 +41,7 @@ type Config struct {
 	//   voters:   {1 2} & {1 2 3}
 	//   learners: {3}
 	//
-	// 但这违反了不变量（3既是投票者又是learner）.相反,我们得到
+	// 但这违反了不变量(3既是投票者又是learner).相反,我们得到
 	//   voters:   {1 2} & {1 2 3}
 	//   learners: {}
 	//   next_learners: {3}
@@ -127,7 +127,7 @@ func (p *ProgressTracker) ConfState() pb.ConfState {
 	}
 }
 
-// IsSingleton 集群中只有一个投票成员（领导者）.
+// IsSingleton 集群中只有一个投票成员(领导者).
 func (p *ProgressTracker) IsSingleton() bool {
 	return len(p.Voters[0]) == 1 && len(p.Voters[1]) == 0
 }

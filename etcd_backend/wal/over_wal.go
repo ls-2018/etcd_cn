@@ -224,7 +224,7 @@ func Create(lg *zap.Logger, dirpath string, metadata []byte) (*WAL, error) {
 
 // SetUnsafeNoFsync ok
 func (w *WAL) SetUnsafeNoFsync() {
-	w.unsafeNoSync = true // 非安全存储 默认是 false    ,
+	w.unsafeNoSync = true // 非安全存储 默认是 false
 }
 
 func (w *WAL) cleanupWAL(lg *zap.Logger) {
@@ -494,7 +494,7 @@ func (w *WAL) ReadAll() (metadata []byte, state raftpb.HardState, ents []raftpb.
 	w.metadata = metadata
 
 	if w.tail() != nil { // wal文件
-		// 创建编码器（与解码器连锁crc）,启用追加功能
+		// 创建编码器(与解码器连锁crc),启用追加功能
 		w.encoder, err = newFileEncoder(w.tail().File, w.decoder.lastCRC())
 		if err != nil {
 			return

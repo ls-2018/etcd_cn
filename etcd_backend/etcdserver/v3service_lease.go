@@ -17,7 +17,7 @@ type Lessor interface {
 	LeaseGrant(ctx context.Context, r *pb.LeaseGrantRequest) (*pb.LeaseGrantResponse, error)                // 创建租约
 	LeaseRevoke(ctx context.Context, r *pb.LeaseRevokeRequest) (*pb.LeaseRevokeResponse, error)             // 移除租约
 	LeaseRenew(ctx context.Context, id lease.LeaseID) (int64, error)                                        // 租约 续租
-	LeaseTimeToLive(ctx context.Context, r *pb.LeaseTimeToLiveRequest) (*pb.LeaseTimeToLiveResponse, error) // 检索租赁信息。
+	LeaseTimeToLive(ctx context.Context, r *pb.LeaseTimeToLiveRequest) (*pb.LeaseTimeToLiveResponse, error) // 检索租赁信息.
 	LeaseLeases(ctx context.Context, r *pb.LeaseLeasesRequest) (*pb.LeaseLeasesResponse, error)             // 显示所有租约信息
 }
 

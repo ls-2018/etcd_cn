@@ -48,7 +48,7 @@ type commit struct {
 // 基于raft的k,v存储
 type raftNode struct {
 	proposeC           <-chan string              // 发送提议消息
-	triggerConfChangeC <-chan raftpb.ConfChangeV1 // 集群的配置变更 ,主动触发的
+	triggerConfChangeC <-chan raftpb.ConfChangeV1 // 集群的配置变更主动触发的
 	commitC            chan<- *commit             // 提交到上层应用的条目log (k,v)
 	errorC             chan<- error               // 返回raft回话的错误
 	id                 int                        // 本机ID
@@ -125,7 +125,7 @@ func (rc *raftNode) maybeTriggerSnapshot(applyDoneC <-chan struct{}) {
 		panic(err)
 	}
 
-	log.Printf("压缩 [0 ,%d]的日志索引 ", compactIndex)
+	log.Printf("压缩 [0%d]的日志索引 ", compactIndex)
 	rc.snapshotIndex = rc.appliedIndex
 }
 
@@ -142,7 +142,7 @@ func (rc *raftNode) serveChannels() {
 
 	defer rc.wal.Close()
 
-	// 创建一个每隔 lOOms 触发一次的定时器,那么在逻辑上,lOOms 即是 etcd-raft 组件的最小时间单位 ,
+	// 创建一个每隔 lOOms 触发一次的定时器,那么在逻辑上,lOOms 即是 etcd-raft 组件的最小时间单位
 	// 该定时器每触发一次,则逻辑时钟推进一次
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
@@ -197,7 +197,7 @@ func (rc *raftNode) serveChannels() {
 				rc.stop()
 				return
 			}
-			// 随着节点的运行, WAL 日志量和 raftLog.storage 中的 Entry 记录会不断增加 ,
+			// 随着节点的运行, WAL 日志量和 raftLog.storage 中的 Entry 记录会不断增加
 			// 所以节点每处理 10000 条(默认值) Entry 记录,就会触发一次创建快照的过程,
 			// 同时 WAL 会释放一些日志文件的句柄,raftLog.storage 也会压缩其保存的 Entry 记录
 			rc.maybeTriggerSnapshot(applyDoneC)

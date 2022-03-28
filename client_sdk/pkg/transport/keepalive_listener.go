@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"net"
 	"time"
+
+	"github.com/ls-2018/etcd_cn/code_debug/conn"
 )
 
 type keepAliveConn interface {
@@ -50,6 +52,7 @@ func (kln *keepaliveListener) Accept() (net.Conn, error) {
 	if err != nil {
 		return nil, err
 	}
+	conn.PrintConn("keepaliveListener",c)
 	kac := c.(keepAliveConn)
 	// detection time: tcp_keepalive_time + tcp_keepalive_probes + tcp_keepalive_intvl
 	// default on linux:  30 + 8 * 30
@@ -72,6 +75,7 @@ func (l *tlsKeepaliveListener) Accept() (c net.Conn, err error) {
 	if err != nil {
 		return
 	}
+	conn.PrintConn("tlsKeepaliveListener",c)
 	kac := c.(keepAliveConn)
 	// detection time: tcp_keepalive_time + tcp_keepalive_probes + tcp_keepalive_intvl
 	// default on linux:  30 + 8 * 30

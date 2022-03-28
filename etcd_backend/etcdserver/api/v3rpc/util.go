@@ -135,7 +135,7 @@ func isClientCtxErr(ctxErr error, err error) bool {
 	return false
 }
 
-// 在v3.4中，learner 被允许提供可序列化的读取和端点状态服务。
+// 在v3.4中learner 被允许提供可序列化的读取和端点状态服务.
 func isRPCSupportedForLearner(req interface{}) bool {
 	switch r := req.(type) {
 	case *pb.StatusRequest:

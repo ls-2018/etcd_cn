@@ -46,7 +46,7 @@ var (
 )
 
 type Backend interface {
-	ReadTx() ReadTx           // // ReadTx 返回一个读事务。它被主数据路径中的 ConcurrentReadTx 替换
+	ReadTx() ReadTx           // // ReadTx 返回一个读事务.它被主数据路径中的 ConcurrentReadTx 替换
 	BatchTx() BatchTx         // 开启写事务
 	ConcurrentReadTx() ReadTx // 主流程中都是使用的这个并发读事务
 	Snapshot() Snapshot       // 对db做快照
@@ -98,13 +98,13 @@ type (
 )
 
 type BackendConfig struct {
-	Path                string            // 是指向后端文件的文件路径。
+	Path                string            // 是指向后端文件的文件路径.
 	BatchInterval       time.Duration     // 是冲刷BatchTx之前的最长时间
 	BatchLimit          int               // 是冲刷BatchTx之前的最大puts数
 	BackendFreelistType bolt.FreelistType // 是后端boltdb的freelist类型
-	MmapSize            uint64            // 是为后端提供的mmap的字节数。
+	MmapSize            uint64            // 是为后端提供的mmap的字节数.
 	Logger              *zap.Logger       //
-	UnsafeNoFsync       bool              `json:"unsafe-no-fsync"` // 禁用所有fsync的使用。
+	UnsafeNoFsync       bool              `json:"unsafe-no-fsync"` // 禁用所有fsync的使用.
 	Mlock               bool              // 防止后端数据库文件被调换
 	Hooks               Hooks             // 在后端事务的生命周期中被执行
 }
@@ -184,20 +184,20 @@ func newBackend(bcfg BackendConfig) *backend {
 	return b
 }
 
-// BatchTx 返回当前的批次tx。该tx可以用于读和写操作。
-// 写入的结果可以立即在同一个tx中被检索到。
-// 写入的结果与其他tx隔离，直到当前的tx被提交。
+// BatchTx 返回当前的批次tx.该tx可以用于读和写操作.
+// 写入的结果可以立即在同一个tx中被检索到.
+// 写入的结果与其他tx隔离直到当前的tx被提交.
 func (b *backend) BatchTx() BatchTx {
 	return b.batchTx
 }
 
 func (b *backend) ReadTx() ReadTx { return b.readTx }
 
-// ConcurrentReadTx 创建并返回一个新的 ReadTx，它。
-// A) 创建并保留backend.readTx.txReadBuffer的副本。
-// B) 引用当前批次间隔的 boltdb read Tx（和它的桶缓存）。
+// ConcurrentReadTx 创建并返回一个新的 ReadTx它.
+// A) 创建并保留backend.readTx.txReadBuffer的副本.
+// B) 引用当前批次间隔的 boltdb read Tx(和它的桶缓存).
 func (b *backend) ConcurrentReadTx() ReadTx {
-	// 这里需要读 readTx 的buffer， 所以需要读锁 这里的锁占用时间是很低的
+	// 这里需要读 readTx 的buffer 所以需要读锁 这里的锁占用时间是很低的
 	b.readTx.RLock()
 	defer b.readTx.RUnlock()
 	b.readTx.txWg.Add(1)
@@ -250,7 +250,7 @@ func (b *backend) ConcurrentReadTx() ReadTx {
 	// concurrentReadTx is not supposed to write to its txReadBuffer
 	return &concurrentReadTx{
 		baseReadTx: baseReadTx{
-			buf:     *buf, // copy一份backend的readTx.buf, 这样就可以不用持有readTx.mu对buffer的保护，从而提升读的性能 这里就是空间换时间(锁的竞争)
+			buf:     *buf, // copy一份backend的readTx.buf, 这样就可以不用持有readTx.mu对buffer的保护从而提升读的性能 这里就是空间换时间(锁的竞争)
 			txMu:    b.readTx.txMu,
 			tx:      b.readTx.tx,
 			buckets: b.readTx.buckets,
@@ -259,7 +259,7 @@ func (b *backend) ConcurrentReadTx() ReadTx {
 	}
 }
 
-// ForceCommit 强制当前的批处理tx提交。
+// ForceCommit 强制当前的批处理tx提交.
 func (b *backend) ForceCommit() {
 	b.batchTx.Commit()
 }
@@ -384,15 +384,15 @@ func (b *backend) Defrag() error {
 func (b *backend) defrag() error {
 	now := time.Now()
 
-	// 锁定batchTx以确保没有人在使用以前的tx，然后关闭以前正在进行的tx。
+	// 锁定batchTx以确保没有人在使用以前的tx然后关闭以前正在进行的tx.
 	b.batchTx.Lock()
 	defer b.batchTx.Unlock()
 
-	// 锁定数据库后，锁定tx，以避免死锁。
+	// 锁定数据库后锁定tx以避免死锁.
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	// 阻止并发的读请求，同时重置TX。
+	// 阻止并发的读请求同时重置TX.
 	b.readTx.Lock()
 	defer b.readTx.Unlock()
 
@@ -559,7 +559,7 @@ func (b *backend) begin(write bool) *bolt.Tx {
 	tx := b.unsafeBegin(write)
 	b.mu.RUnlock()
 
-	size := tx.Size() // 返回该事务所看到的当前数据库大小（字节）。   24576
+	size := tx.Size() // 返回该事务所看到的当前数据库大小(字节).   24576
 	db := tx.DB()
 	stats := db.Stats()
 	atomic.StoreInt64(&b.size, size)

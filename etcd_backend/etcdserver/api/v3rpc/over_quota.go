@@ -36,7 +36,7 @@ type quotaAlarmer struct {
 	id types.ID
 }
 
-// check 请求是否满足配额。如果没有足够的空间。忽略请求并发出自由空间警报。
+// check 请求是否满足配额.如果没有足够的空间.忽略请求并发出自由空间警报.
 func (qa *quotaAlarmer) check(ctx context.Context, r interface{}) error {
 	if qa.q.Available(r) {
 		return nil

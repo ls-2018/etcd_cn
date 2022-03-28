@@ -64,16 +64,18 @@ type ASD struct {
 }
 
 func (m *InternalRaftRequest) Marshal() (dAtA []byte, err error) {
+
+	type xx struct {
+		Key         string
+		Value       string
+		Lease       int64
+		PrevKv      bool
+		IgnoreValue bool
+		IgnoreLease bool
+	}
 	_ = m.Unmarshal
 	a := ASD{
-		Put: &struct {
-			Key         string
-			Value       string
-			Lease       int64
-			PrevKv      bool
-			IgnoreValue bool
-			IgnoreLease bool
-		}{},
+		Put:                      nil,
 		Header:                   m.Header,
 		ID:                       m.ID,
 		V2:                       m.V2,
@@ -126,13 +128,15 @@ func (m *InternalRaftRequest) Unmarshal(dAtA []byte) error {
 	}
 	a := ASD{}
 	err := json.Unmarshal(dAtA, &a)
-	m.Put = &PutRequest{
-		Key:         []byte(a.Put.Key),
-		Value:       []byte(a.Put.Value),
-		Lease:       a.Put.Lease,
-		PrevKv:      a.Put.PrevKv,
-		IgnoreValue: a.Put.IgnoreValue,
-		IgnoreLease: a.Put.IgnoreLease,
+	if a.Put!=nil{
+		m.Put = &PutRequest{
+			Key:         []byte(a.Put.Key),
+			Value:       []byte(a.Put.Value),
+			Lease:       a.Put.Lease,
+			PrevKv:      a.Put.PrevKv,
+			IgnoreValue: a.Put.IgnoreValue,
+			IgnoreLease: a.Put.IgnoreLease,
+		}
 	}
 	m.Header = a.Header
 	m.ID = a.ID

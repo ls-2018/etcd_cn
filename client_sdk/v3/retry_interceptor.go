@@ -47,11 +47,7 @@ func (c *Client) unaryClientInterceptor(optFuncs ...retryOption) grpc.UnaryClien
 			if err := waitRetryBackoff(ctx, attempt, callOpts); err != nil {
 				return err
 			}
-			c.GetLogger().Debug(
-				"retrying of unary invoker",
-				zap.String("target", cc.Target()),
-				zap.Uint("attempt", attempt),
-			)
+			c.GetLogger().Debug("重试调用", zap.String("target", cc.Target()), zap.Uint("attempt", attempt))
 			fmt.Println("--->:", req)    // key:"a" value:"b"
 			fmt.Println("--->:", method) // /etcdserverpb.KV/Put
 			lastErr = invoker(ctx, method, req, reply, cc, grpcOpts...)

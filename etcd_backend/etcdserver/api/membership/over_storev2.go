@@ -18,7 +18,7 @@ import (
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v2store"
 )
 
-// IsMetaStoreOnly 验证给定的`store`是否只包含元信息（成员,版本）;可以从后端（storev3）恢复,而不是用户数据.
+// IsMetaStoreOnly 验证给定的`store`是否只包含元信息(成员,版本);可以从后端(storev3)恢复,而不是用户数据.
 func IsMetaStoreOnly(store v2store.Store) (bool, error) {
 	event, err := store.Get("/", true, false)
 	if err != nil {

@@ -46,7 +46,7 @@ import (
 )
 
 type Manager interface {
-	Status(dbPath string) (Status, error)                               // 快照信息
+	Status(dbPath string) (Status, error) // 快照信息
 	Restore(cfg RestoreConfig) error
 }
 
@@ -73,7 +73,6 @@ type v3Manager struct {
 func hasChecksum(n int64) bool {
 	return (n % 512) == sha256.Size
 }
-
 
 // RestoreConfig configures snapshot restore operation.
 type RestoreConfig struct {
@@ -195,7 +194,7 @@ func (s *v3Manager) outDbPath() string {
 	return filepath.Join(s.snapDir, "db")
 }
 
-// saveDB 将数据库快照复制到快照目录中。
+// saveDB 将数据库快照复制到快照目录中.
 func (s *v3Manager) saveDB() error {
 	err := s.copyAndVerifyDB()
 	if err != nil {
@@ -413,7 +412,7 @@ func (s *v3Manager) Status(dbPath string) (ds Status, err error) {
 
 	h := crc32.New(crc32.MakeTable(crc32.Castagnoli))
 	// 只读事务
-	// Bolt 将其key以字节排序的顺序存储在存储桶中。这使得对这些键的顺序迭代非常快。要遍历键，我们将使用光标
+	// Bolt 将其key以字节排序的顺序存储在存储桶中.这使得对这些键的顺序迭代非常快.要遍历键我们将使用光标
 	if err = db.View(func(tx *bolt.Tx) error {
 		// 首先检查快照文件的完整性
 		var dbErrStrings []string
@@ -421,7 +420,7 @@ func (s *v3Manager) Status(dbPath string) (ds Status, err error) {
 			dbErrStrings = append(dbErrStrings, dbErr.Error())
 		}
 		if len(dbErrStrings) > 0 {
-			return fmt.Errorf("快照文件完整性检查失败。发现%d错误.\n"+strings.Join(dbErrStrings, "\n"), len(dbErrStrings))
+			return fmt.Errorf("快照文件完整性检查失败.发现%d错误.\n"+strings.Join(dbErrStrings, "\n"), len(dbErrStrings))
 		}
 		ds.TotalSize = tx.Size()
 		c := tx.Cursor()
@@ -459,5 +458,3 @@ func (s *v3Manager) Status(dbPath string) (ds Status, err error) {
 	ds.Hash = h.Sum32()
 	return ds, nil
 }
-
-

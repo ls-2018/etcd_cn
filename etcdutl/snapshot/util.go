@@ -17,6 +17,7 @@ package snapshot
 import (
 	"encoding/binary"
 )
+
 // 修订版本
 type revision struct {
 	main int64

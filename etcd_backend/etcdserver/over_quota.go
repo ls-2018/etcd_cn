@@ -24,14 +24,14 @@ import (
 )
 
 const (
-	DefaultQuotaBytes = int64(2 * 1024 * 1024 * 1024) // 2GB 是指在超过空间配额之前，后端大小可能消耗的字节数。
-	MaxQuotaBytes     = int64(8 * 1024 * 1024 * 1024) // 8GB 是建议用于后端配额的最大字节数。较大的配额可能会导致性能下降。
+	DefaultQuotaBytes = int64(2 * 1024 * 1024 * 1024) // 2GB 是指在超过空间配额之前后端大小可能消耗的字节数.
+	MaxQuotaBytes     = int64(8 * 1024 * 1024 * 1024) // 8GB 是建议用于后端配额的最大字节数.较大的配额可能会导致性能下降.
 )
 
-// Quota 代表一个针对任意请求的任意配额。每个请求要花费一定的费用；如果没有足够的剩余费用，那么配额内可用的资源就太少了，无法应用该请求。
+// Quota 代表一个针对任意请求的任意配额.每个请求要花费一定的费用；如果没有足够的剩余费用那么配额内可用的资源就太少了无法应用该请求.
 type Quota interface {
-	Available(req interface{}) bool // 判断给定的请求是否符合配额要求。
-	Cost(req interface{}) int       // 计算对某一请求的配额的开销。
+	Available(req interface{}) bool // 判断给定的请求是否符合配额要求.
+	Cost(req interface{}) int       // 计算对某一请求的配额的开销.
 	Remaining() int64               // 剩余配额
 }
 
@@ -47,8 +47,8 @@ type backendQuota struct {
 }
 
 const (
-	leaseOverhead = 64  // 是对租赁物的存储成本的估计。
-	kvOverhead    = 256 // 是对存储一个密钥的元数据的成本的估计。
+	leaseOverhead = 64  // 是对租赁物的存储成本的估计.
+	kvOverhead    = 256 // 是对存储一个密钥的元数据的成本的估计.
 )
 
 var (
@@ -57,7 +57,7 @@ var (
 	maxQuotaSize     = humanize.Bytes(uint64(MaxQuotaBytes))
 )
 
-// NewBackendQuota 创建一个具有给定存储限制的配额层。
+// NewBackendQuota 创建一个具有给定存储限制的配额层.
 func NewBackendQuota(s *EtcdServer, name string) Quota {
 	lg := s.Logger()
 
@@ -72,7 +72,7 @@ func NewBackendQuota(s *EtcdServer, name string) Quota {
 		quotaLogOnce.Do(func() {
 			if lg != nil {
 				lg.Info(
-					"启用后端配置，默认值",
+					"启用后端配置默认值",
 					zap.String("quota-name", name),
 					zap.Int64("quota-size-bytes", DefaultQuotaBytes),
 					zap.String("quota-size", DefaultQuotaSize),

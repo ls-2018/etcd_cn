@@ -41,7 +41,7 @@ func (w *watcher) StartIndex() uint64 {
 
 // notify 函数通知观察者.如果观察者在给定的路径中感兴趣,该函数将返回true.
 func (w *watcher) notify(e *Event, originalPath bool, deleted bool) bool {
-	// originalPath 对应 1 ,deleted 对应 3
+	// originalPath 对应 1deleted 对应 3
 
 	// 观察者在三种情况下和一个条件下对路径感兴趣,该条件是事件发生在观察者的sinceIndex之后.
 	// 1.事件发生的路径是观察者正在观察的路径.例如,如果观察者在"/foo "观察,而事件发生在"/foo",观察者必须是对该事件感兴趣.

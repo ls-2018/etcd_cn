@@ -45,7 +45,7 @@ func (r *EtcdManualResolver) Build(target resolver.Target, cc resolver.ClientCon
 	if err != nil {
 		return nil, err
 	}
-	// 将存储在r中的端点填充到ClientConn (cc)中。
+	// 将存储在r中的端点填充到ClientConn (cc)中.
 	r.updateState()
 	return res, nil
 }

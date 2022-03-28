@@ -94,7 +94,7 @@ func (r *raft) Step(m pb.Message) error {
 		}
 
 	case pb.MsgVote, pb.MsgPreVote:
-		// 当前节点在参与投票时,会综合下面几个条件决定是否投票（在Raft协议的介绍中也捉到过）．
+		// 当前节点在参与投票时,会综合下面几个条件决定是否投票(在Raft协议的介绍中也捉到过)．
 		// 1. 投票情况是已经投过了
 		// 2. 没投过并且没有leader
 		// 3. 预投票并且term大
@@ -216,7 +216,7 @@ func stepLeader(r *raft, m pb.Message) error {
 				// 一旦提交了联合共识,系统就会过渡到新的配置.联合共识结合了新旧配置.
 				var refused string
 				if alreadyPending {
-					refused = fmt.Sprintf("在索引%d处可能有未应用的conf变更（应用于%d）.", r.pendingConfIndex, r.raftLog.applied)
+					refused = fmt.Sprintf("在索引%d处可能有未应用的conf变更(应用于%d).", r.pendingConfIndex, r.raftLog.applied)
 				} else if alreadyJoint && !wantsLeaveJoint {
 					refused = "必须先从联合配置中过渡出去"
 				} else if !alreadyJoint && wantsLeaveJoint {
@@ -235,14 +235,14 @@ func stepLeader(r *raft, m pb.Message) error {
 			}
 		}
 		// 将日志追加到raft unstable 中
-		if !r.appendEntry(m.Entries...) {
+		if !r.appendEntry(m.Entries...) {  // 类似于健康检查的消息,就会走这里
 			return ErrProposalDropped
 		}
 		// 发送日志给集群其它节点
 		r.bcastAppend()
 		return nil
 	case pb.MsgReadIndex:
-		// 集群中只有一个投票成员（领导者）.
+		// 集群中只有一个投票成员(领导者).
 		if r.prstrack.IsSingleton() {
 			if resp := r.responseToReadIndexReq(m, r.raftLog.committed); resp.To != None {
 				r.send(resp)
@@ -296,7 +296,7 @@ func stepLeader(r *raft, m pb.Message) error {
 				r.sendAppend(m.From)
 			}
 		} else {
-			// 走到这说明   之前发送的MsgApp消息已经被对方的Follower节点接收（Entry记录被成功追加）
+			// 走到这说明   之前发送的MsgApp消息已经被对方的Follower节点接收(Entry记录被成功追加)
 			oldPaused := pr.IsPaused()
 			// m.Index: 对应Follower节点收到的raftLog中最后一条Entry记录的索引,
 			if pr.MaybeUpdate(m.Index) { // 更新pr的进度
@@ -315,7 +315,7 @@ func stepLeader(r *raft, m pb.Message) error {
 				}
 				// 如果进度有更新,判断并更新commitIndex
 				// 收到一个Follower节点的MsgAppResp消息之后,除了修改相应的Match和Next,还会尝试更新raftLog.committed,因为有些Entry记录可能在此次复制中被保存到了
-				// 半数以上的节点中,raft.maybeCommit（）方法在前面已经分析过了
+				// 半数以上的节点中,raft.maybeCommit()方法在前面已经分析过了
 				if r.maybeCommit() {
 					// committed index has progressed for the term, so it is safe
 					// to respond to pending read index requests
@@ -589,7 +589,6 @@ func (r *raft) becomePreCandidate() {
 }
 
 func (r *raft) becomeLeader() {
-	// TODO(xiangli) remove the panic when the raft implementation is stable
 	if r.state == StateFollower {
 		panic("invalid transition [follower -> leader]")
 	}

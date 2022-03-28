@@ -53,7 +53,7 @@ func NewEndpointCommand() *cobra.Command {
 func newEpHealthCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "health",
-		Short: "Checks the healthiness of endpoints specified in `--endpoints` flag",
+		Short: "检查端点的健康程度 `--endpoints` flag",
 		Run:   epHealthCommandFunc,
 	}
 
@@ -88,7 +88,6 @@ type epHealth struct {
 	Error  string `json:"error,omitempty"`
 }
 
-// epHealthCommandFunc executes the "endpoint-health" command.
 func epHealthCommandFunc(cmd *cobra.Command, args []string) {
 	lg, err := zap.NewProduction()
 	if err != nil {
@@ -154,7 +153,7 @@ func epHealthCommandFunc(cmd *cobra.Command, args []string) {
 					}
 				} else if err != nil {
 					eh.Health = false
-					eh.Error = "Unable to fetch the alarm list"
+					eh.Error = "无法获取alarm信息"
 				}
 			}
 			cancel()

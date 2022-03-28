@@ -25,10 +25,10 @@ import (
 
 type Config struct {
 	Endpoints            []string      `json:"endpoints"`               // etcd client --> etcd 的地址
-	AutoSyncInterval     time.Duration `json:"auto-sync-interval"`      // 是用其最新成员更新端点的时间间隔。0禁止自动同步。默认情况下，自动同步被禁用。
+	AutoSyncInterval     time.Duration `json:"auto-sync-interval"`      // 是用其最新成员更新端点的时间间隔.0禁止自动同步.默认情况下自动同步被禁用.
 	DialTimeout          time.Duration `json:"dial-timeout"`            // 建立链接的超时时间
-	DialKeepAliveTime    time.Duration `json:"dial-keep-alive-time"`    // client 向服务端发送发包，确保链接存活
-	DialKeepAliveTimeout time.Duration `json:"dial-keep-alive-timeout"` // 长时间没有接收到响应，关闭链接
+	DialKeepAliveTime    time.Duration `json:"dial-keep-alive-time"`    // client 向服务端发送发包确保链接存活
+	DialKeepAliveTimeout time.Duration `json:"dial-keep-alive-timeout"` // 长时间没有接收到响应关闭链接
 	MaxCallSendMsgSize   int           // 默认2MB
 	MaxCallRecvMsgSize   int
 	TLS                  *tls.Config // 客户端sdk证书
