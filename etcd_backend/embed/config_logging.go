@@ -19,10 +19,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
-	"net/url"
-	"os"
-
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/logutil"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -30,6 +26,9 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/grpclog"
 	"gopkg.in/natefinch/lumberjack.v2"
+	"io/ioutil"
+	"net/url"
+	"os"
 )
 
 // GetLogger

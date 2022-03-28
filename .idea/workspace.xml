@@ -5,92 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="0e773aec-5f20-41bd-8b6b-8b5aa00b03ef" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/etcd_cn.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/etcd_cn.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Procfile" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Procfile.v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/pkg/fileutil/fileutil.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/pkg/fileutil/fileutil.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/pkg/fileutil/lock_flock.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/pkg/fileutil/lock_flock.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/pkg/transport/keepalive_listener.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/pkg/transport/keepalive_listener.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/pkg/transport/limit_listen.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/pkg/transport/limit_listen.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/pkg/transport/listener_tls.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/pkg/transport/listener_tls.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/pkg/transport/timeout_listener.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/pkg/transport/timeout_listener.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/client.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/client.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/concurrency/mutex.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/concurrency/mutex.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/config.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/config.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/retry_interceptor.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/retry_interceptor.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/config/over_config.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/config/over_config.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/embed/config.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/embed/config.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/embed/etcd.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/embed/etcd.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdmain/config.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdmain/config.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdmain/help.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdmain/help.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/api/membership/over_cluster.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/api/membership/over_cluster.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/api/membership/over_downgrade.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/api/membership/over_downgrade.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/api/membership/over_storev2.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/api/membership/over_storev2.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/api/rafthttp/over_raft_pipeline_api.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/api/rafthttp/over_raft_pipeline_api.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/api/snap/snappb/snap.pb.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/api/snap/snappb/snap.pb.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/api/snap/snapshotter.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/api/snap/snapshotter.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/api/v2stats/server.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/api/v2stats/server.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/api/v2store/over_watcher.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/api/v2store/over_watcher.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/api/v3election/v3electionpb/v3election.pb.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/api/v3election/v3electionpb/v3election.pb.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/api/v3lock/v3lockpb/v3lock.pb.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/api/v3lock/v3lockpb/v3lock.pb.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/api/v3rpc/key.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/api/v3rpc/key.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/api/v3rpc/util.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/api/v3rpc/util.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/api_hashkv.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/api_hashkv.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/cluster_util.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/cluster_util.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/over_quota.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/over_quota.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/raft.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/raft.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/server.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/server.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/v2_server.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/v2_server.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/v3_server.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/v3_server.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/v3service_cluster.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/v3service_cluster.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/lease/leasepb/lease.pb.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/lease/leasepb/lease.pb.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/backend/backend_bolt.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/backend/backend_bolt.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/backend/bolt_batch_tx.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/backend/bolt_batch_tx.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/backend/bolt_batch_tx_buffered.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/backend/bolt_batch_tx_buffered.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/backend/read_tx.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/backend/read_tx.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/key_index.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/key_index.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/proxy/tcpproxy/userspace.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/proxy/tcpproxy/userspace.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/wal/over_wal.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/wal/over_wal.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/wal/walpb/record.pb.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/wal/walpb/record.pb.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/ep_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/ep_command.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcdutl/etcdutl/defrag_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdutl/etcdutl/defrag_command.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcdutl/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdutl/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcdutl/snapshot/over_v3_snapshot.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdutl/snapshot/over_v3_snapshot.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcdutl/snapshot/util.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdutl/snapshot/util.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hack/tls-setup/Makefile" beforeDir="false" afterPath="$PROJECT_DIR$/hack/tls-setup/Makefile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hack/tls-setup/Procfile" beforeDir="false" afterPath="$PROJECT_DIR$/hack/tls-setup/Procfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hack/tls-setup/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/hack/tls-setup/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/offical/etcdserverpb/etcdserver.pb.go" beforeDir="false" afterPath="$PROJECT_DIR$/offical/etcdserverpb/etcdserver.pb.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/offical/etcdserverpb/over.go" beforeDir="false" afterPath="$PROJECT_DIR$/offical/etcdserverpb/over.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/offical/etcdserverpb/raft_internal.pb.go" beforeDir="false" afterPath="$PROJECT_DIR$/offical/etcdserverpb/raft_internal.pb.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/offical/etcdserverpb/rpc.pb.go" beforeDir="false" afterPath="$PROJECT_DIR$/offical/etcdserverpb/rpc.pb.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/adt/interval_tree.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/adt/interval_tree.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/pbutil/over_pbutil.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/pbutil/over_pbutil.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/proxy/server.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/proxy/server.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/wait/wait.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/wait/wait.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/raft/confchange/confchange.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/confchange/confchange.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/raft/node.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/node.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/raft/over_interface.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/over_interface.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/raft/over_log.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/over_log.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/raft/over_log_unstable.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/over_log_unstable.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/raft/over_raft.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/over_raft.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/raft/over_snapshot.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/over_snapshot.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/raft/quorum/over_majority.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/quorum/over_majority.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/raft/quorum/over_two_majority.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/quorum/over_two_majority.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/raft/raftpb/confchange.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/raftpb/confchange.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/raft/role.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/role.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/raft/tracker/over_progress.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/tracker/over_progress.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/raft/tracker/tracker.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/tracker/tracker.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/raftexample/raft.go" beforeDir="false" afterPath="$PROJECT_DIR$/raftexample/raft.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/benchmark/README.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/benchmark/cmd/doc.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/benchmark/cmd/root.go" beforeDir="false" afterPath="$PROJECT_DIR$/tools/benchmark/cmd/root.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/benchmark/doc.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/local-tester/bridge/bridge.go" beforeDir="false" afterPath="$PROJECT_DIR$/tools/local-tester/bridge/bridge.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd_backend/embed/config_logging.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/embed/config_logging.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -237,28 +153,8 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/etcd_backend/etcdserver/server.go</url>
-          <line>2094</line>
+          <line>2093</line>
           <option name="timeStamp" value="44" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/etcd_backend/etcdserver/apply.go</url>
-          <line>118</line>
-          <option name="timeStamp" value="53" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/etcd_backend/etcdserver/apply.go</url>
-          <line>126</line>
-          <option name="timeStamp" value="54" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/etcd_backend/etcdserver/server.go</url>
-          <line>2065</line>
-          <option name="timeStamp" value="55" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/etcd_backend/etcdserver/server.go</url>
-          <line>2036</line>
-          <option name="timeStamp" value="56" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/offical/etcdserverpb/over.go</url>

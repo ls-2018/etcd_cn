@@ -24,18 +24,19 @@ func (m *Request) Unmarshal(dAtA []byte) error {
 	return json.Unmarshal(dAtA, m)
 }
 
+type xx struct {
+	Key         string
+	Value       string
+	Lease       int64
+	PrevKv      bool
+	IgnoreValue bool
+	IgnoreLease bool
+}
 type ASD struct {
-	Header *RequestHeader
-	ID     uint64
-	V2     *Request
-	Put    *struct {
-		Key         string
-		Value       string
-		Lease       int64
-		PrevKv      bool
-		IgnoreValue bool
-		IgnoreLease bool
-	}
+	Header                   *RequestHeader
+	ID                       uint64
+	V2                       *Request
+	Put                      *xx
 	DeleteRange              *DeleteRangeRequest
 	AuthRoleRevokePermission *AuthRoleRevokePermissionRequest
 	AuthRoleGet              *AuthRoleGetRequest
@@ -65,14 +66,6 @@ type ASD struct {
 
 func (m *InternalRaftRequest) Marshal() (dAtA []byte, err error) {
 
-	type xx struct {
-		Key         string
-		Value       string
-		Lease       int64
-		PrevKv      bool
-		IgnoreValue bool
-		IgnoreLease bool
-	}
 	_ = m.Unmarshal
 	a := ASD{
 		Put:                      nil,
@@ -106,12 +99,14 @@ func (m *InternalRaftRequest) Marshal() (dAtA []byte, err error) {
 		DowngradeInfoSet:         m.DowngradeInfoSet,
 	}
 	if m.Put != nil {
-		a.Put.Key = string(m.Put.Key)
-		a.Put.Value = string(m.Put.Value)
-		a.Put.Lease = m.Put.Lease
-		a.Put.PrevKv = m.Put.PrevKv
-		a.Put.IgnoreValue = m.Put.IgnoreValue
-		a.Put.IgnoreLease = m.Put.IgnoreLease
+		a.Put = &xx{
+			Key:         string(m.Put.Key),
+			Value:       string(m.Put.Value),
+			Lease:       m.Put.Lease,
+			PrevKv:      m.Put.PrevKv,
+			IgnoreValue: m.Put.IgnoreValue,
+			IgnoreLease: m.Put.IgnoreLease,
+		}
 	}
 
 	return json.Marshal(a)
@@ -128,7 +123,7 @@ func (m *InternalRaftRequest) Unmarshal(dAtA []byte) error {
 	}
 	a := ASD{}
 	err := json.Unmarshal(dAtA, &a)
-	if a.Put!=nil{
+	if a.Put != nil {
 		m.Put = &PutRequest{
 			Key:         []byte(a.Put.Key),
 			Value:       []byte(a.Put.Value),
