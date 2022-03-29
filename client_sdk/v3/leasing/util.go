@@ -39,7 +39,7 @@ func evalCmp(resp *v3.GetResponse, tcmp v3.Cmp) bool {
 		switch tcmp.Target {
 		case v3pb.Compare_VALUE:
 			if tv, _ := tcmp.TargetUnion.(*v3pb.Compare_Value); tv != nil {
-				result = bytes.Compare(kv.Value, tv.Value)
+				result = bytes.Compare([]byte(kv.Value), []byte(tv.Value))
 			}
 		case v3pb.Compare_CREATE:
 			if tv, _ := tcmp.TargetUnion.(*v3pb.Compare_CreateRevision); tv != nil {

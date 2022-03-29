@@ -225,6 +225,7 @@ func NewIntervalTree() IntervalTree {
 		sentinel: sentinel,
 	}
 }
+
 // gorm
 
 type intervalTree struct {

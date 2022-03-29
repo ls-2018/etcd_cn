@@ -27,7 +27,7 @@ import (
 	"github.com/ls-2018/etcd_cn/client_sdk/v3/concurrency"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v2error"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v2store"
-	"go.etcd.io/etcd/api/v3/mvccpb"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/mvccpb"
 )
 
 // store 使用v3客户端实现V2的存储接口.

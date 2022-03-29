@@ -22,9 +22,9 @@ import (
 
 	v3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 	"github.com/ls-2018/etcd_cn/client_sdk/v3/concurrency"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/mvccpb"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/v3rpc/rpctypes"
 	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
-	"go.etcd.io/etcd/api/v3/mvccpb"
-	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -262,7 +262,7 @@ func (lkv *leasingKV) acquire(ctx context.Context, key string, op v3.Op) (*v3.Tx
 		if err := lkv.waitSession(ctx); err != nil {
 			return nil, err
 		}
-		lcmp := v3.Cmp{Key: []byte(key), Target: pb.Compare_LEASE}
+		lcmp := v3.Cmp{Key: key, Target: pb.Compare_LEASE}
 		resp, err := lkv.kv.Txn(ctx).If(
 			v3.Compare(v3.CreateRevision(lkv.pfx+key), "=", 0),
 			v3.Compare(lcmp, "=", 0)).

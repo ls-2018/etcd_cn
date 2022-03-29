@@ -19,8 +19,8 @@ import (
 	"reflect"
 	"testing"
 
-	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
-	"go.etcd.io/etcd/api/v3/version"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/v3rpc/rpctypes"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/version"
 	"google.golang.org/grpc/metadata"
 )
 

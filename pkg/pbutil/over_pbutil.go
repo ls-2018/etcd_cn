@@ -35,14 +35,19 @@ func MustMarshal(m Marshaler) []byte {
 }
 
 func MustUnmarshal(um Unmarshaler, data []byte) {
+	if len(data) == 0 {
+		return
+	}
 	if err := um.Unmarshal(data); err != nil {
 		panic(fmt.Sprintf("反序列化不应该失败(%v)", err))
 	}
 }
 
 func MaybeUnmarshal(um Unmarshaler, data []byte) bool {
+	if len(data) == 0 {
+		return false
+	}
 	if err := um.Unmarshal(data); err != nil {
-		fmt.Println("err->>>", err)
 		return false
 	}
 	return true

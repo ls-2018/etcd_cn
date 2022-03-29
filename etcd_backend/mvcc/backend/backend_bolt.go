@@ -204,50 +204,37 @@ func (b *backend) ConcurrentReadTx() ReadTx {
 
 	b.txReadBufferCache.mu.Lock()
 
-	curCache := b.txReadBufferCache.buf
-	curCacheVer := b.txReadBufferCache.bufVersion
-	curBufVer := b.readTx.buf.bufVersion
+	curCache := b.txReadBufferCache.buf           // 当前的缓存
+	curCacheVer := b.txReadBufferCache.bufVersion // 缓存里的版本
+	curBufVer := b.readTx.buf.bufVersion          // 当前的版本
 
 	isEmptyCache := curCache == nil
-	isStaleCache := curCacheVer != curBufVer
+	isStaleCache := curCacheVer != curBufVer // 是不是陈旧的缓存
 
 	var buf *txReadBuffer
 	switch {
-	case isEmptyCache:
-		// perform safe copy of buffer while holding "b.txReadBufferCache.mu.Lock"
-		// this is only supposed to run once so there won't be much overhead
+	case isEmptyCache: // 缓冲为空
+		// 当持有b.txReadBufferCache.mu.Lock时执行安全的缓冲区拷贝这只应该运行一次，所以不会有太多的开销
 		curBuf := b.readTx.buf.unsafeCopy()
 		buf = &curBuf
 	case isStaleCache:
-		// to maximize the concurrency, try unsafe copy of buffer
-		// release the lock while copying buffer -- cache may become stale again and
-		// get overwritten by someone else.
-		// therefore, we need to check the readTx buffer version again
+		// 最大化并发，尝试不安全的缓冲区拷贝在复制buffer时释放锁——cache可能会再次失效
+		// 被其他人覆盖。因此，我们需要再次检查readTx缓冲区版本
 		b.txReadBufferCache.mu.Unlock()
 		curBuf := b.readTx.buf.unsafeCopy()
 		b.txReadBufferCache.mu.Lock()
 		buf = &curBuf
 	default:
-		// neither empty nor stale cache, just use the current buffer
+		// 既不为空也不过时的缓存，只使用当前缓冲区
 		buf = curCache
 	}
-	// txReadBufferCache.bufVersion can be modified when we doing an unsafeCopy()
-	// as a result, curCacheVer could be no longer the same as
-	// txReadBufferCache.bufVersion
-	// if !isEmptyCache && curCacheVer != b.txReadBufferCache.bufVersion
-	// then the cache became stale while copying "readTx.baseReadTx.buf".
-	// It is safe to not update "txReadBufferCache.buf", because the next following
-	// "ConcurrentReadTx" creation will trigger a new "readTx.baseReadTx.buf" copy
-	// and "buf" is still used for the current "concurrentReadTx.baseReadTx.buf".
 	if isEmptyCache || curCacheVer == b.txReadBufferCache.bufVersion {
-		// continue if the cache is never set or no one has modified the cache
 		b.txReadBufferCache.buf = buf
 		b.txReadBufferCache.bufVersion = curBufVer
 	}
 
 	b.txReadBufferCache.mu.Unlock()
-
-	// concurrentReadTx is not supposed to write to its txReadBuffer
+	// concurrentReadTx 不应该写入它的 txReadBuffer
 	return &concurrentReadTx{
 		baseReadTx: baseReadTx{
 			buf:     *buf, // copy一份backend的readTx.buf, 这样就可以不用持有readTx.mu对buffer的保护从而提升读的性能 这里就是空间换时间(锁的竞争)

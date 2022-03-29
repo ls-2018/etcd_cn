@@ -15,9 +15,9 @@
 package mvcc
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/google/btree"
 	"go.uber.org/zap"
@@ -66,7 +66,7 @@ var ErrRevisionNotFound = errors.New("mvcc: revision not found")
 // generations:
 //    {empty} -> key SHOULD be removed.
 type keyIndex struct {
-	key         []byte
+	key         string
 	modified    revision // 一个key 最后一次修改的revision .
 	generations []generation
 }
@@ -296,11 +296,11 @@ func (ki *keyIndex) findGeneration(rev int64) *generation {
 }
 
 func (ki *keyIndex) Less(b btree.Item) bool {
-	return bytes.Compare(ki.key, b.(*keyIndex).key) == -1
+	return strings.Compare(ki.key, b.(*keyIndex).key) == -1
 }
 
 func (ki *keyIndex) equal(b *keyIndex) bool {
-	if !bytes.Equal(ki.key, b.key) {
+	if !strings.EqualFold(ki.key, b.key) {
 		return false
 	}
 	if ki.modified != b.modified {

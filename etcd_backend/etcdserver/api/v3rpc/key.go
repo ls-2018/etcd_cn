@@ -19,9 +19,9 @@ import (
 	"context"
 
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/v3rpc/rpctypes"
 	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
 	"github.com/ls-2018/etcd_cn/pkg/adt"
-	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
 )
 
 type kvServer struct {
@@ -36,20 +36,6 @@ type kvServer struct {
 
 func NewKVServer(s *etcdserver.EtcdServer) pb.KVServer {
 	return &kvServer{hdr: newHeader(s), kv: s, maxTxnOps: s.Cfg.MaxTxnOps}
-}
-
-func (s *kvServer) Range(ctx context.Context, r *pb.RangeRequest) (*pb.RangeResponse, error) {
-	if err := checkRangeRequest(r); err != nil {
-		return nil, err
-	}
-
-	resp, err := s.kv.Range(ctx, r)
-	if err != nil {
-		return nil, togRPCError(err)
-	}
-
-	s.hdr.fill(resp.Header)
-	return resp, nil
 }
 
 func (s *kvServer) Put(ctx context.Context, r *pb.PutRequest) (*pb.PutResponse, error) {
@@ -83,7 +69,7 @@ func (s *kvServer) DeleteRange(ctx context.Context, r *pb.DeleteRangeRequest) (*
 }
 
 // Txn 在单个事务中处理多个请求一个事务中请求增加键值存储的z evisio n ,并为每个完成的请求生成一个带有相同
-//revision 的事件不允许在一个txn 中多次修改同一个key.
+// revision 的事件不允许在一个txn 中多次修改同一个key.
 func (s *kvServer) Txn(ctx context.Context, r *pb.TxnRequest) (*pb.TxnResponse, error) {
 	if err := checkTxnRequest(r, int(s.maxTxnOps)); err != nil {
 		return nil, err
@@ -115,13 +101,6 @@ func (s *kvServer) Compact(ctx context.Context, r *pb.CompactionRequest) (*pb.Co
 
 	s.hdr.fill(resp.Header)
 	return resp, nil
-}
-
-func checkRangeRequest(r *pb.RangeRequest) error {
-	if len(r.Key) == 0 {
-		return rpctypes.ErrGRPCEmptyKey
-	}
-	return nil
 }
 
 func checkPutRequest(r *pb.PutRequest) error {
@@ -274,4 +253,30 @@ func checkRequestOp(u *pb.RequestOp, maxTxnOps int) error {
 		// empty op / nil entry
 		return rpctypes.ErrGRPCKeyNotFound
 	}
+}
+
+// --------------------------------------------  OVER  ----------------------------------------------------
+
+var _ = NewQuotaKVServer
+
+func checkRangeRequest(r *pb.RangeRequest) error {
+	if len(r.Key) == 0 {
+		return rpctypes.ErrGRPCEmptyKey
+	}
+	return nil
+}
+
+// Range etcdctl get a
+func (s *kvServer) Range(ctx context.Context, r *pb.RangeRequest) (*pb.RangeResponse, error) {
+	if err := checkRangeRequest(r); err != nil {
+		return nil, err
+	}
+
+	resp, err := s.kv.Range(ctx, r)
+	if err != nil {
+		return nil, togRPCError(err)
+	}
+
+	s.hdr.fill(resp.Header)
+	return resp, nil
 }

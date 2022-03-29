@@ -19,8 +19,8 @@ import (
 	"fmt"
 
 	v3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/mvccpb"
 	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
-	"go.etcd.io/etcd/api/v3/mvccpb"
 )
 
 func waitDelete(ctx context.Context, client *v3.Client, key string, rev int64) error {

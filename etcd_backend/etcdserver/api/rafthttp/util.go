@@ -25,7 +25,7 @@ import (
 
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/transport"
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
-	"go.etcd.io/etcd/api/v3/version"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/version"
 
 	"github.com/coreos/go-semver/semver"
 	"go.uber.org/zap"

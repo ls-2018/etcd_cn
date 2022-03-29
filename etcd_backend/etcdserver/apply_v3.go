@@ -28,10 +28,10 @@ import (
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/membership"
 	"github.com/ls-2018/etcd_cn/etcd_backend/lease"
 	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/membershippb"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/mvccpb"
 	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
 	"github.com/ls-2018/etcd_cn/pkg/traceutil"
-	"go.etcd.io/etcd/api/v3/membershippb"
-	"go.etcd.io/etcd/api/v3/mvccpb"
 
 	"github.com/gogo/protobuf/proto"
 	"go.uber.org/zap"
@@ -51,7 +51,6 @@ type applierV3Internal interface {
 	DowngradeInfoSet(r *membershippb.DowngradeInfoSetRequest, shouldApplyV3 membership.ShouldApplyV3)
 }
 
-// applierV3 is the interface for processing V3 raft messages
 type applierV3 interface {
 	Apply(r *pb.InternalRaftRequest, shouldApplyV3 membership.ShouldApplyV3) *applyResult
 	Put(ctx context.Context, txn mvcc.TxnWrite, p *pb.PutRequest) (*pb.PutResponse, *traceutil.Trace, error)
@@ -85,8 +84,7 @@ type applierV3 interface {
 type checkReqFunc func(mvcc.ReadView, *pb.RequestOp) error
 
 type applierV3backend struct {
-	s *EtcdServer
-
+	s          *EtcdServer
 	checkPut   checkReqFunc
 	checkRange checkReqFunc
 }
@@ -208,7 +206,7 @@ func (a *applierV3backend) Put(ctx context.Context, txn mvcc.TxnWrite, p *pb.Put
 	if trace.IsEmpty() {
 		trace = traceutil.New("put",
 			a.s.Logger(),
-			traceutil.Field{Key: "key", Value: string(p.Key)},
+			traceutil.Field{Key: "key", Value: string([]byte(p.Key))},
 			traceutil.Field{Key: "req_size", Value: p.Size()},
 		)
 	}
@@ -226,7 +224,7 @@ func (a *applierV3backend) Put(ctx context.Context, txn mvcc.TxnWrite, p *pb.Put
 	var rr *mvcc.RangeResult
 	if p.IgnoreValue || p.IgnoreLease || p.PrevKv {
 		trace.StepWithFunction(func() {
-			rr, err = txn.Range(context.TODO(), p.Key, nil, mvcc.RangeOptions{})
+			rr, err = txn.Range(context.TODO(), []byte(p.Key), nil, mvcc.RangeOptions{})
 		}, "get previous kv pair")
 
 		if err != nil {
@@ -251,7 +249,7 @@ func (a *applierV3backend) Put(ctx context.Context, txn mvcc.TxnWrite, p *pb.Put
 		}
 	}
 
-	resp.Header.Revision = txn.Put(p.Key, val, leaseID)
+	resp.Header.Revision = txn.Put([]byte([]byte(p.Key)), []byte(val), leaseID)
 	trace.AddField(traceutil.Field{Key: "response_revision", Value: resp.Header.Revision})
 	return resp, trace, nil
 }
@@ -259,7 +257,7 @@ func (a *applierV3backend) Put(ctx context.Context, txn mvcc.TxnWrite, p *pb.Put
 func (a *applierV3backend) DeleteRange(txn mvcc.TxnWrite, dr *pb.DeleteRangeRequest) (*pb.DeleteRangeResponse, error) {
 	resp := &pb.DeleteRangeResponse{}
 	resp.Header = &pb.ResponseHeader{}
-	end := mkGteRange(dr.RangeEnd)
+	end := mkGteRange([]byte(dr.RangeEnd))
 
 	if txn == nil {
 		txn = a.s.kv.Write(traceutil.TODO())
@@ -267,7 +265,7 @@ func (a *applierV3backend) DeleteRange(txn mvcc.TxnWrite, dr *pb.DeleteRangeRequ
 	}
 
 	if dr.PrevKv {
-		rr, err := txn.Range(context.TODO(), dr.Key, end, mvcc.RangeOptions{})
+		rr, err := txn.Range(context.TODO(), []byte(dr.Key), end, mvcc.RangeOptions{})
 		if err != nil {
 			return nil, err
 		}
@@ -279,105 +277,7 @@ func (a *applierV3backend) DeleteRange(txn mvcc.TxnWrite, dr *pb.DeleteRangeRequ
 		}
 	}
 
-	resp.Deleted, resp.Header.Revision = txn.DeleteRange(dr.Key, end)
-	return resp, nil
-}
-
-func (a *applierV3backend) Range(ctx context.Context, txn mvcc.TxnRead, r *pb.RangeRequest) (*pb.RangeResponse, error) {
-	trace := traceutil.Get(ctx)
-
-	resp := &pb.RangeResponse{}
-	resp.Header = &pb.ResponseHeader{}
-
-	if txn == nil {
-		txn = a.s.kv.Read(mvcc.ConcurrentReadTxMode, trace)
-		defer txn.End()
-	}
-
-	limit := r.Limit
-	if r.SortOrder != pb.RangeRequest_NONE ||
-		r.MinModRevision != 0 || r.MaxModRevision != 0 ||
-		r.MinCreateRevision != 0 || r.MaxCreateRevision != 0 {
-		// fetch everything; sort and truncate afterwards
-		limit = 0
-	}
-	if limit > 0 {
-		// fetch one extra for 'more' flag
-		limit = limit + 1
-	}
-
-	ro := mvcc.RangeOptions{
-		Limit: limit,
-		Rev:   r.Revision,
-		Count: r.CountOnly,
-	}
-
-	rr, err := txn.Range(ctx, r.Key, mkGteRange(r.RangeEnd), ro)
-	if err != nil {
-		return nil, err
-	}
-
-	if r.MaxModRevision != 0 {
-		f := func(kv *mvccpb.KeyValue) bool { return kv.ModRevision > r.MaxModRevision }
-		pruneKVs(rr, f)
-	}
-	if r.MinModRevision != 0 {
-		f := func(kv *mvccpb.KeyValue) bool { return kv.ModRevision < r.MinModRevision }
-		pruneKVs(rr, f)
-	}
-	if r.MaxCreateRevision != 0 {
-		f := func(kv *mvccpb.KeyValue) bool { return kv.CreateRevision > r.MaxCreateRevision }
-		pruneKVs(rr, f)
-	}
-	if r.MinCreateRevision != 0 {
-		f := func(kv *mvccpb.KeyValue) bool { return kv.CreateRevision < r.MinCreateRevision }
-		pruneKVs(rr, f)
-	}
-
-	sortOrder := r.SortOrder
-	if r.SortTarget != pb.RangeRequest_KEY && sortOrder == pb.RangeRequest_NONE {
-		// Since current mvcc.Range implementation returns results
-		// sorted by keys in lexiographically ascending order,
-		// sort ASCEND by default only when target is not 'KEY'
-		sortOrder = pb.RangeRequest_ASCEND
-	}
-	if sortOrder != pb.RangeRequest_NONE {
-		var sorter sort.Interface
-		switch {
-		case r.SortTarget == pb.RangeRequest_KEY:
-			sorter = &kvSortByKey{&kvSort{rr.KVs}}
-		case r.SortTarget == pb.RangeRequest_VERSION:
-			sorter = &kvSortByVersion{&kvSort{rr.KVs}}
-		case r.SortTarget == pb.RangeRequest_CREATE:
-			sorter = &kvSortByCreate{&kvSort{rr.KVs}}
-		case r.SortTarget == pb.RangeRequest_MOD:
-			sorter = &kvSortByMod{&kvSort{rr.KVs}}
-		case r.SortTarget == pb.RangeRequest_VALUE:
-			sorter = &kvSortByValue{&kvSort{rr.KVs}}
-		}
-		switch {
-		case sortOrder == pb.RangeRequest_ASCEND:
-			sort.Sort(sorter)
-		case sortOrder == pb.RangeRequest_DESCEND:
-			sort.Sort(sort.Reverse(sorter))
-		}
-	}
-
-	if r.Limit > 0 && len(rr.KVs) > int(r.Limit) {
-		rr.KVs = rr.KVs[:r.Limit]
-		resp.More = true
-	}
-	trace.Step("filter and sort the key-value pairs")
-	resp.Header.Revision = rr.Rev
-	resp.Count = int64(rr.Count)
-	resp.Kvs = make([]*mvccpb.KeyValue, len(rr.KVs))
-	for i := range rr.KVs {
-		if r.KeysOnly {
-			rr.KVs[i].Value = nil
-		}
-		resp.Kvs[i] = &rr.KVs[i]
-	}
-	trace.Step("assemble the response")
+	resp.Deleted, resp.Header.Revision = txn.DeleteRange([]byte(dr.Key), end)
 	return resp, nil
 }
 
@@ -507,7 +407,7 @@ func applyCompare(rv mvcc.ReadView, c *pb.Compare) bool {
 	// * rewrite rules for common patterns:
 	//	ex. "[a, b) createrev > 0" => "limit 1 /\ kvs > 0"
 	// * caching
-	rr, err := rv.Range(context.TODO(), c.Key, mkGteRange(c.RangeEnd), mvcc.RangeOptions{})
+	rr, err := rv.Range(context.TODO(), []byte(c.Key), mkGteRange([]byte(c.RangeEnd)), mvcc.RangeOptions{})
 	if err != nil {
 		return false
 	}
@@ -534,9 +434,9 @@ func compareKV(c *pb.Compare, ckv mvccpb.KeyValue) bool {
 	case pb.Compare_VALUE:
 		v := []byte{}
 		if tv, _ := c.TargetUnion.(*pb.Compare_Value); tv != nil {
-			v = tv.Value
+			v = []byte(tv.Value)
 		}
-		result = bytes.Compare(ckv.Value, v)
+		result = bytes.Compare([]byte(ckv.Value), v)
 	case pb.Compare_CREATE:
 		if tv, _ := c.TargetUnion.(*pb.Compare_CreateRevision); tv != nil {
 			rev = tv.CreateRevision
@@ -949,7 +849,7 @@ func (s *kvSort) Len() int { return len(s.kvs) }
 type kvSortByKey struct{ *kvSort }
 
 func (s *kvSortByKey) Less(i, j int) bool {
-	return bytes.Compare(s.kvs[i].Key, s.kvs[j].Key) < 0
+	return bytes.Compare([]byte(s.kvs[i].Key), []byte(s.kvs[j].Key)) < 0
 }
 
 type kvSortByVersion struct{ *kvSort }
@@ -973,7 +873,7 @@ func (s *kvSortByMod) Less(i, j int) bool {
 type kvSortByValue struct{ *kvSort }
 
 func (s *kvSortByValue) Less(i, j int) bool {
-	return bytes.Compare(s.kvs[i].Value, s.kvs[j].Value) < 0
+	return bytes.Compare([]byte(s.kvs[i].Value), []byte(s.kvs[j].Value)) < 0
 }
 
 func checkRequests(rv mvcc.ReadView, rt *pb.TxnRequest, txnPath []bool, f checkReqFunc) (int, error) {
@@ -1007,7 +907,7 @@ func (a *applierV3backend) checkRequestPut(rv mvcc.ReadView, reqOp *pb.RequestOp
 	req := tv.RequestPut
 	if req.IgnoreValue || req.IgnoreLease {
 		// expects previous key-value, error if not exist
-		rr, err := rv.Range(context.TODO(), req.Key, nil, mvcc.RangeOptions{})
+		rr, err := rv.Range(context.TODO(), []byte(req.Key), nil, mvcc.RangeOptions{})
 		if err != nil {
 			return err
 		}
@@ -1051,17 +951,6 @@ func compareInt64(a, b int64) int {
 	}
 }
 
-// mkGteRange determines if the range end is a >= range. This works around grpc
-// sending empty byte strings as nil; >= is encoded in the range end as '\0'.
-// If it is a GTE range, then []byte{} is returned to indicate the empty byte
-// string (vs nil being no byte string).
-func mkGteRange(rangeEnd []byte) []byte {
-	if len(rangeEnd) == 1 && rangeEnd[0] == 0 {
-		return []byte{}
-	}
-	return rangeEnd
-}
-
 func noSideEffect(r *pb.InternalRaftRequest) bool {
 	return r.Range != nil || r.AuthUserGet != nil || r.AuthRoleGet != nil || r.AuthStatus != nil
 }
@@ -1102,4 +991,110 @@ func newHeader(s *EtcdServer) *pb.ResponseHeader {
 		Revision:  s.KV().Rev(),
 		RaftTerm:  s.Term(),
 	}
+}
+
+// ----------------------------------------   OVER  ------------------------------------------------------------
+
+func (a *applierV3backend) Range(ctx context.Context, txn mvcc.TxnRead, r *pb.RangeRequest) (*pb.RangeResponse, error) {
+	trace := traceutil.Get(ctx)
+	resp := &pb.RangeResponse{}
+	resp.Header = &pb.ResponseHeader{}
+
+	if txn == nil {
+		txn = a.s.kv.Read(mvcc.ConcurrentReadTxMode, trace) // 并发读取,获取事务
+		defer txn.End()
+	}
+
+	limit := r.Limit
+	// 有序
+	if r.SortOrder != pb.RangeRequest_NONE || r.MinModRevision != 0 || r.MaxModRevision != 0 || r.MinCreateRevision != 0 || r.MaxCreateRevision != 0 {
+		// 最大、最小    创建版本、修订版本
+		// 获取一切;然后进行排序和截断
+		limit = 0
+	}
+	if limit > 0 {
+		// 获取一个额外的'more'标志
+		limit = limit + 1
+	}
+
+	ro := mvcc.RangeOptions{
+		Limit: limit,       // 0
+		Rev:   r.Revision,  // 0
+		Count: r.CountOnly, // false
+	}
+	// 主要逻辑
+	rr, err := txn.Range(ctx, []byte(r.Key), mkGteRange([]byte(r.RangeEnd)), ro)
+	if err != nil {
+		return nil, err
+	}
+
+	if r.MaxModRevision != 0 {
+		f := func(kv *mvccpb.KeyValue) bool { return kv.ModRevision > r.MaxModRevision }
+		pruneKVs(rr, f)
+	}
+	if r.MinModRevision != 0 {
+		f := func(kv *mvccpb.KeyValue) bool { return kv.ModRevision < r.MinModRevision }
+		pruneKVs(rr, f)
+	}
+	if r.MaxCreateRevision != 0 {
+		f := func(kv *mvccpb.KeyValue) bool { return kv.CreateRevision > r.MaxCreateRevision }
+		pruneKVs(rr, f)
+	}
+	if r.MinCreateRevision != 0 {
+		f := func(kv *mvccpb.KeyValue) bool { return kv.CreateRevision < r.MinCreateRevision }
+		pruneKVs(rr, f)
+	}
+
+	sortOrder := r.SortOrder
+	if r.SortTarget != pb.RangeRequest_KEY && sortOrder == pb.RangeRequest_NONE {
+		// Since current mvcc.Range implementation returns results
+		// sorted by keys in lexiographically ascending order,
+		// sort ASCEND by default only when target is not 'KEY'
+		sortOrder = pb.RangeRequest_ASCEND
+	}
+	if sortOrder != pb.RangeRequest_NONE {
+		var sorter sort.Interface
+		switch {
+		case r.SortTarget == pb.RangeRequest_KEY:
+			sorter = &kvSortByKey{&kvSort{rr.KVs}}
+		case r.SortTarget == pb.RangeRequest_VERSION:
+			sorter = &kvSortByVersion{&kvSort{rr.KVs}}
+		case r.SortTarget == pb.RangeRequest_CREATE:
+			sorter = &kvSortByCreate{&kvSort{rr.KVs}}
+		case r.SortTarget == pb.RangeRequest_MOD:
+			sorter = &kvSortByMod{&kvSort{rr.KVs}}
+		case r.SortTarget == pb.RangeRequest_VALUE:
+			sorter = &kvSortByValue{&kvSort{rr.KVs}}
+		}
+		switch {
+		case sortOrder == pb.RangeRequest_ASCEND:
+			sort.Sort(sorter)
+		case sortOrder == pb.RangeRequest_DESCEND:
+			sort.Sort(sort.Reverse(sorter))
+		}
+	}
+
+	if r.Limit > 0 && len(rr.KVs) > int(r.Limit) {
+		rr.KVs = rr.KVs[:r.Limit]
+		resp.More = true
+	}
+	trace.Step("filter and sort the key-value pairs")
+	resp.Header.Revision = rr.Rev
+	resp.Count = int64(rr.Count)
+	resp.Kvs = make([]*mvccpb.KeyValue, len(rr.KVs))
+	for i := range rr.KVs {
+		if r.KeysOnly {
+			rr.KVs[i].Value = ""
+		}
+		resp.Kvs[i] = &rr.KVs[i]
+	}
+	trace.Step("assemble the response")
+	return resp, nil
+}
+
+func mkGteRange(rangeEnd []byte) []byte {
+	if len(rangeEnd) == 1 && rangeEnd[0] == 0 {
+		return []byte{}
+	}
+	return rangeEnd
 }

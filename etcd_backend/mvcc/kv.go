@@ -18,49 +18,37 @@ import (
 	"context"
 
 	"github.com/ls-2018/etcd_cn/etcd_backend/lease"
-	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc/backend"
-	"github.com/ls-2018/etcd_cn/pkg/traceutil"
-	"go.etcd.io/etcd/api/v3/mvccpb"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/mvccpb"
 )
 
+// RangeOptions 请求参数
 type RangeOptions struct {
-	Limit int64
-	Rev   int64
-	Count bool
+	Limit int64 // 用户限制的数据量
+	Rev   int64 // 指定的修订版本
+	Count bool  // 是否统计修订版本数
 }
 
+// RangeResult 响应
 type RangeResult struct {
 	KVs   []mvccpb.KeyValue
-	Rev   int64
-	Count int
+	Rev   int64 // 最新的修订版本
+	Count int   // 统计当前的   修订版本数
 }
 
 type ReadView interface {
-	// FirstRev returns the first KV revision at the time of opening the txn.
-	// After a compaction, the first revision increases to the compaction
-	// revision.
-	FirstRev() int64
-
-	// Rev returns the revision of the KV at the time of opening the txn.
-	Rev() int64
-
-	// Range gets the keys in the range at rangeRev.
-	// The returned rev is the current revision of the KV when the operation is executed.
-	// If rangeRev <=0, range gets the keys at currentRev.
-	// If `end` is nil, the request returns the key.
-	// If `end` is not nil and not empty, it gets the keys in range [key, range_end).
-	// If `end` is not nil and empty, it gets the keys greater than or equal to key.
-	// Limit limits the number of keys returned.
-	// If the required rev is compacted, ErrCompacted will be returned.
+	// FirstRev
+	//     before    			   cur
+	//             compact
+	//           rev       rev   		rev
+	FirstRev() int64 // 在打开txn时返回第一个KV修订。在压实之后，第一个修订增加到压实修订。
+	Rev() int64      // 在打开txn时返回KV的修订。
 	Range(ctx context.Context, key, end []byte, ro RangeOptions) (r *RangeResult, err error)
 }
 
-// TxnRead represents a read-only transaction with operations that will not
-// block other read transactions.
+// TxnRead 只读事务,不会锁住其他只读事务
 type TxnRead interface {
 	ReadView
-	// End marks the transaction is complete and ready to commit.
-	End()
+	End() // 标记事务已完成 并且准备提交
 }
 
 type WriteView interface {
@@ -81,16 +69,17 @@ type WriteView interface {
 	Put(key, value []byte, lease lease.LeaseID) (rev int64)
 }
 
-// TxnWrite represents a transaction that can modify the store.
 type TxnWrite interface {
 	TxnRead
 	WriteView
-	// Changes gets the changes made since opening the write txn.
+	// Changes 获取打开write txn后所做的更改。
 	Changes() []mvccpb.KeyValue
 }
 
-// txnReadWrite coerces a read txn to a write, panicking on any write operation.
-type txnReadWrite struct{ TxnRead }
+// txnReadWrite 读事务-->写事务，对任何写操作都感到恐慌。
+type txnReadWrite struct {
+	TxnRead
+}
 
 func (trw *txnReadWrite) DeleteRange(key, end []byte) (n, rev int64) { panic("unexpected DeleteRange") }
 func (trw *txnReadWrite) Put(key, value []byte, lease lease.LeaseID) (rev int64) {
@@ -103,48 +92,6 @@ func NewReadOnlyTxnWrite(txn TxnRead) TxnWrite { return &txnReadWrite{txn} }
 type ReadTxMode uint32
 
 const (
-	// Use ConcurrentReadTx and the txReadBuffer is copied
-	ConcurrentReadTxMode = ReadTxMode(1)
-	// Use backend ReadTx and txReadBuffer is not copied
-	SharedBufReadTxMode = ReadTxMode(2)
+	ConcurrentReadTxMode = ReadTxMode(1) // 缓冲区拷贝，提高性能
+	SharedBufReadTxMode  = ReadTxMode(2)
 )
-
-type KV interface {
-	ReadView
-	WriteView
-
-	// Read creates a read transaction.
-	Read(mode ReadTxMode, trace *traceutil.Trace) TxnRead
-
-	// Write creates a write transaction.
-	Write(trace *traceutil.Trace) TxnWrite
-
-	// Hash computes the hash of the KV's backend.
-	Hash() (hash uint32, revision int64, err error)
-
-	// HashByRev computes the hash of all MVCC revisions up to a given revision.
-	HashByRev(rev int64) (hash uint32, revision int64, compactRev int64, err error)
-
-	// Compact frees all superseded keys with revisions less than rev.
-	Compact(trace *traceutil.Trace, rev int64) (<-chan struct{}, error)
-
-	// Commit commits outstanding txns into the underlying backend.
-	Commit()
-
-	// Restore restores the KV store from a backend.
-	Restore(b backend.Backend) error
-	Close() error
-}
-
-// WatchableKV is a KV that can be watched.
-type WatchableKV interface {
-	KV
-	Watchable
-}
-
-// Watchable is the interface that wraps the NewWatchStream function.
-type Watchable interface {
-	// NewWatchStream returns a WatchStream that can be used to
-	// watch events happened or happening on the KV.
-	NewWatchStream() WatchStream
-}

@@ -207,6 +207,7 @@ func (s *EtcdServer) mayPromoteMember(id types.ID) error {
 	return nil
 }
 
+// 线性一致性读，保证强一致性
 func (s *EtcdServer) linearizableReadLoop() {
 	for {
 		requestId := s.reqIDGen.Next()
@@ -215,7 +216,6 @@ func (s *EtcdServer) linearizableReadLoop() {
 		case <-leaderChangedNotifier:
 			continue
 		case <-s.readwaitc:
-			fmt.Println("linearizableReadLoop not ready")
 		case <-s.stopping:
 			return
 		}
@@ -238,7 +238,7 @@ func (s *EtcdServer) linearizableReadLoop() {
 			continue
 		}
 
-		trace.Step("read index received")
+		trace.Step("收到要读的索引")
 
 		trace.AddField(traceutil.Field{Key: "readStateIndex", Value: confirmedIndex})
 

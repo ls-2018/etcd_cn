@@ -28,9 +28,9 @@ import (
 
 	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc/backend"
 	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc/buckets"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/authpb"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/v3rpc/rpctypes"
 	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
-	"go.etcd.io/etcd/api/v3/authpb"
-	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
 
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
@@ -102,64 +102,28 @@ type AuthStore interface {
 
 	// IsAuthEnabled returns true if the authentication feature is enabled.
 	IsAuthEnabled() bool
-
-	// Authenticate does authentication based on given user name and password
 	Authenticate(ctx context.Context, username, password string) (*pb.AuthenticateResponse, error)
-
 	// Recover recovers the state of auth store from the given backend
 	Recover(b backend.Backend)
-
-	// UserAdd adds a new user
 	UserAdd(r *pb.AuthUserAddRequest) (*pb.AuthUserAddResponse, error)
-
-	// UserDelete deletes a user
 	UserDelete(r *pb.AuthUserDeleteRequest) (*pb.AuthUserDeleteResponse, error)
-
-	// UserChangePassword changes a password of a user
 	UserChangePassword(r *pb.AuthUserChangePasswordRequest) (*pb.AuthUserChangePasswordResponse, error)
-
-	// UserGrantRole grants a role to the user
 	UserGrantRole(r *pb.AuthUserGrantRoleRequest) (*pb.AuthUserGrantRoleResponse, error)
-
-	// UserGet gets the detailed information of a users
 	UserGet(r *pb.AuthUserGetRequest) (*pb.AuthUserGetResponse, error)
-
-	// UserRevokeRole revokes a role of a user
 	UserRevokeRole(r *pb.AuthUserRevokeRoleRequest) (*pb.AuthUserRevokeRoleResponse, error)
 
-	// RoleAdd adds a new role
 	RoleAdd(r *pb.AuthRoleAddRequest) (*pb.AuthRoleAddResponse, error)
-
-	// RoleGrantPermission grants a permission to a role
 	RoleGrantPermission(r *pb.AuthRoleGrantPermissionRequest) (*pb.AuthRoleGrantPermissionResponse, error)
-
-	// RoleGet gets the detailed information of a role
 	RoleGet(r *pb.AuthRoleGetRequest) (*pb.AuthRoleGetResponse, error)
 
-	// RoleRevokePermission gets the detailed information of a role
 	RoleRevokePermission(r *pb.AuthRoleRevokePermissionRequest) (*pb.AuthRoleRevokePermissionResponse, error)
-
-	// RoleDelete gets the detailed information of a role
 	RoleDelete(r *pb.AuthRoleDeleteRequest) (*pb.AuthRoleDeleteResponse, error)
-
-	// UserList gets a list of all users
 	UserList(r *pb.AuthUserListRequest) (*pb.AuthUserListResponse, error)
-
-	// RoleList gets a list of all roles
 	RoleList(r *pb.AuthRoleListRequest) (*pb.AuthRoleListResponse, error)
-
-	// IsPutPermitted checks put permission of the user
 	IsPutPermitted(authInfo *AuthInfo, key []byte) error
-
-	// IsRangePermitted checks range permission of the user
-	IsRangePermitted(authInfo *AuthInfo, key, rangeEnd []byte) error
-
-	// IsDeleteRangePermitted checks delete-range permission of the user
+	IsRangePermitted(authInfo *AuthInfo, key, rangeEnd []byte) error // 检查用户的范围权限
 	IsDeleteRangePermitted(authInfo *AuthInfo, key, rangeEnd []byte) error
-
-	// IsAdminPermitted checks admin permission of the user
 	IsAdminPermitted(authInfo *AuthInfo) error
-
 	// GenTokenPrefix produces a random string in a case of simple token
 	// in a case of JWT, it produces an empty string
 	GenTokenPrefix() (string, error)
@@ -193,7 +157,7 @@ type authStore struct {
 
 	lg        *zap.Logger
 	be        backend.Backend
-	enabled   bool
+	enabled   bool // 是否开启认证
 	enabledMu sync.RWMutex
 
 	rangePermCache map[string]*unifiedRangePermissions // username -> unifiedRangePermissions
@@ -331,7 +295,7 @@ func (as *authStore) CheckPassword(username, password string) (uint64, error) {
 		return 0, err
 	}
 
-	if bcrypt.CompareHashAndPassword(user.Password, []byte(password)) != nil {
+	if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)) != nil {
 		as.lg.Info("invalid password", zap.String("user-name", username))
 		return 0, ErrAuthFailed
 	}
@@ -399,8 +363,8 @@ func (as *authStore) UserAdd(r *pb.AuthUserAddRequest) (*pb.AuthUserAddResponse,
 	}
 
 	newUser := &authpb.User{
-		Name:     []byte(r.Name),
-		Password: password,
+		Name:     r.Name,
+		Password: string(password),
 		Options:  options,
 	}
 
@@ -463,9 +427,9 @@ func (as *authStore) UserChangePassword(r *pb.AuthUserChangePasswordRequest) (*p
 	}
 
 	updatedUser := &authpb.User{
-		Name:     []byte(r.Name),
+		Name:     r.Name,
 		Roles:    user.Roles,
-		Password: password,
+		Password: string(password),
 		Options:  user.Options,
 	}
 
@@ -739,7 +703,7 @@ func (as *authStore) RoleAdd(r *pb.AuthRoleAddRequest) (*pb.AuthRoleAddResponse,
 	}
 
 	newRole := &authpb.Role{
-		Name: []byte(r.Name),
+		Name: r.Name,
 	}
 
 	putRole(as.lg, tx, newRole)
@@ -818,7 +782,7 @@ func (as *authStore) RoleGrantPermission(r *pb.AuthRoleGrantPermissionRequest) (
 }
 
 func (as *authStore) isOpPermitted(userName string, revision uint64, key, rangeEnd []byte, permTyp authpb.Permission_Type) error {
-	// TODO(mitake): this function would be costly so we need a caching mechanism
+	// 这个函数的开销很大，所以我们需要一个缓存机制
 	if !as.IsAuthEnabled() {
 		return nil
 	}
@@ -864,7 +828,7 @@ func (as *authStore) IsPutPermitted(authInfo *AuthInfo, key []byte) error {
 }
 
 func (as *authStore) IsRangePermitted(authInfo *AuthInfo, key, rangeEnd []byte) error {
-	return as.isOpPermitted(authInfo.Username, authInfo.Revision, key, rangeEnd, authpb.READ)
+	return as.isOpPermitted(authInfo.Username, authInfo.Revision, key, rangeEnd, authpb.READ) // '' ,0 ,health,nil
 }
 
 func (as *authStore) IsDeleteRangePermitted(authInfo *AuthInfo, key, rangeEnd []byte) error {
@@ -936,7 +900,7 @@ func putUser(lg *zap.Logger, tx backend.BatchTx, user *authpb.User) {
 	if err != nil {
 		lg.Panic("failed to unmarshal 'authpb.User'", zap.Error(err))
 	}
-	tx.UnsafePut(buckets.AuthUsers, user.Name, b)
+	tx.UnsafePut(buckets.AuthUsers, []byte(user.Name), b)
 }
 
 func delUser(tx backend.BatchTx, username string) {
@@ -985,7 +949,7 @@ func putRole(lg *zap.Logger, tx backend.BatchTx, role *authpb.Role) {
 		)
 	}
 
-	tx.UnsafePut(buckets.AuthRoles, role.Name, b)
+	tx.UnsafePut(buckets.AuthRoles, []byte(role.Name), b)
 }
 
 func delRole(tx backend.BatchTx, rolename string) {
@@ -1272,11 +1236,7 @@ func (as *authStore) HasRole(user, role string) bool {
 	tx.Unlock()
 
 	if u == nil {
-		as.lg.Warn(
-			"'has-role' requested for non-existing user",
-			zap.String("user-name", user),
-			zap.String("role-name", role),
-		)
+		as.lg.Warn("'has-role'请求不存在的用户", zap.String("user-name", user), zap.String("role-name", role))
 		return false
 	}
 

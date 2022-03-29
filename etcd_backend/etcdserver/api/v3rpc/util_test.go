@@ -20,7 +20,7 @@ import (
 	"testing"
 
 	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc"
-	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/v3rpc/rpctypes"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

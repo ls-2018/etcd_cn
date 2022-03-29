@@ -55,6 +55,7 @@ import (
 	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc"
 	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc/backend"
 	"github.com/ls-2018/etcd_cn/etcd_backend/wal"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/version"
 	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
 	"github.com/ls-2018/etcd_cn/pkg/idutil"
 	"github.com/ls-2018/etcd_cn/pkg/pbutil"
@@ -63,7 +64,6 @@ import (
 	"github.com/ls-2018/etcd_cn/pkg/traceutil"
 	"github.com/ls-2018/etcd_cn/pkg/wait"
 	"github.com/ls-2018/etcd_cn/raft/raftpb"
-	"go.etcd.io/etcd/api/v3/version"
 )
 
 const (
@@ -176,10 +176,10 @@ type EtcdServer struct {
 	Cfg               config.ServerConfig      // 配置项
 	lgMu              *sync.RWMutex
 	lg                *zap.Logger
-	w                 wait.Wait    // 为了同步调用情况下让调用者阻塞等待调用结果的.
-	readMu            sync.RWMutex // 下面3个结果都是为了实现linearizable 读使用的
-	readwaitc         chan struct{}
-	readNotifier      *notifier
+	w                 wait.Wait               // 为了同步调用情况下让调用者阻塞等待调用结果的.
+	readMu            sync.RWMutex            // 下面3个结果都是为了实现linearizable 读使用的
+	readwaitc         chan struct{}           // 通过向readwaitC发送一个空结构体来通知etcd服务器它正在等待读取
+	readNotifier      *notifier               // 在没有错误时通知read goroutine 可以处理请求
 	stop              chan struct{}           // 停止通道
 	stopping          chan struct{}           // 停止时关闭这个通道
 	done              chan struct{}           // etcd的start函数中的循环退出,会关闭这个通道
@@ -199,7 +199,7 @@ type EtcdServer struct {
 	kv                mvcc.WatchableKV        // v3用的kv存储
 	lessor            lease.Lessor            // v3用,作用是实现过期时间
 	backendLock       sync.Mutex              // 守护后端存储的锁,改变后端存储和获取后端存储是使用
-	backend           backend.Backend         // 后端存储
+	backend           backend.Backend         // 后端存储  bolt.db
 	beHooks           *backendHooks           // 存储钩子
 	authStore         auth.AuthStore          // 存储鉴权数据
 	alarmStore        *v3alarm.AlarmStore     // 存储告警数据
@@ -550,13 +550,13 @@ func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 		time.Duration(cfg.TokenTTL)*time.Second,
 	)
 	if err != nil {
-		cfg.Logger.Warn("failed to create token provider", zap.Error(err))
+		cfg.Logger.Warn("创建令牌提供程序失败", zap.Error(err))
 		return nil, err
 	}
 	srv.kv = mvcc.New(srv.Logger(), srv.backend, srv.lessor, mvcc.StoreConfig{CompactionBatchLimit: cfg.CompactionBatchLimit})
 
 	kvindex := temp.CI.ConsistentIndex()
-	srv.lg.Debug("restore consistentIndex", zap.Uint64("index", kvindex))
+	srv.lg.Debug("恢复consistentIndex", zap.Uint64("index", kvindex))
 	if temp.BeExist {
 		// TODO: remove kvindex != 0 checking when we do not expect users to upgrade
 		// etcd from pre-3.0 release.
@@ -1874,7 +1874,6 @@ func (s *EtcdServer) updateClusterVersionV2(ver string) {
 	fmt.Println("start", time.Now())
 	_, err := s.Do(ctx, req)
 	fmt.Println("end", time.Now())
-
 	cancel()
 
 	switch err {

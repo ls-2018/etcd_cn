@@ -67,7 +67,7 @@ func (h *httpKVAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		cc := raftpb.ConfChangeV1{
 			Type:    raftpb.ConfChangeAddNode,
 			NodeID:  nodeId,
-			Context: url,
+			Context: string(url),
 		}
 		h.confChangeC <- cc // 新增节点
 

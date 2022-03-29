@@ -19,8 +19,8 @@ import (
 
 	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 
+	"github.com/ls-2018/etcd_cn/offical/api/v3/v3rpc/rpctypes"
 	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
-	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
 )
 
 type kvPrefix struct {
@@ -189,10 +189,10 @@ func (kv *kvPrefix) prefixCmps(cs []clientv3.Cmp) []clientv3.Cmp {
 	newCmps := make([]clientv3.Cmp, len(cs))
 	for i := range cs {
 		newCmps[i] = cs[i]
-		pfxKey, endKey := kv.prefixInterval(cs[i].KeyBytes(), cs[i].RangeEnd)
+		pfxKey, endKey := kv.prefixInterval(cs[i].KeyBytes(), []byte(cs[i].RangeEnd))
 		newCmps[i].WithKeyBytes(pfxKey)
 		if len(cs[i].RangeEnd) != 0 {
-			newCmps[i].RangeEnd = endKey
+			newCmps[i].RangeEnd = string(endKey)
 		}
 	}
 	return newCmps

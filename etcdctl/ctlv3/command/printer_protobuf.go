@@ -19,9 +19,9 @@ import (
 	"os"
 
 	v3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
+	mvccpb "github.com/ls-2018/etcd_cn/offical/api/v3/mvccpb"
 	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
 	"github.com/ls-2018/etcd_cn/pkg/cobrautl"
-	mvccpb "go.etcd.io/etcd/api/v3/mvccpb"
 )
 
 type pbPrinter struct{ printer }

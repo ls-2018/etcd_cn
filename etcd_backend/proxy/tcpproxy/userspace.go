@@ -95,7 +95,7 @@ func (tp *TCPProxy) Run() error {
 		if err != nil {
 			return err
 		}
-		conn.PrintConn("TCPProxy",in)
+		conn.PrintConn("TCPProxy", in)
 		go tp.serve(in)
 	}
 }

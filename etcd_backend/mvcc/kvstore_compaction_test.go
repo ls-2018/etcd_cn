@@ -75,7 +75,7 @@ func TestScheduleCompaction(t *testing.T) {
 		ibytes := newRevBytes()
 		for _, rev := range revs {
 			revToBytes(rev, ibytes)
-			tx.UnsafePut(buckets.Key, ibytes, []byte("bar"))
+			tx.UnsafePut(buckets.Key, string(ibytes), "bar")
 		}
 		tx.Unlock()
 
@@ -84,12 +84,12 @@ func TestScheduleCompaction(t *testing.T) {
 		tx.Lock()
 		for _, rev := range tt.wrevs {
 			revToBytes(rev, ibytes)
-			keys, _ := tx.UnsafeRange(buckets.Key, ibytes, nil, 0)
+			keys, _ := tx.UnsafeRange(buckets.Key, string(ibytes), "", 0)
 			if len(keys) != 1 {
 				t.Errorf("#%d: range on %v = %d, want 1", i, rev, len(keys))
 			}
 		}
-		_, vals := tx.UnsafeRange(buckets.Meta, finishedCompactKeyName, nil, 0)
+		_, vals := tx.UnsafeRange(buckets.Meta, finishedCompactKeyName, "", 0)
 		revToBytes(revision{main: tt.rev}, ibytes)
 		if w := [][]byte{ibytes}; !reflect.DeepEqual(vals, w) {
 			t.Errorf("#%d: vals on %v = %+v, want %+v", i, finishedCompactKeyName, vals, w)
@@ -104,11 +104,10 @@ func TestCompactAllAndRestore(t *testing.T) {
 	b, tmpPath := betesting.NewDefaultTmpBackend(t)
 	s0 := NewStore(zap.NewExample(), b, &lease.FakeLessor{}, StoreConfig{})
 	defer os.Remove(tmpPath)
-
-	s0.Put([]byte("foo"), []byte("bar"), lease.NoLease)
-	s0.Put([]byte("foo"), []byte("bar1"), lease.NoLease)
-	s0.Put([]byte("foo"), []byte("bar2"), lease.NoLease)
-	s0.DeleteRange([]byte("foo"), nil)
+	s0.Put("foo", "bar", lease.NoLease)
+	s0.Put("foo", "bar1", lease.NoLease)
+	s0.Put("foo", "bar2", lease.NoLease)
+	s0.DeleteRange("foo", "")
 
 	rev := s0.Rev()
 	// compact all keys
@@ -132,7 +131,7 @@ func TestCompactAllAndRestore(t *testing.T) {
 	if s1.Rev() != rev {
 		t.Errorf("rev = %v, want %v", s1.Rev(), rev)
 	}
-	_, err = s1.Range(context.TODO(), []byte("foo"), nil, RangeOptions{})
+	_, err = s1.Range(context.TODO(), "foo", "", RangeOptions{})
 	if err != nil {
 		t.Errorf("unexpect range error %v", err)
 	}

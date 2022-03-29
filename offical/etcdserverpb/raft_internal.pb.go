@@ -7,7 +7,7 @@ import (
 
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/golang/protobuf/proto"
-	membershippb "go.etcd.io/etcd/api/v3/membershippb"
+	membershippb "github.com/ls-2018/etcd_cn/offical/api/v3/membershippb"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.

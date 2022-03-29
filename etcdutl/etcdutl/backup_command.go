@@ -215,7 +215,7 @@ func translateWAL(lg *zap.Logger, srcWAL string, walsnap walpb.Snapshot, v3 bool
 		// TERM changes (so there are superflous entries from previous term).
 
 		if ents[i].Type == raftpb.EntryConfChange {
-			lg.Info("ignoring EntryConfChange raft entry")
+			lg.Info("忽略 EntryConfChange 日志项")
 			raftEntryToNoOp(&ents[i])
 			continue
 		}
@@ -230,9 +230,7 @@ func translateWAL(lg *zap.Logger, srcWAL string, walsnap walpb.Snapshot, v3 bool
 		}
 
 		if v2Req != nil && v2Req.Method == "PUT" && memberAttrRE.MatchString(v2Req.Path) {
-			lg.Info("ignoring member attribute update on",
-				zap.Stringer("entry", &ents[i]),
-				zap.String("v2Req.Path", v2Req.Path))
+			lg.Info("忽略成员更新", zap.Stringer("entry", &ents[i]), zap.String("v2Req.Path", v2Req.Path))
 			raftEntryToNoOp(&ents[i])
 			continue
 		}

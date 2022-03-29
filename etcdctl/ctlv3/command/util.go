@@ -27,8 +27,8 @@ import (
 	"time"
 
 	v3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
+	pb "github.com/ls-2018/etcd_cn/offical/api/v3/mvccpb"
 	"github.com/ls-2018/etcd_cn/pkg/cobrautl"
-	pb "go.etcd.io/etcd/api/v3/mvccpb"
 
 	"github.com/spf13/cobra"
 )
@@ -36,13 +36,13 @@ import (
 func printKV(isHex bool, valueOnly bool, kv *pb.KeyValue) {
 	k, v := string(kv.Key), string(kv.Value)
 	if isHex {
-		k = addHexPrefix(hex.EncodeToString(kv.Key))
-		v = addHexPrefix(hex.EncodeToString(kv.Value))
+		k = addHexPrefix(hex.EncodeToString([]byte(kv.Key)))
+		v = addHexPrefix(hex.EncodeToString([]byte(kv.Value)))
 	}
 	if !valueOnly {
-		fmt.Println(k)
+		fmt.Println("printKV--->", k)
 	}
-	fmt.Println(v)
+	fmt.Println("printKV--->", v)
 }
 
 func addHexPrefix(s string) string {

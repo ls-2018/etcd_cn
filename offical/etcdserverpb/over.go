@@ -5,7 +5,7 @@ import (
 	"errors"
 	"strings"
 
-	"go.etcd.io/etcd/api/v3/membershippb"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/membershippb"
 )
 
 func (m *Metadata) Marshal() (dAtA []byte, err error) {
@@ -65,7 +65,6 @@ type ASD struct {
 }
 
 func (m *InternalRaftRequest) Marshal() (dAtA []byte, err error) {
-
 	_ = m.Unmarshal
 	a := ASD{
 		Put:                      nil,
@@ -125,8 +124,8 @@ func (m *InternalRaftRequest) Unmarshal(dAtA []byte) error {
 	err := json.Unmarshal(dAtA, &a)
 	if a.Put != nil {
 		m.Put = &PutRequest{
-			Key:         []byte(a.Put.Key),
-			Value:       []byte(a.Put.Value),
+			Key:         a.Put.Key,
+			Value:       a.Put.Value,
 			Lease:       a.Put.Lease,
 			PrevKv:      a.Put.PrevKv,
 			IgnoreValue: a.Put.IgnoreValue,

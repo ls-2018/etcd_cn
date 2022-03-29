@@ -17,7 +17,7 @@ package grpcproxy
 import (
 	"context"
 
-	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/v3rpc/rpctypes"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"

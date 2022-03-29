@@ -27,7 +27,7 @@ import (
 // IsSafeRangeBucket是一个黑科技,用来避免无意中读取重复的键.
 // 对一个桶的覆盖应该只在limit=1的情况下获取,但IsSafeRangeBucket是已知的,永远不会覆盖任何键,所以范围是安全的.
 
-// 负责读请求
+// ReadTx 负责读请求
 type ReadTx interface {
 	Lock()
 	Unlock()
@@ -42,7 +42,7 @@ type baseReadTx struct {
 	// 写事务执行End时候需要获取这个写锁然后把写事务的更新写到 baseReadTx 的buffer里面；
 	// 创建 concurrentReadTx 时候需要获取读锁因为需要拷贝buffer
 	mu      sync.RWMutex  // 保护 txReadBuffer 的访问
-	buf     txReadBuffer  // 用于加速读效率的缓存
+	buf     txReadBuffer  // 用于加速读效率的缓存  blot.db的记录
 	txMu    *sync.RWMutex // 保护下面的tx和buckets
 	tx      *bolt.Tx
 	buckets map[BucketID]*bolt.Bucket
@@ -82,7 +82,7 @@ func (baseReadTx *baseReadTx) UnsafeRange(bucketType Bucket, key, endKey []byte,
 		limit = math.MaxInt64
 	}
 	if limit > 1 && !bucketType.IsSafeRangeBucket() {
-		panic("do not use unsafeRange on non-keys bucket")
+		panic("不要在非keys桶上使用unsafeRange")
 	}
 	// 首先从缓存中查询键值对
 	keys, vals := baseReadTx.buf.Range(bucketType, key, endKey, limit)

@@ -24,7 +24,7 @@ import (
 
 	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 
-	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/v3rpc/rpctypes"
 	"go.uber.org/zap"
 )
 

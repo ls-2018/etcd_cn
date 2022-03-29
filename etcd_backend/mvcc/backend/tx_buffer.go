@@ -21,7 +21,7 @@ import (
 
 const bucketBufferInitialSize = 512
 
-// txBuffer handles functionality shared between txWriteBuffer and txReadBuffer.
+// txBuffer 处理txWriteBuffer和txReadBuffer之间共享的功能。
 type txBuffer struct {
 	buckets map[BucketID]*bucketBuffer
 }
@@ -94,11 +94,9 @@ func (txw *txWriteBuffer) writeback(txr *txReadBuffer) {
 	txr.bufVersion++
 }
 
-// txReadBuffer accesses buffered updates.
 type txReadBuffer struct {
 	txBuffer
-	// bufVersion is used to check if the buffer is modified recently
-	bufVersion uint64
+	bufVersion uint64 // 用于检查缓存最新是否更新了
 }
 
 func (txr *txReadBuffer) Range(bucket Bucket, key, endKey []byte, limit int64) ([][]byte, [][]byte) {
@@ -115,30 +113,15 @@ func (txr *txReadBuffer) ForEach(bucket Bucket, visitor func(k, v []byte) error)
 	return nil
 }
 
-// unsafeCopy returns a copy of txReadBuffer, caller should acquire backend.readTx.RLock()
-func (txr *txReadBuffer) unsafeCopy() txReadBuffer {
-	txrCopy := txReadBuffer{
-		txBuffer: txBuffer{
-			buckets: make(map[BucketID]*bucketBuffer, len(txr.txBuffer.buckets)),
-		},
-		bufVersion: 0,
-	}
-	for bucketName, bucket := range txr.txBuffer.buckets {
-		txrCopy.txBuffer.buckets[bucketName] = bucket.Copy()
-	}
-	return txrCopy
-}
-
 type kv struct {
-	key []byte
-	val []byte
+	key string
+	val string
 }
 
-// bucketBuffer buffers key-value pairs that are pending commit.
+// bucketBuffer 缓存了等待提交的k-v键值对
 type bucketBuffer struct {
-	buf []kv
-	// used tracks number of elements in use so buf can be reused without reallocation.
-	used int
+	buf  []kv
+	used int // 跟踪使用中的元素数量，这样buf可以重用而不需要重新分配。
 }
 
 func newBucketBuffer() *bucketBuffer {
@@ -146,34 +129,34 @@ func newBucketBuffer() *bucketBuffer {
 }
 
 func (bb *bucketBuffer) Range(key, endKey []byte, limit int64) (keys [][]byte, vals [][]byte) {
-	f := func(i int) bool { return bytes.Compare(bb.buf[i].key, key) >= 0 }
+	f := func(i int) bool { return bytes.Compare([]byte(bb.buf[i].key), key) >= 0 }
 	idx := sort.Search(bb.used, f)
 	if idx < 0 {
 		return nil, nil
 	}
 	if len(endKey) == 0 {
-		if bytes.Equal(key, bb.buf[idx].key) {
-			keys = append(keys, bb.buf[idx].key)
-			vals = append(vals, bb.buf[idx].val)
+		if bytes.Equal(key, []byte(bb.buf[idx].key)) {
+			keys = append(keys, []byte(bb.buf[idx].key))
+			vals = append(vals, []byte(bb.buf[idx].val))
 		}
 		return keys, vals
 	}
-	if bytes.Compare(endKey, bb.buf[idx].key) <= 0 {
+	if bytes.Compare(endKey, []byte(bb.buf[idx].key)) <= 0 {
 		return nil, nil
 	}
 	for i := idx; i < bb.used && int64(len(keys)) < limit; i++ {
-		if bytes.Compare(endKey, bb.buf[i].key) <= 0 {
+		if bytes.Compare(endKey, []byte(bb.buf[i].key)) <= 0 {
 			break
 		}
-		keys = append(keys, bb.buf[i].key)
-		vals = append(vals, bb.buf[i].val)
+		keys = append(keys, []byte(bb.buf[i].key))
+		vals = append(vals, []byte(bb.buf[i].val))
 	}
 	return keys, vals
 }
 
 func (bb *bucketBuffer) ForEach(visitor func(k, v []byte) error) error {
 	for i := 0; i < bb.used; i++ {
-		if err := visitor(bb.buf[i].key, bb.buf[i].val); err != nil {
+		if err := visitor([]byte(bb.buf[i].key), []byte(bb.buf[i].val)); err != nil {
 			return err
 		}
 	}
@@ -181,7 +164,7 @@ func (bb *bucketBuffer) ForEach(visitor func(k, v []byte) error) error {
 }
 
 func (bb *bucketBuffer) add(k, v []byte) {
-	bb.buf[bb.used].key, bb.buf[bb.used].val = k, v
+	bb.buf[bb.used].key, bb.buf[bb.used].val = string(k), string(v)
 	bb.used++
 	if bb.used == len(bb.buf) {
 		buf := make([]kv, (3*len(bb.buf))/2)
@@ -193,12 +176,12 @@ func (bb *bucketBuffer) add(k, v []byte) {
 // merge merges data from bbsrc into bb.
 func (bb *bucketBuffer) merge(bbsrc *bucketBuffer) {
 	for i := 0; i < bbsrc.used; i++ {
-		bb.add(bbsrc.buf[i].key, bbsrc.buf[i].val)
+		bb.add([]byte(bbsrc.buf[i].key), []byte(bbsrc.buf[i].val))
 	}
 	if bb.used == bbsrc.used {
 		return
 	}
-	if bytes.Compare(bb.buf[(bb.used-bbsrc.used)-1].key, bbsrc.buf[0].key) < 0 {
+	if bytes.Compare([]byte(bb.buf[(bb.used-bbsrc.used)-1].key), []byte(bbsrc.buf[0].key)) < 0 {
 		return
 	}
 
@@ -207,7 +190,7 @@ func (bb *bucketBuffer) merge(bbsrc *bucketBuffer) {
 	// remove duplicates, using only newest update
 	widx := 0
 	for ridx := 1; ridx < bb.used; ridx++ {
-		if !bytes.Equal(bb.buf[ridx].key, bb.buf[widx].key) {
+		if !bytes.Equal([]byte(bb.buf[ridx].key), []byte(bb.buf[widx].key)) {
 			widx++
 		}
 		bb.buf[widx] = bb.buf[ridx]
@@ -217,7 +200,7 @@ func (bb *bucketBuffer) merge(bbsrc *bucketBuffer) {
 
 func (bb *bucketBuffer) Len() int { return bb.used }
 func (bb *bucketBuffer) Less(i, j int) bool {
-	return bytes.Compare(bb.buf[i].key, bb.buf[j].key) < 0
+	return bytes.Compare([]byte(bb.buf[i].key), []byte(bb.buf[j].key)) < 0
 }
 func (bb *bucketBuffer) Swap(i, j int) { bb.buf[i], bb.buf[j] = bb.buf[j], bb.buf[i] }
 
@@ -228,4 +211,18 @@ func (bb *bucketBuffer) Copy() *bucketBuffer {
 	}
 	copy(bbCopy.buf, bb.buf)
 	return &bbCopy
+}
+
+// unsafeCopy 读缓冲区拷贝
+func (txr *txReadBuffer) unsafeCopy() txReadBuffer {
+	txrCopy := txReadBuffer{
+		txBuffer: txBuffer{
+			buckets: make(map[BucketID]*bucketBuffer, len(txr.txBuffer.buckets)),
+		},
+		bufVersion: 0,
+	}
+	for bucketName, bucket := range txr.txBuffer.buckets {
+		txrCopy.txBuffer.buckets[bucketName] = bucket.Copy()
+	}
+	return txrCopy
 }

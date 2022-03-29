@@ -18,7 +18,7 @@ import (
 	"context"
 
 	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
-	"go.etcd.io/etcd/api/v3/mvccpb"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/mvccpb"
 )
 
 // WaitEvents waits on a key until it observes the given events and returns the final one.

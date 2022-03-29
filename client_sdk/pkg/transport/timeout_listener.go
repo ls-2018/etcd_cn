@@ -39,7 +39,7 @@ func (rwln *rwTimeoutListener) Accept() (net.Conn, error) {
 	if err != nil {
 		return nil, err
 	}
-	conn.PrintConn("rwTimeoutListener",c)
+	conn.PrintConn("rwTimeoutListener", c)
 	return timeoutConn{
 		Conn:         c,
 		writeTimeout: rwln.writeTimeout,

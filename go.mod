@@ -4,6 +4,8 @@ go 1.16
 
 replace go.etcd.io/etcd/api/v3 v3.5.2 => github.com/etcd-io/etcd/api/v3 v3.5.2
 
+replace github.com/etcd-io/etcd/api/v3 v3.5.2 => ./offical/api/v3
+
 require (
 	github.com/akhenakh/hunspellgo v0.0.0-20160221122622-9db38fa26e19 // indirect
 	github.com/alexkohler/nakedret v1.0.0
@@ -46,7 +48,6 @@ require (
 	github.com/trustmaster/go-aspell v0.0.0-20200701131845-c2b1f55bec8f // indirect
 	github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2
 	go.etcd.io/bbolt v1.3.6
-	go.etcd.io/etcd/api/v3 v3.5.2
 	go.etcd.io/etcd/client/v3 v3.5.2
 	go.etcd.io/protodoc v0.0.0-20180829002748-484ab544e116
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.20.0

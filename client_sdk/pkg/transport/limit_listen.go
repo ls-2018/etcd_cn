@@ -48,7 +48,7 @@ func (l *limitListener) Accept() (net.Conn, error) {
 		l.release()
 		return nil, err
 	}
-	conn.PrintConn("limitListener",c)
+	conn.PrintConn("limitListener", c)
 	return &limitListenerConn{Conn: c, release: l.release}, nil
 }
 

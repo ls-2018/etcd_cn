@@ -20,39 +20,17 @@ import (
 	"github.com/ls-2018/etcd_cn/etcd_backend/lease"
 	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc/backend"
 	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc/buckets"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/mvccpb"
 	"github.com/ls-2018/etcd_cn/pkg/traceutil"
-	"go.etcd.io/etcd/api/v3/mvccpb"
 	"go.uber.org/zap"
 )
 
 type storeTxnRead struct {
-	s  *store
-	tx backend.ReadTx
-
+	s        *store
+	tx       backend.ReadTx
 	firstRev int64
-	rev      int64
-
-	trace *traceutil.Trace
-}
-
-func (s *store) Read(mode ReadTxMode, trace *traceutil.Trace) TxnRead {
-	s.mu.RLock()
-	s.revMu.RLock()
-	// For read-only workloads, we use shared buffer by copying transaction read buffer
-	// for higher concurrency with ongoing blocking writes.
-	// For write/write-read transactions, we use the shared buffer
-	// rather than duplicating transaction read buffer to avoid transaction overhead.
-	var tx backend.ReadTx
-	if mode == ConcurrentReadTxMode {
-		tx = s.b.ConcurrentReadTx()
-	} else {
-		tx = s.b.ReadTx()
-	}
-
-	tx.RLock() // RLock is no-op. concurrentReadTx does not need to be locked after it is created.
-	firstRev, rev := s.compactMainRev, s.currentRev
-	s.revMu.RUnlock()
-	return newMetricsTxnRead(&storeTxnRead{s, tx, firstRev, rev, trace})
+	rev      int64 // 总的修订版本
+	trace    *traceutil.Trace
 }
 
 func (tr *storeTxnRead) FirstRev() int64 { return tr.firstRev }
@@ -60,6 +38,59 @@ func (tr *storeTxnRead) Rev() int64      { return tr.rev }
 
 func (tr *storeTxnRead) Range(ctx context.Context, key, end []byte, ro RangeOptions) (r *RangeResult, err error) {
 	return tr.rangeKeys(ctx, key, end, tr.Rev(), ro)
+}
+
+func (tr *storeTxnRead) rangeKeys(ctx context.Context, key, end []byte, curRev int64, ro RangeOptions) (*RangeResult, error) {
+	rev := ro.Rev // 指定修订版本
+	if rev > curRev {
+		return &RangeResult{KVs: nil, Count: -1, Rev: curRev}, ErrFutureRev
+	}
+	if rev <= 0 {
+		rev = curRev
+	}
+	if rev < tr.s.compactMainRev {
+		return &RangeResult{KVs: nil, Count: -1, Rev: 0}, ErrCompacted
+	}
+	if ro.Count {
+		total := tr.s.kvindex.CountRevisions(key, end, rev)
+		tr.trace.Step("从内存索引树中统计修订数")
+		return &RangeResult{KVs: nil, Count: total, Rev: curRev}, nil
+	}
+	// 获取数据
+	revpairs, total := tr.s.kvindex.Revisions(key, end, rev, int(ro.Limit))
+	tr.trace.Step("从内存索引树中获取指定范围的keys")
+	if len(revpairs) == 0 {
+		return &RangeResult{KVs: nil, Count: total, Rev: curRev}, nil
+	}
+
+	limit := int(ro.Limit)
+	if limit <= 0 || limit > len(revpairs) {
+		limit = len(revpairs) // 实际收到的数据量
+	}
+
+	kvs := make([]mvccpb.KeyValue, limit)
+	revBytes := newRevBytes() // len 为17的数组
+	for i, revpair := range revpairs[:len(kvs)] {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+		}
+		revToBytes(revpair, revBytes)
+		// 根据修订版本获取数据
+		_, vs := tr.tx.UnsafeRange(buckets.Key, revBytes, nil, 0)
+		if len(vs) != 1 {
+			tr.s.lg.Fatal("Range找不到修订对", zap.Int64("revision-main", revpair.main), zap.Int64("revision-sub", revpair.sub))
+		}
+		if err := kvs[i].Unmarshal([]byte(vs[0])); err != nil {
+			tr.s.lg.Fatal(
+				"反序列失败 mvccpb.KeyValue",
+				zap.Error(err),
+			)
+		}
+	}
+	tr.trace.Step("从bolt.db 中range key")
+	return &RangeResult{KVs: kvs, Count: total, Rev: curRev}, nil
 }
 
 func (tr *storeTxnRead) End() {
@@ -73,19 +104,6 @@ type storeTxnWrite struct {
 	// beginRev is the revision where the txn begins; it will write to the next revision.
 	beginRev int64
 	changes  []mvccpb.KeyValue
-}
-
-func (s *store) Write(trace *traceutil.Trace) TxnWrite {
-	s.mu.RLock()
-	tx := s.b.BatchTx()
-	tx.Lock()
-	tw := &storeTxnWrite{
-		storeTxnRead: storeTxnRead{s, tx, 0, 0, trace},
-		tx:           tx,
-		beginRev:     s.currentRev,
-		changes:      make([]mvccpb.KeyValue, 0, 4),
-	}
-	return newMetricsTxnWrite(tw)
 }
 
 func (tw *storeTxnWrite) Rev() int64 { return tw.beginRev }
@@ -124,61 +142,6 @@ func (tw *storeTxnWrite) End() {
 	tw.s.mu.RUnlock()
 }
 
-func (tr *storeTxnRead) rangeKeys(ctx context.Context, key, end []byte, curRev int64, ro RangeOptions) (*RangeResult, error) {
-	rev := ro.Rev
-	if rev > curRev {
-		return &RangeResult{KVs: nil, Count: -1, Rev: curRev}, ErrFutureRev
-	}
-	if rev <= 0 {
-		rev = curRev
-	}
-	if rev < tr.s.compactMainRev {
-		return &RangeResult{KVs: nil, Count: -1, Rev: 0}, ErrCompacted
-	}
-	if ro.Count {
-		total := tr.s.kvindex.CountRevisions(key, end, rev)
-		tr.trace.Step("count revisions from in-memory index tree")
-		return &RangeResult{KVs: nil, Count: total, Rev: curRev}, nil
-	}
-	revpairs, total := tr.s.kvindex.Revisions(key, end, rev, int(ro.Limit))
-	tr.trace.Step("range keys from in-memory index tree")
-	if len(revpairs) == 0 {
-		return &RangeResult{KVs: nil, Count: total, Rev: curRev}, nil
-	}
-
-	limit := int(ro.Limit)
-	if limit <= 0 || limit > len(revpairs) {
-		limit = len(revpairs)
-	}
-
-	kvs := make([]mvccpb.KeyValue, limit)
-	revBytes := newRevBytes()
-	for i, revpair := range revpairs[:len(kvs)] {
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		default:
-		}
-		revToBytes(revpair, revBytes)
-		_, vs := tr.tx.UnsafeRange(buckets.Key, revBytes, nil, 0)
-		if len(vs) != 1 {
-			tr.s.lg.Fatal(
-				"range failed to find revision pair",
-				zap.Int64("revision-main", revpair.main),
-				zap.Int64("revision-sub", revpair.sub),
-			)
-		}
-		if err := kvs[i].Unmarshal(vs[0]); err != nil {
-			tr.s.lg.Fatal(
-				"failed to unmarshal mvccpb.KeyValue",
-				zap.Error(err),
-			)
-		}
-	}
-	tr.trace.Step("range keys from bolt db")
-	return &RangeResult{KVs: kvs, Count: total, Rev: curRev}, nil
-}
-
 func (tw *storeTxnWrite) put(key, value []byte, leaseID lease.LeaseID) {
 	rev := tw.beginRev + 1
 	c := rev
@@ -198,8 +161,8 @@ func (tw *storeTxnWrite) put(key, value []byte, leaseID lease.LeaseID) {
 
 	ver = ver + 1
 	kv := mvccpb.KeyValue{
-		Key:            key,
-		Value:          value,
+		Key:            string(key),
+		Value:          string(value),
 		CreateRevision: c,
 		ModRevision:    rev,
 		Version:        ver,
@@ -266,7 +229,7 @@ func (tw *storeTxnWrite) delete(key []byte) {
 
 	ibytes = appendMarkTombstone(tw.storeTxnRead.s.lg, ibytes)
 
-	kv := mvccpb.KeyValue{Key: key}
+	kv := mvccpb.KeyValue{Key: string(key)}
 
 	d, err := kv.Marshal()
 	if err != nil {

@@ -42,7 +42,7 @@ for dir in ${DIRS}; do
     run protoc --gofast_out=plugins=grpc:. -I=".:${GOGOPROTO_PATH}:${ETCD_ROOT_DIR}/..:${ETCD_ROOT_DIR}:${GRPC_GATEWAY_ROOT}/third_party/googleapis" \
       --plugin="${GOFAST_BIN}" ./*.proto
 
-    run sed -i.bak -E 's|"etcd/api/|"go.etcd.io/etcd/api/v3/|g' ./*.pb.go
+    run sed -i.bak -E 's|"etcd/api/|"github.com/ls-2018/etcd_cn/offical/api/v3/|g' ./*.pb.go
     run sed -i.bak -E 's|"raft/raftpb"|"github.com/ls-2018/etcd_cn/raft/raftpb"|g' ./*.pb.go
 
     rm -f ./*.bak
@@ -75,9 +75,9 @@ for pb in api/etcdserverpb/rpc etcd/etcdserver/api/v3lock/v3lockpb/v3lock etcd/e
   run sed -i -E "s#([ (])([a-zA-Z0-9_]*(Client|Server|Request)([^(]|$))#\\1${pkg}.\\2#g" "${gwfile}"
   run sed -i -E "s# (New[a-zA-Z0-9_]*Client\\()# ${pkg}.\\1#g" "${gwfile}"
   run sed -i -E "s|go.etcd.io/etcd|github.com/ls-2018|g" "${gwfile}"
-  run sed -i -E "s|github.com/ls-2018/etcd_cn/api|go.etcd.io/etcd/api/v3|g" "${gwfile}"
+  run sed -i -E "s|github.com/ls-2018/etcd_cn/api|github.com/ls-2018/etcd_cn/offical/api/v3|g" "${gwfile}"
   run sed -i -E "s|github.com/ls-2018/etcd_cn/server|github.com/ls-2018/etcd_cn/server/v3|g" "${gwfile}"
-  
+
   run go fmt "${gwfile}"
 
   gwdir="${pkgpath}/gw/"

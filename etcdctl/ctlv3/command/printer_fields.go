@@ -18,8 +18,8 @@ import (
 	"fmt"
 
 	v3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
+	spb "github.com/ls-2018/etcd_cn/offical/api/v3/mvccpb"
 	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
-	spb "go.etcd.io/etcd/api/v3/mvccpb"
 )
 
 type fieldsPrinter struct{ printer }

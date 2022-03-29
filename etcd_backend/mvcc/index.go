@@ -51,7 +51,7 @@ func newTreeIndex(lg *zap.Logger) index {
 }
 
 func (ti *treeIndex) Put(key []byte, rev revision) {
-	keyi := &keyIndex{key: key}
+	keyi := &keyIndex{key: string(key)}
 
 	ti.Lock()
 	defer ti.Unlock()
@@ -66,7 +66,7 @@ func (ti *treeIndex) Put(key []byte, rev revision) {
 }
 
 func (ti *treeIndex) Get(key []byte, atRev int64) (modified, created revision, ver int64, err error) {
-	keyi := &keyIndex{key: key}
+	keyi := &keyIndex{key: string(key)}
 	ti.RLock()
 	defer ti.RUnlock()
 	if keyi = ti.keyIndex(keyi); keyi == nil {
@@ -89,7 +89,7 @@ func (ti *treeIndex) keyIndex(keyi *keyIndex) *keyIndex {
 }
 
 func (ti *treeIndex) visit(key, end []byte, f func(ki *keyIndex) bool) {
-	keyi, endi := &keyIndex{key: key}, &keyIndex{key: end}
+	keyi, endi := &keyIndex{key: string(key)}, &keyIndex{key: string(end)}
 
 	ti.RLock()
 	defer ti.RUnlock()
@@ -154,7 +154,7 @@ func (ti *treeIndex) Range(key, end []byte, atRev int64) (keys [][]byte, revs []
 	ti.visit(key, end, func(ki *keyIndex) bool {
 		if rev, _, _, err := ki.get(ti.lg, atRev); err == nil {
 			revs = append(revs, rev)
-			keys = append(keys, ki.key)
+			keys = append(keys, []byte(ki.key))
 		}
 		return true
 	})
@@ -162,7 +162,7 @@ func (ti *treeIndex) Range(key, end []byte, atRev int64) (keys [][]byte, revs []
 }
 
 func (ti *treeIndex) Tombstone(key []byte, rev revision) error {
-	keyi := &keyIndex{key: key}
+	keyi := &keyIndex{key: string(key)}
 
 	ti.Lock()
 	defer ti.Unlock()
@@ -179,7 +179,7 @@ func (ti *treeIndex) Tombstone(key []byte, rev revision) error {
 // at or after the given rev. The returned slice is sorted in the order
 // of revision.
 func (ti *treeIndex) RangeSince(key, end []byte, rev int64) []revision {
-	keyi := &keyIndex{key: key}
+	keyi := &keyIndex{key: string(key)}
 
 	ti.RLock()
 	defer ti.RUnlock()
@@ -193,7 +193,7 @@ func (ti *treeIndex) RangeSince(key, end []byte, rev int64) []revision {
 		return keyi.since(ti.lg, rev)
 	}
 
-	endi := &keyIndex{key: end}
+	endi := &keyIndex{key: string(end)}
 	var revs []revision
 	ti.tree.AscendGreaterOrEqual(keyi, func(item btree.Item) bool {
 		if len(endi.key) > 0 && !item.Less(endi) {

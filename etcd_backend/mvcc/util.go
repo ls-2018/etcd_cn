@@ -19,7 +19,7 @@ import (
 
 	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc/backend"
 	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc/buckets"
-	"go.etcd.io/etcd/api/v3/mvccpb"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/mvccpb"
 )
 
 func WriteKV(be backend.Backend, kv mvccpb.KeyValue) {

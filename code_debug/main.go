@@ -22,7 +22,7 @@ func main() {
 	ch = nil
 	select {
 	case a := <-ch:
-		fmt.Println(a)
+		fmt.Println("<-ch", a)
 	default:
 
 	}

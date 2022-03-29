@@ -24,9 +24,9 @@ import (
 	"github.com/ls-2018/etcd_cn/etcd_backend/auth"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver"
 	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/mvccpb"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/v3rpc/rpctypes"
 	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
-	"go.etcd.io/etcd/api/v3/mvccpb"
-	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
 
 	"go.uber.org/zap"
 )
@@ -383,7 +383,7 @@ func (sws *serverWatchStream) sendLoop() {
 				events[i] = &evs[i]
 				if needPrevKV && !IsCreateEvent(evs[i]) {
 					opt := mvcc.RangeOptions{Rev: evs[i].Kv.ModRevision - 1}
-					r, err := sws.watchable.Range(context.TODO(), evs[i].Kv.Key, nil, opt)
+					r, err := sws.watchable.Range(context.TODO(), []byte(evs[i].Kv.Key), nil, opt)
 					if err == nil && len(r.KVs) != 0 {
 						events[i].PrevKv = &(r.KVs[0])
 					}

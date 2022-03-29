@@ -65,14 +65,14 @@ func (p *kvProxy) Range(ctx context.Context, r *pb.RangeRequest) (*pb.RangeRespo
 }
 
 func (p *kvProxy) Put(ctx context.Context, r *pb.PutRequest) (*pb.PutResponse, error) {
-	p.cache.Invalidate(r.Key, nil)
+	p.cache.Invalidate([]byte(r.Key), nil)
 
 	resp, err := p.kv.Do(ctx, PutRequestToOp(r))
 	return (*pb.PutResponse)(resp.Put()), err
 }
 
 func (p *kvProxy) DeleteRange(ctx context.Context, r *pb.DeleteRangeRequest) (*pb.DeleteRangeResponse, error) {
-	p.cache.Invalidate(r.Key, r.RangeEnd)
+	p.cache.Invalidate([]byte(r.Key), []byte(r.RangeEnd))
 
 	resp, err := p.kv.Do(ctx, DelRequestToOp(r))
 	return (*pb.DeleteRangeResponse)(resp.Del()), err
@@ -82,10 +82,10 @@ func (p *kvProxy) txnToCache(reqs []*pb.RequestOp, resps []*pb.ResponseOp) {
 	for i := range resps {
 		switch tv := resps[i].Response.(type) {
 		case *pb.ResponseOp_ResponsePut:
-			p.cache.Invalidate(reqs[i].GetRequestPut().Key, nil)
+			p.cache.Invalidate([]byte(reqs[i].GetRequestPut().Key), nil)
 		case *pb.ResponseOp_ResponseDeleteRange:
 			rdr := reqs[i].GetRequestDeleteRange()
-			p.cache.Invalidate(rdr.Key, rdr.RangeEnd)
+			p.cache.Invalidate([]byte(rdr.Key), []byte(rdr.RangeEnd))
 		case *pb.ResponseOp_ResponseRange:
 			req := *(reqs[i].GetRequestRange())
 			req.Serializable = true
@@ -104,7 +104,7 @@ func (p *kvProxy) Txn(ctx context.Context, r *pb.TxnRequest) (*pb.TxnResponse, e
 
 	// txn may claim an outdated key is updated; be safe and invalidate
 	for _, cmp := range r.Compare {
-		p.cache.Invalidate(cmp.Key, cmp.RangeEnd)
+		p.cache.Invalidate([]byte(cmp.Key), []byte(cmp.RangeEnd))
 	}
 	// update any fetched keys
 	if resp.Succeeded {

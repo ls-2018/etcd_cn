@@ -24,7 +24,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/testutil"
-	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/v3rpc/rpctypes"
 	"go.uber.org/zap/zaptest"
 
 	"google.golang.org/grpc"

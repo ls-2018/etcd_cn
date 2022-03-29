@@ -28,8 +28,8 @@ import (
 	cconfig "github.com/ls-2018/etcd_cn/etcd_backend/config"
 	"github.com/ls-2018/etcd_cn/etcd_backend/embed"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/rafthttp"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/version"
 	"github.com/ls-2018/etcd_cn/pkg/flags"
-	"go.etcd.io/etcd/api/v3/version"
 
 	"go.uber.org/zap"
 	"sigs.k8s.io/yaml"

@@ -28,9 +28,9 @@ import (
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/transport"
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
 	stats "github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v2stats"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/version"
 	"github.com/ls-2018/etcd_cn/pkg/httputil"
 	"github.com/ls-2018/etcd_cn/raft/raftpb"
-	"go.etcd.io/etcd/api/v3/version"
 
 	"github.com/coreos/go-semver/semver"
 	"go.uber.org/zap"

@@ -21,8 +21,8 @@ import (
 	"github.com/ls-2018/etcd_cn/etcd_backend/lease"
 	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc/backend"
 	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc/buckets"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/mvccpb"
 	"github.com/ls-2018/etcd_cn/pkg/traceutil"
-	"go.etcd.io/etcd/api/v3/mvccpb"
 
 	"go.uber.org/zap"
 )
@@ -88,7 +88,7 @@ func newWatchableStore(lg *zap.Logger, b backend.Backend, le lease.Lessor, cfg S
 	s.store.ReadView = &readView{s}
 	s.store.WriteView = &writeView{s}
 	if s.le != nil {
-		// use this store as the deleter so revokes trigger watch events
+		// 使用此存储作为删除器，因此撤销触发器监视事件
 		s.le.SetRangeDeleter(func() lease.TxnDelete { return s.Write(traceutil.TODO()) })
 	}
 	s.wg.Add(2)

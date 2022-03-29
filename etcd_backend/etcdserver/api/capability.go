@@ -19,7 +19,7 @@ import (
 
 	"github.com/coreos/go-semver/semver"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/membership"
-	"go.etcd.io/etcd/api/v3/version"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/version"
 	"go.uber.org/zap"
 )
 

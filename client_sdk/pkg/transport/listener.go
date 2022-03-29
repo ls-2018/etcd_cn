@@ -58,16 +58,13 @@ func newListener(addr, scheme string, opts ...ListenerOption) (net.Listener, err
 
 	switch {
 	case lnOpts.IsSocketOpts():
-		// new ListenConfig with socket options.
 		config, err := newListenConfig(lnOpts.socketOpts)
 		if err != nil {
 			return nil, err
 		}
 		lnOpts.ListenConfig = config
-		// check for timeout
 		fallthrough
 	case lnOpts.IsTimeout(), lnOpts.IsSocketOpts():
-		// timeout listener with socket options.
 		ln, err := lnOpts.ListenConfig.Listen(context.TODO(), "tcp", addr)
 		if err != nil {
 			return nil, err
@@ -95,7 +92,6 @@ func newListener(addr, scheme string, opts ...ListenerOption) (net.Listener, err
 		lnOpts.Listener = ln
 	}
 
-	//  only skip if not passing TLSInfo
 	if lnOpts.skipTLSInfoCheck && !lnOpts.IsTLS() {
 		return lnOpts.Listener, nil
 	}

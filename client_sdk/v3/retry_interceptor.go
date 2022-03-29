@@ -24,7 +24,7 @@ import (
 	"sync"
 	"time"
 
-	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/v3rpc/rpctypes"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"

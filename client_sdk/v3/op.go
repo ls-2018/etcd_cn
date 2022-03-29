@@ -31,8 +31,8 @@ var noPrefixEnd = []byte{0}
 // Op represents an Operation that kv can execute.
 type Op struct {
 	t   opType
-	key []byte
-	end []byte
+	key string
+	end string
 
 	// for range
 	limit        int64
@@ -70,7 +70,7 @@ type Op struct {
 	filterDelete bool
 
 	// for put
-	val     []byte
+	val     string
 	leaseID LeaseID
 
 	// txn
@@ -92,13 +92,13 @@ func (op Op) Txn() ([]Cmp, []Op, []Op) {
 }
 
 // KeyBytes returns the byte slice holding the Op's key.
-func (op Op) KeyBytes() []byte { return op.key }
+func (op Op) KeyBytes() []byte { return []byte(op.key) }
 
 // WithKeyBytes sets the byte slice for the Op's key.
-func (op *Op) WithKeyBytes(key []byte) { op.key = key }
+func (op *Op) WithKeyBytes(key []byte) { op.key = string(key) }
 
 // RangeBytes returns the byte slice holding with the Op's range end, if any.
-func (op Op) RangeBytes() []byte { return op.end }
+func (op Op) RangeBytes() []byte { return []byte(op.end) }
 
 // Rev returns the requested revision, if any.
 func (op Op) Rev() int64 { return op.rev }
@@ -134,13 +134,13 @@ func (op Op) MinCreateRev() int64 { return op.minCreateRev }
 func (op Op) MaxCreateRev() int64 { return op.maxCreateRev }
 
 // WithRangeBytes sets the byte slice for the Op's range end.
-func (op *Op) WithRangeBytes(end []byte) { op.end = end }
+func (op *Op) WithRangeBytes(end []byte) { op.end = string(end) }
 
 // ValueBytes returns the byte slice holding the Op's value, if any.
-func (op Op) ValueBytes() []byte { return op.val }
+func (op Op) ValueBytes() []byte { return []byte(op.val) }
 
 // WithValueBytes sets the byte slice for the Op's value.
-func (op *Op) WithValueBytes(v []byte) { op.val = v }
+func (op *Op) WithValueBytes(v []byte) { op.val = string(v) }
 
 func (op Op) toRangeRequest() *pb.RangeRequest {
 	if op.t != tRange {
@@ -222,7 +222,7 @@ func OpGet(key string, opts ...OpOption) Op {
 	if IsOptsWithPrefix(opts) && IsOptsWithFromKey(opts) {
 		panic("`WithPrefix` and `WithFromKey` cannot be set at the same time, choose one")
 	}
-	ret := Op{t: tRange, key: []byte(key)}
+	ret := Op{t: tRange, key: key}
 	ret.applyOpts(opts)
 	return ret
 }
@@ -233,7 +233,7 @@ func OpDelete(key string, opts ...OpOption) Op {
 	if IsOptsWithPrefix(opts) && IsOptsWithFromKey(opts) {
 		panic("`WithPrefix` and `WithFromKey` cannot be set at the same time, choose one")
 	}
-	ret := Op{t: tDeleteRange, key: []byte(key)}
+	ret := Op{t: tDeleteRange, key: key}
 	ret.applyOpts(opts)
 	switch {
 	case ret.leaseID != 0:
@@ -262,10 +262,10 @@ func OpDelete(key string, opts ...OpOption) Op {
 
 // OpPut returns "put" operation based on given key-value and operation options.
 func OpPut(key, val string, opts ...OpOption) Op {
-	ret := Op{t: tPut, key: []byte(key), val: []byte(val)}
+	ret := Op{t: tPut, key: key, val: val}
 	ret.applyOpts(opts)
 	switch {
-	case ret.end != nil:
+	case ret.end != "":
 		panic("unexpected range in put")
 	case ret.limit != 0:
 		panic("unexpected limit in put")
@@ -295,7 +295,7 @@ func OpTxn(cmps []Cmp, thenOps []Op, elseOps []Op) Op {
 }
 
 func opWatch(key string, opts ...OpOption) Op {
-	ret := Op{t: tRange, key: []byte(key)}
+	ret := Op{t: tRange, key: key}
 	ret.applyOpts(opts)
 	switch {
 	case ret.leaseID != 0:
@@ -359,22 +359,22 @@ func WithSort(target SortTarget, order SortOrder) OpOption {
 // GetPrefixRangeEnd gets the range end of the prefix.
 // 'Get(foo, WithPrefix())' is equal to 'Get(foo, WithRange(GetPrefixRangeEnd(foo))'.
 func GetPrefixRangeEnd(prefix string) string {
-	return string(getPrefix([]byte(prefix)))
+	return string(getPrefix(prefix))
 }
 
-func getPrefix(key []byte) []byte {
+func getPrefix(key string) string {
 	end := make([]byte, len(key))
 	copy(end, key)
 	for i := len(end) - 1; i >= 0; i-- {
 		if end[i] < 0xff {
 			end[i] = end[i] + 1
 			end = end[:i+1]
-			return end
+			return string(end)
 		}
 	}
 	// next prefix does not exist (e.g., 0xffff);
 	// default to WithFromKey policy
-	return noPrefixEnd
+	return string(noPrefixEnd)
 }
 
 // WithPrefix enables 'Get', 'Delete', or 'Watch' requests to operate
@@ -383,7 +383,7 @@ func getPrefix(key []byte) []byte {
 func WithPrefix() OpOption {
 	return func(op *Op) {
 		if len(op.key) == 0 {
-			op.key, op.end = []byte{0}, []byte{0}
+			op.key, op.end = string([]byte{0}), string([]byte{0})
 			return
 		}
 		op.end = getPrefix(op.key)
@@ -395,7 +395,7 @@ func WithPrefix() OpOption {
 // the keys in the range [key, end).
 // endKey必须是lexicographically greater than start key.
 func WithRange(endKey string) OpOption {
-	return func(op *Op) { op.end = []byte(endKey) }
+	return func(op *Op) { op.end = endKey }
 }
 
 // WithFromKey specifies the range of 'Get', 'Delete', 'Watch' requests
@@ -403,9 +403,9 @@ func WithRange(endKey string) OpOption {
 func WithFromKey() OpOption {
 	return func(op *Op) {
 		if len(op.key) == 0 {
-			op.key = []byte{0}
+			op.key = string([]byte{0})
 		}
-		op.end = []byte("\x00")
+		op.end = string([]byte("\x00"))
 	}
 }
 

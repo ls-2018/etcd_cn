@@ -33,9 +33,9 @@ import (
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v2store"
 	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc/backend"
 	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc/buckets"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/version"
 	"github.com/ls-2018/etcd_cn/pkg/netutil"
 	"github.com/ls-2018/etcd_cn/raft/raftpb"
-	"go.etcd.io/etcd/api/v3/version"
 
 	"github.com/coreos/go-semver/semver"
 	"go.uber.org/zap"
@@ -445,7 +445,7 @@ func downgradeInfoFromBackend(lg *zap.Logger, be backend.Backend) *DowngradeInfo
 		)
 	}
 	var d DowngradeInfo
-	if err := json.Unmarshal(vals[0], &d); err != nil {
+	if err := json.Unmarshal([]byte(vals[0]), &d); err != nil {
 		lg.Panic("反序列化失败", zap.Error(err))
 	}
 	if d.Enabled {

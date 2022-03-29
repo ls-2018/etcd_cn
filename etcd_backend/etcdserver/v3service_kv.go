@@ -17,45 +17,6 @@ type RaftKV interface {
 	Compact(ctx context.Context, r *pb.CompactionRequest) (*pb.CompactionResponse, error)
 }
 
-// Range TODO 待看
-func (s *EtcdServer) Range(ctx context.Context, r *pb.RangeRequest) (*pb.RangeResponse, error) {
-	trace := traceutil.New("range",
-		s.Logger(),
-		traceutil.Field{Key: "range_begin", Value: string(r.Key)},
-		traceutil.Field{Key: "range_end", Value: string(r.RangeEnd)},
-	)
-	ctx = context.WithValue(ctx, traceutil.TraceKey, trace)
-
-	var resp *pb.RangeResponse
-	var err error
-	defer func(start time.Time) {
-		if resp != nil {
-			trace.AddField(
-				traceutil.Field{Key: "response_count", Value: len(resp.Kvs)},
-				traceutil.Field{Key: "response_revision", Value: resp.Header.Revision},
-			)
-		}
-	}(time.Now())
-
-	if !r.Serializable {
-		err = s.linearizableReadNotify(ctx)
-		trace.Step("agreement among raft nodes before linearized reading")
-		if err != nil {
-			return nil, err
-		}
-	}
-	chk := func(ai *auth.AuthInfo) error {
-		return s.authStore.IsRangePermitted(ai, r.Key, r.RangeEnd)
-	}
-
-	get := func() { resp, err = s.applyV3Base.Range(ctx, nil, r) }
-	if serr := s.doSerialize(ctx, chk, get); serr != nil {
-		err = serr
-		return nil, err
-	}
-	return resp, err
-}
-
 func (s *EtcdServer) Put(ctx context.Context, r *pb.PutRequest) (*pb.PutResponse, error) {
 	ctx = context.WithValue(ctx, traceutil.StartTimeKey, time.Now())
 	resp, err := s.raftRequest(ctx, pb.InternalRaftRequest{Put: r})
@@ -117,7 +78,7 @@ func (s *EtcdServer) Compact(ctx context.Context, r *pb.CompactionRequest) (*pb.
 
 		applyStart := result.trace.GetStartTime()
 		result.trace.SetStartTime(startTime)
-		trace.InsertStep(0, applyStart, "process raft request")
+		trace.InsertStep(0, applyStart, "处理raft请求")
 	}
 	if r.Physical && result != nil && result.physc != nil {
 		<-result.physc
@@ -145,4 +106,42 @@ func (s *EtcdServer) Compact(ctx context.Context, r *pb.CompactionRequest) (*pb.
 	resp.Header.Revision = s.kv.Rev()
 	trace.AddField(traceutil.Field{Key: "response_revision", Value: resp.Header.Revision})
 	return resp, nil
+}
+
+// ---------------------------------------  OVER -------------------------------------------------------------
+
+func (s *EtcdServer) Range(ctx context.Context, r *pb.RangeRequest) (*pb.RangeResponse, error) {
+	trace := traceutil.New("range", s.Logger(), traceutil.Field{Key: "range_begin", Value: string(r.Key)}, traceutil.Field{Key: "range_end", Value: string(r.RangeEnd)})
+	ctx = context.WithValue(ctx, traceutil.TraceKey, trace) // trace
+	var resp *pb.RangeResponse
+	var err error
+	defer func(start time.Time) {
+		if resp != nil {
+			trace.AddField(
+				traceutil.Field{Key: "response_count", Value: len(resp.Kvs)},
+				traceutil.Field{Key: "response_revision", Value: resp.Header.Revision},
+			)
+		}
+	}(time.Now())
+
+	if !r.Serializable {
+		err = s.linearizableReadNotify(ctx) // 发准备信号
+		trace.Step("在线性化读数之前，raft节点之间的一致。")
+		if err != nil {
+			return nil, err
+		}
+	}
+	chk := func(ai *auth.AuthInfo) error {
+		return s.authStore.IsRangePermitted(ai, []byte(r.Key), []byte(r.RangeEnd)) // health,nil
+	}
+
+	get := func() {
+		_ = applierV3backend{}
+		resp, err = s.applyV3Base.Range(ctx, nil, r)
+	}
+	if serr := s.doSerialize(ctx, chk, get); serr != nil {
+		err = serr
+		return nil, err
+	}
+	return resp, err
 }

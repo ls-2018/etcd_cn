@@ -26,9 +26,8 @@ import (
 	"github.com/ls-2018/etcd_cn/etcd_backend/lease"
 	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc/backend"
 	betesting "github.com/ls-2018/etcd_cn/etcd_backend/mvcc/backend/testing"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/mvccpb"
 	"github.com/ls-2018/etcd_cn/pkg/traceutil"
-	"go.etcd.io/etcd/api/v3/mvccpb"
-
 	"go.uber.org/zap"
 )
 
@@ -274,7 +273,7 @@ func testKVPutMultipleTimes(t *testing.T, f putFunc) {
 			t.Fatal(err)
 		}
 		wkvs := []mvccpb.KeyValue{
-			{Key: []byte("foo"), Value: []byte("bar"), CreateRevision: 2, ModRevision: base + 1, Version: base, Lease: base},
+			{Key: "foo", Value: "bar", CreateRevision: 2, ModRevision: base + 1, Version: base, Lease: base},
 		}
 		if !reflect.DeepEqual(r.KVs, wkvs) {
 			t.Errorf("#%d: kvs = %+v, want %+v", i, r.KVs, wkvs)
@@ -378,7 +377,7 @@ func TestKVOperationInSequence(t *testing.T) {
 			t.Fatal(err)
 		}
 		wkvs := []mvccpb.KeyValue{
-			{Key: []byte("foo"), Value: []byte("bar"), CreateRevision: base + 1, ModRevision: base + 1, Version: 1, Lease: int64(lease.NoLease)},
+			{Key: "foo", Value: "bar", CreateRevision: base + 1, ModRevision: base + 1, Version: 1, Lease: int64(lease.NoLease)},
 		}
 		if !reflect.DeepEqual(r.KVs, wkvs) {
 			t.Errorf("#%d: kvs = %+v, want %+v", i, r.KVs, wkvs)
@@ -481,7 +480,7 @@ func TestKVTxnOperationInSequence(t *testing.T) {
 			t.Fatal(err)
 		}
 		wkvs := []mvccpb.KeyValue{
-			{Key: []byte("foo"), Value: []byte("bar"), CreateRevision: base + 1, ModRevision: base + 1, Version: 1, Lease: int64(lease.NoLease)},
+			{Key: "foo", Value: "bar", CreateRevision: base + 1, ModRevision: base + 1, Version: 1, Lease: int64(lease.NoLease)},
 		}
 		if !reflect.DeepEqual(r.KVs, wkvs) {
 			t.Errorf("#%d: kvs = %+v, want %+v", i, r.KVs, wkvs)
@@ -530,13 +529,13 @@ func TestKVCompactReserveLastValue(t *testing.T) {
 		{
 			1,
 			[]mvccpb.KeyValue{
-				{Key: []byte("foo"), Value: []byte("bar0"), CreateRevision: 2, ModRevision: 2, Version: 1, Lease: 1},
+				{Key: "foo", Value: "bar0", CreateRevision: 2, ModRevision: 2, Version: 1, Lease: 1},
 			},
 		},
 		{
 			2,
 			[]mvccpb.KeyValue{
-				{Key: []byte("foo"), Value: []byte("bar1"), CreateRevision: 2, ModRevision: 3, Version: 2, Lease: 2},
+				{Key: "foo", Value: "bar1", CreateRevision: 2, ModRevision: 3, Version: 2, Lease: 2},
 			},
 		},
 		{
@@ -546,7 +545,7 @@ func TestKVCompactReserveLastValue(t *testing.T) {
 		{
 			4,
 			[]mvccpb.KeyValue{
-				{Key: []byte("foo"), Value: []byte("bar2"), CreateRevision: 5, ModRevision: 5, Version: 1, Lease: 3},
+				{Key: "foo", Value: "bar2", CreateRevision: 5, ModRevision: 5, Version: 1, Lease: 3},
 			},
 		},
 	}
@@ -716,8 +715,8 @@ func TestWatchableKVWatch(t *testing.T) {
 		{
 			Type: mvccpb.PUT,
 			Kv: &mvccpb.KeyValue{
-				Key:            []byte("foo"),
-				Value:          []byte("bar"),
+				Key:            "foo",
+				Value:          "bar",
 				CreateRevision: 2,
 				ModRevision:    2,
 				Version:        1,
@@ -727,8 +726,8 @@ func TestWatchableKVWatch(t *testing.T) {
 		{
 			Type: mvccpb.PUT,
 			Kv: &mvccpb.KeyValue{
-				Key:            []byte("foo1"),
-				Value:          []byte("bar1"),
+				Key:            "foo1",
+				Value:          "bar1",
 				CreateRevision: 3,
 				ModRevision:    3,
 				Version:        1,
@@ -738,8 +737,8 @@ func TestWatchableKVWatch(t *testing.T) {
 		{
 			Type: mvccpb.PUT,
 			Kv: &mvccpb.KeyValue{
-				Key:            []byte("foo1"),
-				Value:          []byte("bar11"),
+				Key:            "foo1",
+				Value:          "bar11",
 				CreateRevision: 3,
 				ModRevision:    4,
 				Version:        2,
@@ -819,8 +818,8 @@ func put3TestKVs(s KV) []mvccpb.KeyValue {
 	s.Put([]byte("foo1"), []byte("bar1"), 2)
 	s.Put([]byte("foo2"), []byte("bar2"), 3)
 	return []mvccpb.KeyValue{
-		{Key: []byte("foo"), Value: []byte("bar"), CreateRevision: 2, ModRevision: 2, Version: 1, Lease: 1},
-		{Key: []byte("foo1"), Value: []byte("bar1"), CreateRevision: 3, ModRevision: 3, Version: 1, Lease: 2},
-		{Key: []byte("foo2"), Value: []byte("bar2"), CreateRevision: 4, ModRevision: 4, Version: 1, Lease: 3},
+		{Key: "foo", Value: "bar", CreateRevision: 2, ModRevision: 2, Version: 1, Lease: 1},
+		{Key: "foo1", Value: "bar1", CreateRevision: 3, ModRevision: 3, Version: 1, Lease: 2},
+		{Key: "foo2", Value: "bar2", CreateRevision: 4, ModRevision: 4, Version: 1, Lease: 3},
 	}
 }

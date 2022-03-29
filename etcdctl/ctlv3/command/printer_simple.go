@@ -107,7 +107,7 @@ func (s *simplePrinter) TimeToLive(resp v3.LeaseTimeToLiveResponse, keys bool) {
 		}
 		txt += fmt.Sprintf(", attached keys(%v)", ks)
 	}
-	fmt.Println(txt)
+	fmt.Println("TimeToLive--->", txt)
 }
 
 func (s *simplePrinter) Leases(resp v3.LeaseLeasesResponse) {

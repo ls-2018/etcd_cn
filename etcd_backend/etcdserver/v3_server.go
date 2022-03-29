@@ -17,8 +17,6 @@ package etcdserver
 import (
 	"context"
 	"encoding/binary"
-	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/ls-2018/etcd_cn/raft"
@@ -26,9 +24,9 @@ import (
 	"github.com/ls-2018/etcd_cn/etcd_backend/auth"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/membership"
 	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/membershippb"
 	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
 	"github.com/ls-2018/etcd_cn/pkg/traceutil"
-	"go.etcd.io/etcd/api/v3/membershippb"
 
 	"github.com/gogo/protobuf/proto"
 	"go.uber.org/zap"
@@ -112,15 +110,9 @@ func (s *EtcdServer) waitLeader(ctx context.Context) (*membership.Member, error)
 }
 
 func (s *EtcdServer) Alarm(ctx context.Context, r *pb.AlarmRequest) (*pb.AlarmResponse, error) {
-	// {"Header":{"ID":7587861472305649414},"ID":0,"V2":null,"Put":{"Key":"","Value":"","Lease":0,"PrevKv":false,"IgnoreValue":false,"IgnoreLease":false},"DeleteRange":null,"AuthRoleRevokePermission":null,"AuthRoleGet":null,"AuthRoleDelete":null,
-	// "AuthUserList":null,"AuthUserChangePassword":null,"AuthStatus":null,"LeaseCheckpoint":null,
-	// "Alarm":{},"AuthDisable":null,"LeaseRevoke":null,"AuthEnable":null,
-	//"AuthUserDelete":null,"Authenticate":null,"AuthUserGet":null,"AuthUserRevokeRole":null,
-	//"LeaseGrant":null,"Compaction":null,"AuthRoleList":null,"AuthRoleAdd":null,
-	//"AuthUserGrantRole":null,"AuthUserAdd":null,"ClusterVersionSet":null,"ClusterMemberAttrSet":null,"DowngradeInfoSet":null}
 	req := pb.InternalRaftRequest{Alarm: r}
-	marshal, _ := json.Marshal(req)
-	fmt.Println(string(marshal))
+	// marshal, _ := json.Marshal(req)
+	// fmt.Println("marshal-->",string(marshal))
 	resp, err := s.raftRequestOnce(ctx, req)
 	if err != nil {
 		return nil, err
@@ -147,31 +139,6 @@ func (s *EtcdServer) raftRequestOnce(ctx context.Context, r pb.InternalRaftReque
 
 func (s *EtcdServer) raftRequest(ctx context.Context, r pb.InternalRaftRequest) (proto.Message, error) {
 	return s.raftRequestOnce(ctx, r)
-}
-
-// doSerialize handles the auth logic, with permissions checked by "chk", for a serialized request "get". Returns a non-nil error on authentication failure.
-func (s *EtcdServer) doSerialize(ctx context.Context, chk func(*auth.AuthInfo) error, get func()) error {
-	trace := traceutil.Get(ctx)
-	ai, err := s.AuthInfoFromCtx(ctx)
-	if err != nil {
-		return err
-	}
-	if ai == nil {
-		// chk expects non-nil AuthInfo; use empty credentials
-		ai = &auth.AuthInfo{}
-	}
-	if err = chk(ai); err != nil {
-		return err
-	}
-	trace.Step("get authentication metadata")
-	// fetch response for serialized request
-	get()
-	// check for stale token revision in case the auth store was updated while
-	// the request has been handled.
-	if ai.Revision != 0 && ai.Revision != s.authStore.Revision() {
-		return auth.ErrAuthOldRevision
-	}
-	return nil
 }
 
 // 当客户端提交一条数据变更请求时
@@ -267,28 +234,6 @@ func (s *EtcdServer) sendReadIndex(requestIndex uint64) error {
 		return err
 	}
 	return nil
-}
-
-func (s *EtcdServer) linearizableReadNotify(ctx context.Context) error {
-	s.readMu.RLock()
-	nc := s.readNotifier
-	s.readMu.RUnlock()
-
-	//  linearizable loop 没有准备好就发送此信号
-	select {
-	case s.readwaitc <- struct{}{}:
-	default:
-	}
-
-	// wait for read state notification
-	select {
-	case <-nc.c:
-		return nc.err
-	case <-ctx.Done():
-		return ctx.Err()
-	case <-s.done:
-		return ErrStopped
-	}
 }
 
 // AuthInfoFromCtx 获取认证信息
@@ -394,4 +339,53 @@ func (s *EtcdServer) downgradeCancel(ctx context.Context) (*pb.DowngradeResponse
 	}
 	resp := pb.DowngradeResponse{Version: s.ClusterVersion().String()}
 	return &resp, nil
+}
+
+// ----------------------------------------   OVER  ------------------------------------------------------------
+
+// doSerialize 为序列化的请求“get”处理认证逻辑，并由“chk”检查权限。身份验证失败时返回一个非空错误。
+func (s *EtcdServer) doSerialize(ctx context.Context, chk func(*auth.AuthInfo) error, get func()) error {
+	trace := traceutil.Get(ctx) // 从上下文获取trace
+	ai, err := s.AuthInfoFromCtx(ctx)
+	if err != nil {
+		return err
+	}
+	if ai == nil {
+		// chk期望非nil AuthInfo;使用空的凭证
+		ai = &auth.AuthInfo{}
+	}
+	// 检查权限
+	if err = chk(ai); err != nil {
+		return err
+	}
+	trace.Step("获取认证元数据")
+	// 获取序列化请求的响应
+	get()
+	// 如果在处理请求时更新了身份验证存储，请检查过时的令牌修订情况。
+	if ai.Revision != 0 && ai.Revision != s.authStore.Revision() {
+		return auth.ErrAuthOldRevision
+	}
+	return nil
+}
+
+// 准备好了线性读取
+func (s *EtcdServer) linearizableReadNotify(ctx context.Context) error {
+	s.readMu.RLock()
+	nc := s.readNotifier
+	s.readMu.RUnlock()
+
+	select {
+	case s.readwaitc <- struct{}{}:
+	default:
+	}
+
+	// 等待读状态通知
+	select {
+	case <-nc.c:
+		return nc.err
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-s.done:
+		return ErrStopped
+	}
 }

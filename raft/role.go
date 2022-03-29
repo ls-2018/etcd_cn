@@ -235,7 +235,7 @@ func stepLeader(r *raft, m pb.Message) error {
 			}
 		}
 		// 将日志追加到raft unstable 中
-		if !r.appendEntry(m.Entries...) {  // 类似于健康检查的消息,就会走这里
+		if !r.appendEntry(m.Entries...) { // 类似于健康检查的消息,就会走这里
 			return ErrProposalDropped
 		}
 		// 发送日志给集群其它节点

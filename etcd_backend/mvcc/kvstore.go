@@ -25,9 +25,9 @@ import (
 	"github.com/ls-2018/etcd_cn/etcd_backend/lease"
 	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc/backend"
 	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc/buckets"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/mvccpb"
 	"github.com/ls-2018/etcd_cn/pkg/schedule"
 	"github.com/ls-2018/etcd_cn/pkg/traceutil"
-	"go.etcd.io/etcd/api/v3/mvccpb"
 
 	"go.uber.org/zap"
 )
@@ -36,8 +36,8 @@ var (
 	scheduledCompactKeyName = []byte("scheduledCompactRev")
 	finishedCompactKeyName  = []byte("finishedCompactRev")
 
-	ErrCompacted = errors.New("mvcc: required revision has been compacted")
-	ErrFutureRev = errors.New("mvcc: required revision is a future revision")
+	ErrCompacted = errors.New("mvcc: 指定的修订版本已被压缩")
+	ErrFutureRev = errors.New("mvcc: 指定的修订版本还没有")
 )
 
 const (
@@ -61,31 +61,22 @@ type StoreConfig struct {
 type store struct {
 	ReadView
 	WriteView
-
 	cfg StoreConfig
-
 	// mu read locks for txns and write locks for non-txn store changes.
-	mu sync.RWMutex
-
+	mu      sync.RWMutex
 	b       backend.Backend
 	kvindex index
-
-	le lease.Lessor
-
+	le      lease.Lessor
 	// revMuLock protects currentRev and compactMainRev.
 	// Locked at end of write txn and released after write txn unlock lock.
 	// Locked before locking read txn and released after locking.
 	revMu sync.RWMutex
 	// currentRev is the revision of the last completed transaction.
-	currentRev int64
-	// compactMainRev is the main revision of the last compaction.
+	currentRev     int64
 	compactMainRev int64
-
-	fifoSched schedule.Scheduler
-
-	stopc chan struct{}
-
-	lg *zap.Logger
+	fifoSched      schedule.Scheduler
+	stopc          chan struct{}
+	lg             *zap.Logger
 }
 
 // NewStore returns a new store. It is useful to create a store inside
@@ -134,6 +125,39 @@ func NewStore(lg *zap.Logger, b backend.Backend, le lease.Lessor, cfg StoreConfi
 	}
 
 	return s
+}
+
+// 返回读事务、  并发读,串行读
+func (s *store) Read(mode ReadTxMode, trace *traceutil.Trace) TxnRead {
+	s.mu.RLock()
+	s.revMu.RLock()
+	// 对于只读的工作负载，我们通过复制事务读缓冲区来使用共享缓冲区提高并发性
+	// 对于写/写/读事务，我们使用共享缓冲区
+	// 而不是复制事务读缓冲区，以避免事务开销。
+	var tx backend.ReadTx
+	if mode == ConcurrentReadTxMode {
+		tx = s.b.ConcurrentReadTx()
+	} else {
+		tx = s.b.ReadTx()
+	}
+
+	tx.RLock()
+	firstRev, rev := s.compactMainRev, s.currentRev
+	s.revMu.RUnlock()
+	return &storeTxnRead{s, tx, firstRev, rev, trace}
+}
+
+func (s *store) Write(trace *traceutil.Trace) TxnWrite {
+	s.mu.RLock()
+	tx := s.b.BatchTx()
+	tx.Lock()
+	tw := &storeTxnWrite{
+		storeTxnRead: storeTxnRead{s, tx, 0, 0, trace},
+		tx:           tx,
+		beginRev:     s.currentRev,
+		changes:      make([]mvccpb.KeyValue, 0, 4),
+	}
+	return tw
 }
 
 func (s *store) compactBarrier(ctx context.Context, ch chan struct{}) {

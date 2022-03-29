@@ -65,7 +65,7 @@ func (aa *authApplierV3) Apply(r *pb.InternalRaftRequest, shouldApplyV3 membersh
 }
 
 func (aa *authApplierV3) Put(ctx context.Context, txn mvcc.TxnWrite, r *pb.PutRequest) (*pb.PutResponse, *traceutil.Trace, error) {
-	if err := aa.as.IsPutPermitted(&aa.authInfo, r.Key); err != nil {
+	if err := aa.as.IsPutPermitted(&aa.authInfo, []byte(r.Key)); err != nil {
 		return nil, nil, err
 	}
 
@@ -78,7 +78,7 @@ func (aa *authApplierV3) Put(ctx context.Context, txn mvcc.TxnWrite, r *pb.PutRe
 	}
 
 	if r.PrevKv {
-		err := aa.as.IsRangePermitted(&aa.authInfo, r.Key, nil)
+		err := aa.as.IsRangePermitted(&aa.authInfo, []byte(r.Key), nil)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -87,18 +87,18 @@ func (aa *authApplierV3) Put(ctx context.Context, txn mvcc.TxnWrite, r *pb.PutRe
 }
 
 func (aa *authApplierV3) Range(ctx context.Context, txn mvcc.TxnRead, r *pb.RangeRequest) (*pb.RangeResponse, error) {
-	if err := aa.as.IsRangePermitted(&aa.authInfo, r.Key, r.RangeEnd); err != nil {
+	if err := aa.as.IsRangePermitted(&aa.authInfo, []byte(r.Key), []byte(r.RangeEnd)); err != nil {
 		return nil, err
 	}
 	return aa.applierV3.Range(ctx, txn, r)
 }
 
 func (aa *authApplierV3) DeleteRange(txn mvcc.TxnWrite, r *pb.DeleteRangeRequest) (*pb.DeleteRangeResponse, error) {
-	if err := aa.as.IsDeleteRangePermitted(&aa.authInfo, r.Key, r.RangeEnd); err != nil {
+	if err := aa.as.IsDeleteRangePermitted(&aa.authInfo, []byte(r.Key), []byte(r.RangeEnd)); err != nil {
 		return nil, err
 	}
 	if r.PrevKv {
-		err := aa.as.IsRangePermitted(&aa.authInfo, r.Key, r.RangeEnd)
+		err := aa.as.IsRangePermitted(&aa.authInfo, []byte(r.Key), []byte(r.RangeEnd))
 		if err != nil {
 			return nil, err
 		}
@@ -115,7 +115,7 @@ func checkTxnReqsPermission(as auth.AuthStore, ai *auth.AuthInfo, reqs []*pb.Req
 				continue
 			}
 
-			if err := as.IsRangePermitted(ai, tv.RequestRange.Key, tv.RequestRange.RangeEnd); err != nil {
+			if err := as.IsRangePermitted(ai, []byte(tv.RequestRange.Key), []byte(tv.RequestRange.RangeEnd)); err != nil {
 				return err
 			}
 
@@ -124,7 +124,7 @@ func checkTxnReqsPermission(as auth.AuthStore, ai *auth.AuthInfo, reqs []*pb.Req
 				continue
 			}
 
-			if err := as.IsPutPermitted(ai, tv.RequestPut.Key); err != nil {
+			if err := as.IsPutPermitted(ai, []byte(tv.RequestPut.Key)); err != nil {
 				return err
 			}
 
@@ -134,13 +134,13 @@ func checkTxnReqsPermission(as auth.AuthStore, ai *auth.AuthInfo, reqs []*pb.Req
 			}
 
 			if tv.RequestDeleteRange.PrevKv {
-				err := as.IsRangePermitted(ai, tv.RequestDeleteRange.Key, tv.RequestDeleteRange.RangeEnd)
+				err := as.IsRangePermitted(ai, []byte(tv.RequestDeleteRange.Key), []byte(tv.RequestDeleteRange.RangeEnd))
 				if err != nil {
 					return err
 				}
 			}
 
-			err := as.IsDeleteRangePermitted(ai, tv.RequestDeleteRange.Key, tv.RequestDeleteRange.RangeEnd)
+			err := as.IsDeleteRangePermitted(ai, []byte(tv.RequestDeleteRange.Key), []byte(tv.RequestDeleteRange.RangeEnd))
 			if err != nil {
 				return err
 			}
@@ -152,7 +152,7 @@ func checkTxnReqsPermission(as auth.AuthStore, ai *auth.AuthInfo, reqs []*pb.Req
 
 func checkTxnAuth(as auth.AuthStore, ai *auth.AuthInfo, rt *pb.TxnRequest) error {
 	for _, c := range rt.Compare {
-		if err := as.IsRangePermitted(ai, c.Key, c.RangeEnd); err != nil {
+		if err := as.IsRangePermitted(ai, []byte(c.Key), []byte(c.RangeEnd)); err != nil {
 			return err
 		}
 	}

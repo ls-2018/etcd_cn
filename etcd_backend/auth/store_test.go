@@ -26,9 +26,9 @@ import (
 
 	"github.com/ls-2018/etcd_cn/etcd_backend/mvcc/backend"
 	betesting "github.com/ls-2018/etcd_cn/etcd_backend/mvcc/backend/testing"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/authpb"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/v3rpc/rpctypes"
 	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
-	"go.etcd.io/etcd/api/v3/authpb"
-	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
 
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"

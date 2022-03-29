@@ -30,14 +30,11 @@ type Bucket interface {
 	ID() BucketID // ID返回一个水桶的唯一标识符.该ID必须不被持久化并且可以在内存地图中作为轻量级的标识符使用.
 	Name() []byte
 	String() string
-
-	// IsSafeRangeBucket is a hack to avoid inadvertently reading duplicate keys;
-	// overwrites on a bucket should only fetch with limit=1, but safeRangeBucket
-	// is known to never overwrite any key so range is safe.
-	IsSafeRangeBucket() bool
+	// IsSafeRangeBucket 是一种避免无意中读取重复key的方法;bucket上的覆盖应该只取limit=1，但已知safeerangebucket永远不会覆盖任何键，所以range是安全的。
+	IsSafeRangeBucket() bool // 不要在非键桶上使用unsafeRange
 }
 
-// 负责读请求
+// BatchTx 负责读请求
 type BatchTx interface {
 	ReadTx
 	UnsafeCreateBucket(bucket Bucket)

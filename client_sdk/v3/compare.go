@@ -55,7 +55,7 @@ func Compare(cmp Cmp, result string, v interface{}) Cmp {
 		if !ok {
 			panic("bad compare value")
 		}
-		cmp.TargetUnion = &pb.Compare_Value{Value: []byte(val)}
+		cmp.TargetUnion = &pb.Compare_Value{Value: val}
 	case pb.Compare_VERSION:
 		cmp.TargetUnion = &pb.Compare_Version{Version: mustInt64(v)}
 	case pb.Compare_CREATE:
@@ -71,47 +71,47 @@ func Compare(cmp Cmp, result string, v interface{}) Cmp {
 }
 
 func Value(key string) Cmp {
-	return Cmp{Key: []byte(key), Target: pb.Compare_VALUE}
+	return Cmp{Key: key, Target: pb.Compare_VALUE}
 }
 
 func Version(key string) Cmp {
-	return Cmp{Key: []byte(key), Target: pb.Compare_VERSION}
+	return Cmp{Key: key, Target: pb.Compare_VERSION}
 }
 
 func CreateRevision(key string) Cmp {
-	return Cmp{Key: []byte(key), Target: pb.Compare_CREATE}
+	return Cmp{Key: key, Target: pb.Compare_CREATE}
 }
 
 func ModRevision(key string) Cmp {
-	return Cmp{Key: []byte(key), Target: pb.Compare_MOD}
+	return Cmp{Key: key, Target: pb.Compare_MOD}
 }
 
 // LeaseValue compares a key's LeaseID to a value of your choosing. The empty
 // LeaseID is 0, otherwise known as `NoLease`.
 func LeaseValue(key string) Cmp {
-	return Cmp{Key: []byte(key), Target: pb.Compare_LEASE}
+	return Cmp{Key: key, Target: pb.Compare_LEASE}
 }
 
 // KeyBytes returns the byte slice holding with the comparison key.
-func (cmp *Cmp) KeyBytes() []byte { return cmp.Key }
+func (cmp *Cmp) KeyBytes() []byte { return []byte(cmp.Key) }
 
 // WithKeyBytes sets the byte slice for the comparison key.
-func (cmp *Cmp) WithKeyBytes(key []byte) { cmp.Key = key }
+func (cmp *Cmp) WithKeyBytes(key []byte) { cmp.Key = string(key) }
 
 // ValueBytes returns the byte slice holding the comparison value, if any.
 func (cmp *Cmp) ValueBytes() []byte {
 	if tu, ok := cmp.TargetUnion.(*pb.Compare_Value); ok {
-		return tu.Value
+		return []byte(tu.Value)
 	}
 	return nil
 }
 
 // WithValueBytes sets the byte slice for the comparison's value.
-func (cmp *Cmp) WithValueBytes(v []byte) { cmp.TargetUnion.(*pb.Compare_Value).Value = v }
+func (cmp *Cmp) WithValueBytes(v []byte) { cmp.TargetUnion.(*pb.Compare_Value).Value = string(v) }
 
 // WithRange sets the comparison to scan the range [key, end).
 func (cmp Cmp) WithRange(end string) Cmp {
-	cmp.RangeEnd = []byte(end)
+	cmp.RangeEnd = end
 	return cmp
 }
 

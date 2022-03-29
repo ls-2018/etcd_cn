@@ -37,9 +37,9 @@ import (
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/rafthttp"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v3rpc"
 	"github.com/ls-2018/etcd_cn/etcd_backend/verify"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/version"
 	"github.com/ls-2018/etcd_cn/pkg/debugutil"
 	runtimeutil "github.com/ls-2018/etcd_cn/pkg/runtime"
-	"go.etcd.io/etcd/api/v3/version"
 
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/soheilhy/cmux"

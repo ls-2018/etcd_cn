@@ -16,18 +16,15 @@ package v3rpc
 
 import (
 	"context"
-	"encoding/json"
 	"sync"
 	"time"
-
-	"go.uber.org/zap"
 
 	"github.com/ls-2018/etcd_cn/raft"
 
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api"
-	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/v3rpc/rpctypes"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -56,8 +53,8 @@ func newUnaryInterceptor(s *etcdserver.EtcdServer) grpc.UnaryServerInterceptor {
 
 		md, ok := metadata.FromIncomingContext(ctx)
 		if ok {
-			data, _ := json.Marshal(md)
-			s.Logger().Info("-", zap.String("metadata", string(data)))
+			// data, _ := json.Marshal(md)
+			// s.Logger().Info("-", zap.String("metadata", string(data)))
 			// hasleader
 			if ks := md[rpctypes.MetadataRequireLeaderKey]; len(ks) > 0 && ks[0] == rpctypes.MetadataHasLeader {
 				if s.Leader() == types.ID(raft.None) {

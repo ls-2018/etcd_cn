@@ -28,8 +28,8 @@ import (
 	"github.com/ls-2018/etcd_cn/pkg/cobrautl"
 
 	"github.com/ls-2018/etcd_cn/client_sdk/v3/mirror"
-	"go.etcd.io/etcd/api/v3/mvccpb"
-	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/mvccpb"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/v3rpc/rpctypes"
 
 	"github.com/spf13/cobra"
 )

@@ -22,7 +22,7 @@ import (
 	"net"
 	"sync"
 
-	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/v3rpc/rpctypes"
 	grpccredentials "google.golang.org/grpc/credentials"
 )
 

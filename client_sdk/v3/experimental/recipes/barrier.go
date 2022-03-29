@@ -18,7 +18,7 @@ import (
 	"context"
 
 	v3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
-	"go.etcd.io/etcd/api/v3/mvccpb"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/mvccpb"
 )
 
 // Barrier creates a key in etcd to block processes, then deletes the key to

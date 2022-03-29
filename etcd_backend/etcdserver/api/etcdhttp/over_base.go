@@ -23,7 +23,7 @@ import (
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v2error"
 	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/v2http/httptypes"
-	"go.etcd.io/etcd/api/v3/version"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/version"
 	"go.uber.org/zap"
 )
 

@@ -69,7 +69,7 @@ func txnCommandFunc(cmd *cobra.Command, args []string) {
 
 func promptInteractive(s string) {
 	if txnInteractive {
-		fmt.Println(s)
+		fmt.Println("promptInteractive--->", s)
 	}
 }
 

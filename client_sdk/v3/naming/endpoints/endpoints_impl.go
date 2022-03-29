@@ -87,7 +87,7 @@ func (m *endpointManager) NewWatchChannel(ctx context.Context) (WatchChannel, er
 	initUpdates := make([]*Update, 0, len(resp.Kvs))
 	for _, kv := range resp.Kvs {
 		var iup internal.Update
-		if err := json.Unmarshal(kv.Value, &iup); err != nil {
+		if err := json.Unmarshal([]byte(kv.Value), &iup); err != nil {
 			lg.Warn("unmarshal endpoint update failed", zap.String("key", string(kv.Key)), zap.Error(err))
 			continue
 		}
@@ -134,7 +134,7 @@ func (m *endpointManager) watch(ctx context.Context, rev int64, upch chan []*Upd
 				var op Operation
 				switch e.Type {
 				case clientv3.EventTypePut:
-					err = json.Unmarshal(e.Kv.Value, &iup)
+					err = json.Unmarshal([]byte(e.Kv.Value), &iup)
 					op = Add
 					if err != nil {
 						lg.Warn("unmarshal endpoint update failed", zap.String("key", string(e.Kv.Key)), zap.Error(err))
@@ -165,7 +165,7 @@ func (m *endpointManager) List(ctx context.Context) (Key2EndpointMap, error) {
 	eps := make(Key2EndpointMap)
 	for _, kv := range resp.Kvs {
 		var iup internal.Update
-		if err := json.Unmarshal(kv.Value, &iup); err != nil {
+		if err := json.Unmarshal([]byte(kv.Value), &iup); err != nil {
 			continue
 		}
 

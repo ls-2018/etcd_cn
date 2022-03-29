@@ -37,7 +37,6 @@ var (
 	printValueOnly bool
 )
 
-// NewGetCommand returns the cobra command for "get".
 func NewGetCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get [options] <key> [range_end]",
@@ -46,15 +45,15 @@ func NewGetCommand() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&getConsistency, "consistency", "l", "Linearizable(l) or Serializable(s)")
-	cmd.Flags().StringVar(&getSortOrder, "order", "", "Order of results; ASCEND or DESCEND (ASCEND by default)")
-	cmd.Flags().StringVar(&getSortTarget, "sort-by", "", "Sort target; CREATE, KEY, MODIFY, VALUE, or VERSION")
-	cmd.Flags().Int64Var(&getLimit, "limit", 0, "Maximum number of results")
-	cmd.Flags().BoolVar(&getPrefix, "prefix", false, "Get keys with matching prefix")
-	cmd.Flags().BoolVar(&getFromKey, "from-key", false, "Get keys that are greater than or equal to the given key using byte compare")
-	cmd.Flags().Int64Var(&getRev, "rev", 0, "Specify the kv revision")
-	cmd.Flags().BoolVar(&getKeysOnly, "keys-only", false, "Get only the keys")
-	cmd.Flags().BoolVar(&getCountOnly, "count-only", false, "Get only the count")
-	cmd.Flags().BoolVar(&printValueOnly, "print-value-only", false, `Only write values when using the "simple" output format`)
+	cmd.Flags().StringVar(&getSortOrder, "order", "", "对结果排序; ASCEND or DESCEND (ASCEND by default)")
+	cmd.Flags().StringVar(&getSortTarget, "sort-by", "", "使用那个字段排序; CREATE, KEY, MODIFY, VALUE, or VERSION")
+	cmd.Flags().Int64Var(&getLimit, "limit", 0, "结果的最大数量")
+	cmd.Flags().BoolVar(&getPrefix, "prefix", false, "返回前缀匹配的keys")
+	cmd.Flags().BoolVar(&getFromKey, "from-key", false, "使用byte compare获取 >= 给定键的键")
+	cmd.Flags().Int64Var(&getRev, "rev", 0, "指定修订版本")
+	cmd.Flags().BoolVar(&getKeysOnly, "keys-only", false, "只获取keys")
+	cmd.Flags().BoolVar(&getCountOnly, "count-only", false, "只获取匹配的数量")
+	cmd.Flags().BoolVar(&printValueOnly, "print-value-only", false, `仅在使用“simple”输出格式时写入值`)
 	return cmd
 }
 
@@ -98,12 +97,14 @@ func getGetOp(args []string) (string, []clientv3.OpOption) {
 	}
 
 	var opts []clientv3.OpOption
+	fmt.Println("getConsistency", getConsistency)
 	switch getConsistency {
 	case "s":
 		opts = append(opts, clientv3.WithSerializable())
 	case "l":
+	//	 默认就是串行化读
 	default:
-		cobrautl.ExitWithError(cobrautl.ExitBadFeature, fmt.Errorf("unknown consistency flag %q", getConsistency))
+		cobrautl.ExitWithError(cobrautl.ExitBadFeature, fmt.Errorf("未知的 consistency 标志 %q", getConsistency))
 	}
 
 	key := args[0]

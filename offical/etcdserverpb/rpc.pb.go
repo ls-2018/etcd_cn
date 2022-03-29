@@ -9,8 +9,8 @@ import (
 
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/golang/protobuf/proto"
-	authpb "go.etcd.io/etcd/api/v3/authpb"
-	mvccpb "go.etcd.io/etcd/api/v3/mvccpb"
+	authpb "github.com/ls-2018/etcd_cn/offical/api/v3/authpb"
+	mvccpb "github.com/ls-2018/etcd_cn/offical/api/v3/mvccpb"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -320,13 +320,13 @@ func (m *ResponseHeader) GetRaftTerm() uint64 {
 
 type RangeRequest struct {
 	// key is the first key for the range. If range_end is not given, the request only looks up key.
-	Key []byte `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	Key string `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 	// range_end is the upper bound on the requested range [key, range_end).
 	// If range_end is '\0', the range is all keys >= key.
 	// If range_end is key plus one (e.g., "aa"+1 == "ab", "a\xff"+1 == "b"),
 	// then the range request gets all keys prefixed with key.
 	// If both key and range_end are '\0', then the range request returns all keys.
-	RangeEnd []byte `protobuf:"bytes,2,opt,name=range_end,json=rangeEnd,proto3" json:"range_end,omitempty"`
+	RangeEnd string `protobuf:"bytes,2,opt,name=range_end,json=rangeEnd,proto3" json:"range_end,omitempty"`
 	// limit is a limit on the number of keys returned for the request. When limit is set to 0,
 	// it is treated as no limit.
 	Limit int64 `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
@@ -338,11 +338,8 @@ type RangeRequest struct {
 	SortOrder RangeRequest_SortOrder `protobuf:"varint,5,opt,name=sort_order,json=sortOrder,proto3,enum=etcdserverpb.RangeRequest_SortOrder" json:"sort_order,omitempty"`
 	// sort_target is the key-value field to use for sorting.
 	SortTarget RangeRequest_SortTarget `protobuf:"varint,6,opt,name=sort_target,json=sortTarget,proto3,enum=etcdserverpb.RangeRequest_SortTarget" json:"sort_target,omitempty"`
-	// 表示设置range请求通过可串行化（ serializable)的方式从接受请求的节点读取本地数据.默认情况下, range 请求是可
-	//线性化的,它反映了当前集群的一致性.为了获得更好的性能和可用
-	//性,可以考虑使用可串行化的读,以有一定的概率读到过期数据为代
-	//价,不需要经过一致性协议与集群中其他节点的协同,而是直接从本地
-	//节点读数据.
+	// 表示设置range请求通过可串行化（ serializable)的方式从接受请求的节点读取本地数据.默认情况下, range 请求是可线性化的,它反映了当前集群的一致性.为了获得更好的性能和可用
+	// 性,可以考虑使用可串行化的读,以有一定的概率读到过期数据为代价,不需要经过一致性协议与集群中其他节点的协同,而是直接从本地节点读数据.
 	Serializable bool `protobuf:"varint,7,opt,name=serializable,proto3" json:"serializable,omitempty"`
 	KeysOnly     bool `protobuf:"varint,8,opt,name=keys_only,json=keysOnly,proto3" json:"keys_only,omitempty"`    // 表示是否只返回key 而不返回value
 	CountOnly    bool `protobuf:"varint,9,opt,name=count_only,json=countOnly,proto3" json:"count_only,omitempty"` // ,表示是否只返回range 请求返回的key 的数量.
@@ -367,18 +364,18 @@ func (*RangeRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_77a6da22d6a3feb1, []int{1}
 }
 
-func (m *RangeRequest) GetKey() []byte {
+func (m *RangeRequest) GetKey() string {
 	if m != nil {
 		return m.Key
 	}
-	return nil
+	return ""
 }
 
-func (m *RangeRequest) GetRangeEnd() []byte {
+func (m *RangeRequest) GetRangeEnd() string {
 	if m != nil {
 		return m.RangeEnd
 	}
-	return nil
+	return ""
 }
 
 func (m *RangeRequest) GetLimit() int64 {
@@ -502,9 +499,9 @@ func (m *RangeResponse) GetCount() int64 {
 
 type PutRequest struct {
 	// key is the key, in bytes, to put into the key-value store.
-	Key []byte `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	Key string `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 	// value is the value, in bytes, to associate with the key in the key-value store.
-	Value []byte `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+	Value string `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
 	// lease is the lease ID to associate with the key in the key-value store. A lease
 	// value of 0 indicates no lease.
 	Lease int64 `protobuf:"varint,3,opt,name=lease,proto3" json:"lease,omitempty"`
@@ -526,18 +523,18 @@ func (*PutRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_77a6da22d6a3feb1, []int{3}
 }
 
-func (m *PutRequest) GetKey() []byte {
+func (m *PutRequest) GetKey() string {
 	if m != nil {
 		return m.Key
 	}
-	return nil
+	return ""
 }
 
-func (m *PutRequest) GetValue() []byte {
+func (m *PutRequest) GetValue() string {
 	if m != nil {
 		return m.Value
 	}
-	return nil
+	return ""
 }
 
 func (m *PutRequest) GetLease() int64 {
@@ -600,13 +597,13 @@ func (m *PutResponse) GetPrevKv() *mvccpb.KeyValue {
 
 type DeleteRangeRequest struct {
 	// key is the first key to delete in the range.
-	Key []byte `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	Key string `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 	// range_end is the key following the last key to delete for the range [key, range_end).
 	// If range_end is not given, the range is defined to contain only the key argument.
 	// If range_end is one bit larger than the given key, then the range is all the keys
 	// with the prefix (the given key).
 	// If range_end is '\0', the range is all keys greater than or equal to the key argument.
-	RangeEnd []byte `protobuf:"bytes,2,opt,name=range_end,json=rangeEnd,proto3" json:"range_end,omitempty"`
+	RangeEnd string `protobuf:"bytes,2,opt,name=range_end,json=rangeEnd,proto3" json:"range_end,omitempty"`
 	// If prev_kv is set, etcd gets the previous key-value pairs before deleting it.
 	// The previous key-value pairs will be returned in the delete response.
 	PrevKv bool `protobuf:"varint,3,opt,name=prev_kv,json=prevKv,proto3" json:"prev_kv,omitempty"`
@@ -619,18 +616,18 @@ func (*DeleteRangeRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_77a6da22d6a3feb1, []int{5}
 }
 
-func (m *DeleteRangeRequest) GetKey() []byte {
+func (m *DeleteRangeRequest) GetKey() string {
 	if m != nil {
 		return m.Key
 	}
-	return nil
+	return ""
 }
 
-func (m *DeleteRangeRequest) GetRangeEnd() []byte {
+func (m *DeleteRangeRequest) GetRangeEnd() string {
 	if m != nil {
 		return m.RangeEnd
 	}
-	return nil
+	return ""
 }
 
 func (m *DeleteRangeRequest) GetPrevKv() bool {
@@ -863,7 +860,7 @@ type Compare struct {
 	// target is the key-value field to inspect for the comparison.
 	Target Compare_CompareTarget `protobuf:"varint,2,opt,name=target,proto3,enum=etcdserverpb.Compare_CompareTarget" json:"target,omitempty"`
 	// key is the subject key for the comparison operation.
-	Key []byte `protobuf:"bytes,3,opt,name=key,proto3" json:"key,omitempty"`
+	Key string `protobuf:"bytes,3,opt,name=key,proto3" json:"key,omitempty"`
 	// Types that are valid to be assigned to TargetUnion:
 	//	*Compare_Version
 	//	*Compare_CreateRevision
@@ -873,7 +870,7 @@ type Compare struct {
 	TargetUnion isCompare_TargetUnion `protobuf_oneof:"target_union"`
 	// range_end compares the given target to all keys in the range [key, range_end).
 	// See RangeRequest for more details on key ranges.
-	RangeEnd []byte `protobuf:"bytes,64,opt,name=range_end,json=rangeEnd,proto3" json:"range_end,omitempty"`
+	RangeEnd string `protobuf:"bytes,64,opt,name=range_end,json=rangeEnd,proto3" json:"range_end,omitempty"`
 }
 
 func (m *Compare) Reset()         { *m = Compare{} }
@@ -898,7 +895,7 @@ type Compare_ModRevision struct {
 	ModRevision int64 `protobuf:"varint,6,opt,name=mod_revision,json=modRevision,proto3,oneof" json:"mod_revision,omitempty"`
 }
 type Compare_Value struct {
-	Value []byte `protobuf:"bytes,7,opt,name=value,proto3,oneof" json:"value,omitempty"`
+	Value string `protobuf:"bytes,7,opt,name=value,proto3,oneof" json:"value,omitempty"`
 }
 type Compare_Lease struct {
 	Lease int64 `protobuf:"varint,8,opt,name=lease,proto3,oneof" json:"lease,omitempty"`
@@ -931,11 +928,11 @@ func (m *Compare) GetTarget() Compare_CompareTarget {
 	return Compare_VERSION
 }
 
-func (m *Compare) GetKey() []byte {
+func (m *Compare) GetKey() string {
 	if m != nil {
 		return m.Key
 	}
-	return nil
+	return ""
 }
 
 func (m *Compare) GetVersion() int64 {
@@ -959,11 +956,11 @@ func (m *Compare) GetModRevision() int64 {
 	return 0
 }
 
-func (m *Compare) GetValue() []byte {
+func (m *Compare) GetValue() string {
 	if x, ok := m.GetTargetUnion().(*Compare_Value); ok {
 		return x.Value
 	}
-	return nil
+	return ""
 }
 
 func (m *Compare) GetLease() int64 {
@@ -973,11 +970,11 @@ func (m *Compare) GetLease() int64 {
 	return 0
 }
 
-func (m *Compare) GetRangeEnd() []byte {
+func (m *Compare) GetRangeEnd() string {
 	if m != nil {
 		return m.RangeEnd
 	}
-	return nil
+	return ""
 }
 
 // XXX_OneofWrappers is for the internal use of the proto package.

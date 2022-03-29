@@ -135,8 +135,6 @@ func getExcludedAlarms(r *http.Request) (alarms AlarmSet) {
 	return alarms
 }
 
-// TODO: etcdserver.ErrNoLeader in health API
-
 func checkHealth(lg *zap.Logger, srv etcdserver.ServerV2, excludedAlarms AlarmSet, serializable bool) Health {
 	h := Health{}
 	h.Health = "true"

@@ -18,8 +18,8 @@ import (
 	"fmt"
 	"math"
 
+	"github.com/ls-2018/etcd_cn/offical/api/v3/mvccpb"
 	"github.com/ls-2018/etcd_cn/pkg/adt"
-	"go.etcd.io/etcd/api/v3/mvccpb"
 )
 
 // watchBatchMaxRevs is the maximum distinct revisions that

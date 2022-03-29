@@ -21,8 +21,8 @@ import (
 	"time"
 
 	v3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/mvccpb"
 	v3pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
-	"go.etcd.io/etcd/api/v3/mvccpb"
 )
 
 const revokeBackoff = 2 * time.Second
@@ -144,7 +144,7 @@ func (lc *leaseCache) Update(key, val []byte, respHeader *v3pb.ResponseHeader) {
 	cacheResp := li.response
 	if len(cacheResp.Kvs) == 0 {
 		kv := &mvccpb.KeyValue{
-			Key:            key,
+			Key:            string(key),
 			CreateRevision: respHeader.Revision,
 		}
 		cacheResp.Kvs = append(cacheResp.Kvs, kv)
@@ -154,7 +154,7 @@ func (lc *leaseCache) Update(key, val []byte, respHeader *v3pb.ResponseHeader) {
 	if cacheResp.Kvs[0].ModRevision < respHeader.Revision {
 		cacheResp.Header = respHeader
 		cacheResp.Kvs[0].ModRevision = respHeader.Revision
-		cacheResp.Kvs[0].Value = val
+		cacheResp.Kvs[0].Value = string(val)
 	}
 }
 
@@ -228,11 +228,9 @@ func (lk *leaseKey) get(op v3.Op) *v3.GetResponse {
 		ret.Kvs = nil
 	} else {
 		kv := *ret.Kvs[0]
-		kv.Key = make([]byte, len(kv.Key))
-		copy(kv.Key, ret.Kvs[0].Key)
+		kv.Key = ret.Kvs[0].Key
 		if !op.IsKeysOnly() {
-			kv.Value = make([]byte, len(kv.Value))
-			copy(kv.Value, ret.Kvs[0].Value)
+			kv.Value = ret.Kvs[0].Value
 		}
 		ret.Kvs = []*mvccpb.KeyValue{&kv}
 	}

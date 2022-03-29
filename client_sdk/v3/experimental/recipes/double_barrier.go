@@ -20,7 +20,7 @@ import (
 	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 
 	"github.com/ls-2018/etcd_cn/client_sdk/v3/concurrency"
-	"go.etcd.io/etcd/api/v3/mvccpb"
+	"github.com/ls-2018/etcd_cn/offical/api/v3/mvccpb"
 )
 
 // DoubleBarrier blocks processes on Enter until an expected count enters, then

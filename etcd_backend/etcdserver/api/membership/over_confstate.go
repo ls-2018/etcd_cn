@@ -49,7 +49,7 @@ func UnsafeConfStateFromBackend(lg *zap.Logger, tx backend.ReadTx) *raftpb.ConfS
 	var confState raftpb.ConfState
 	if err := json.Unmarshal(vals[0], &confState); err != nil {
 		log.Panic("从bolt.db获取到的值无法反序列化",
-			zap.ByteString("conf-state-json", vals[0]),
+			zap.ByteString("conf-state-json", []byte(vals[0])),
 			zap.Error(err))
 	}
 	return &confState
