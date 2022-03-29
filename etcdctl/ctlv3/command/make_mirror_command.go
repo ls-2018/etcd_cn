@@ -22,9 +22,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
-
 	"github.com/bgentry/speakeasy"
+	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 	"github.com/ls-2018/etcd_cn/pkg/cobrautl"
 
 	"github.com/ls-2018/etcd_cn/client_sdk/v3/mirror"

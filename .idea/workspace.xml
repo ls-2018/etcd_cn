@@ -6,140 +6,11 @@
   <component name="ChangeListManager">
     <list default="true" id="49524360-39b2-44cd-b702-de0461fb4222" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/pkg/transport/keepalive_listener.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/pkg/transport/keepalive_listener.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/pkg/transport/limit_listen.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/pkg/transport/limit_listen.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/pkg/transport/listener.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/pkg/transport/listener.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/pkg/transport/listener_tls.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/pkg/transport/listener_tls.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/pkg/transport/timeout_listener.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/pkg/transport/timeout_listener.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v2/client.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v2/client.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v2/client_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v2/client_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/auth.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/auth.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/client.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/client.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/client_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/client_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/compare.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/compare.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/concurrency/election.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/concurrency/election.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/concurrency/key.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/concurrency/key.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/credentials/credentials.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/credentials/credentials.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/ctx.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/ctx.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/ctx_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/ctx_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/experimental/recipes/barrier.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/experimental/recipes/barrier.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/experimental/recipes/client.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/experimental/recipes/client.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/experimental/recipes/double_barrier.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/experimental/recipes/double_barrier.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/experimental/recipes/priority_queue.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/experimental/recipes/priority_queue.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/experimental/recipes/queue.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/experimental/recipes/queue.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/experimental/recipes/rwmutex.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/experimental/recipes/rwmutex.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/experimental/recipes/watch.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/experimental/recipes/watch.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/lease.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/lease.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/leasing/cache.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/leasing/cache.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/leasing/kv.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/leasing/kv.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/leasing/util.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/leasing/util.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/namespace/kv.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/namespace/kv.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/naming/endpoints/endpoints_impl.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/naming/endpoints/endpoints_impl.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/op.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/op.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/retry.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/retry.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/retry_interceptor.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/retry_interceptor.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/watch.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/watch.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/watch_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/watch_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/code_debug/conn/addr.go" beforeDir="false" afterPath="$PROJECT_DIR$/code_debug/conn/addr.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/code_debug/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/code_debug/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/auth/range_perm_cache.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/auth/range_perm_cache.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/auth/range_perm_cache_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/auth/range_perm_cache_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/auth/store.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/auth/store.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/auth/store_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/auth/store_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/embed/config_logging.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/embed/config_logging.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/embed/etcd.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/embed/etcd.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdmain/config.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdmain/config.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/api/capability.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/api/capability.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/api/etcdhttp/a.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/api/etcdhttp/a.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/api/etcdhttp/over_base.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/api/etcdhttp/over_base.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/api/membership/over_cluster.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/api/membership/over_cluster.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/api/membership/over_confstate.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/api/membership/over_confstate.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/api/membership/over_downgrade.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/api/membership/over_downgrade.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/api/rafthttp/raft_stream_api.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/api/rafthttp/raft_stream_api.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/api/rafthttp/stream.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/api/rafthttp/stream.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/api/rafthttp/util.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/api/rafthttp/util.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/api/v2v3/store.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/api/v2v3/store.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/api/v3election/v3electionpb/v3election.pb.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/api/v3election/v3electionpb/v3election.pb.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/api/v3rpc/interceptor.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/api/v3rpc/interceptor.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/api/v3rpc/key.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/api/v3rpc/key.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/api/v3rpc/lease.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/api/v3rpc/lease.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/api/v3rpc/maintenance.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/api/v3rpc/maintenance.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/api/v3rpc/over_member.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/api/v3rpc/over_member.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/api/v3rpc/over_quota.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/api/v3rpc/over_quota.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/api/v3rpc/util.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/api/v3rpc/util.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/api/v3rpc/util_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/api/v3rpc/util_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/api/v3rpc/watch.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/api/v3rpc/watch.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/api/v3rpc/watch_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/api/v3rpc/watch_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/api_hashkv.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/api_hashkv.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/apply.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/apply_v3.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/apply_auth.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/apply_auth.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/cluster_util.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/cluster_util.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/corrupt.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/corrupt.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/server.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/server.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/v3_server.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/v3_server.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/v3service_cluster.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/v3service_cluster.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/v3service_kv.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/v3service_kv.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/lease/lessor_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/lease/lessor_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/backend/backend_bolt.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/backend/backend_bolt.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/backend/backend_bolt_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/backend/bolt_batch_tx.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/backend/bolt_batch_tx.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/backend/bolt_batch_tx_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/backend/export_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/backend/hooks_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/backend/read_tx.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/backend/read_tx.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/backend/tx_buffer.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/backend/tx_buffer.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/index.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/index.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/key_index.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/key_index.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/kv.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/kv.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/kv_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/kv_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/kvstore.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/kvstore.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/kvstore_compaction_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/kvstore_compaction_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/kvstore_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/kvstore_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/kvstore_txn.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/kvstore_txn.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/metrics_txn.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/revision.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/over_revision.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/revision_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/util.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/util.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/watchable_store.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/watchable_store.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/watchable_store_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/watchable_store_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/watchable_store_txn.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/watchable_store_txn.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/watcher.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/watcher.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/watcher_group.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/watcher_group.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/watcher_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/watcher_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/proxy/grpcproxy/cache/store.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/proxy/grpcproxy/cache/store.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/proxy/grpcproxy/health.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/proxy/grpcproxy/health.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/proxy/grpcproxy/kv.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/proxy/grpcproxy/kv.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/proxy/grpcproxy/lease.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/proxy/grpcproxy/lease.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/proxy/grpcproxy/util.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/proxy/grpcproxy/util.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/proxy/grpcproxy/watch.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/proxy/grpcproxy/watch.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/proxy/grpcproxy/watcher.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/proxy/grpcproxy/watcher.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/proxy/tcpproxy/userspace.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/proxy/tcpproxy/userspace.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/auth_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/auth_command.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/ep_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/ep_command.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/get_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/get_command.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client_sdk/v3/mirror/syncer.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/mirror/syncer.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/demo/etcdMutex/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/demo/etcdMutex/main.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/make_mirror_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/make_mirror_command.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/printer_fields.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/printer_fields.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/printer_protobuf.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/printer_protobuf.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/printer_simple.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/printer_simple.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/txn_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/txn_command.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/util.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/util.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/version_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/version_command.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/ctl.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/ctl.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcdutl/etcdutl/backup_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdutl/etcdutl/backup_command.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/offical/etcdserverpb/a.py" beforeDir="false" afterPath="$PROJECT_DIR$/offical/api/v3/a.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/offical/etcdserverpb/over.go" beforeDir="false" afterPath="$PROJECT_DIR$/offical/etcdserverpb/over.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/offical/etcdserverpb/raft_internal.pb.go" beforeDir="false" afterPath="$PROJECT_DIR$/offical/etcdserverpb/raft_internal.pb.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/offical/etcdserverpb/raft_internal_stringer.go" beforeDir="false" afterPath="$PROJECT_DIR$/offical/etcdserverpb/raft_internal_stringer.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/offical/etcdserverpb/rpc.pb.go" beforeDir="false" afterPath="$PROJECT_DIR$/offical/etcdserverpb/rpc.pb.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/adt/interval_tree.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/adt/interval_tree.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/pbutil/over_pbutil.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/pbutil/over_pbutil.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/proxy/server.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/proxy/server.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/raft/role.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/role.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/raftexample/httpapi.go" beforeDir="false" afterPath="$PROJECT_DIR$/raftexample/httpapi.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/genproto.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/genproto.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/etcd-dump-db/backend.go" beforeDir="false" afterPath="$PROJECT_DIR$/tools/etcd-dump-db/backend.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -167,6 +38,7 @@
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">
+    <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
@@ -174,16 +46,20 @@
     <property name="go.import.settings.migrated" value="true" />
     <property name="go.modules.go.list.on.any.changes.was.set" value="true" />
     <property name="go.sdk.automatically.set" value="true" />
-    <property name="last_opened_file_path" value="$USER_HOME$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/offical" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
     <property name="vue.rearranger.settings.migration" value="true" />
   </component>
   <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/offical" />
+    </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/offical/client" />
       <recent name="$PROJECT_DIR$/offical/api/v3" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.a">
+  <component name="RunManager" selected="Go Build.go build main.go">
     <configuration name="go build main.go" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
       <module name="etcd_cn" />
       <working_directory value="$PROJECT_DIR$" />
@@ -216,8 +92,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.a" />
         <item itemvalue="Go Build.go build main.go" />
+        <item itemvalue="Python.a" />
       </list>
     </recent_temporary>
   </component>
@@ -235,6 +111,9 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
   </component>
   <component name="VgoProject">
     <integration-enabled>true</integration-enabled>

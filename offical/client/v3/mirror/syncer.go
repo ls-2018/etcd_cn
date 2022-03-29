@@ -18,7 +18,7 @@ package mirror
 import (
 	"context"
 
-	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
+	"github.com/ls-2018/etcd_cn/offical/client/v3"
 )
 
 const (
@@ -96,7 +96,7 @@ func (s *syncer) SyncBase(ctx context.Context) (<-chan clientv3.GetResponse, cha
 				return
 			}
 			// move to next key
-			key = string(append([]byte(resp.Kvs[len(resp.Kvs)-1].Key), 0))
+			key = string(append(resp.Kvs[len(resp.Kvs)-1].Key, 0))
 		}
 	}()
 
