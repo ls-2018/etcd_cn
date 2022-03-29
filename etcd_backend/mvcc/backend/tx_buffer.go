@@ -16,6 +16,7 @@ package backend
 
 import (
 	"bytes"
+	"fmt"
 	"sort"
 )
 
@@ -99,13 +100,6 @@ type txReadBuffer struct {
 	bufVersion uint64 // 用于检查缓存最新是否更新了
 }
 
-func (txr *txReadBuffer) Range(bucket Bucket, key, endKey []byte, limit int64) ([][]byte, [][]byte) {
-	if b := txr.buckets[bucket.ID()]; b != nil {
-		return b.Range(key, endKey, limit)
-	}
-	return nil, nil
-}
-
 func (txr *txReadBuffer) ForEach(bucket Bucket, visitor func(k, v []byte) error) error {
 	if b := txr.buckets[bucket.ID()]; b != nil {
 		return b.ForEach(visitor)
@@ -114,7 +108,7 @@ func (txr *txReadBuffer) ForEach(bucket Bucket, visitor func(k, v []byte) error)
 }
 
 type kv struct {
-	key string
+	key []byte
 	val string
 }
 
@@ -124,34 +118,8 @@ type bucketBuffer struct {
 	used int // 跟踪使用中的元素数量，这样buf可以重用而不需要重新分配。
 }
 
-func newBucketBuffer() *bucketBuffer {
+func newBucketBuffer() *bucketBuffer { // 512
 	return &bucketBuffer{buf: make([]kv, bucketBufferInitialSize), used: 0}
-}
-
-func (bb *bucketBuffer) Range(key, endKey []byte, limit int64) (keys [][]byte, vals [][]byte) {
-	f := func(i int) bool { return bytes.Compare([]byte(bb.buf[i].key), key) >= 0 }
-	idx := sort.Search(bb.used, f)
-	if idx < 0 {
-		return nil, nil
-	}
-	if len(endKey) == 0 {
-		if bytes.Equal(key, []byte(bb.buf[idx].key)) {
-			keys = append(keys, []byte(bb.buf[idx].key))
-			vals = append(vals, []byte(bb.buf[idx].val))
-		}
-		return keys, vals
-	}
-	if bytes.Compare(endKey, []byte(bb.buf[idx].key)) <= 0 {
-		return nil, nil
-	}
-	for i := idx; i < bb.used && int64(len(keys)) < limit; i++ {
-		if bytes.Compare(endKey, []byte(bb.buf[i].key)) <= 0 {
-			break
-		}
-		keys = append(keys, []byte(bb.buf[i].key))
-		vals = append(vals, []byte(bb.buf[i].val))
-	}
-	return keys, vals
 }
 
 func (bb *bucketBuffer) ForEach(visitor func(k, v []byte) error) error {
@@ -164,7 +132,7 @@ func (bb *bucketBuffer) ForEach(visitor func(k, v []byte) error) error {
 }
 
 func (bb *bucketBuffer) add(k, v []byte) {
-	bb.buf[bb.used].key, bb.buf[bb.used].val = string(k), string(v)
+	bb.buf[bb.used].key, bb.buf[bb.used].val = k, string(v)
 	bb.used++
 	if bb.used == len(bb.buf) {
 		buf := make([]kv, (3*len(bb.buf))/2)
@@ -225,4 +193,44 @@ func (txr *txReadBuffer) unsafeCopy() txReadBuffer {
 		txrCopy.txBuffer.buckets[bucketName] = bucket.Copy()
 	}
 	return txrCopy
+}
+
+func (bb *bucketBuffer) Range(key, endKey []byte, limit int64) (keys [][]byte, vals [][]byte) {
+	f := func(i int) bool {
+		return bytes.Compare([]byte(bb.buf[i].key), key) >= 0
+	}
+	idx := sort.Search(bb.used, f) // 找到第一个返回TRUE的索引
+	if idx < 0 {                   // 没招到
+		return nil, nil
+	}
+	if len(endKey) == 0 {
+		if bytes.Equal(key, []byte(bb.buf[idx].key)) {
+			keys = append(keys, []byte(bb.buf[idx].key))
+			vals = append(vals, []byte(bb.buf[idx].val))
+		}
+		fmt.Println(fmt.Sprintf("get %s:%s", string(bb.buf[idx].key), bb.buf[idx].val))
+		return keys, vals
+	}
+	// 缓存中没有对应的key
+	// bb.buf[idx].key >  endKey
+	if bytes.Compare(endKey, []byte(bb.buf[idx].key)) <= 0 {
+		return nil, nil
+	}
+	for i := idx; i < bb.used && int64(len(keys)) < limit; i++ {
+		// bb.buf[idx].key >  endKey
+		if bytes.Compare(endKey, []byte(bb.buf[i].key)) <= 0 {
+			break
+		}
+		keys = append(keys, []byte(bb.buf[i].key))
+		vals = append(vals, []byte(bb.buf[i].val))
+	}
+	return keys, vals
+}
+
+// Range OK
+func (txr *txReadBuffer) Range(bucket Bucket, key, endKey []byte, limit int64) ([][]byte, [][]byte) {
+	if b := txr.buckets[bucket.ID()]; b != nil {
+		return b.Range(key, endKey, limit)
+	}
+	return nil, nil
 }

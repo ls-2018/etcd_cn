@@ -150,7 +150,7 @@ func (t *batchTx) UnsafeDelete(bucketType Bucket, key []byte) {
 	bucket := t.tx.Bucket(bucketType.Name())
 	if bucket == nil {
 		t.backend.lg.Fatal(
-			"failed to find a bucket",
+			"查找桶失败",
 			zap.Stringer("bucket-name", bucketType),
 			zap.Stack("stack"),
 		)
@@ -158,7 +158,7 @@ func (t *batchTx) UnsafeDelete(bucketType Bucket, key []byte) {
 	err := bucket.Delete(key)
 	if err != nil {
 		t.backend.lg.Fatal(
-			"failed to delete a key",
+			"删除一个key失败",
 			zap.Stringer("bucket-name", bucketType),
 			zap.Error(err),
 		)

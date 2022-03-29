@@ -23,7 +23,7 @@ import (
 	"go.uber.org/zap"
 )
 
-var ErrRevisionNotFound = errors.New("mvcc: revision not found")
+var ErrRevisionNotFound = errors.New("mvcc: 修订版本没有找到")
 
 // keyIndex stores the revisions of a key in the backend.
 // Each keyIndex has at least one key generation.
@@ -66,18 +66,17 @@ var ErrRevisionNotFound = errors.New("mvcc: revision not found")
 // generations:
 //    {empty} -> key SHOULD be removed.
 type keyIndex struct {
-	key         string
+	key         string   // key
 	modified    revision // 一个key 最后一次修改的revision .
 	generations []generation
 }
 
-// put puts a revision to the keyIndex.
+// put 将一个修订放到keyIndex中。
 func (ki *keyIndex) put(lg *zap.Logger, main int64, sub int64) {
 	rev := revision{main: main, sub: sub}
-
 	if !rev.GreaterThan(ki.modified) {
 		lg.Panic(
-			"'put' with an unexpected smaller revision",
+			"'put'有一个意想不到的小修改",
 			zap.Int64("given-revision-main", rev.main),
 			zap.Int64("given-revision-sub", rev.sub),
 			zap.Int64("modified-revision-main", ki.modified.main),
@@ -103,7 +102,6 @@ func (ki *keyIndex) restore(lg *zap.Logger, created, modified revision, ver int6
 			zap.Int("generations-size", len(ki.generations)),
 		)
 	}
-
 	ki.modified = modified
 	g := generation{created: created, ver: ver, revs: []revision{modified}}
 	ki.generations = append(ki.generations, g)
@@ -326,10 +324,10 @@ func (ki *keyIndex) String() string {
 	return s
 }
 
-// generation contains multiple revisions of a key.
+// generation  包含一个key的多个版本。
 type generation struct {
 	ver     int64
-	created revision // when the generation is created (put in first revision).
+	created revision // 被创建时(放入第一个修订版本)。
 	revs    []revision
 }
 

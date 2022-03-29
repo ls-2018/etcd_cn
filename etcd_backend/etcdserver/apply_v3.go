@@ -837,45 +837,6 @@ func (a *quotaApplierV3) LeaseGrant(lc *pb.LeaseGrantRequest) (*pb.LeaseGrantRes
 	return resp, err
 }
 
-type kvSort struct{ kvs []mvccpb.KeyValue }
-
-func (s *kvSort) Swap(i, j int) {
-	t := s.kvs[i]
-	s.kvs[i] = s.kvs[j]
-	s.kvs[j] = t
-}
-func (s *kvSort) Len() int { return len(s.kvs) }
-
-type kvSortByKey struct{ *kvSort }
-
-func (s *kvSortByKey) Less(i, j int) bool {
-	return bytes.Compare([]byte(s.kvs[i].Key), []byte(s.kvs[j].Key)) < 0
-}
-
-type kvSortByVersion struct{ *kvSort }
-
-func (s *kvSortByVersion) Less(i, j int) bool {
-	return (s.kvs[i].Version - s.kvs[j].Version) < 0
-}
-
-type kvSortByCreate struct{ *kvSort }
-
-func (s *kvSortByCreate) Less(i, j int) bool {
-	return (s.kvs[i].CreateRevision - s.kvs[j].CreateRevision) < 0
-}
-
-type kvSortByMod struct{ *kvSort }
-
-func (s *kvSortByMod) Less(i, j int) bool {
-	return (s.kvs[i].ModRevision - s.kvs[j].ModRevision) < 0
-}
-
-type kvSortByValue struct{ *kvSort }
-
-func (s *kvSortByValue) Less(i, j int) bool {
-	return bytes.Compare([]byte(s.kvs[i].Value), []byte(s.kvs[j].Value)) < 0
-}
-
 func checkRequests(rv mvcc.ReadView, rt *pb.TxnRequest, txnPath []bool, f checkReqFunc) (int, error) {
 	txnCount := 0
 	reqs := rt.Success
@@ -973,6 +934,7 @@ func removeNeedlessRangeReqs(txn *pb.TxnRequest) {
 	txn.Failure = f(txn.Failure)
 }
 
+// 修剪查询到的数据
 func pruneKVs(rr *mvcc.RangeResult, isPrunable func(*mvccpb.KeyValue) bool) {
 	j := 0
 	for i := range rr.KVs {
@@ -995,6 +957,7 @@ func newHeader(s *EtcdServer) *pb.ResponseHeader {
 
 // ----------------------------------------   OVER  ------------------------------------------------------------
 
+// Range 👌🏻
 func (a *applierV3backend) Range(ctx context.Context, txn mvcc.TxnRead, r *pb.RangeRequest) (*pb.RangeResponse, error) {
 	trace := traceutil.Get(ctx)
 	resp := &pb.RangeResponse{}
@@ -1027,7 +990,7 @@ func (a *applierV3backend) Range(ctx context.Context, txn mvcc.TxnRead, r *pb.Ra
 	if err != nil {
 		return nil, err
 	}
-
+	// 修剪查询到的数据
 	if r.MaxModRevision != 0 {
 		f := func(kv *mvccpb.KeyValue) bool { return kv.ModRevision > r.MaxModRevision }
 		pruneKVs(rr, f)
@@ -1045,11 +1008,10 @@ func (a *applierV3backend) Range(ctx context.Context, txn mvcc.TxnRead, r *pb.Ra
 		pruneKVs(rr, f)
 	}
 
-	sortOrder := r.SortOrder
+	sortOrder := r.SortOrder // 默认不排序
+	// 默认是请求的key
 	if r.SortTarget != pb.RangeRequest_KEY && sortOrder == pb.RangeRequest_NONE {
-		// Since current mvcc.Range implementation returns results
-		// sorted by keys in lexiographically ascending order,
-		// sort ASCEND by default only when target is not 'KEY'
+		// 因为当前mvcc。Range实现返回按字序升序排序的结果，默认情况下，只有当target不是'KEY'时，排序才会升序。
 		sortOrder = pb.RangeRequest_ASCEND
 	}
 	if sortOrder != pb.RangeRequest_NONE {
@@ -1078,7 +1040,7 @@ func (a *applierV3backend) Range(ctx context.Context, txn mvcc.TxnRead, r *pb.Ra
 		rr.KVs = rr.KVs[:r.Limit]
 		resp.More = true
 	}
-	trace.Step("filter and sort the key-value pairs")
+	trace.Step("筛选键值对并对其排序")
 	resp.Header.Revision = rr.Rev
 	resp.Count = int64(rr.Count)
 	resp.Kvs = make([]*mvccpb.KeyValue, len(rr.KVs))
@@ -1088,7 +1050,7 @@ func (a *applierV3backend) Range(ctx context.Context, txn mvcc.TxnRead, r *pb.Ra
 		}
 		resp.Kvs[i] = &rr.KVs[i]
 	}
-	trace.Step("assemble the response")
+	trace.Step("组装响应")
 	return resp, nil
 }
 
@@ -1097,4 +1059,44 @@ func mkGteRange(rangeEnd []byte) []byte {
 		return []byte{}
 	}
 	return rangeEnd
+}
+
+// 根据不同字段进行比较时，使用不同字段
+type kvSort struct{ kvs []mvccpb.KeyValue }
+
+func (s *kvSort) Swap(i, j int) {
+	t := s.kvs[i]
+	s.kvs[i] = s.kvs[j]
+	s.kvs[j] = t
+}
+func (s *kvSort) Len() int { return len(s.kvs) }
+
+type kvSortByKey struct{ *kvSort }
+
+func (s *kvSortByKey) Less(i, j int) bool {
+	return bytes.Compare([]byte(s.kvs[i].Key), []byte(s.kvs[j].Key)) < 0
+}
+
+type kvSortByVersion struct{ *kvSort }
+
+func (s *kvSortByVersion) Less(i, j int) bool {
+	return (s.kvs[i].Version - s.kvs[j].Version) < 0
+}
+
+type kvSortByCreate struct{ *kvSort }
+
+func (s *kvSortByCreate) Less(i, j int) bool {
+	return (s.kvs[i].CreateRevision - s.kvs[j].CreateRevision) < 0
+}
+
+type kvSortByMod struct{ *kvSort }
+
+func (s *kvSortByMod) Less(i, j int) bool {
+	return (s.kvs[i].ModRevision - s.kvs[j].ModRevision) < 0
+}
+
+type kvSortByValue struct{ *kvSort }
+
+func (s *kvSortByValue) Less(i, j int) bool {
+	return bytes.Compare([]byte(s.kvs[i].Value), []byte(s.kvs[j].Value)) < 0
 }

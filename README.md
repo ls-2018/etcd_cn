@@ -497,3 +497,9 @@ HTTP/2.0 多路复用机制,减少了大量 watcher 等场景下的连接数； 
 过期的时候自动删除相关联的所有 key,不再需要为每个 key 单独续期； 4、etcd v3 支持范围、分页查询,可避免大包等 expensive request.
 
 pb.Message.Entries =  [ pb.InternalRaftRequest ] 
+
+
+etcd中每新建一个key ,会为其分配一个主版本,同时还有一个sub版本,长度17byte
+格式： 8byte_8byte
+例如[00000002_00000000]---> 转换成bolt.db的键值就是  00000000000000025f0000000000000000
+

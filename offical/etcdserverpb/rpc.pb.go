@@ -62,9 +62,9 @@ func (AlarmType) EnumDescriptor() ([]byte, []int) {
 type RangeRequest_SortOrder int32
 
 const (
-	RangeRequest_NONE    RangeRequest_SortOrder = 0
-	RangeRequest_ASCEND  RangeRequest_SortOrder = 1
-	RangeRequest_DESCEND RangeRequest_SortOrder = 2
+	RangeRequest_NONE    RangeRequest_SortOrder = 0 // 不排序
+	RangeRequest_ASCEND  RangeRequest_SortOrder = 1 // 升序
+	RangeRequest_DESCEND RangeRequest_SortOrder = 2 // 降序
 )
 
 var RangeRequest_SortOrder_name = map[int32]string{
@@ -334,7 +334,7 @@ type RangeRequest struct {
 	// If revision is less or equal to zero, the range is over the newest key-value store.
 	// If the revision has been compacted, ErrCompacted is returned as a response.
 	Revision int64 `protobuf:"varint,4,opt,name=revision,proto3" json:"revision,omitempty"`
-	// sort_order is the order for returned sorted results.
+	// 返回的数据 排序方式
 	SortOrder RangeRequest_SortOrder `protobuf:"varint,5,opt,name=sort_order,json=sortOrder,proto3,enum=etcdserverpb.RangeRequest_SortOrder" json:"sort_order,omitempty"`
 	// sort_target is the key-value field to use for sorting.
 	SortTarget RangeRequest_SortTarget `protobuf:"varint,6,opt,name=sort_target,json=sortTarget,proto3,enum=etcdserverpb.RangeRequest_SortTarget" json:"sort_target,omitempty"`

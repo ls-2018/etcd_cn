@@ -65,29 +65,6 @@ func (ti *treeIndex) Put(key []byte, rev revision) {
 	okeyi.put(ti.lg, rev.main, rev.sub)
 }
 
-func (ti *treeIndex) Get(key []byte, atRev int64) (modified, created revision, ver int64, err error) {
-	keyi := &keyIndex{key: string(key)}
-	ti.RLock()
-	defer ti.RUnlock()
-	if keyi = ti.keyIndex(keyi); keyi == nil {
-		return revision{}, revision{}, 0, ErrRevisionNotFound
-	}
-	return keyi.get(ti.lg, atRev)
-}
-
-func (ti *treeIndex) KeyIndex(keyi *keyIndex) *keyIndex {
-	ti.RLock()
-	defer ti.RUnlock()
-	return ti.keyIndex(keyi)
-}
-
-func (ti *treeIndex) keyIndex(keyi *keyIndex) *keyIndex {
-	if item := ti.tree.Get(keyi); item != nil {
-		return item.(*keyIndex)
-	}
-	return nil
-}
-
 func (ti *treeIndex) visit(key, end []byte, f func(ki *keyIndex) bool) {
 	keyi, endi := &keyIndex{key: string(key)}, &keyIndex{key: string(end)}
 
@@ -105,28 +82,8 @@ func (ti *treeIndex) visit(key, end []byte, f func(ki *keyIndex) bool) {
 	})
 }
 
-func (ti *treeIndex) Revisions(key, end []byte, atRev int64, limit int) (revs []revision, total int) {
-	if end == nil {
-		rev, _, _, err := ti.Get(key, atRev)
-		if err != nil {
-			return nil, 0
-		}
-		return []revision{rev}, 1
-	}
-	ti.visit(key, end, func(ki *keyIndex) bool {
-		if rev, _, _, err := ki.get(ti.lg, atRev); err == nil {
-			if limit <= 0 || len(revs) < limit {
-				revs = append(revs, rev)
-			}
-			total++
-		}
-		return true
-	})
-	return revs, total
-}
-
 func (ti *treeIndex) CountRevisions(key, end []byte, atRev int64) int {
-	if end == nil {
+	if end == nil || len(end) == 0 {
 		_, _, _, err := ti.Get(key, atRev)
 		if err != nil {
 			return 0
@@ -144,7 +101,7 @@ func (ti *treeIndex) CountRevisions(key, end []byte, atRev int64) int {
 }
 
 func (ti *treeIndex) Range(key, end []byte, atRev int64) (keys [][]byte, revs []revision) {
-	if end == nil {
+	if end == nil || len(end) == 0 {
 		rev, _, _, err := ti.Get(key, atRev)
 		if err != nil {
 			return nil, nil
@@ -184,7 +141,7 @@ func (ti *treeIndex) RangeSince(key, end []byte, rev int64) []revision {
 	ti.RLock()
 	defer ti.RUnlock()
 
-	if end == nil {
+	if end == nil || len(end) == 0 {
 		item := ti.tree.Get(keyi)
 		if item == nil {
 			return nil
@@ -266,6 +223,55 @@ func (ti *treeIndex) Equal(bi index) bool {
 	})
 
 	return equal
+}
+
+// ---------------------------------------- OVER  --------------------------------------------------------------
+
+// Get 获取某个key的某个版本的索引号
+func (ti *treeIndex) Get(key []byte, atRev int64) (modified, created revision, ver int64, err error) {
+	keyi := &keyIndex{key: string(key)}
+	ti.RLock()
+	defer ti.RUnlock()
+	// 判断key 在不在btree里
+	if keyi = ti.keyIndex(keyi); keyi == nil {
+		return revision{}, revision{}, 0, ErrRevisionNotFound
+	}
+	return keyi.get(ti.lg, atRev)
+}
+
+// Revisions 获取所有修正版本
+func (ti *treeIndex) Revisions(key, end []byte, atRev int64, limit int) (revs []revision, total int) {
+	if end == nil || len(end) == 0 {
+		rev, _, _, err := ti.Get(key, atRev)
+		if err != nil {
+			return nil, 0
+		}
+		return []revision{rev}, 1
+	}
+	ti.visit(key, end, func(ki *keyIndex) bool {
+		if rev, _, _, err := ki.get(ti.lg, atRev); err == nil {
+			if limit <= 0 || len(revs) < limit {
+				revs = append(revs, rev)
+			}
+			total++
+		}
+		return true
+	})
+	return revs, total
+}
+
+func (ti *treeIndex) KeyIndex(keyi *keyIndex) *keyIndex {
+	ti.RLock()
+	defer ti.RUnlock()
+	return ti.keyIndex(keyi)
+}
+
+// 判断有没这个key,
+func (ti *treeIndex) keyIndex(keyi *keyIndex) *keyIndex {
+	if item := ti.tree.Get(keyi); item != nil {
+		return item.(*keyIndex)
+	}
+	return nil
 }
 
 func (ti *treeIndex) Insert(ki *keyIndex) {

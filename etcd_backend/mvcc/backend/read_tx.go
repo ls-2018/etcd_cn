@@ -41,12 +41,12 @@ type ReadTx interface {
 type baseReadTx struct {
 	// 写事务执行End时候需要获取这个写锁然后把写事务的更新写到 baseReadTx 的buffer里面；
 	// 创建 concurrentReadTx 时候需要获取读锁因为需要拷贝buffer
-	mu      sync.RWMutex  // 保护 txReadBuffer 的访问
-	buf     txReadBuffer  // 用于加速读效率的缓存  blot.db的记录
-	txMu    *sync.RWMutex // 保护下面的tx和buckets
-	tx      *bolt.Tx
-	buckets map[BucketID]*bolt.Bucket
-	txWg    *sync.WaitGroup // txWg 保护 tx 在批处理间隔结束时不会被回滚直到使用此 tx 的所有读取完成.
+	mu      sync.RWMutex              // 保护 txReadBuffer 的访问
+	buf     txReadBuffer              // 用于加速读效率的缓存  blot.db的记录
+	txMu    *sync.RWMutex             // 保护下面的tx和buckets
+	tx      *bolt.Tx                  // ?
+	buckets map[BucketID]*bolt.Bucket // 底层bolt.db 每个bucket 的引用
+	txWg    *sync.WaitGroup           // txWg 保护 tx 在批处理间隔结束时不会被回滚直到使用此 tx 的所有读取完成.
 }
 
 func (baseReadTx *baseReadTx) UnsafeForEach(bucket Bucket, visitor func(k, v []byte) error) error {
@@ -73,8 +73,9 @@ func (baseReadTx *baseReadTx) UnsafeForEach(bucket Bucket, visitor func(k, v []b
 	return baseReadTx.buf.ForEach(bucket, visitor)
 }
 
+// UnsafeRange 从blot.db 查找键值对
 func (baseReadTx *baseReadTx) UnsafeRange(bucketType Bucket, key, endKey []byte, limit int64) ([][]byte, [][]byte) {
-	if endKey == nil {
+	if endKey == nil || len(endKey) == 0 {
 		// forbid duplicates for single keys
 		limit = 1
 	}
@@ -91,8 +92,8 @@ func (baseReadTx *baseReadTx) UnsafeRange(bucketType Bucket, key, endKey []byte,
 		return keys, vals
 	}
 
-	// find/cache bucket
-	bn := bucketType.ID()
+	// 查找、创建桶
+	bn := bucketType.ID() // key桶的ID是1
 	baseReadTx.txMu.RLock()
 	bucket, ok := baseReadTx.buckets[bn]
 	baseReadTx.txMu.RUnlock()
@@ -100,12 +101,12 @@ func (baseReadTx *baseReadTx) UnsafeRange(bucketType Bucket, key, endKey []byte,
 	if !ok {
 		baseReadTx.txMu.Lock()
 		lockHeld = true
-		bucket = baseReadTx.tx.Bucket(bucketType.Name())
+		bucket = baseReadTx.tx.Bucket(bucketType.Name()) // 创建一个桶
 		baseReadTx.buckets[bn] = bucket
 	}
 
-	// ignore missing bucket since may have been created in this batch
-	if bucket == nil {
+	// 忽略丢失的桶，因为可能已在此批处理中创建
+	if bucket == nil { // 在等锁的时候，另外一个调用创建了该桶,低概率事件
 		if lockHeld {
 			baseReadTx.txMu.Unlock()
 		}
@@ -117,7 +118,7 @@ func (baseReadTx *baseReadTx) UnsafeRange(bucketType Bucket, key, endKey []byte,
 	c := bucket.Cursor()
 	baseReadTx.txMu.Unlock()
 	// 将查询缓存的结采与查询 BlotDB 的结果合并 然后返回
-	k2, v2 := unsafeRange(c, key, endKey, limit-int64(len(keys)))
+	k2, v2 := unsafeRange(c, key, endKey, limit-int64(len(keys))) // 刨除在缓存中找到的，剩余的从bolt.db中查找
 	return append(k2, keys...), append(v2, vals...)
 }
 

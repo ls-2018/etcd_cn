@@ -36,10 +36,12 @@ type storeTxnRead struct {
 func (tr *storeTxnRead) FirstRev() int64 { return tr.firstRev }
 func (tr *storeTxnRead) Rev() int64      { return tr.rev }
 
+// Range OK
 func (tr *storeTxnRead) Range(ctx context.Context, key, end []byte, ro RangeOptions) (r *RangeResult, err error) {
 	return tr.rangeKeys(ctx, key, end, tr.Rev(), ro)
 }
 
+// OK
 func (tr *storeTxnRead) rangeKeys(ctx context.Context, key, end []byte, curRev int64, ro RangeOptions) (*RangeResult, error) {
 	rev := ro.Rev // 指定修订版本
 	if rev > curRev {
@@ -56,7 +58,7 @@ func (tr *storeTxnRead) rangeKeys(ctx context.Context, key, end []byte, curRev i
 		tr.trace.Step("从内存索引树中统计修订数")
 		return &RangeResult{KVs: nil, Count: total, Rev: curRev}, nil
 	}
-	// 获取数据
+	// 获取版本数据
 	revpairs, total := tr.s.kvindex.Revisions(key, end, rev, int(ro.Limit))
 	tr.trace.Step("从内存索引树中获取指定范围的keys")
 	if len(revpairs) == 0 {
@@ -70,6 +72,7 @@ func (tr *storeTxnRead) rangeKeys(ctx context.Context, key, end []byte, curRev i
 
 	kvs := make([]mvccpb.KeyValue, limit)
 	revBytes := newRevBytes() // len 为17的数组
+	// 拿着索引数据去bolt.db 查数据
 	for i, revpair := range revpairs[:len(kvs)] {
 		select {
 		case <-ctx.Done():
@@ -147,8 +150,7 @@ func (tw *storeTxnWrite) put(key, value []byte, leaseID lease.LeaseID) {
 	c := rev
 	oldLease := lease.NoLease
 
-	// if the key exists before, use its previous created and
-	// get its previous leaseID
+	// 如果该键之前存在，使用它之前创建的并获取它之前的leaseID
 	_, created, ver, err := tw.s.kvindex.Get(key, rev)
 	if err == nil {
 		c = created.main
