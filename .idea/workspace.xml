@@ -137,6 +137,7 @@
       <change beforePath="$PROJECT_DIR$/pkg/pbutil/over_pbutil.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/pbutil/over_pbutil.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pkg/proxy/server.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/proxy/server.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/raft/role.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/role.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/raftexample/httpapi.go" beforeDir="false" afterPath="$PROJECT_DIR$/raftexample/httpapi.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/scripts/genproto.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/genproto.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tools/etcd-dump-db/backend.go" beforeDir="false" afterPath="$PROJECT_DIR$/tools/etcd-dump-db/backend.go" afterDir="false" />
     </list>
