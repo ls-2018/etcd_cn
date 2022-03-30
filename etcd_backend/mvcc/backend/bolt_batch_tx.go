@@ -84,6 +84,7 @@ func (t *batchTx) UnsafePut(bucket Bucket, key []byte, value []byte) {
 	t.unsafePut(bucket, key, value, false)
 }
 
+// UnsafeSeqPut OK
 func (t *batchTx) UnsafeSeqPut(bucket Bucket, key []byte, value []byte) {
 	t.unsafePut(bucket, key, value, true)
 }

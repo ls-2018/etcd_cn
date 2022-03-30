@@ -29,7 +29,10 @@ type RequestHeader struct {
 	// username is a username that is associated with an auth token of gRPC connection
 	Username string `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
 	// auth_revision is a revision number of auth.authStore. It is not related to mvcc
-	AuthRevision uint64 `protobuf:"varint,3,opt,name=auth_revision,json=authRevision,proto3" json:"auth_revision,omitempty"`
+	AuthRevision         uint64   `protobuf:"varint,3,opt,name=auth_revision,json=authRevision,proto3" json:"auth_revision,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
 func (m *RequestHeader) Reset()         { *m = RequestHeader{} }
@@ -86,7 +89,11 @@ func (*InternalRaftRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b4c9a9be0cfca103, []int{1}
 }
 
-type EmptyResponse struct{}
+type EmptyResponse struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
 
 func (m *EmptyResponse) Reset()         { *m = EmptyResponse{} }
 func (m *EmptyResponse) String() string { return proto.CompactTextString(m) }
@@ -102,7 +109,10 @@ type InternalAuthenticateRequest struct {
 	Name     string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	Password string `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
 	// simple_token is generated in API layer (etcdserver/v3_server.go)
-	SimpleToken string `protobuf:"bytes,3,opt,name=simple_token,json=simpleToken,proto3" json:"simple_token,omitempty"`
+	SimpleToken          string   `protobuf:"bytes,3,opt,name=simple_token,json=simpleToken,proto3" json:"simple_token,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
 func (m *InternalAuthenticateRequest) Reset()         { *m = InternalAuthenticateRequest{} }
@@ -188,18 +198,15 @@ var fileDescriptor_b4c9a9be0cfca103 = []byte{
 	0x00, 0xff, 0xff, 0x94, 0x6f, 0x64, 0x0a, 0x98, 0x0a, 0x00, 0x00,
 }
 
-func (m *RequestHeader) Marshal() (dAtA []byte, err error) {
-	return json.Marshal(m)
-}
+var (
+	ErrInvalidLengthRaftInternal        = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowRaftInternal          = fmt.Errorf("proto: integer overflow")
+	ErrUnexpectedEndOfGroupRaftInternal = fmt.Errorf("proto: unexpected end of group")
+)
 
-func (m *EmptyResponse) Marshal() (dAtA []byte, err error) {
-	return json.Marshal(m)
-}
-
-func (m *InternalAuthenticateRequest) Marshal() (dAtA []byte, err error) {
-	return json.Marshal(m)
-}
-
+func (m *RequestHeader) Marshal() (dAtA []byte, err error)               { return json.Marshal(m) }
+func (m *EmptyResponse) Marshal() (dAtA []byte, err error)               { return json.Marshal(m) }
+func (m *InternalAuthenticateRequest) Marshal() (dAtA []byte, err error) { return json.Marshal(m) }
 func (m *RequestHeader) Size() (n int) {
 	marshal, _ := json.Marshal(m)
 	return len(marshal)
@@ -219,15 +226,6 @@ func (m *InternalAuthenticateRequest) Size() (n int) {
 	marshal, _ := json.Marshal(m)
 	return len(marshal)
 }
-
-func (m *RequestHeader) Unmarshal(dAtA []byte) error {
-	return json.Unmarshal(dAtA, m)
-}
-
-func (m *EmptyResponse) Unmarshal(dAtA []byte) error {
-	return json.Unmarshal(dAtA, m)
-}
-
-func (m *InternalAuthenticateRequest) Unmarshal(dAtA []byte) error {
-	return json.Unmarshal(dAtA, m)
-}
+func (m *RequestHeader) Unmarshal(dAtA []byte) error               { return json.Unmarshal(dAtA, m) }
+func (m *EmptyResponse) Unmarshal(dAtA []byte) error               { return json.Unmarshal(dAtA, m) }
+func (m *InternalAuthenticateRequest) Unmarshal(dAtA []byte) error { return json.Unmarshal(dAtA, m) }

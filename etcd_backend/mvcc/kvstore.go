@@ -63,16 +63,12 @@ type store struct {
 	WriteView
 	cfg StoreConfig
 	// mu read locks for txns and write locks for non-txn store changes.
-	mu      sync.RWMutex
-	b       backend.Backend
-	kvindex index
-	le      lease.Lessor
-	// revMuLock protects currentRev and compactMainRev.
-	// Locked at end of write txn and released after write txn unlock lock.
-	// Locked before locking read txn and released after locking.
-	revMu sync.RWMutex
-	// currentRev is the revision of the last completed transaction.
-	currentRev     int64
+	mu             sync.RWMutex
+	b              backend.Backend
+	kvindex        index
+	le             lease.Lessor // 租约管理器
+	revMu          sync.RWMutex // 保护currentRev和compactMainRev
+	currentRev     int64        // 是最后一个已完成事务的修订
 	compactMainRev int64
 	fifoSched      schedule.Scheduler
 	stopc          chan struct{}

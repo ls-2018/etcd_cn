@@ -36,37 +36,13 @@ type keyIndex struct {
 
 // generation  包含一个key的多个版本。
 type generation struct {
-	ver     int64      // 记录对当前key 有几个版本
-	created revision   // 第一次创建时的索引信息
-	revs    []revision // 当值存在以后,对该值的修改记录
+	versionCount int64      // 记录对当前key 有几个版本
+	created      revision   // 第一次创建时的索引信息
+	revs         []revision // 当值存在以后,对该值的修改记录
 }
 type revision struct {
 	main int64 // 主修订版本     key 不是连续的,可能会差很多， 因为多个key发生了写   ,全局层面上看,是自增的
 	sub  int64 // 子修订版本
-}
-
-// put 将一个修订放到keyIndex中。
-func (ki *keyIndex) put(lg *zap.Logger, main int64, sub int64) {
-	rev := revision{main: main, sub: sub}
-	if !rev.GreaterThan(ki.modified) {
-		lg.Panic(
-			"'put'有一个意想不到的小修改",
-			zap.Int64("given-revision-main", rev.main),
-			zap.Int64("given-revision-sub", rev.sub),
-			zap.Int64("modified-revision-main", ki.modified.main),
-			zap.Int64("modified-revision-sub", ki.modified.sub),
-		)
-	}
-	if len(ki.generations) == 0 {
-		ki.generations = append(ki.generations, generation{})
-	}
-	g := &ki.generations[len(ki.generations)-1]
-	if len(g.revs) == 0 { // create a new key
-		g.created = rev
-	}
-	g.revs = append(g.revs, rev)
-	g.ver++
-	ki.modified = rev
 }
 
 func (ki *keyIndex) restore(lg *zap.Logger, created, modified revision, ver int64) {
@@ -77,7 +53,7 @@ func (ki *keyIndex) restore(lg *zap.Logger, created, modified revision, ver int6
 		)
 	}
 	ki.modified = modified
-	g := generation{created: created, ver: ver, revs: []revision{modified}}
+	g := generation{created: created, versionCount: ver, revs: []revision{modified}}
 	ki.generations = append(ki.generations, g)
 }
 
@@ -226,7 +202,7 @@ func (ki *keyIndex) get(lg *zap.Logger, atRev int64) (modified, created revision
 
 	n := g.walk(func(rev revision) bool { return rev.main > atRev }) // 返回第一个小于等于 该修订版本的最新的索引
 	if n != -1 {
-		return g.revs[n], g.created, g.ver - int64(len(g.revs)-n-1), nil
+		return g.revs[n], g.created, g.versionCount - int64(len(g.revs)-n-1), nil
 	}
 
 	return revision{}, revision{}, 0, ErrRevisionNotFound
@@ -278,7 +254,7 @@ func (g *generation) walk(f func(rev revision) bool) int {
 }
 
 func (g generation) equal(b generation) bool {
-	if g.ver != b.ver {
+	if g.versionCount != b.versionCount {
 		return false
 	}
 	if len(g.revs) != len(b.revs) {
@@ -295,7 +271,7 @@ func (g generation) equal(b generation) bool {
 }
 
 func (g *generation) String() string {
-	return fmt.Sprintf("g: 创建[%d] 版本数[%d], 修订记录 %#v\n", g.created, g.ver, g.revs)
+	return fmt.Sprintf("g: 创建[%d] 版本数[%d], 修订记录 %#v\n", g.created, g.versionCount, g.revs)
 }
 
 // OK
@@ -332,4 +308,28 @@ func (ki *keyIndex) findGeneration(rev int64) *generation {
 		cg--
 	}
 	return nil
+}
+
+// put 将一个修订放到keyIndex中。
+func (ki *keyIndex) put(lg *zap.Logger, main int64, sub int64) {
+	rev := revision{main: main, sub: sub}
+	if !rev.GreaterThan(ki.modified) {
+		lg.Panic(
+			"'put'有一个意想不到的小修改",
+			zap.Int64("given-revision-main", rev.main),
+			zap.Int64("given-revision-sub", rev.sub),
+			zap.Int64("modified-revision-main", ki.modified.main),
+			zap.Int64("modified-revision-sub", ki.modified.sub),
+		)
+	}
+	if len(ki.generations) == 0 {
+		ki.generations = append(ki.generations, generation{})
+	}
+	g := &ki.generations[len(ki.generations)-1]
+	if len(g.revs) == 0 { // create a new key
+		g.created = rev
+	}
+	g.revs = append(g.revs, rev)
+	g.versionCount++
+	ki.modified = rev
 }

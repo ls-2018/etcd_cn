@@ -249,8 +249,7 @@ func (rc *raftNode) ReportSnapshot(id uint64, status raft.SnapshotStatus) {}
 // 上层的应用通过这几个channel就能和raftNode进行交互
 func newRaftNode(id int, peers []string, join bool, getSnapshot func() ([]byte, error),
 	proposeC <-chan string,
-	triggerConfChangeC <-chan raftpb.ConfChangeV1) (<-chan *commit, <-chan error, <-chan *snap.Snapshotter,
-) {
+	triggerConfChangeC <-chan raftpb.ConfChangeV1) (<-chan *commit, <-chan error, <-chan *snap.Snapshotter) {
 	// channel,主要传输Entry记录
 	// raftNode会将etcd-raft模块返回的待apply Entry封装在 Ready实例中然后 写入commitC通道,
 	// 另一方面,kvstore会从commitC通道中读取这些待应用的 Entry 记录井保存其中的键值对信息.

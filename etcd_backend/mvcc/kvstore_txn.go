@@ -104,8 +104,8 @@ func (tr *storeTxnRead) End() {
 type storeTxnWrite struct {
 	storeTxnRead
 	tx       backend.BatchTx
-	beginRev int64 // 是TXN开始时的修订版本;它将写到下次修订。
-	changes  []mvccpb.KeyValue
+	beginRev int64             // 是TXN开始时的修订版本;它将写到下次修订。
+	changes  []mvccpb.KeyValue // 写事务接收到的k,v 包含修订版本数据
 }
 
 func (tw *storeTxnWrite) Rev() int64 { return tw.beginRev }
@@ -128,77 +128,6 @@ func (tw *storeTxnWrite) DeleteRange(key, end []byte) (int64, int64) {
 func (tw *storeTxnWrite) Put(key, value []byte, lease lease.LeaseID) int64 {
 	tw.put(key, value, lease)
 	return tw.beginRev + 1
-}
-
-func (tw *storeTxnWrite) End() {
-	// only update index if the txn modifies the mvcc state.
-	if len(tw.changes) != 0 {
-		// hold revMu lock to prevent new read txns from opening until writeback.
-		tw.s.revMu.Lock()
-		tw.s.currentRev++
-	}
-	tw.tx.Unlock()
-	if len(tw.changes) != 0 {
-		tw.s.revMu.Unlock()
-	}
-	tw.s.mu.RUnlock()
-}
-
-func (tw *storeTxnWrite) put(key, value []byte, leaseID lease.LeaseID) {
-	rev := tw.beginRev + 1 // 事务开始时有一个ID，写这个操作，对应的ID应+1
-	c := rev
-	oldLease := lease.NoLease
-
-	// 如果该键之前存在，使用它之前创建的并获取它之前的leaseID
-	_, created, beforeVersion, err := tw.s.kvindex.Get(key, rev) // 0,0,nil  <= rev的最新修改
-	if err == nil {
-		c = created.main
-		oldLease = tw.s.le.GetLease(lease.LeaseItem{Key: string(key)})
-		tw.trace.Step("获取键先前的created_revision和leaseID")
-	}
-	indexBytes := newRevBytes()
-	idxRev := revision{main: rev, sub: int64(len(tw.changes))}
-	revToBytes(idxRev, indexBytes)
-
-	kv := mvccpb.KeyValue{
-		Key:            string(key),
-		Value:          string(value),
-		CreateRevision: c,                 // 当前代，创建时的修订版本
-		ModRevision:    rev,               // 修订版本
-		Version:        beforeVersion + 1, // Version是key的版本。删除键会将该键的版本重置为0，对键的任何修改都会增加它的版本。
-		Lease:          int64(leaseID),    // 租约ID
-	}
-
-	d, err := kv.Marshal()
-	if err != nil {
-		tw.storeTxnRead.s.lg.Fatal("序列化失败 mvccpb.KeyValue", zap.Error(err))
-	}
-
-	tw.trace.Step("序列化 mvccpb.KeyValue")
-	tw.tx.UnsafeSeqPut(buckets.Key, indexBytes, d) // ✅ 写入db,buf
-	tw.s.kvindex.Put(key, idxRev)
-	tw.changes = append(tw.changes, kv)
-	tw.trace.Step("存储键值对到bolt.db")
-
-	if oldLease != lease.NoLease {
-		if tw.s.le == nil {
-			panic("no lessor to detach lease")
-		}
-		err = tw.s.le.Detach(oldLease, []lease.LeaseItem{{Key: string(key)}})
-		if err != nil {
-			tw.storeTxnRead.s.lg.Error("从key中分离旧的租约失败", zap.Error(err))
-		}
-	}
-	if leaseID != lease.NoLease {
-		if tw.s.le == nil {
-			panic("租约控制方为空")
-		}
-		err = tw.s.le.Attach(leaseID, []lease.LeaseItem{{Key: string(key)}})
-		if err != nil {
-			panic("租约附加失败")
-		}
-	}
-	tw.trace.Step("附加租约到key")
 }
 
 func (tw *storeTxnWrite) deleteRange(key, end []byte) int64 {
@@ -259,3 +188,79 @@ func (tw *storeTxnWrite) delete(key []byte) {
 }
 
 func (tw *storeTxnWrite) Changes() []mvccpb.KeyValue { return tw.changes }
+
+// End 主要是用来解锁
+func (tw *storeTxnWrite) End() {
+	// 只有在Txn修改了Mvcc状态时才会更新索引。
+	if len(tw.changes) != 0 {
+		// 保持revMu锁，以防止新的读Txns打开，直到写回。
+		tw.s.revMu.Lock()
+		tw.s.currentRev++
+	}
+	tw.tx.Unlock()
+	if len(tw.changes) != 0 {
+		tw.s.revMu.Unlock()
+	}
+	tw.s.mu.RUnlock()
+}
+
+// OK
+func (tw *storeTxnWrite) put(key, value []byte, leaseID lease.LeaseID) {
+	rev := tw.beginRev + 1 // 事务开始时有一个ID，写这个操作，对应的ID应+1
+	c := rev
+	oldLease := lease.NoLease
+
+	// 如果该键之前存在，使用它之前创建的并获取它之前的leaseID
+	_, created, beforeVersion, err := tw.s.kvindex.Get(key, rev) // 0,0,nil  <= rev的最新修改
+	if err == nil {
+		c = created.main
+		oldLease = tw.s.le.GetLease(lease.LeaseItem{Key: string(key)})
+		tw.trace.Step("获取键先前的created_revision和leaseID")
+	}
+	indexBytes := newRevBytes()
+	idxRev := revision{main: rev, sub: int64(len(tw.changes))} // 当前请求的修订版本
+	revToBytes(idxRev, indexBytes)
+
+	kv := mvccpb.KeyValue{
+		Key:            string(key),
+		Value:          string(value),
+		CreateRevision: c,                 // 当前代，创建时的修订版本
+		ModRevision:    rev,               // 修订版本
+		Version:        beforeVersion + 1, // Version是key的版本。删除键会将该键的版本重置为0，对键的任何修改都会增加它的版本。
+		Lease:          int64(leaseID),    // 租约ID
+	}
+
+	d, err := kv.Marshal()
+	if err != nil {
+		tw.storeTxnRead.s.lg.Fatal("序列化失败 mvccpb.KeyValue", zap.Error(err))
+	}
+
+	tw.trace.Step("序列化 mvccpb.KeyValue")
+	tw.tx.UnsafeSeqPut(buckets.Key, indexBytes, d) // ✅ 写入db,buf
+	_ = (&treeIndex{}).Put
+	tw.s.kvindex.Put(key, idxRev) // 当前请求的修订版本
+	tw.changes = append(tw.changes, kv)
+	tw.trace.Step("存储键值对到bolt.db")
+
+	// 如果用户没穿,就是 NoLease
+	if oldLease != lease.NoLease {
+		if tw.s.le == nil {
+			panic("没找到租约")
+		}
+		// 分离旧的租约
+		err = tw.s.le.Detach(oldLease, []lease.LeaseItem{{Key: string(key)}})
+		if err != nil {
+			tw.storeTxnRead.s.lg.Error("从key中分离旧的租约失败", zap.Error(err))
+		}
+	}
+	if leaseID != lease.NoLease {
+		if tw.s.le == nil {
+			panic("没找到租约")
+		}
+		err = tw.s.le.Attach(leaseID, []lease.LeaseItem{{Key: string(key)}})
+		if err != nil {
+			panic("租约附加失败")
+		}
+	}
+	tw.trace.Step("附加租约到key")
+}

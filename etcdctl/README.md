@@ -243,7 +243,7 @@ RPC: Txn
 <CMPCREATE> := ("c"|"create")"("<KEY>")" <CMPOP> <REVISION>
 <CMPMOD> ::= ("m"|"mod")"("<KEY>")" <CMPOP> <REVISION>
 <CMPVAL> ::= ("val"|"value")"("<KEY>")" <CMPOP> <VALUE>
-<CMPVER> ::= ("ver"|"version")"("<KEY>")" <CMPOP> <VERSION>
+<CMPVER> ::= ("versionCount"|"version")"("<KEY>")" <CMPOP> <VERSION>
 <CMPLEASE> ::= "lease("<KEY>")" <CMPOP> <LEASE>
 <THEN> ::= <OP>*
 <ELSE> ::= <OP>*

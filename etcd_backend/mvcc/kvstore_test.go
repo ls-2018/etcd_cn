@@ -408,8 +408,8 @@ func TestStoreRestore(t *testing.T) {
 	}
 
 	gens := []generation{
-		{created: revision{4, 0}, ver: 2, revs: []revision{{3, 0}, {5, 0}}},
-		{created: revision{0, 0}, ver: 0, revs: nil},
+		{created: revision{4, 0}, versionCount: 2, revs: []revision{{3, 0}, {5, 0}}},
+		{created: revision{0, 0}, versionCount: 0, revs: nil},
 	}
 	ki := &keyIndex{key: "foo", modified: revision{5, 0}, generations: gens}
 	wact = []testutil.Action{

@@ -120,6 +120,13 @@ func (s *EtcdServer) Alarm(ctx context.Context, r *pb.AlarmRequest) (*pb.AlarmRe
 	return resp.(*pb.AlarmResponse), nil
 }
 
+// OK 对外提供的接口
+func (s *EtcdServer) raftRequest(ctx context.Context, r pb.InternalRaftRequest) (proto.Message, error) {
+	return s.raftRequestOnce(ctx, r)
+}
+
+
+
 func (s *EtcdServer) raftRequestOnce(ctx context.Context, r pb.InternalRaftRequest) (proto.Message, error) {
 	result, err := s.processInternalRaftRequestOnce(ctx, r)
 	if err != nil {
@@ -135,10 +142,6 @@ func (s *EtcdServer) raftRequestOnce(ctx context.Context, r pb.InternalRaftReque
 		result.trace.InsertStep(0, applyStart, "处理raft请求")
 	}
 	return result.resp, nil
-}
-
-func (s *EtcdServer) raftRequest(ctx context.Context, r pb.InternalRaftRequest) (proto.Message, error) {
-	return s.raftRequestOnce(ctx, r)
 }
 
 // 当客户端提交一条数据变更请求时

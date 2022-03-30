@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	fmt "fmt"
 	math "math"
-	math_bits "math/bits"
 
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/golang/protobuf/proto"
@@ -25,23 +24,26 @@ var (
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 type Request struct {
-	ID         uint64 `protobuf:"varint,1,opt,name=ID" json:"ID"`
-	Method     string `protobuf:"bytes,2,opt,name=Method" json:"Method"`
-	Path       string `protobuf:"bytes,3,opt,name=Path" json:"Path"`
-	Val        string `protobuf:"bytes,4,opt,name=Val" json:"Val"`
-	Dir        bool   `protobuf:"varint,5,opt,name=Dir" json:"Dir"`
-	PrevValue  string `protobuf:"bytes,6,opt,name=PrevValue" json:"PrevValue"`
-	PrevIndex  uint64 `protobuf:"varint,7,opt,name=PrevIndex" json:"PrevIndex"`
-	PrevExist  *bool  `protobuf:"varint,8,opt,name=PrevExist" json:"PrevExist,omitempty"`
-	Expiration int64  `protobuf:"varint,9,opt,name=Expiration" json:"Expiration"`
-	Wait       bool   `protobuf:"varint,10,opt,name=Wait" json:"Wait"`
-	Since      uint64 `protobuf:"varint,11,opt,name=Since" json:"Since"`
-	Recursive  bool   `protobuf:"varint,12,opt,name=Recursive" json:"Recursive"`
-	Sorted     bool   `protobuf:"varint,13,opt,name=Sorted" json:"Sorted"`
-	Quorum     bool   `protobuf:"varint,14,opt,name=Quorum" json:"Quorum"`
-	Time       int64  `protobuf:"varint,15,opt,name=Time" json:"Time"`
-	Stream     bool   `protobuf:"varint,16,opt,name=Stream" json:"Stream"`
-	Refresh    *bool  `protobuf:"varint,17,opt,name=Refresh" json:"Refresh,omitempty"`
+	ID                   uint64   `protobuf:"varint,1,opt,name=ID" json:"ID"`
+	Method               string   `protobuf:"bytes,2,opt,name=Method" json:"Method"`
+	Path                 string   `protobuf:"bytes,3,opt,name=Path" json:"Path"`
+	Val                  string   `protobuf:"bytes,4,opt,name=Val" json:"Val"`
+	Dir                  bool     `protobuf:"varint,5,opt,name=Dir" json:"Dir"`
+	PrevValue            string   `protobuf:"bytes,6,opt,name=PrevValue" json:"PrevValue"`
+	PrevIndex            uint64   `protobuf:"varint,7,opt,name=PrevIndex" json:"PrevIndex"`
+	PrevExist            *bool    `protobuf:"varint,8,opt,name=PrevExist" json:"PrevExist,omitempty"`
+	Expiration           int64    `protobuf:"varint,9,opt,name=Expiration" json:"Expiration"`
+	Wait                 bool     `protobuf:"varint,10,opt,name=Wait" json:"Wait"`
+	Since                uint64   `protobuf:"varint,11,opt,name=Since" json:"Since"`
+	Recursive            bool     `protobuf:"varint,12,opt,name=Recursive" json:"Recursive"`
+	Sorted               bool     `protobuf:"varint,13,opt,name=Sorted" json:"Sorted"`
+	Quorum               bool     `protobuf:"varint,14,opt,name=Quorum" json:"Quorum"`
+	Time                 int64    `protobuf:"varint,15,opt,name=Time" json:"Time"`
+	Stream               bool     `protobuf:"varint,16,opt,name=Stream" json:"Stream"`
+	Refresh              *bool    `protobuf:"varint,17,opt,name=Refresh" json:"Refresh,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
 func (m *Request) Reset()         { *m = Request{} }
@@ -52,8 +54,11 @@ func (*Request) Descriptor() ([]byte, []int) {
 }
 
 type Metadata struct {
-	NodeID    uint64 `protobuf:"varint,1,opt,name=NodeID" json:"NodeID"`
-	ClusterID uint64 `protobuf:"varint,2,opt,name=ClusterID" json:"ClusterID"`
+	NodeID               uint64   `protobuf:"varint,1,opt,name=NodeID" json:"NodeID"`
+	ClusterID            uint64   `protobuf:"varint,2,opt,name=ClusterID" json:"ClusterID"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
 func (m *Metadata) Reset()         { *m = Metadata{} }
@@ -98,6 +103,14 @@ var fileDescriptor_09ffbeb3bebbce7e = []byte{
 	0x00, 0x00, 0xff, 0xff, 0xee, 0x40, 0xba, 0xd6, 0xa4, 0x02, 0x00, 0x00,
 }
 
+var (
+	ErrInvalidLengthEtcdserver        = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowEtcdserver          = fmt.Errorf("proto: integer overflow")
+	ErrUnexpectedEndOfGroupEtcdserver = fmt.Errorf("proto: unexpected end of group")
+)
+
+func (m *Request) Marshal() (dAtA []byte, err error)  { return json.Marshal(m) }
+func (m *Metadata) Marshal() (dAtA []byte, err error) { return json.Marshal(m) }
 func (m *Request) Size() (n int) {
 	marshal, _ := json.Marshal(m)
 	return len(marshal)
@@ -107,13 +120,5 @@ func (m *Metadata) Size() (n int) {
 	marshal, _ := json.Marshal(m)
 	return len(marshal)
 }
-
-func sovEtcdserver(x uint64) (n int) {
-	return (math_bits.Len64(x|1) + 6) / 7
-}
-
-var (
-	ErrInvalidLengthEtcdserver        = fmt.Errorf("proto: negative length found during unmarshaling")
-	ErrIntOverflowEtcdserver          = fmt.Errorf("proto: integer overflow")
-	ErrUnexpectedEndOfGroupEtcdserver = fmt.Errorf("proto: unexpected end of group")
-)
+func (m *Request) Unmarshal(dAtA []byte) error  { return json.Unmarshal(dAtA, m) }
+func (m *Metadata) Unmarshal(dAtA []byte) error { return json.Unmarshal(dAtA, m) }
