@@ -32,11 +32,10 @@ import (
 	"go.uber.org/zap"
 )
 
-// NoLease is a special LeaseID representing the absence of a lease.
-const NoLease = LeaseID(0)
-
-// MaxLeaseTTL is the maximum lease TTL value
-const MaxLeaseTTL = 9000000000
+const (
+	NoLease     = LeaseID(0) // 是一个特殊的LeaseID，表示没有租约。
+	MaxLeaseTTL = 9000000000
+)
 
 var v3_6 = semver.Version{Major: 3, Minor: 6}
 
@@ -80,7 +79,7 @@ type Checkpointer func(ctx context.Context, lc *pb.LeaseCheckpointRequest)
 
 type LeaseID int64
 
-// Lessor owns leases. It can grant, revoke, renew and modify leases for lessee.
+// Lessor 创建、移除、更新租约
 type Lessor interface {
 	// SetRangeDeleter lets the lessor create TxnDeletes to the store.
 	// Lessor deletes the items in the revoked or expired lease by creating
@@ -103,9 +102,7 @@ type Lessor interface {
 	// If the lease does not exist, an error will be returned.
 	Attach(id LeaseID, items []LeaseItem) error
 
-	// GetLease returns LeaseID for given item.
-	// If no lease found, NoLease value will be returned.
-	GetLease(item LeaseItem) LeaseID
+	GetLease(item LeaseItem) LeaseID // 返回给定项目的LeaseID。如果没有找到租约，则返回NoLease值。
 
 	// Detach detaches given leaseItem from the lease with given LeaseID.
 	// If the lease does not exist, an error will be returned.
@@ -140,44 +137,33 @@ type Lessor interface {
 	Stop()
 }
 
-// lessor implements Lessor interface.
-// TODO: use clockwork for testability.
 type lessor struct {
 	mu sync.RWMutex
-
 	// demotec is set when the lessor is the primary.
 	// demotec will be closed if the lessor is demoted.
-	demotec chan struct{}
-
+	demotec              chan struct{}
 	leaseMap             map[LeaseID]*Lease
 	leaseExpiredNotifier *LeaseExpiredNotifier
 	leaseCheckpointHeap  LeaseQueue
 	itemMap              map[LeaseItem]LeaseID
-
 	// When a lease expires, the lessor will delete the
 	// leased range (or key) by the RangeDeleter.
 	rd RangeDeleter
-
 	// When a lease's deadline should be persisted to preserve the remaining TTL across leader
 	// elections and restarts, the lessor will checkpoint the lease by the Checkpointer.
 	cp Checkpointer
-
 	// backend to persist leases. We only persist lease ID and expiry for now.
 	// The leased items can be recovered by iterating all the keys in kv.
 	b backend.Backend
-
 	// minLeaseTTL is the minimum lease TTL that can be granted for a lease. Any
 	// requests for shorter TTLs are extended to the minimum TTL.
 	minLeaseTTL int64
-
-	expiredC chan []*Lease
+	expiredC    chan []*Lease
 	// stopC is a channel whose closure indicates that the lessor should be stopped.
 	stopC chan struct{}
 	// doneC is a channel whose closure indicates that the lessor is stopped.
 	doneC chan struct{}
-
-	lg *zap.Logger
-
+	lg    *zap.Logger
 	// Wait duration between lease checkpoints.
 	checkpointInterval time.Duration
 	// the interval to check if the expired lease is revoked
@@ -557,7 +543,7 @@ func (le *lessor) Attach(id LeaseID, items []LeaseItem) error {
 
 func (le *lessor) GetLease(item LeaseItem) LeaseID {
 	le.mu.RLock()
-	id := le.itemMap[item]
+	id := le.itemMap[item] // 找不到就是永久
 	le.mu.RUnlock()
 	return id
 }

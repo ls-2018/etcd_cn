@@ -15,10 +15,10 @@
 package mvcc
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -128,16 +128,16 @@ func TestWatcherWatchPrefix(t *testing.T) {
 	idm := make(map[WatchID]struct{})
 
 	val := []byte("bar")
-	keyWatch, keyEnd, keyPut := []byte("foo"), []byte("fop"), []byte("foobar")
+	keyWatch, keyEnd, keyPut := "foo", "fop", "foobar"
 
 	for i := 0; i < 10; i++ {
-		id, _ := w.Watch(0, keyWatch, keyEnd, 0)
+		id, _ := w.Watch(0, []byte(keyWatch), []byte(keyEnd), 0)
 		if _, ok := idm[id]; ok {
 			t.Errorf("#%d: unexpected duplicated id %x", i, id)
 		}
 		idm[id] = struct{}{}
 
-		s.Put(keyPut, val, lease.NoLease)
+		s.Put([]byte(keyPut), val, lease.NoLease)
 
 		resp := <-w.Chan()
 		if resp.WatchID != id {
@@ -152,18 +152,18 @@ func TestWatcherWatchPrefix(t *testing.T) {
 			t.Errorf("#%d: len(resp.Events) got = %d, want = 1", i, len(resp.Events))
 		}
 		if len(resp.Events) == 1 {
-			if !bytes.Equal(resp.Events[0].Kv.Key, keyPut) {
+			if !strings.EqualFold(resp.Events[0].Kv.Key, keyPut) {
 				t.Errorf("#%d: resp.Events got = %s, want = %s", i, resp.Events[0].Kv.Key, keyPut)
 			}
 		}
 	}
 
-	keyWatch1, keyEnd1, keyPut1 := []byte("foo1"), []byte("foo2"), []byte("foo1bar")
-	s.Put(keyPut1, val, lease.NoLease)
+	keyWatch1, keyEnd1, keyPut1 := "foo1", "foo2", "foo1bar"
+	s.Put([]byte(keyPut1), val, lease.NoLease)
 
 	// unsynced watchers
 	for i := 10; i < 15; i++ {
-		id, _ := w.Watch(0, keyWatch1, keyEnd1, 1)
+		id, _ := w.Watch(0, []byte(keyWatch1), []byte(keyEnd1), 1)
 		if _, ok := idm[id]; ok {
 			t.Errorf("#%d: id %d exists", i, id)
 		}
@@ -182,7 +182,7 @@ func TestWatcherWatchPrefix(t *testing.T) {
 			t.Errorf("#%d: len(resp.Events) got = %d, want = 1", i, len(resp.Events))
 		}
 		if len(resp.Events) == 1 {
-			if !bytes.Equal(resp.Events[0].Kv.Key, keyPut1) {
+			if !strings.EqualFold(resp.Events[0].Kv.Key, keyPut1) {
 				t.Errorf("#%d: resp.Events got = %s, want = %s", i, resp.Events[0].Kv.Key, keyPut1)
 			}
 		}
@@ -233,9 +233,9 @@ func TestWatchDeleteRange(t *testing.T) {
 	s.DeleteRange(from, to)
 
 	we := []mvccpb.Event{
-		{Type: mvccpb.DELETE, Kv: &mvccpb.KeyValue{Key: []byte("foo_0"), ModRevision: 5}},
-		{Type: mvccpb.DELETE, Kv: &mvccpb.KeyValue{Key: []byte("foo_1"), ModRevision: 5}},
-		{Type: mvccpb.DELETE, Kv: &mvccpb.KeyValue{Key: []byte("foo_2"), ModRevision: 5}},
+		{Type: mvccpb.DELETE, Kv: &mvccpb.KeyValue{Key: "foo_0", ModRevision: 5}},
+		{Type: mvccpb.DELETE, Kv: &mvccpb.KeyValue{Key: "foo_1", ModRevision: 5}},
+		{Type: mvccpb.DELETE, Kv: &mvccpb.KeyValue{Key: "foo_2", ModRevision: 5}},
 	}
 
 	select {

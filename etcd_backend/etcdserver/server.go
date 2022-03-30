@@ -1959,8 +1959,6 @@ func (s *EtcdServer) parseProposeCtxErr(err error, start time.Time) error {
 	}
 }
 
-func (s *EtcdServer) KV() mvcc.WatchableKV { return s.kv }
-
 func (s *EtcdServer) Backend() backend.Backend {
 	s.backendLock.Lock()
 	defer s.backendLock.Unlock()
@@ -2257,3 +2255,5 @@ func (s *EtcdServer) LeaderChangedNotify() <-chan struct{} {
 	defer s.leaderChangedMu.RUnlock()
 	return s.leaderChanged
 }
+
+func (s *EtcdServer) KV() mvcc.WatchableKV { return s.kv }

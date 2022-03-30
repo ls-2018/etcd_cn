@@ -23,8 +23,8 @@ import (
 )
 
 func WriteKV(be backend.Backend, kv mvccpb.KeyValue) {
-	ibytes := newRevBytes()
-	revToBytes(revision{main: kv.ModRevision}, ibytes)
+	indexBytes := newRevBytes()
+	revToBytes(revision{main: kv.ModRevision}, indexBytes)
 
 	d, err := kv.Marshal()
 	if err != nil {
@@ -32,6 +32,6 @@ func WriteKV(be backend.Backend, kv mvccpb.KeyValue) {
 	}
 
 	be.BatchTx().Lock()
-	be.BatchTx().UnsafePut(buckets.Key, ibytes, d)
+	be.BatchTx().UnsafePut(buckets.Key, indexBytes, d)
 	be.BatchTx().Unlock()
 }

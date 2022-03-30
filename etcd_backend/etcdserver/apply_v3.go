@@ -202,7 +202,7 @@ func (a *applierV3backend) Put(ctx context.Context, txn mvcc.TxnWrite, p *pb.Put
 	resp = &pb.PutResponse{}
 	resp.Header = &pb.ResponseHeader{}
 	trace = traceutil.Get(ctx)
-	// create put tracing if the trace in context is empty
+	// 如果上下文中的trace为空，则创建put跟踪
 	if trace.IsEmpty() {
 		trace = traceutil.New("put",
 			a.s.Logger(),
@@ -211,12 +211,13 @@ func (a *applierV3backend) Put(ctx context.Context, txn mvcc.TxnWrite, p *pb.Put
 		)
 	}
 	val, leaseID := p.Value, lease.LeaseID(p.Lease)
-	if txn == nil {
+	if txn == nil { // 写事务
 		if leaseID != lease.NoLease {
-			if l := a.s.lessor.Lookup(leaseID); l == nil {
+			if l := a.s.lessor.Lookup(leaseID); l == nil { // 查找租约
 				return nil, nil, lease.ErrLeaseNotFound
 			}
 		}
+		// watchableStoreTxnWrite[storeTxnWrite]
 		txn = a.s.KV().Write(trace)
 		defer txn.End()
 	}
@@ -225,7 +226,7 @@ func (a *applierV3backend) Put(ctx context.Context, txn mvcc.TxnWrite, p *pb.Put
 	if p.IgnoreValue || p.IgnoreLease || p.PrevKv {
 		trace.StepWithFunction(func() {
 			rr, err = txn.Range(context.TODO(), []byte(p.Key), nil, mvcc.RangeOptions{})
-		}, "get previous kv pair")
+		}, "得到之前的kv对")
 
 		if err != nil {
 			return nil, nil, err
@@ -249,7 +250,7 @@ func (a *applierV3backend) Put(ctx context.Context, txn mvcc.TxnWrite, p *pb.Put
 		}
 	}
 
-	resp.Header.Revision = txn.Put([]byte([]byte(p.Key)), []byte(val), leaseID)
+	resp.Header.Revision = txn.Put([]byte(p.Key), []byte(val), leaseID)
 	trace.AddField(traceutil.Field{Key: "response_revision", Value: resp.Header.Revision})
 	return resp, trace, nil
 }

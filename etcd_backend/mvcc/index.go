@@ -227,7 +227,7 @@ func (ti *treeIndex) Equal(bi index) bool {
 
 // ---------------------------------------- OVER  --------------------------------------------------------------
 
-// Get 获取某个key的某个版本的索引号
+// Get 获取某个key的某个版本的索引号 ,
 func (ti *treeIndex) Get(key []byte, atRev int64) (modified, created revision, ver int64, err error) {
 	keyi := &keyIndex{key: string(key)}
 	ti.RLock()
@@ -236,7 +236,7 @@ func (ti *treeIndex) Get(key []byte, atRev int64) (modified, created revision, v
 	if keyi = ti.keyIndex(keyi); keyi == nil {
 		return revision{}, revision{}, 0, ErrRevisionNotFound
 	}
-	return keyi.get(ti.lg, atRev)
+	return keyi.get(ti.lg, atRev) // 获取修订版本
 }
 
 // Revisions 获取所有修正版本
@@ -248,6 +248,7 @@ func (ti *treeIndex) Revisions(key, end []byte, atRev int64, limit int) (revs []
 		}
 		return []revision{rev}, 1
 	}
+	// 指定了end
 	ti.visit(key, end, func(ki *keyIndex) bool {
 		if rev, _, _, err := ki.get(ti.lg, atRev); err == nil {
 			if limit <= 0 || len(revs) < limit {

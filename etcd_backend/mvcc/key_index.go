@@ -25,50 +25,24 @@ import (
 
 var ErrRevisionNotFound = errors.New("mvcc: 修订版本没有找到")
 
-// keyIndex stores the revisions of a key in the backend.
-// Each keyIndex has at least one key generation.
-// Each generation might have several key versions.
-// Tombstone on a key appends an tombstone version at the end
-// of the current generation and creates a new empty generation.
-// Each version of a key has an index pointing to the backend.
-//
-// For example: put(1.0);put(2.0);tombstone(3.0);put(4.0);tombstone(5.0) on key "foo"
-// generate a keyIndex:
-// key:     "foo"
-// rev: 5
-// generations:
-//    {empty}
-//    {4.0, 5.0(t)}
-//    {1.0, 2.0, 3.0(t)}
-//
-// Compact a keyIndex removes the versions with smaller or equal to
-// rev except the largest one. If the generation becomes empty
-// during compaction, it will be removed. if all the generations get
-// removed, the keyIndex should be removed.
-//
-// For example:
-// compact(2) on the previous example
-// generations:
-//    {empty}
-//    {4.0, 5.0(t)}
-//    {2.0, 3.0(t)}
-//
-// compact(4)
-// generations:
-//    {empty}
-//    {4.0, 5.0(t)}
-//
-// compact(5):
-// generations:
-//    {empty} -> key SHOULD be removed.
-//
-// compact(6):
-// generations:
-//    {empty} -> key SHOULD be removed.
+// keyIndex
+// key的删除操作将在末尾追加删除版本
+// 当前代，并创建一个新的空代。
 type keyIndex struct {
-	key         string   // key
-	modified    revision // 一个key 最后一次修改的revision .
-	generations []generation
+	key         string       // key
+	modified    revision     // 一个key 最新修改的revision .
+	generations []generation // 每次新建都会创建一个,删除然后新建也会生成一个
+}
+
+// generation  包含一个key的多个版本。
+type generation struct {
+	ver     int64      // 记录对当前key 有几个版本
+	created revision   // 第一次创建时的索引信息
+	revs    []revision // 当值存在以后,对该值的修改记录
+}
+type revision struct {
+	main int64 // 主修订版本     key 不是连续的,可能会差很多， 因为多个key发生了写   ,全局层面上看,是自增的
+	sub  int64 // 子修订版本
 }
 
 // put 将一个修订放到keyIndex中。
@@ -125,37 +99,12 @@ func (ki *keyIndex) tombstone(lg *zap.Logger, main int64, sub int64) error {
 	return nil
 }
 
-// get gets the modified, created revision and version of the key that satisfies the given atRev.
-// Rev必须是higher than or equal to the given atRev.
-func (ki *keyIndex) get(lg *zap.Logger, atRev int64) (modified, created revision, ver int64, err error) {
-	if ki.isEmpty() {
-		lg.Panic(
-			"'get' got an unexpected empty keyIndex",
-			zap.String("key", string(ki.key)),
-		)
-	}
-	g := ki.findGeneration(atRev)
-	if g.isEmpty() {
-		return revision{}, revision{}, 0, ErrRevisionNotFound
-	}
-
-	n := g.walk(func(rev revision) bool { return rev.main > atRev })
-	if n != -1 {
-		return g.revs[n], g.created, g.ver - int64(len(g.revs)-n-1), nil
-	}
-
-	return revision{}, revision{}, 0, ErrRevisionNotFound
-}
-
 // since returns revisions since the given rev. Only the revision with the
 // largest sub revision will be returned if multiple revisions have the same
 // main revision.
 func (ki *keyIndex) since(lg *zap.Logger, rev int64) []revision {
 	if ki.isEmpty() {
-		lg.Panic(
-			"'since' got an unexpected empty keyIndex",
-			zap.String("key", string(ki.key)),
-		)
+		lg.Panic("'since' 得到一个意外的空keyIndex", zap.String("key", ki.key))
 	}
 	since := revision{rev, 0}
 	var gi int
@@ -263,34 +212,24 @@ func (ki *keyIndex) doCompact(atRev int64, available map[revision]struct{}) (gen
 	return genIdx, revIndex
 }
 
-func (ki *keyIndex) isEmpty() bool {
-	return len(ki.generations) == 1 && ki.generations[0].isEmpty()
-}
+// --------------------------------------------- OVER ---------------------------------------------------------------
 
-// findGeneration finds out the generation of the keyIndex that the
-// given rev belongs to. If the given rev is at the gap of two generations,
-// which means that the key does not exist at the given rev, it returns nil.
-func (ki *keyIndex) findGeneration(rev int64) *generation {
-	lastg := len(ki.generations) - 1
-	cg := lastg
-
-	for cg >= 0 {
-		if len(ki.generations[cg].revs) == 0 {
-			cg--
-			continue
-		}
-		g := ki.generations[cg]
-		if cg != lastg {
-			if tomb := g.revs[len(g.revs)-1].main; tomb <= rev {
-				return nil
-			}
-		}
-		if g.revs[0].main <= rev {
-			return &ki.generations[cg]
-		}
-		cg--
+// get 获取满足给定atRev的键的修改、创建的revision和版本。Rev必须大于或等于给定的atRev。
+func (ki *keyIndex) get(lg *zap.Logger, atRev int64) (modified, created revision, ver int64, err error) {
+	if ki.isEmpty() { // 判断有没有修订版本
+		lg.Panic("'get'得到一个意外的空keyIndex", zap.String("key", ki.key))
 	}
-	return nil
+	g := ki.findGeneration(atRev)
+	if g.isEmpty() {
+		return revision{}, revision{}, 0, ErrRevisionNotFound
+	}
+
+	n := g.walk(func(rev revision) bool { return rev.main > atRev }) // 返回第一个小于等于 该修订版本的最新的索引
+	if n != -1 {
+		return g.revs[n], g.created, g.ver - int64(len(g.revs)-n-1), nil
+	}
+
+	return revision{}, revision{}, 0, ErrRevisionNotFound
 }
 
 func (ki *keyIndex) Less(b btree.Item) bool {
@@ -324,20 +263,9 @@ func (ki *keyIndex) String() string {
 	return s
 }
 
-// generation  包含一个key的多个版本。
-type generation struct {
-	ver     int64
-	created revision // 被创建时(放入第一个修订版本)。
-	revs    []revision
-}
-
 func (g *generation) isEmpty() bool { return g == nil || len(g.revs) == 0 }
 
-// walk walks through the revisions in the generation in descending order.
-// It passes the revision to the given function.
-// walk returns until: 1. it finishes walking all pairs 2. the function returns false.
-// walk returns the position at where it stopped. If it stopped after
-// finishing walking, -1 will be returned.
+// 遍历返回符合条件的索引,倒序遍历
 func (g *generation) walk(f func(rev revision) bool) int {
 	l := len(g.revs)
 	for i := range g.revs {
@@ -347,10 +275,6 @@ func (g *generation) walk(f func(rev revision) bool) int {
 		}
 	}
 	return -1
-}
-
-func (g *generation) String() string {
-	return fmt.Sprintf("g: created[%d] ver[%d], revs %#v\n", g.created, g.ver, g.revs)
 }
 
 func (g generation) equal(b generation) bool {
@@ -368,4 +292,44 @@ func (g generation) equal(b generation) bool {
 		}
 	}
 	return true
+}
+
+func (g *generation) String() string {
+	return fmt.Sprintf("g: 创建[%d] 版本数[%d], 修订记录 %#v\n", g.created, g.ver, g.revs)
+}
+
+// OK
+func (ki *keyIndex) isEmpty() bool {
+	// 只有一个历史版本,且
+	return len(ki.generations) == 1 && ki.generations[0].isEmpty()
+}
+
+// findGeneration 找到给定rev所属的keyIndex的生成。如果给定的rev在两代之间，这意味着在给定的rev上键不存在，它将返回nil。
+// 如果修订版本是接下来要写的，就返回当前代
+func (ki *keyIndex) findGeneration(rev int64) *generation {
+	lastg := len(ki.generations) - 1
+	cg := lastg
+	// 倒着查找
+	for cg >= 0 {
+		if len(ki.generations[cg].revs) == 0 {
+			cg--
+			continue
+		}
+		g := ki.generations[cg]
+		if cg != lastg {
+			// 每次生成的key的最新修订版本
+			// 不是最新的一组，但最大的都比 rev
+			if tomb := g.revs[len(g.revs)-1].main; tomb <= rev {
+				// tomb应该是删除的代数
+				return nil
+			}
+		}
+		// 0    rev     last
+		if g.revs[0].main <= rev {
+			// 找到对应修订版本 所属的gen版本
+			return &ki.generations[cg]
+		}
+		cg--
+	}
+	return nil
 }

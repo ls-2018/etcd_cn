@@ -30,11 +30,9 @@ type authApplierV3 struct {
 	applierV3
 	as     auth.AuthStore
 	lessor lease.Lessor
-
 	// mu serializes Apply so that user isn't corrupted and so that
 	// serialized requests don't leak data from TOCTOU errors
-	mu sync.Mutex
-
+	mu       sync.Mutex
 	authInfo auth.AuthInfo
 }
 

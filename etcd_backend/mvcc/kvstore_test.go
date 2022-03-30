@@ -15,7 +15,6 @@
 package mvcc
 
 import (
-	"bytes"
 	"context"
 	"crypto/rand"
 	"encoding/binary"
@@ -26,6 +25,7 @@ import (
 	"reflect"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -57,8 +57,8 @@ func TestStoreRev(t *testing.T) {
 
 func TestStorePut(t *testing.T) {
 	kv := mvccpb.KeyValue{
-		Key:            []byte("foo"),
-		Value:          []byte("bar"),
+		Key:            "foo",
+		Value:          "bar",
 		CreateRevision: 1,
 		ModRevision:    2,
 		Version:        1,
@@ -86,8 +86,8 @@ func TestStorePut(t *testing.T) {
 			revision{2, 0},
 			newTestKeyBytes(revision{2, 0}, false),
 			mvccpb.KeyValue{
-				Key:            []byte("foo"),
-				Value:          []byte("bar"),
+				Key:            "foo",
+				Value:          "bar",
 				CreateRevision: 2,
 				ModRevision:    2,
 				Version:        1,
@@ -103,8 +103,8 @@ func TestStorePut(t *testing.T) {
 			revision{2, 0},
 			newTestKeyBytes(revision{2, 0}, false),
 			mvccpb.KeyValue{
-				Key:            []byte("foo"),
-				Value:          []byte("bar"),
+				Key:            "foo",
+				Value:          "bar",
 				CreateRevision: 2,
 				ModRevision:    2,
 				Version:        2,
@@ -120,8 +120,8 @@ func TestStorePut(t *testing.T) {
 			revision{3, 0},
 			newTestKeyBytes(revision{3, 0}, false),
 			mvccpb.KeyValue{
-				Key:            []byte("foo"),
-				Value:          []byte("bar"),
+				Key:            "foo",
+				Value:          "bar",
 				CreateRevision: 2,
 				ModRevision:    3,
 				Version:        3,
@@ -162,8 +162,8 @@ func TestStorePut(t *testing.T) {
 			t.Errorf("#%d: tx action = %+v, want %+v", i, g, wact)
 		}
 		wact = []testutil.Action{
-			{Name: "get", Params: []interface{}{[]byte("foo"), tt.wputrev.main}},
-			{Name: "put", Params: []interface{}{[]byte("foo"), tt.wputrev}},
+			{Name: "get", Params: []interface{}{"foo", tt.wputrev.main}},
+			{Name: "put", Params: []interface{}{"foo", tt.wputrev}},
 		}
 		if g := fi.Action(); !reflect.DeepEqual(g, wact) {
 			t.Errorf("#%d: index action = %+v, want %+v", i, g, wact)
@@ -179,8 +179,8 @@ func TestStorePut(t *testing.T) {
 func TestStoreRange(t *testing.T) {
 	key := newTestKeyBytes(revision{2, 0}, false)
 	kv := mvccpb.KeyValue{
-		Key:            []byte("foo"),
-		Value:          []byte("bar"),
+		Key:            "foo",
+		Value:          "bar",
 		CreateRevision: 1,
 		ModRevision:    2,
 		Version:        1,
@@ -251,8 +251,8 @@ func TestStoreRange(t *testing.T) {
 func TestStoreDeleteRange(t *testing.T) {
 	key := newTestKeyBytes(revision{2, 0}, false)
 	kv := mvccpb.KeyValue{
-		Key:            []byte("foo"),
-		Value:          []byte("bar"),
+		Key:            "foo",
+		Value:          "bar",
 		CreateRevision: 1,
 		ModRevision:    2,
 		Version:        1,
@@ -298,7 +298,7 @@ func TestStoreDeleteRange(t *testing.T) {
 		}
 
 		data, err := (&mvccpb.KeyValue{
-			Key: []byte("foo"),
+			Key: "foo",
 		}).Marshal()
 		if err != nil {
 			t.Errorf("#%d: marshal err = %v, want nil", i, err)
@@ -311,7 +311,7 @@ func TestStoreDeleteRange(t *testing.T) {
 		}
 		wact = []testutil.Action{
 			{Name: "range", Params: []interface{}{[]byte("foo"), []byte("goo"), tt.wrrev}},
-			{Name: "tombstone", Params: []interface{}{[]byte("foo"), tt.wdelrev}},
+			{Name: "tombstone", Params: []interface{}{"foo", tt.wdelrev}},
 		}
 		if g := fi.Action(); !reflect.DeepEqual(g, wact) {
 			t.Errorf("#%d: index action = %+v, want %+v", i, g, wact)
@@ -366,8 +366,8 @@ func TestStoreRestore(t *testing.T) {
 
 	putkey := newTestKeyBytes(revision{3, 0}, false)
 	putkv := mvccpb.KeyValue{
-		Key:            []byte("foo"),
-		Value:          []byte("bar"),
+		Key:            "foo",
+		Value:          "bar",
 		CreateRevision: 4,
 		ModRevision:    4,
 		Version:        1,
@@ -378,7 +378,7 @@ func TestStoreRestore(t *testing.T) {
 	}
 	delkey := newTestKeyBytes(revision{5, 0}, true)
 	delkv := mvccpb.KeyValue{
-		Key: []byte("foo"),
+		Key: "foo",
 	}
 	delkvb, err := delkv.Marshal()
 	if err != nil {
@@ -411,7 +411,7 @@ func TestStoreRestore(t *testing.T) {
 		{created: revision{4, 0}, ver: 2, revs: []revision{{3, 0}, {5, 0}}},
 		{created: revision{0, 0}, ver: 0, revs: nil},
 	}
-	ki := &keyIndex{key: []byte("foo"), modified: revision{5, 0}, generations: gens}
+	ki := &keyIndex{key: "foo", modified: revision{5, 0}, generations: gens}
 	wact = []testutil.Action{
 		{Name: "keyIndex", Params: []interface{}{ki}},
 		{Name: "insert", Params: []interface{}{ki}},
@@ -682,8 +682,8 @@ func TestConcurrentReadNotBlockingWrite(t *testing.T) {
 	}
 	// readTx2 should see the result of new write
 	w := mvccpb.KeyValue{
-		Key:            []byte("foo"),
-		Value:          []byte("newBar"),
+		Key:            "foo",
+		Value:          "newBar",
 		CreateRevision: 2,
 		ModRevision:    3,
 		Version:        2,
@@ -699,8 +699,8 @@ func TestConcurrentReadNotBlockingWrite(t *testing.T) {
 	}
 	// readTx1 should not see the result of new write
 	w = mvccpb.KeyValue{
-		Key:            []byte("foo"),
-		Value:          []byte("bar"),
+		Key:            "foo",
+		Value:          "bar",
 		CreateRevision: 2,
 		ModRevision:    2,
 		Version:        1,
@@ -735,9 +735,9 @@ func TestConcurrentReadTxAndWrite(t *testing.T) {
 			numOfPuts := mrand.Intn(maxNumOfPutsPerWrite) + 1
 			var pendingKvs kvs
 			for j := 0; j < numOfPuts; j++ {
-				k := []byte(strconv.Itoa(mrand.Int()))
-				v := []byte(strconv.Itoa(mrand.Int()))
-				tx.Put(k, v, lease.NoLease)
+				k := strconv.Itoa(mrand.Int())
+				v := strconv.Itoa(mrand.Int())
+				tx.Put([]byte(k), []byte(v), lease.NoLease)
 				pendingKvs = append(pendingKvs, kv{k, v})
 			}
 			// reads should not see above Puts until write is finished
@@ -793,14 +793,14 @@ func TestConcurrentReadTxAndWrite(t *testing.T) {
 }
 
 type kv struct {
-	key []byte
-	val []byte
+	key string
+	val string
 }
 
 type kvs []kv
 
 func (kvs kvs) Len() int           { return len(kvs) }
-func (kvs kvs) Less(i, j int) bool { return bytes.Compare(kvs[i].key, kvs[j].key) < 0 }
+func (kvs kvs) Less(i, j int) bool { return strings.Compare(kvs[i].key, kvs[j].key) < 0 }
 func (kvs kvs) Swap(i, j int)      { kvs[i], kvs[j] = kvs[j], kvs[i] }
 
 func merge(dst, src kvs) kvs {
@@ -810,7 +810,7 @@ func merge(dst, src kvs) kvs {
 	// ref: tx_buffer.go
 	widx := 0
 	for ridx := 1; ridx < len(dst); ridx++ {
-		if !bytes.Equal(dst[widx].key, dst[ridx].key) {
+		if !strings.EqualFold(dst[widx].key, dst[ridx].key) {
 			widx++
 		}
 		dst[widx] = dst[ridx]

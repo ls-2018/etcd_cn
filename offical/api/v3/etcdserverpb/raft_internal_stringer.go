@@ -159,7 +159,7 @@ func (*loggableValueCompare) ProtoMessage()    {}
 // size field.
 // To preserve proto encoding of the key bytes, a faked out proto type is used here.
 type loggablePutRequest struct {
-	Key         []byte `protobuf:"bytes,1,opt,name=key,proto3"`
+	Key         string `protobuf:"bytes,1,opt,name=key,proto3"`
 	ValueSize   int64  `protobuf:"varint,2,opt,name=value_size,proto3"`
 	Lease       int64  `protobuf:"varint,3,opt,name=lease,proto3"`
 	PrevKv      bool   `protobuf:"varint,4,opt,name=prev_kv,proto3"`

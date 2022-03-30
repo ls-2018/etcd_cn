@@ -46,24 +46,19 @@ type watchable interface {
 
 type watchableStore struct {
 	*store
-
 	// mu protects watcher groups and batches. It should never be locked
 	// before locking store.mu to avoid deadlock.
 	mu sync.RWMutex
-
 	// victims are watcher batches that were blocked on the watch channel
 	victims []watcherBatch
 	victimc chan struct{}
-
 	// contains all unsynced watchers that needs to sync with events that have happened
 	unsynced watcherGroup
-
 	// contains all synced watchers that are in sync with the progress of the store.
 	// The key of the map is the key that the watcher watches on.
 	synced watcherGroup
-
-	stopc chan struct{}
-	wg    sync.WaitGroup
+	stopc  chan struct{}
+	wg     sync.WaitGroup
 }
 
 // cancelFunc updates unsynced and synced maps when running
@@ -114,8 +109,8 @@ func (s *watchableStore) NewWatchStream() WatchStream {
 
 func (s *watchableStore) watch(key, end []byte, startRev int64, id WatchID, ch chan<- WatchResponse, fcs ...FilterFunc) (*watcher, cancelFunc) {
 	wa := &watcher{
-		key:    key,
-		end:    end,
+		key:    string(key),
+		end:    string(end),
 		minRev: startRev,
 		id:     id,
 		ch:     ch,
@@ -469,10 +464,10 @@ func (s *watchableStore) progress(w *watcher) {
 
 type watcher struct {
 	// the watcher key
-	key []byte
+	key string
 	// end indicates the end of the range to watch.
 	// If end is set, the watcher is on a range.
-	end []byte
+	end string
 
 	// victim is set when ch is blocked and undergoing victim processing
 	victim bool

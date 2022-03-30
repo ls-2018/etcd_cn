@@ -109,7 +109,7 @@ func (t *Trace) Step(msg string, fields ...Field) {
 	}
 }
 
-// StepWithFunction will measure the input function as a single step
+// StepWithFunction 将测量输入函数作为一个单一的步骤
 func (t *Trace) StepWithFunction(f func(), msg string, fields ...Field) {
 	t.disableStep()
 	f()

@@ -97,7 +97,8 @@ func (t *batchTxBuffered) UnsafePut(bucket Bucket, key []byte, value []byte) {
 	t.buf.put(bucket, key, value)
 }
 
-func (t *batchTxBuffered) UnsafeSeqPut(bucket Bucket, key []byte, value []byte) {
+// UnsafeSeqPut OK
+func (t *batchTxBuffered) UnsafeSeqPut(bucket Bucket, key []byte, value []byte) { // ✅
 	t.batchTx.UnsafeSeqPut(bucket, key, value)
 	t.buf.putSeq(bucket, key, value)
 }

@@ -27,8 +27,8 @@ var (
 	ErrGRPCLeaseProvided = status.New(codes.InvalidArgument, "etcdserver: lease is provided").Err()
 	ErrGRPCTooManyOps    = status.New(codes.InvalidArgument, "etcdserver: too many operations in txn request").Err()
 	ErrGRPCDuplicateKey  = status.New(codes.InvalidArgument, "etcdserver: duplicate key given in txn request").Err()
-	ErrGRPCCompacted     = status.New(codes.OutOfRange, "etcdserver: mvcc: required revision has been compacted").Err()
-	ErrGRPCFutureRev     = status.New(codes.OutOfRange, "etcdserver: mvcc: required revision is a future revision").Err()
+	ErrGRPCCompacted     = status.New(codes.OutOfRange, "etcdserver: mvcc: 所需的修订版 已被压缩").Err()
+	ErrGRPCFutureRev     = status.New(codes.OutOfRange, "etcdserver: mvcc: 所需的修订版是一个未来版本").Err()
 	ErrGRPCNoSpace       = status.New(codes.ResourceExhausted, "etcdserver: mvcc: database space exceeded").Err()
 
 	ErrGRPCLeaseNotFound    = status.New(codes.NotFound, "etcdserver: requested lease not found").Err()

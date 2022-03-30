@@ -50,20 +50,6 @@ func (txw *txWriteBuffer) put(bucket Bucket, k, v []byte) {
 	txw.putInternal(bucket, k, v)
 }
 
-func (txw *txWriteBuffer) putSeq(bucket Bucket, k, v []byte) {
-	// TODO: Add (in tests?) verification whether k>b[len(b)]
-	txw.putInternal(bucket, k, v)
-}
-
-func (txw *txWriteBuffer) putInternal(bucket Bucket, k, v []byte) {
-	b, ok := txw.buckets[bucket.ID()]
-	if !ok {
-		b = newBucketBuffer()
-		txw.buckets[bucket.ID()] = b
-	}
-	b.add(k, v)
-}
-
 func (txw *txWriteBuffer) reset() {
 	txw.txBuffer.reset()
 	for k := range txw.bucket2seq {
@@ -118,13 +104,9 @@ type bucketBuffer struct {
 	used int // 跟踪使用中的元素数量，这样buf可以重用而不需要重新分配。
 }
 
-func newBucketBuffer() *bucketBuffer { // 512
-	return &bucketBuffer{buf: make([]kv, bucketBufferInitialSize), used: 0}
-}
-
 func (bb *bucketBuffer) ForEach(visitor func(k, v []byte) error) error {
 	for i := 0; i < bb.used; i++ {
-		if err := visitor([]byte(bb.buf[i].key), []byte(bb.buf[i].val)); err != nil {
+		if err := visitor(bb.buf[i].key, []byte(bb.buf[i].val)); err != nil {
 			return err
 		}
 	}
@@ -144,12 +126,12 @@ func (bb *bucketBuffer) add(k, v []byte) {
 // merge merges data from bbsrc into bb.
 func (bb *bucketBuffer) merge(bbsrc *bucketBuffer) {
 	for i := 0; i < bbsrc.used; i++ {
-		bb.add([]byte(bbsrc.buf[i].key), []byte(bbsrc.buf[i].val))
+		bb.add(bbsrc.buf[i].key, []byte(bbsrc.buf[i].val))
 	}
 	if bb.used == bbsrc.used {
 		return
 	}
-	if bytes.Compare([]byte(bb.buf[(bb.used-bbsrc.used)-1].key), []byte(bbsrc.buf[0].key)) < 0 {
+	if bytes.Compare(bb.buf[(bb.used-bbsrc.used)-1].key, bbsrc.buf[0].key) < 0 {
 		return
 	}
 
@@ -158,7 +140,7 @@ func (bb *bucketBuffer) merge(bbsrc *bucketBuffer) {
 	// remove duplicates, using only newest update
 	widx := 0
 	for ridx := 1; ridx < bb.used; ridx++ {
-		if !bytes.Equal([]byte(bb.buf[ridx].key), []byte(bb.buf[widx].key)) {
+		if !bytes.Equal(bb.buf[ridx].key, bb.buf[widx].key) {
 			widx++
 		}
 		bb.buf[widx] = bb.buf[ridx]
@@ -168,7 +150,7 @@ func (bb *bucketBuffer) merge(bbsrc *bucketBuffer) {
 
 func (bb *bucketBuffer) Len() int { return bb.used }
 func (bb *bucketBuffer) Less(i, j int) bool {
-	return bytes.Compare([]byte(bb.buf[i].key), []byte(bb.buf[j].key)) < 0
+	return bytes.Compare(bb.buf[i].key, bb.buf[j].key) < 0
 }
 func (bb *bucketBuffer) Swap(i, j int) { bb.buf[i], bb.buf[j] = bb.buf[j], bb.buf[i] }
 
@@ -197,15 +179,15 @@ func (txr *txReadBuffer) unsafeCopy() txReadBuffer {
 
 func (bb *bucketBuffer) Range(key, endKey []byte, limit int64) (keys [][]byte, vals [][]byte) {
 	f := func(i int) bool {
-		return bytes.Compare([]byte(bb.buf[i].key), key) >= 0
+		return bytes.Compare(bb.buf[i].key, key) >= 0
 	}
 	idx := sort.Search(bb.used, f) // 找到第一个返回TRUE的索引
 	if idx < 0 {                   // 没招到
 		return nil, nil
 	}
 	if len(endKey) == 0 {
-		if bytes.Equal(key, []byte(bb.buf[idx].key)) {
-			keys = append(keys, []byte(bb.buf[idx].key))
+		if bytes.Equal(key, bb.buf[idx].key) {
+			keys = append(keys, bb.buf[idx].key)
 			vals = append(vals, []byte(bb.buf[idx].val))
 		}
 		fmt.Println(fmt.Sprintf("get %s:%s", string(bb.buf[idx].key), bb.buf[idx].val))
@@ -213,15 +195,15 @@ func (bb *bucketBuffer) Range(key, endKey []byte, limit int64) (keys [][]byte, v
 	}
 	// 缓存中没有对应的key
 	// bb.buf[idx].key >  endKey
-	if bytes.Compare(endKey, []byte(bb.buf[idx].key)) <= 0 {
+	if bytes.Compare(endKey, bb.buf[idx].key) <= 0 {
 		return nil, nil
 	}
 	for i := idx; i < bb.used && int64(len(keys)) < limit; i++ {
 		// bb.buf[idx].key >  endKey
-		if bytes.Compare(endKey, []byte(bb.buf[i].key)) <= 0 {
+		if bytes.Compare(endKey, bb.buf[i].key) <= 0 {
 			break
 		}
-		keys = append(keys, []byte(bb.buf[i].key))
+		keys = append(keys, bb.buf[i].key)
 		vals = append(vals, []byte(bb.buf[i].val))
 	}
 	return keys, vals
@@ -233,4 +215,23 @@ func (txr *txReadBuffer) Range(bucket Bucket, key, endKey []byte, limit int64) (
 		return b.Range(key, endKey, limit)
 	}
 	return nil, nil
+}
+
+// 将k,v写入到db之后,会写入到缓存中
+func (txw *txWriteBuffer) putSeq(bucket Bucket, k, v []byte) {
+	txw.putInternal(bucket, k, v)
+}
+
+// 创建缓存结构
+func (txw *txWriteBuffer) putInternal(bucket Bucket, k, v []byte) {
+	b, ok := txw.buckets[bucket.ID()]
+	if !ok {
+		b = newBucketBuffer()
+		txw.buckets[bucket.ID()] = b
+	}
+	b.add(k, v)
+}
+
+func newBucketBuffer() *bucketBuffer { // 512
+	return &bucketBuffer{buf: make([]kv, bucketBufferInitialSize), used: 0}
 }

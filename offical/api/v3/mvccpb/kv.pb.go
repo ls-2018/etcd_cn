@@ -49,25 +49,13 @@ func (Event_EventType) EnumDescriptor() ([]byte, []int) {
 }
 
 type KeyValue struct {
-	// key is the key in bytes. An empty key is not allowed.
-	Key string `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	// create_revision is the revision of last creation on this key.
-	CreateRevision int64 `protobuf:"varint,2,opt,name=create_revision,json=createRevision,proto3" json:"create_revision,omitempty"`
-	// mod_revision is the revision of last modification on this key.
-	ModRevision int64 `protobuf:"varint,3,opt,name=mod_revision,json=modRevision,proto3" json:"mod_revision,omitempty"`
-	// version is the version of the key. A deletion resets
-	// the version to zero and any modification of the key
-	// increases its version.
-	Version int64 `protobuf:"varint,4,opt,name=version,proto3" json:"version,omitempty"`
-	// value is the value held by the key, in bytes.
-	Value string `protobuf:"bytes,5,opt,name=value,proto3" json:"value,omitempty"`
-	// lease is the ID of the lease that attached to key.
-	// When the attached lease expires, the key will be deleted.
-	// If lease is 0, then no lease is attached to the key.
-	Lease                int64    `protobuf:"varint,6,opt,name=lease,proto3" json:"lease,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Key            string `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	CreateRevision int64  `protobuf:"varint,2,opt,name=create_revision,json=createRevision,proto3" json:"create_revision,omitempty"`
+	ModRevision    int64  `protobuf:"varint,3,opt,name=mod_revision,json=modRevision,proto3" json:"mod_revision,omitempty"`
+	// Version是key的版本。删除键会将该键的版本重置为0，对键的任何修改都会增加它的版本。
+	Version int64  `protobuf:"varint,4,opt,name=version,proto3" json:"version,omitempty"`
+	Value   string `protobuf:"bytes,5,opt,name=value,proto3" json:"value,omitempty"`
+	Lease   int64  `protobuf:"varint,6,opt,name=lease,proto3" json:"lease,omitempty"`
 }
 
 func (m *KeyValue) Reset()         { *m = KeyValue{} }
@@ -89,10 +77,7 @@ type Event struct {
 	// its modification revision set to the revision of deletion.
 	Kv *KeyValue `protobuf:"bytes,2,opt,name=kv,proto3" json:"kv,omitempty"`
 	// prev_kv holds the key-value pair before the event happens.
-	PrevKv               *KeyValue `protobuf:"bytes,3,opt,name=prev_kv,json=prevKv,proto3" json:"prev_kv,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
-	XXX_unrecognized     []byte    `json:"-"`
-	XXX_sizecache        int32     `json:"-"`
+	PrevKv *KeyValue `protobuf:"bytes,3,opt,name=prev_kv,json=prevKv,proto3" json:"prev_kv,omitempty"`
 }
 
 func (m *Event) Reset()         { *m = Event{} }

@@ -31,7 +31,7 @@ func TestOpWithSort(t *testing.T) {
 		t.Fatalf("expected range request, got %v", reflect.TypeOf(opReq))
 	}
 	req := q.RequestRange
-	wreq := &pb.RangeRequest{Key: []byte("foo"), SortOrder: pb.RangeRequest_NONE, Limit: 10}
+	wreq := &pb.RangeRequest{Key: "foo", SortOrder: pb.RangeRequest_NONE, Limit: 10}
 	if !reflect.DeepEqual(req, wreq) {
 		t.Fatalf("expected %+v, got %+v", wreq, req)
 	}

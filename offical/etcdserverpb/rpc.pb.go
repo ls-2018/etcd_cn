@@ -504,10 +504,8 @@ type PutRequest struct {
 	Value string `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
 	// lease is the lease ID to associate with the key in the key-value store. A lease
 	// value of 0 indicates no lease.
-	Lease int64 `protobuf:"varint,3,opt,name=lease,proto3" json:"lease,omitempty"`
-	// If prev_kv is set, etcd gets the previous key-value pair before changing it.
-	// The previous key-value pair will be returned in the put response.
-	PrevKv bool `protobuf:"varint,4,opt,name=prev_kv,json=prevKv,proto3" json:"prev_kv,omitempty"`
+	Lease  int64 `protobuf:"varint,3,opt,name=lease,proto3" json:"lease,omitempty"`
+	PrevKv bool  `protobuf:"varint,4,opt,name=prev_kv,json=prevKv,proto3" json:"prev_kv,omitempty"` // 是否设置了前缀
 	// If ignore_value is set, etcd updates the key using its current value.
 	// Returns an error if the key does not exist.
 	IgnoreValue bool `protobuf:"varint,5,opt,name=ignore_value,json=ignoreValue,proto3" json:"ignore_value,omitempty"`

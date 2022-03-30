@@ -162,7 +162,7 @@ func newWatcherGroup() watcherGroup {
 // add puts a watcher in the group.
 func (wg *watcherGroup) add(wa *watcher) {
 	wg.watchers.add(wa)
-	if wa.end == nil || len(wa.end) == 0 {
+	if wa.end == "" || len(wa.end) == 0 {
 		wg.keyWatchers.add(wa)
 		return
 	}
@@ -195,7 +195,7 @@ func (wg *watcherGroup) delete(wa *watcher) bool {
 		return false
 	}
 	wg.watchers.delete(wa)
-	if wa.end == nil || len(wa.end) == 0 {
+	if wa.end == "" || len(wa.end) == 0 {
 		wg.keyWatchers.delete(wa)
 		return true
 	}

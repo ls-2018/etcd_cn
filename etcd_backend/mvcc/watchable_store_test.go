@@ -213,10 +213,10 @@ func TestSyncWatchers(t *testing.T) {
 	if evs[0].Type != mvccpb.PUT {
 		t.Errorf("got = %v, want = %v", evs[0].Type, mvccpb.PUT)
 	}
-	if !bytes.Equal(evs[0].Kv.Key, testKey) {
+	if !bytes.Equal([]byte(evs[0].Kv.Key), testKey) {
 		t.Errorf("got = %s, want = %s", evs[0].Kv.Key, testKey)
 	}
-	if !bytes.Equal(evs[0].Kv.Value, testValue) {
+	if !bytes.Equal([]byte(evs[0].Kv.Value), testValue) {
 		t.Errorf("got = %s, want = %s", evs[0].Kv.Value, testValue)
 	}
 }
@@ -431,8 +431,8 @@ func TestWatchBatchUnsynced(t *testing.T) {
 }
 
 func TestNewMapwatcherToEventMap(t *testing.T) {
-	k0, k1, k2 := []byte("foo0"), []byte("foo1"), []byte("foo2")
-	v0, v1, v2 := []byte("bar0"), []byte("bar1"), []byte("bar2")
+	k0, k1, k2 := ("foo0"), ("foo1"), ("foo2")
+	v0, v1, v2 := ("bar0"), ("bar1"), ("bar2")
 
 	ws := []*watcher{{key: k0}, {key: k1}, {key: k2}}
 

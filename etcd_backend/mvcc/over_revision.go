@@ -19,11 +19,6 @@ import "encoding/binary"
 // revBytesLen 正常修订版本的长度
 const revBytesLen = 8 + 1 + 8
 
-type revision struct {
-	main int64 // 主修订版本
-	sub  int64 // 子修订版本
-}
-
 func (a revision) GreaterThan(b revision) bool {
 	if a.main > b.main {
 		return true

@@ -6,17 +6,34 @@
   <component name="ChangeListManager">
     <list default="true" id="49524360-39b2-44cd-b702-de0461fb4222" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client_sdk/v3/op_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/op_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/apply_auth.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/apply_auth.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/apply_v3.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/apply_v3.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd_backend/etcdserver/server.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/etcdserver/server.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd_backend/lease/lessor.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/lease/lessor.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/backend/bolt_batch_tx.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/backend/bolt_batch_tx.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/backend/read_tx.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/backend/read_tx.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/backend/bolt_batch_tx_buffered.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/backend/bolt_batch_tx_buffered.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/backend/tx_buffer.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/backend/tx_buffer.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/index.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/index.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/index_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/index_test.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/key_index.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/key_index.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/key_index_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/key_index_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/kv.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/kv.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/kvstore_compaction_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/kvstore_compaction_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/kvstore_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/kvstore_test.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/kvstore_txn.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/kvstore_txn.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/over_revision.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/over_revision.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/util.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/util.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/watchable_store.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/watchable_store.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/watchable_store_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/watchable_store_test.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/watcher_group.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/watcher_group.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd_backend/mvcc/watcher_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd_backend/mvcc/watcher_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/api/v3/etcdserverpb/raft_internal_stringer.go" beforeDir="false" afterPath="$PROJECT_DIR$/offical/api/v3/etcdserverpb/raft_internal_stringer.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/api/v3/mvccpb/kv.pb.go" beforeDir="false" afterPath="$PROJECT_DIR$/offical/api/v3/mvccpb/kv.pb.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/api/v3/v3rpc/rpctypes/error.go" beforeDir="false" afterPath="$PROJECT_DIR$/offical/api/v3/v3rpc/rpctypes/error.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/clientv3util/example_key_test.go" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/offical/etcdserverpb/rpc.pb.go" beforeDir="false" afterPath="$PROJECT_DIR$/offical/etcdserverpb/rpc.pb.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/req.py" beforeDir="false" afterPath="$PROJECT_DIR$/req.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/traceutil/trace.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/traceutil/trace.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -84,6 +101,18 @@
       <filePath value="$PROJECT_DIR$/etcd_backend/main.go" />
       <method v="2" />
     </configuration>
+    <configuration name="TestKeyIndexFindGeneration in github.com/ls-2018/etcd_cn/etcd_backend/mvcc" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="etcd_cn" />
+      <working_directory value="$PROJECT_DIR$/etcd_backend/mvcc" />
+      <root_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="github.com/ls-2018/etcd_cn/etcd_backend/mvcc" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestKeyIndexFindGeneration\E$" />
+      <method v="2" />
+    </configuration>
     <configuration name="a" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="etcd_cn" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -131,10 +160,12 @@
       <item itemvalue="Go Build.etcdctl" />
       <item itemvalue="Python.a" />
       <item itemvalue="Python.req" />
+      <item itemvalue="Go Test.TestKeyIndexFindGeneration in github.com/ls-2018/etcd_cn/etcd_backend/mvcc" />
     </list>
     <recent_temporary>
       <list>
         <item itemvalue="Go Build.local" />
+        <item itemvalue="Go Test.TestKeyIndexFindGeneration in github.com/ls-2018/etcd_cn/etcd_backend/mvcc" />
         <item itemvalue="Python.req" />
         <item itemvalue="Go Build.etcdctl" />
         <item itemvalue="Python.a" />
@@ -155,6 +186,7 @@
         </entry>
       </map>
     </option>
+    <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
@@ -165,50 +197,100 @@
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+        <line-breakpoint type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/etcd_backend/etcdserver/api_downgrade.go</url>
           <line>45</line>
           <option name="timeStamp" value="3" />
         </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+        <line-breakpoint type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/etcd_backend/etcdserver/corrupt.go</url>
           <line>151</line>
           <option name="timeStamp" value="4" />
         </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+        <line-breakpoint type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/etcd_backend/etcdserver/v3_server.go</url>
           <line>325</line>
           <option name="timeStamp" value="5" />
         </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+        <line-breakpoint type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/etcd_backend/etcdserver/v3service_auth.go</url>
           <line>59</line>
           <option name="timeStamp" value="6" />
         </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+        <line-breakpoint type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/etcd_backend/etcdserver/v3service_cluster.go</url>
           <line>21</line>
           <option name="timeStamp" value="7" />
         </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/etcd_backend/mvcc/backend/tx_buffer.go</url>
-          <line>216</line>
-          <option name="timeStamp" value="80" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/etcd_backend/etcdserver/apply_v3.go</url>
-          <line>1010</line>
-          <option name="timeStamp" value="96" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+        <line-breakpoint type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/client_sdk/v3/op.go</url>
           <line>162</line>
           <option name="timeStamp" value="97" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/etcd_backend/etcdserver/v3service_kv.go</url>
-          <line>113</line>
-          <option name="timeStamp" value="98" />
+          <url>file://$PROJECT_DIR$/etcd_backend/mvcc/key_index.go</url>
+          <line>49</line>
+          <option name="timeStamp" value="116" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd_backend/etcdserver/apply_v3.go</url>
+          <line>226</line>
+          <option name="timeStamp" value="125" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd_backend/etcdserver/apply_v3.go</url>
+          <line>235</line>
+          <option name="timeStamp" value="126" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd_backend/etcdserver/apply_v3.go</url>
+          <line>241</line>
+          <option name="timeStamp" value="127" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd_backend/etcdserver/apply_v3.go</url>
+          <line>244</line>
+          <option name="timeStamp" value="128" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd_backend/mvcc/kv_view.go</url>
+          <line>52</line>
+          <option name="timeStamp" value="134" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd_backend/etcdserver/apply_v3.go</url>
+          <line>816</line>
+          <option name="timeStamp" value="135" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd_backend/etcdserver/apply_v3.go</url>
+          <line>247</line>
+          <option name="timeStamp" value="136" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd_backend/mvcc/kvstore_txn.go</url>
+          <line>154</line>
+          <option name="timeStamp" value="138" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd_backend/mvcc/backend/bolt_batch_tx.go</url>
+          <line>87</line>
+          <option name="timeStamp" value="147" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd_backend/mvcc/kvstore_txn.go</url>
+          <line>177</line>
+          <option name="timeStamp" value="149" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd_backend/mvcc/kvstore_txn.go</url>
+          <line>178</line>
+          <option name="timeStamp" value="150" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd_backend/mvcc/backend/bolt_batch_tx_buffered.go</url>
+          <line>101</line>
+          <option name="timeStamp" value="153" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

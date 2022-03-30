@@ -50,7 +50,7 @@ type batchTx struct {
 	sync.Mutex
 	tx      *bolt.Tx
 	backend *backend
-	pending int // 运行中的事务
+	pending int // 当前事务中的写入次数
 }
 
 func (t *batchTx) Lock() {
@@ -88,25 +88,21 @@ func (t *batchTx) UnsafeSeqPut(bucket Bucket, key []byte, value []byte) {
 	t.unsafePut(bucket, key, value, true)
 }
 
+// OK
 func (t *batchTx) unsafePut(bucketType Bucket, key []byte, value []byte, seq bool) {
 	bucket := t.tx.Bucket(bucketType.Name())
 	if bucket == nil {
-		t.backend.lg.Fatal(
-			"failed to find a bucket",
-			zap.Stringer("bucket-name", bucketType),
-			zap.Stack("stack"),
-		)
+		t.backend.lg.Fatal("找不到bolt.db里的桶", zap.Stringer("bucket-name", bucketType), zap.Stack("stack"))
 	}
 	if seq {
-		// it is useful to increase fill percent when the workloads are mostly append-only.
-		// this can delay the page split and reduce space usage.
+		// 当工作负载大多为仅附加时，增加填充百分比是很有用的。这可以延迟页面分割和减少空间使用。
+		// 告诉bolt 当页面已满时，它应该告诉它做一个 90-10 拆分，而不是 50-50 拆分，这更适合于顺序插入。这样可以让其体积稍小。
+		// 一个例子：使用 FillPercent = 0.9 之前是 103MB，使用之后是64MB，实际数据是22MB。
 		bucket.FillPercent = 0.9
 	}
 	if err := bucket.Put(key, value); err != nil {
 		t.backend.lg.Fatal(
-			"failed to write to a bucket",
-			zap.Stringer("bucket-name", bucketType),
-			zap.Error(err),
+			"桶写数据失败", zap.Stringer("bucket-name", bucketType), zap.Error(err),
 		)
 	}
 	t.pending++
