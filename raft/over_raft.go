@@ -117,7 +117,7 @@ type raft struct {
 	// current term. Those will be handled as fast as first log is committed in
 	// current term.
 	pendingReadIndexMessages []pb.Message
-	readStates               []ReadState // follower读取的响应
+	readStates               []ReadState // leader会直接往这里存储； follower 转发MsgReadIndex至leader 的响应
 	readOnly                 *readOnly
 }
 
@@ -320,7 +320,7 @@ func newRaft(c *Config) *raft {
 		logger:                    c.Logger,
 		checkQuorum:               c.CheckQuorum,                 // 检查需要维持的选票数,一旦小于,就会丢失leader
 		preVote:                   c.PreVote,                     // PreVote 是否启用PreVote
-		readOnly:                  newReadOnly(c.ReadOnlyOption), // etcd_backend/etcdserver/raft.go:469    默认值0 ReadOnlySafe
+		readOnly:                  newReadOnly(c.ReadOnlyOption), // etcd/etcdserver/raft.go:469    默认值0 ReadOnlySafe
 		disableProposalForwarding: c.DisableProposalForwarding,   // 禁止将请求转发到leader,默认FALSE
 	}
 	// todo 没看懂
@@ -776,6 +776,7 @@ func (r *raft) handleAppendEntries(m pb.Message) {
 
 // 判断提交的日志任期与当前任期 是否一致
 func (r *raft) committedEntryInCurrentTerm() bool {
+	// 获取最新提交的日志所对应的任期   == 当前的任期
 	return r.raftLog.zeroTermOnErrCompacted(r.raftLog.term(r.raftLog.committed)) == r.Term
 }
 

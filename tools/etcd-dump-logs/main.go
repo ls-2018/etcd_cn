@@ -30,9 +30,9 @@ import (
 	"time"
 
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
-	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/snap"
-	"github.com/ls-2018/etcd_cn/etcd_backend/wal"
-	"github.com/ls-2018/etcd_cn/etcd_backend/wal/walpb"
+	"github.com/ls-2018/etcd_cn/etcd/etcdserver/api/snap"
+	"github.com/ls-2018/etcd_cn/etcd/wal"
+	"github.com/ls-2018/etcd_cn/etcd/wal/walpb"
 	"github.com/ls-2018/etcd_cn/offical/etcdserverpb"
 	"github.com/ls-2018/etcd_cn/pkg/pbutil"
 	"github.com/ls-2018/etcd_cn/raft/raftpb"

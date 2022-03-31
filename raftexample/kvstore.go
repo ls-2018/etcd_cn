@@ -19,7 +19,7 @@ import (
 	"log"
 	"sync"
 
-	"github.com/ls-2018/etcd_cn/etcd_backend/etcdserver/api/snap"
+	"github.com/ls-2018/etcd_cn/etcd/etcdserver/api/snap"
 	"github.com/ls-2018/etcd_cn/raft/raftpb"
 )
 

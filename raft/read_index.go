@@ -2,23 +2,6 @@ package raft
 
 import pb "github.com/ls-2018/etcd_cn/raft/raftpb"
 
-// responseToReadIndexReq constructs a response for `req`. If `req` comes from the peer
-// itself, a blank value will be returned.
-func (r *raft) responseToReadIndexReq(req pb.Message, readIndex uint64) pb.Message {
-	if req.From == None || req.From == r.id {
-		r.readStates = append(r.readStates, ReadState{
-			Index:      readIndex,
-			RequestCtx: req.Entries[0].Data,
-		})
-		return pb.Message{}
-	}
-	return pb.Message{
-		Type:    pb.MsgReadIndexResp,
-		To:      req.From,
-		Index:   readIndex,
-		Entries: req.Entries,
-	}
-}
 
 func releasePendingReadIndexMessages(r *raft) {
 	if !r.committedEntryInCurrentTerm() {
@@ -53,5 +36,23 @@ func sendMsgReadIndexResponse(r *raft, m pb.Message) {
 		if resp := r.responseToReadIndexReq(m, r.raftLog.committed); resp.To != None {
 			r.send(resp)
 		}
+	}
+}
+
+// responseToReadIndexReq 为' req '构造响应。如果' req '来自对等体本身，则返回一个空值。
+func (r *raft) responseToReadIndexReq(req pb.Message, readIndex uint64) pb.Message {
+	//readIndex  己提交的位置,即己提交的Entry记录中最大的索引值.
+	if req.From == None || req.From == r.id {
+		r.readStates = append(r.readStates, ReadState{
+			Index:      readIndex,
+			RequestCtx: req.Entries[0].Data,
+		})
+		return pb.Message{}
+	}
+	return pb.Message{
+		Type:    pb.MsgReadIndexResp,
+		To:      req.From,
+		Index:   readIndex,
+		Entries: req.Entries,
 	}
 }

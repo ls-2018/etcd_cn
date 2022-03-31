@@ -21,7 +21,7 @@ import (
 	"runtime/pprof"
 	"time"
 
-	"github.com/ls-2018/etcd_cn/etcd_backend/lease"
+	"github.com/ls-2018/etcd_cn/etcd/lease"
 	"github.com/ls-2018/etcd_cn/pkg/report"
 	"github.com/ls-2018/etcd_cn/pkg/traceutil"
 

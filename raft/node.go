@@ -30,9 +30,7 @@ const (
 
 var (
 	emptyState = pb.HardState{}
-
-	// ErrStopped is returned by methods on ExternNodes that have been stopped.
-	ErrStopped = errors.New("raft: stopped")
+	ErrStopped = errors.New("raft: 已停止")
 )
 
 func isHardStateEqual(a, b pb.HardState) bool {
@@ -208,8 +206,9 @@ func (n *localNode) run() {
 				pm.result <- err
 				close(pm.result)
 			}
-		case m := <-n.recvc: // Message队列,除Propose消息以外其他消息塞到这个队列里
+		case m := <-n.recvc: // Message队列, 除Propose消息以外其他消息塞到这个队列里
 			// 必须是已知节点、或者是非响应类信息
+			// MsgReadIndex类型
 			if pr := r.prstrack.Progress[m.From]; pr != nil || !IsResponseMsg(m.Type) {
 				r.Step(m)
 			}
@@ -244,7 +243,7 @@ func (n *localNode) run() {
 			}
 		case <-n.tickc: // 超时时间到,包括心跳超时和选举超时等
 			n.rn.Tick()
-		case readyc <- rd: // 数据放入ready channel中
+		case readyc <- rd: // 数据放入ready channel中,等待上层应用处理
 			n.rn.acceptReady(rd)  // 告诉raft,ready数据已被接收
 			advancec = n.advancec // 赋值Advance channel等待Ready处理完成的消息
 		case <-advancec: // 使用者处理完Ready数据后,调用了Advance()
@@ -282,11 +281,13 @@ func (n *localNode) TransferLeadership(ctx context.Context, lead, transferee uin
 	}
 }
 
+// ------------------------------------------	over --------------------------------------------------------------
+
+// ReadIndex etcdctl get 会走这里，rctx 是一个生成的索引
 func (n *localNode) ReadIndex(ctx context.Context, rctx []byte) error {
+	// rctx 后随着响应返回来
 	return n.step(ctx, pb.Message{Type: pb.MsgReadIndex, Entries: []pb.Entry{{Data: rctx}}}) // ok  data是requestIndex[生成的]
 }
-
-// ------------------------------------------	over --------------------------------------------------------------
 
 func (n *localNode) Ready() <-chan Ready {
 	// Ready 如果raft状态机有变化,会通过channel返回一个Ready的数据结构,里面包含变化信息,比如日志变化、心跳发送等.

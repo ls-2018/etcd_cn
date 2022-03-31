@@ -143,7 +143,7 @@ func (r *raft) Step(m pb.Message) error {
 		}
 
 	default:
-		err := r.step(r, m) // 当前节点是Follower状态,raft.step字段指向stepFollower()函数
+		err := r.step(r, m) // 如果当前节点是Follower状态,raft.step字段指向stepFollower()函数
 		if err != nil {
 			return err
 		}
@@ -250,13 +250,13 @@ func stepLeader(r *raft, m pb.Message) error {
 			return nil
 		}
 
-		// Postpone read only request when this leader has not committed
-		// any log entry at its term.
+		// 当leader在其任期内没有提交任何日志记录时，推迟只读请求。
 		if !r.committedEntryInCurrentTerm() {
 			r.pendingReadIndexMessages = append(r.pendingReadIndexMessages, m)
 			return nil
 		}
 
+		// 发送消息读取响应
 		sendMsgReadIndexResponse(r, m)
 
 		return nil
@@ -527,14 +527,15 @@ func stepFollower(r *raft, m pb.Message) error {
 		// know we are not recovering from a partition so there is no need for the
 		// extra round trip.
 		r.hup(campaignTransfer)
-	case pb.MsgReadIndex:
+
+	case pb.MsgReadIndex:	// ✅
 		if r.lead == None {
 			r.logger.Infof("%x 当前任期没有leader %d; 跳过读索引", r.id, r.Term)
 			return nil
 		}
 		m.To = r.lead
 		r.send(m)
-	case pb.MsgReadIndexResp:
+	case pb.MsgReadIndexResp:	// ✅
 		if len(m.Entries) != 1 {
 			r.logger.Errorf("%x  来自 %x的 MsgReadIndexResp 格式无效, 日志条数: %d", r.id, m.From, len(m.Entries))
 			return nil

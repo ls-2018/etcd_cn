@@ -37,6 +37,7 @@ type Ready struct {
 	// ReadState是包含索引和rctx(就是ReadIndex()函数的参数)的结构,意义是某一时刻的集群
 	// 最大提交索引.至于这个时刻使用者用于实现linearizable read就是另一回事了,其中rctx就是
 	// 某一时刻的唯一标识.一句话概括：
+	// 用于实现线性一致性读的结果,只有一个id,用于表示raft还活着
 	ReadStates []ReadState // 这个参数就是Node.ReadIndex()的结果回调.
 
 	// 需要存入可靠存储的日志,还记得log那片文章里面提到的unstable么,这些日志就是从哪里获取的.

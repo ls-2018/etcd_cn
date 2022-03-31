@@ -24,7 +24,7 @@ import (
 	"time"
 
 	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
-	"github.com/ls-2018/etcd_cn/etcd_backend/embed"
+	"github.com/ls-2018/etcd_cn/etcd/embed"
 
 	"go.uber.org/zap"
 )

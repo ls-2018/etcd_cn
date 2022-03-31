@@ -129,14 +129,13 @@ func (rn *RawNode) readyWithoutAccept() Ready {
 	return newReady(rn.raft, rn.prevSoftSt, rn.prevHardSt) // 计算状态变化
 }
 
-// acceptReady is called when the consumer of the RawNode has decided to go
-// ahead and handle a Ready. Nothing must alter the state of the RawNode between
-// this call and the prior call to Ready().
+// acceptReady 当已经commit的消息提交给上层应用后 被调用
 func (rn *RawNode) acceptReady(rd Ready) {
 	if rd.SoftState != nil {
 		rn.prevSoftSt = rd.SoftState
 	}
 	if len(rd.ReadStates) != 0 {
+		// 清除MsgReadIndex消息导致的数据存储
 		rn.raft.readStates = nil
 	}
 	rn.raft.msgs = nil
