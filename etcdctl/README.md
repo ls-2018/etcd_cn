@@ -166,11 +166,11 @@ RPC: DeleteRange
 
 #### Options
 
-- prefix -- delete keys by matching prefix
+- prefix -- 通过匹配前缀删除键
 
-- prev-kv -- return deleted key-value pairs
+- prev-kv -- 返回删除的k,v 键值对
 
-- from-key -- delete keys that are greater than or equal to the given key using byte compare
+- from-key -- 使用字节比较法删除大于或等于给定键的键。
 
 #### Output
 

@@ -36,9 +36,9 @@ func NewDelCommand() *cobra.Command {
 		Run:   delCommandFunc,
 	}
 
-	cmd.Flags().BoolVar(&delPrefix, "prefix", false, "delete keys with matching prefix")
-	cmd.Flags().BoolVar(&delPrevKV, "prev-kv", false, "return deleted key-value pairs")
-	cmd.Flags().BoolVar(&delFromKey, "from-key", false, "delete keys that are greater than or equal to the given key using byte compare")
+	cmd.Flags().BoolVar(&delPrefix, "prefix", false, "通过匹配前缀删除键")
+	cmd.Flags().BoolVar(&delPrevKV, "prev-kv", false, "返回删除的k,v 键值对")
+	cmd.Flags().BoolVar(&delFromKey, "from-key", false, "使用字节比较法删除大于或等于给定键的键。")
 	return cmd
 }
 
