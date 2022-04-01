@@ -43,12 +43,6 @@ func (rv *readView) Range(ctx context.Context, key, end []byte, ro RangeOptions)
 
 type writeView struct{ kv KV }
 
-func (wv *writeView) DeleteRange(key, end []byte) (n, rev int64) {
-	tw := wv.kv.Write(traceutil.TODO())
-	defer tw.End()
-	return tw.DeleteRange(key, end)
-}
-
 func (wv *writeView) Put(key, value []byte, lease lease.LeaseID) (rev int64) {
 	tw := wv.kv.Write(traceutil.TODO())
 	defer tw.End()

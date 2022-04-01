@@ -35,33 +35,15 @@ var (
 // NewPutCommand returns the cobra command for "put".
 func NewPutCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "put [options] <key> <value> (<value> can also be given from stdin)",
-		Short: "Puts the given key into the store",
-		Long: `
-Puts the given key into the store.
-
-When <value> begins with '-', <value> is interpreted as a flag.
-Insert '--' for workaround:
-
-$ put <key> -- <value>
-$ put -- <key> <value>
-
-If <value> isn't given as a command line argument and '--ignore-value' is not specified,
-this command tries to read the value from standard input.
-
-If <lease> isn't given as a command line argument and '--ignore-lease' is not specified,
-this command tries to read the value from standard input.
-
-For example,
-$ cat file | put <key>
-will store the content of the file to <key>.
-`,
-		Run: putCommandFunc,
+		Use:   "put",
+		Short: "将给定的键放入存储中",
+		Long:  `将给定的键放入存储中`,
+		Run:   putCommandFunc,
 	}
-	cmd.Flags().StringVar(&leaseStr, "lease", "0", "lease ID (in hexadecimal) to attach to the key")
-	cmd.Flags().BoolVar(&putPrevKV, "prev-kv", false, "return the previous key-value pair before modification")
-	cmd.Flags().BoolVar(&putIgnoreVal, "ignore-value", false, "updates the key using its current value")
-	cmd.Flags().BoolVar(&putIgnoreLease, "ignore-lease", false, "updates the key using its current lease")
+	cmd.Flags().StringVar(&leaseStr, "lease", "0", "将租约附加到key  (in hexadecimal) ")
+	cmd.Flags().BoolVar(&putPrevKV, "prev-kv", false, "返回键值对之前的版本")
+	cmd.Flags().BoolVar(&putIgnoreVal, "ignore-value", false, "更新当前的值")
+	cmd.Flags().BoolVar(&putIgnoreLease, "ignore-lease", false, "更新租约")
 	return cmd
 }
 

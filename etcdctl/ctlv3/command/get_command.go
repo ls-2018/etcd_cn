@@ -40,7 +40,7 @@ var (
 func NewGetCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get [options] <key> [range_end]",
-		Short: "Gets the key or a range of keys",
+		Short: "获取键或键的范围",
 		Run:   getCommandFunc,
 	}
 
@@ -57,7 +57,6 @@ func NewGetCommand() *cobra.Command {
 	return cmd
 }
 
-// getCommandFunc executes the "get" command.
 func getCommandFunc(cmd *cobra.Command, args []string) {
 	key, opts := getGetOp(args)
 	ctx, cancel := commandCtx(cmd)

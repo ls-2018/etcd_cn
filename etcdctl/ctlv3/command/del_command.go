@@ -32,7 +32,7 @@ var (
 func NewDelCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "del [options] <key> [range_end]",
-		Short: "Removes the specified key or range of keys [key, range_end)",
+		Short: "移除指定的键或键的范围 [key, range_end)",
 		Run:   delCommandFunc,
 	}
 

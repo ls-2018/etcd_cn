@@ -64,7 +64,7 @@ etcdctl put -- a  b
 
 ### GET [options] \<key\> [range_end]
 
-GET gets the key or a range of keys [key, range_end) if range_end is given.
+GET 获取键或键的范围 [key, range_end) if range_end is given.
 
 RPC: Range
 
@@ -160,7 +160,7 @@ due to new lines. To resolve this issue, set `--hex` to hex encode all strings.
 
 ### DEL [options] \<key\> [range_end]
 
-Removes the specified key or range of keys [key, range_end) if range_end is given.
+移除指定的键或键的范围 [key, range_end) if range_end is given.
 
 RPC: DeleteRange
 
