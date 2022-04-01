@@ -23,15 +23,17 @@ func sendMsgReadIndexResponse(r *raft, m pb.Message) {
 	switch r.readOnly.option {
 	// 如果需要更多的地方投票，进行全面的广播。
 	case ReadOnlySafe:
+		//	该线性读模式,每次 Follower 进行读请求时,需要和 Leader 同步日志提交位点信息,而 Leader需要向过半的 Follower 发起证明自己是 Leader 的轻量的 RPC 请求,
+		//	相当于一个 Follower 读,至少需要 1 +(n/2)+ 1 次的 RPC 请求.
+
 		// 清空readOnly中指定消息ID及之前的所有记录
-		// 开启leader向follower的确认机制
-		// 记录当前节点的raftLog.committed字段值,即已提交位置
-		r.readOnly.addRequest(r.raftLog.committed, m)
+		r.readOnly.addRequest(r.raftLog.committed, m) // 记录当前节点的raftLog.committed字段值,即已提交位置
+
 		// recvAck通知只读结构raft状态机已收到对附加只读请求上下文的心跳信号的确认。
-		// 也就是记录下只读的请求
-		r.readOnly.recvAck(r.id, m.Entries[0].Data)
+		r.readOnly.recvAck(r.id, m.Entries[0].Data)    // 本机确认此消息
 		// leader 节点向其他节点发起广播
 		r.bcastHeartbeatWithCtx(m.Entries[0].Data)
+
 	case ReadOnlyLeaseBased:
 		if resp := r.responseToReadIndexReq(m, r.raftLog.committed); resp.To != None {
 			r.send(resp)

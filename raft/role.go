@@ -253,14 +253,13 @@ func stepLeader(r *raft, m pb.Message) error {
 		}
 
 		// 当leader在其任期内没有提交任何日志记录时，推迟只读请求。
-		if !r.committedEntryInCurrentTerm() {
+		if !r.committedEntryInCurrentTerm() { // 任期变更时，有数据没有committed
 			r.pendingReadIndexMessages = append(r.pendingReadIndexMessages, m)
 			return nil
 		}
 
 		// 发送消息读取响应
 		sendMsgReadIndexResponse(r, m) // case pb.MsgReadIndex:
-
 		return nil
 	}
 	// 根据消息的From字段获取对应的Progress实例,为后面的消息处理做准备
@@ -365,11 +364,13 @@ func stepLeader(r *raft, m pb.Message) error {
 		}
 		// 判断leader有没有收到大多数节点的确认
 		// 也就是ReadIndex算法中，leader节点得到follower的确认，证明自己目前还是Leader
-		if r.prstrack.Voters.VoteResult(r.readOnly.recvAck(m.From, m.Context)) != quorum.VoteWon {
+		readIndexStates := r.readOnly.recvAck(m.From, m.Context) // 记录了每个节点对  m.Context  的响应
+		xxx := r.prstrack.Voters.VoteResult(readIndexStates)
+		if xxx != quorum.VoteWon {
 			return nil
 		}
 		// 收到了响应节点超过半数，会清空readOnly中指定消息ID及之前的所有记录
-		rss := r.readOnly.advance(m)
+		rss := r.readOnly.advance(m) // 响应的ReadIndex
 		// 返回follower的心跳回执
 		for _, rs := range rss {
 			if resp := r.responseToReadIndexReq(rs.req, rs.index); resp.To != None {

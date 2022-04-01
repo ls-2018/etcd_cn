@@ -46,7 +46,7 @@ type readOnly struct {
 		在etcd服务端收到MsgReadIndex消息时,会为其创建一个唯一的消息ID,并作为MsgReadIndex消息的第一条Entry记录.
 		在pendingReadIndex维护了消息ID与对应请求readIndexStatus实例的映射
 	*/
-	pendingReadIndex map[string]*readIndexStatus // id -->readIndexStatus
+	pendingReadIndex map[string]*readIndexStatus // MsgReadIndex请求对应的消息ID -->readIndexStatus
 	readIndexQueue   []string                    // 记录了MsgReadIndex请求对应的消息ID,这样可以保证MsgReadIndex的顺序
 }
 
@@ -57,11 +57,6 @@ func newReadOnly(option ReadOnlyOption) *readOnly {
 	}
 }
 
-// addRequest adds a read only request into readonly struct.
-// `index` is the commit index of the raft state machine when it received
-// the read only request.
-// `m` is the original read only request message from the local or remote localNode.
-//将已提交的位置(raftLog.committed)以及MsgReadIndex消息的相关信息存到readOnly中
 /*
 1.获取消息ID,在ReadIndex消息的第一个记录中记录了消息ID
 2.判断该消息是否已经记录在pendingReadIndex中,如果已存在则直接返回
@@ -69,19 +64,18 @@ func newReadOnly(option ReadOnlyOption) *readOnly {
 4.并将消息ID追加到readIndexQueue队列中
 */
 func (ro *readOnly) addRequest(index uint64, m pb.Message) {
+	// index 当前节点的committed索引, m MsgReadIndex消息 【自增🆔】
 	s := string(m.Entries[0].Data)
 	if _, ok := ro.pendingReadIndex[s]; ok {
 		return
 	}
+	// 记录发送的索引值,
 	ro.pendingReadIndex[s] = &readIndexStatus{index: index, req: m, acks: make(map[uint64]bool)}
 	ro.readIndexQueue = append(ro.readIndexQueue, s)
 }
 
-// recvAck notifies the readonly struct that the raft state machine received
-// an acknowledgment of the heartbeat that attached with the read only request
-// context.
 /*
-recvAck通知readonly结构,即raft状态机接受了对只读请求上下文附加的心跳的确认.
+recvAck通知readonly结构,即raft状态机接受了对MsgReadIndex上下文附加的心跳的确认.
 1.消息的Context即消息ID,根据消息id获取对应的readIndexStatus
 2.如果获取不到则返回0
 3.记录了该Follower节点返回的MsgHeartbeatResp响应的信息
@@ -92,17 +86,12 @@ func (ro *readOnly) recvAck(id uint64, context []byte) map[uint64]bool {
 	if !ok {
 		return nil
 	}
-
 	rs.acks[id] = true
 	return rs.acks
 }
 
-// advance advances the read only request queue kept by the readonly struct.
-// It dequeues the requests until it finds the read only request that has
-// the same context as the given `m`.
 /*
-1.遍历readIndexQueue队列,如果能找到该消息的Context,则返回该消息及之前的所有记录rss,
-	并删除readIndexQueue队列和pendingReadIndex中对应的记录
+1.遍历readIndexQueue队列,如果能找到该消息的Context,则返回该消息及之前的所有记录rss,并删除readIndexQueue队列和pendingReadIndex中对应的记录
 2.如果没有Context对应的消息ID,则返回nil
 */
 func (ro *readOnly) advance(m pb.Message) []*readIndexStatus {
@@ -118,7 +107,7 @@ func (ro *readOnly) advance(m pb.Message) []*readIndexStatus {
 		i++
 		rs, ok := ro.pendingReadIndex[okctx]
 		if !ok {
-			panic("cannot find corresponding read state from pending map")
+			panic("无法从挂起的映射中找到相应的读状态")
 		}
 		rss = append(rss, rs)
 		if okctx == ctx {
@@ -138,9 +127,7 @@ func (ro *readOnly) advance(m pb.Message) []*readIndexStatus {
 	return nil
 }
 
-// lastPendingRequestCtx returns the context of the last pending read only
-// request in readonly struct.
-// 返回记录中最后一个消息ID
+// lastPendingRequestCtx 返回MsgReadIndex记录中最后一个消息ID
 func (ro *readOnly) lastPendingRequestCtx() string {
 	if len(ro.readIndexQueue) == 0 {
 		return ""

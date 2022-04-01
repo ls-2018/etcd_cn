@@ -19,7 +19,7 @@ import (
 
 // LinearizableReadNotify 一致性读
 func (s *EtcdServer) LinearizableReadNotify(ctx context.Context) error {
-	return s.linearizableReadNotify(ctx)
+	return s.linearizeReadNotify(ctx)
 }
 
 func (s *EtcdServer) AddMember(ctx context.Context, memb membership.Member) ([]*membership.Member, error) {

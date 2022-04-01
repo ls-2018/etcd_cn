@@ -43,7 +43,7 @@ func (h *downgradeEnabledHandler) ServeHTTP(w http.ResponseWriter, r *http.Reque
 	defer cancel()
 
 	// serve with linearized downgrade info
-	if err := h.server.linearizableReadNotify(ctx); err != nil {
+	if err := h.server.linearizeReadNotify(ctx); err != nil {
 		http.Error(w, fmt.Sprintf("failed linearized read: %v", err),
 			http.StatusInternalServerError)
 		return

@@ -33,7 +33,7 @@ func (s *EtcdServer) Txn(ctx context.Context, r *pb.TxnRequest) (*pb.TxnResponse
 		)
 		ctx = context.WithValue(ctx, traceutil.TraceKey, trace)
 		if !isTxnSerializable(r) {
-			err := s.linearizableReadNotify(ctx)
+			err := s.linearizeReadNotify(ctx)
 			trace.Step("agreement among raft nodes before linearized reading")
 			if err != nil {
 				return nil, err
@@ -116,7 +116,7 @@ func (s *EtcdServer) Range(ctx context.Context, r *pb.RangeRequest) (*pb.RangeRe
 	}(time.Now())
 	if !r.Serializable {
 		// 需要阻塞等待直到读到最新的数据
-		err = s.linearizableReadNotify(ctx) // 发准备信号,并等待结果
+		err = s.linearizeReadNotify(ctx) // 发准备信号,并等待结果
 		trace.Step("在线性化读数之前，raft节点之间的一致。")
 		if err != nil {
 			return nil, err

@@ -7,25 +7,13 @@
     <list default="true" id="49524360-39b2-44cd-b702-de0461fb4222" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/kv.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/kv.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/op.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/op.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/apply_auth.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/apply_auth.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/apply_v3.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/apply_v3.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/raft.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/raft.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/server.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/server.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api_downgrade.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/api_downgrade.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/corrupt.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/corrupt.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/etcd/etcdserver/v3_server.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/v3_server.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/v3service_auth.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/v3service_auth.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/etcd/etcdserver/v3service_cluster.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/v3service_cluster.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/etcd/etcdserver/v3service_kv.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/v3service_kv.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/lease/lease_queue.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/lease/lease_queue.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/lease/lessor.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/lease/lessor.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/mvcc/index.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/mvcc/index.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/mvcc/kv.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/mvcc/kv.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/mvcc/kvstore_txn.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/mvcc/kvstore_txn.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcdctl/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/del_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/del_command.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/offical/etcdserverpb/rpc.pb.go" beforeDir="false" afterPath="$PROJECT_DIR$/offical/etcdserverpb/rpc.pb.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/raft/over_interface.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/over_interface.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/raft/rawnode.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/rawnode.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/raft/over_raft.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/over_raft.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/raft/read_index.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/read_index.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/raft/read_only.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/read_only.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/raft/role.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/role.go" afterDir="false" />
@@ -241,7 +229,7 @@
         </line-breakpoint>
         <line-breakpoint type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/etcd/etcdserver/v3_server.go</url>
-          <line>298</line>
+          <line>296</line>
           <option name="timeStamp" value="5" />
         </line-breakpoint>
         <line-breakpoint type="DlvLineBreakpoint">
@@ -275,18 +263,13 @@
           <option name="timeStamp" value="169" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/raft/role.go</url>
-          <line>255</line>
-          <option name="timeStamp" value="200" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/etcd/etcdserver/v3service_cluster.go</url>
           <line>301</line>
           <option name="timeStamp" value="202" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/raft/role.go</url>
-          <line>546</line>
+          <line>547</line>
           <option name="timeStamp" value="204" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
@@ -360,11 +343,6 @@
           <option name="timeStamp" value="271" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/etcd/etcdserver/v3_server.go</url>
-          <line>391</line>
-          <option name="timeStamp" value="272" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/etcd/etcdserver/v3service_cluster.go</url>
           <line>240</line>
           <option name="timeStamp" value="275" />
@@ -425,14 +403,14 @@
           <option name="timeStamp" value="299" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/etcd/etcdserver/v3_server.go</url>
-          <line>393</line>
-          <option name="timeStamp" value="300" />
+          <url>file://$PROJECT_DIR$/raft/role.go</url>
+          <line>261</line>
+          <option name="timeStamp" value="303" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/etcd/etcdserver/v3_server.go</url>
-          <line>395</line>
-          <option name="timeStamp" value="301" />
+          <url>file://$PROJECT_DIR$/raft/node.go</url>
+          <line>288</line>
+          <option name="timeStamp" value="304" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

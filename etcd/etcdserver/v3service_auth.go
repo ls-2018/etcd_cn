@@ -57,7 +57,7 @@ func (s *EtcdServer) AuthStatus(ctx context.Context, r *pb.AuthStatusRequest) (*
 }
 
 func (s *EtcdServer) Authenticate(ctx context.Context, r *pb.AuthenticateRequest) (*pb.AuthenticateResponse, error) {
-	if err := s.linearizableReadNotify(ctx); err != nil {
+	if err := s.linearizeReadNotify(ctx); err != nil {
 		return nil, err
 	}
 

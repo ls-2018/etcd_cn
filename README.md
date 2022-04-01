@@ -520,12 +520,14 @@ raftNode.start
     }
 ---------------------------------
 leader:
-    stepLeader;case pb.MsgReadIndex:
-  1、集群只有一个节点  
-    r.readStates = append(r.readStates, ReadState{Index:r.raftLog.committed, RequestCtx: 自增ID})
-  2、
-    。。。
-          
+    stepLeader;
+    case pb.MsgReadIndex:
+      1、集群只有一个节点  
+        r.readStates = append(r.readStates, ReadState{Index:r.raftLog.committed, RequestCtx: 自增ID})
+      2、
+        引入pendingReadIndex、readIndexQueue 心跳广播 自增ID 等待大多数据集群节点回应 自增ID
+    case pb.MsgHeartbeatResp:    
+      rss := r.readOnly.advance(m)       
 
 rd.ReadStates
 ----------------------------------
@@ -539,7 +541,7 @@ linearizableReadLoop                      发送MsgReadIndex消息,
     nr.notify(nil)                        相当于往nc.c发消息       
 --------------
 get
-linearizableReadNotify                    线性读,触发linearizableReadLoop,并等待结果
+linearizeReadNotify                    线性读,触发linearizableReadLoop,并等待结果
   1、case s.readwaitc <- struct{}{}:      触发线性读 
   2、case <-nc.c:                         等待结果
      return nc.err  

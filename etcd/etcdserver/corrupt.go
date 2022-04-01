@@ -149,7 +149,7 @@ func (s *EtcdServer) checkHashKV() error {
 	peers := s.getPeerHashKVs(rev)
 
 	ctx, cancel := context.WithTimeout(context.Background(), s.Cfg.ReqTimeout())
-	err = s.linearizableReadNotify(ctx)
+	err = s.linearizeReadNotify(ctx)
 	cancel()
 	if err != nil {
 		return err

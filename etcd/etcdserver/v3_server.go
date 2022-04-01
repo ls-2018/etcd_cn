@@ -125,8 +125,6 @@ func (s *EtcdServer) raftRequest(ctx context.Context, r pb.InternalRaftRequest) 
 	return s.raftRequestOnce(ctx, r)
 }
 
-
-
 func (s *EtcdServer) raftRequestOnce(ctx context.Context, r pb.InternalRaftRequest) (proto.Message, error) {
 	result, err := s.processInternalRaftRequestOnce(ctx, r)
 	if err != nil {
@@ -245,7 +243,7 @@ func (s *EtcdServer) downgradeValidate(ctx context.Context, v string) (*pb.Downg
 
 	// gets leaders commit index and wait for local store to finish applying that index
 	// to avoid using stale downgrade information
-	err = s.linearizableReadNotify(ctx)
+	err = s.linearizeReadNotify(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -296,7 +294,7 @@ func (s *EtcdServer) downgradeEnable(ctx context.Context, r *pb.DowngradeRequest
 func (s *EtcdServer) downgradeCancel(ctx context.Context) (*pb.DowngradeResponse, error) {
 	// gets leaders commit index and wait for local store to finish applying that index
 	// to avoid using stale downgrade information
-	if err := s.linearizableReadNotify(ctx); err != nil {
+	if err := s.linearizeReadNotify(ctx); err != nil {
 		return nil, err
 	}
 
@@ -315,7 +313,6 @@ func (s *EtcdServer) downgradeCancel(ctx context.Context) (*pb.DowngradeResponse
 }
 
 // ----------------------------------------   OVER  ------------------------------------------------------------
-
 
 // etcdctl get  就是异步发送一条raft的消息
 func (s *EtcdServer) sendReadIndex(requestIndex uint64) error {
@@ -349,7 +346,6 @@ func (s *EtcdServer) AuthInfoFromCtx(ctx context.Context) (*auth.AuthInfo, error
 	return authInfo, nil
 }
 
-
 // doSerialize 为序列化的请求“get”处理认证逻辑，并由“chk”检查权限。身份验证失败时返回一个非空错误。
 func (s *EtcdServer) doSerialize(ctx context.Context, chk func(*auth.AuthInfo) error, get func()) error {
 	trace := traceutil.Get(ctx) // 从上下文获取trace
@@ -376,7 +372,7 @@ func (s *EtcdServer) doSerialize(ctx context.Context, chk func(*auth.AuthInfo) e
 }
 
 // 进行一次 线性读取准备
-func (s *EtcdServer) linearizableReadNotify(ctx context.Context) error {
+func (s *EtcdServer) linearizeReadNotify(ctx context.Context) error {
 	s.readMu.RLock()
 	nc := s.readNotifier
 	s.readMu.RUnlock()

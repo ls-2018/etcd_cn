@@ -776,7 +776,7 @@ func (r *raft) handleAppendEntries(m pb.Message) {
 
 // 判断提交的日志任期与当前任期 是否一致
 func (r *raft) committedEntryInCurrentTerm() bool {
-	// 获取最新提交的日志所对应的任期   == 当前的任期
+	// 获取最新提交的日志所对应的任期 == 当前的任期
 	return r.raftLog.zeroTermOnErrCompacted(r.raftLog.term(r.raftLog.committed)) == r.Term
 }
 
