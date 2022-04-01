@@ -176,39 +176,40 @@ type EtcdServer struct {
 	Cfg               config.ServerConfig      // 配置项
 	lgMu              *sync.RWMutex
 	lg                *zap.Logger
-	w                 wait.Wait               // 为了同步调用情况下让调用者阻塞等待调用结果的.
-	readMu            sync.RWMutex            // 下面3个结果都是为了实现linearizable 读使用的
-	readwaitc         chan struct{}           // 通过向readwaitC发送一个空结构体来通知etcd服务器它正在等待读取
-	readNotifier      *notifier               // 在没有错误时通知read goroutine 可以处理请求
-	stop              chan struct{}           // 停止通道
-	stopping          chan struct{}           // 停止时关闭这个通道
-	done              chan struct{}           // etcd的start函数中的循环退出,会关闭这个通道
-	leaderChanged     chan struct{}           // leader变换后 通知linearizable read loop   drop掉旧的读请求
-	leaderChangedMu   sync.RWMutex            //
-	errorc            chan error              // 错误通道,用以传入不可恢复的错误,关闭raft状态机.
-	id                types.ID                // etcd实例id
-	attributes        membership.Attributes   // etcd实例属性
-	cluster           *membership.RaftCluster // 集群信息
-	v2store           v2store.Store           // v2的kv存储
-	snapshotter       *snap.Snapshotter       // 用以snapshot
-	applyV2           ApplierV2               // v2的applier,用于将commited index apply到raft状态机
-	applyV3           applierV3               // v3的applier,用于将commited index apply到raft状态机
-	applyV3Base       applierV3               // 剥去了鉴权和配额功能的applyV3
-	applyV3Internal   applierV3Internal       // v3的内部applier
-	applyWait         wait.WaitTime           // apply的等待队列,等待某个index的日志apply完成
-	kv                mvcc.WatchableKV        // v3用的kv存储
-	lessor            lease.Lessor            // v3用,作用是实现过期时间
-	backendLock       sync.Mutex              // 守护后端存储的锁,改变后端存储和获取后端存储是使用
-	backend           backend.Backend         // 后端存储  bolt.db
-	beHooks           *backendHooks           // 存储钩子
-	authStore         auth.AuthStore          // 存储鉴权数据
-	alarmStore        *v3alarm.AlarmStore     // 存储告警数据
-	stats             *stats.ServerStats      // 当前节点状态
-	lstats            *stats.LeaderStats      // leader状态
-	SyncTicker        *time.Ticker            // v2用,实现ttl数据过期的
-	compactor         v3compactor.Compactor   // 压缩数据的周期任务
-	peerRt            http.RoundTripper       // 用于发送远程请求
-	reqIDGen          *idutil.Generator       // 用于生成请求id
+	w                 wait.Wait     // 为了同步调用情况下让调用者阻塞等待调用结果的.
+	readMu            sync.RWMutex  // 下面3个结果都是为了实现linearizable 读使用的
+	readwaitc         chan struct{} // 通过向readwaitC发送一个空结构体来通知etcd服务器它正在等待读取
+	readNotifier      *notifier     // 在没有错误时通知read goroutine 可以处理请求
+
+	stop            chan struct{}           // 停止通道
+	stopping        chan struct{}           // 停止时关闭这个通道
+	done            chan struct{}           // etcd的start函数中的循环退出,会关闭这个通道
+	leaderChanged   chan struct{}           // leader变换后 通知linearizable read loop   drop掉旧的读请求
+	leaderChangedMu sync.RWMutex            //
+	errorc          chan error              // 错误通道,用以传入不可恢复的错误,关闭raft状态机.
+	id              types.ID                // etcd实例id
+	attributes      membership.Attributes   // etcd实例属性
+	cluster         *membership.RaftCluster // 集群信息
+	v2store         v2store.Store           // v2的kv存储
+	snapshotter     *snap.Snapshotter       // 用以snapshot
+	applyV2         ApplierV2               // v2的applier,用于将commited index apply到raft状态机
+	applyV3         applierV3               // v3的applier,用于将commited index apply到raft状态机
+	applyV3Base     applierV3               // 剥去了鉴权和配额功能的applyV3
+	applyV3Internal applierV3Internal       // v3的内部applier
+	applyWait       wait.WaitTime           // apply的等待队列,等待某个index的日志apply完成
+	kv              mvcc.WatchableKV        // v3用的kv存储
+	lessor          lease.Lessor            // v3用,作用是实现过期时间
+	backendLock     sync.Mutex              // 守护后端存储的锁,改变后端存储和获取后端存储是使用
+	backend         backend.Backend         // 后端存储  bolt.db
+	beHooks         *backendHooks           // 存储钩子
+	authStore       auth.AuthStore          // 存储鉴权数据
+	alarmStore      *v3alarm.AlarmStore     // 存储告警数据
+	stats           *stats.ServerStats      // 当前节点状态
+	lstats          *stats.LeaderStats      // leader状态
+	SyncTicker      *time.Ticker            // v2用,实现ttl数据过期的
+	compactor       v3compactor.Compactor   // 压缩数据的周期任务
+	peerRt          http.RoundTripper       // 用于发送远程请求
+	reqIDGen        *idutil.Generator       // 用于生成请求id
 	// wgMu blocks concurrent waitgroup mutation while etcd stopping
 	wgMu sync.RWMutex
 	// wg is used to wait for the goroutines that depends on the etcd state
@@ -831,26 +832,6 @@ type ServerPeerV2 interface {
 	DowngradeEnabledHandler() http.Handler
 }
 
-// Process 接收一个raft信息并将其应用于etcd的raft状态机,使用ctx的超时.
-func (s *EtcdServer) Process(ctx context.Context, m raftpb.Message) error {
-	lg := s.Logger()
-	// 判断该消息的来源有没有被删除
-	if s.cluster.IsIDRemoved(types.ID(m.From)) {
-		lg.Warn("拒绝来自被删除的成员的raft的信息",
-			zap.String("local-member-id", s.ID().String()),
-			zap.String("removed-member-id", types.ID(m.From).String()),
-		)
-		return httptypes.NewHTTPError(http.StatusForbidden, "无法处理来自被删除成员的信息")
-	}
-	// 操作日志【复制、配置变更 req】
-	if m.Type == raftpb.MsgApp {
-		s.stats.RecvAppendReq(types.ID(m.From).String(), m.Size())
-	}
-	var _ raft.RaftNodeInterFace = raftNode{}
-	//_ = raftNode{}.Step
-	return s.r.Step(ctx, m)
-}
-
 func (s *EtcdServer) ReportUnreachable(id uint64) {
 	s.r.ReportUnreachable(id)
 }
@@ -986,9 +967,9 @@ func (s *EtcdServer) run() {
 		select {
 		case ap := <-s.r.apply():
 			// 集群启动时,会先apply两条消息
-			//index1:EntryConfChange {"Type":0,"NodeID":10276657743932975437,"Context":"{\"id\":10276657743932975437,\"peerURLs\":[\"http://localhost:2380\"],\"name\":\"default\"}","ID":0}
-			//index2:EntryNormal nil    用于任期内第一次commit
-			//index3:EntryNormal {"ID":7587861549007417858,"Method":"PUT","Path":"/0/members/8e9e05c52164694d/attributes","Val":"{\"name\":\"default\",\"clientURLs\":[\"http://localhost:2379\"]}","Dir":false,"PrevValue":"","PrevIndex":0,"Expiration":0,"Wait":false,"Since":0,"Recursive":false,"Sorted":false,"Quorum":false,"Time":0,"Stream":false}
+			// index1:EntryConfChange {"Type":0,"NodeID":10276657743932975437,"Context":"{\"id\":10276657743932975437,\"peerURLs\":[\"http://localhost:2380\"],\"name\":\"default\"}","ID":0}
+			// index2:EntryNormal nil    用于任期内第一次commit
+			// index3:EntryNormal {"ID":7587861549007417858,"Method":"PUT","Path":"/0/members/8e9e05c52164694d/attributes","Val":"{\"name\":\"default\",\"clientURLs\":[\"http://localhost:2379\"]}","Dir":false,"PrevValue":"","PrevIndex":0,"Expiration":0,"Wait":false,"Since":0,"Recursive":false,"Sorted":false,"Quorum":false,"Time":0,"Stream":false}
 			// 读取 放入applyc的消息
 			f := func(context.Context) {
 				s.applyAll(&ep, &ap)
@@ -2259,3 +2240,23 @@ func (s *EtcdServer) LeaderChangedNotify() <-chan struct{} {
 }
 
 func (s *EtcdServer) KV() mvcc.WatchableKV { return s.kv }
+
+// Process 接收一个raft信息并将其应用于etcd的raft状态机,使用ctx的超时.
+func (s *EtcdServer) Process(ctx context.Context, m raftpb.Message) error {
+	lg := s.Logger()
+	// 判断该消息的来源有没有被删除
+	if s.cluster.IsIDRemoved(types.ID(m.From)) {
+		lg.Warn("拒绝来自被删除的成员的raft的信息",
+			zap.String("local-member-id", s.ID().String()),
+			zap.String("removed-member-id", types.ID(m.From).String()),
+		)
+		return httptypes.NewHTTPError(http.StatusForbidden, "无法处理来自被删除成员的信息")
+	}
+	// 操作日志【复制、配置变更 req】
+	if m.Type == raftpb.MsgApp {
+		s.stats.RecvAppendReq(types.ID(m.From).String(), m.Size())
+	}
+	var _ raft.RaftNodeInterFace = raftNode{}
+	//_ = raftNode{}.Step
+	return s.r.Step(ctx, m)
+}

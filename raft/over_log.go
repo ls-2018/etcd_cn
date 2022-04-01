@@ -30,7 +30,7 @@ type raftLog struct {
 	// 用于存储未写入Storage的快照数据及Entry记录
 	unstable unstable // 快照之后的数据
 
-	committed uint64// 己提交的位置,即己提交的Entry记录中最大的索引值.
+	committed uint64 // 己提交的位置,即己提交的Entry记录中最大的索引值.
 	// 而applied保存的是传入状态机中的最高index
 	// 即一条日志首先要提交成功(即committed),才能被applied到状态机中;因此以下不等式一直成立：applied <= committed
 	applied uint64

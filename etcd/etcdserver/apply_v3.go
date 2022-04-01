@@ -18,6 +18,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"sort"
+
 	"github.com/coreos/go-semver/semver"
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
 	"github.com/ls-2018/etcd_cn/etcd/auth"
@@ -29,7 +31,6 @@ import (
 	"github.com/ls-2018/etcd_cn/offical/api/v3/mvccpb"
 	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
 	"github.com/ls-2018/etcd_cn/pkg/traceutil"
-	"sort"
 
 	"github.com/gogo/protobuf/proto"
 	"go.uber.org/zap"
@@ -179,7 +180,7 @@ func (a *applierV3backend) DeleteRange(txn mvcc.TxnWrite, dr *pb.DeleteRangeRequ
 		defer txn.End()
 	}
 
-	if dr.PrevKv {//
+	if dr.PrevKv { //
 		rr, err := txn.Range(context.TODO(), []byte(dr.Key), end, mvcc.RangeOptions{})
 		if err != nil {
 			return nil, err
@@ -191,7 +192,7 @@ func (a *applierV3backend) DeleteRange(txn mvcc.TxnWrite, dr *pb.DeleteRangeRequ
 			}
 		}
 	}
- 	// storeTxnWrite
+	// storeTxnWrite
 	resp.Deleted, resp.Header.Revision = txn.DeleteRange([]byte(dr.Key), end)
 	return resp, nil
 }

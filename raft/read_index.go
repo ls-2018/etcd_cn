@@ -30,7 +30,7 @@ func sendMsgReadIndexResponse(r *raft, m pb.Message) {
 		r.readOnly.addRequest(r.raftLog.committed, m) // 记录当前节点的raftLog.committed字段值,即已提交位置
 
 		// recvAck通知只读结构raft状态机已收到对附加只读请求上下文的心跳信号的确认。
-		r.readOnly.recvAck(r.id, m.Entries[0].Data)    // 本机确认此消息
+		r.readOnly.recvAck(r.id, m.Entries[0].Data) // 本机确认此消息
 		// leader 节点向其他节点发起广播
 		r.bcastHeartbeatWithCtx(m.Entries[0].Data)
 

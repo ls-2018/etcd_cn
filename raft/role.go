@@ -244,7 +244,7 @@ func stepLeader(r *raft, m pb.Message) error {
 	case pb.MsgReadIndex:
 		// 表示当前集群只有一个节点，当前节点就是leader
 		if r.prstrack.IsSingleton() {
-			//记录当前的commit index，称为ReadIndex；
+			// 记录当前的commit index，称为ReadIndex；
 			resp := r.responseToReadIndexReq(m, r.raftLog.committed)
 			if resp.To != None {
 				r.send(resp)

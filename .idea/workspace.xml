@@ -6,17 +6,87 @@
   <component name="ChangeListManager">
     <list default="true" id="49524360-39b2-44cd-b702-de0461fb4222" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api_downgrade.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/api_downgrade.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/corrupt.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/corrupt.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/server.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/server.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/etcd/etcdserver/v3_server.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/v3_server.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/v3service_auth.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/v3service_auth.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/v3service_cluster.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/v3service_cluster.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/etcd/etcdserver/v3service_kv.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/v3service_kv.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/raft/over_raft.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/over_raft.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/raft/read_index.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/read_index.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/raft/read_only.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/read_only.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/raft/role.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/role.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/auth.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/client.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/client_test.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/clientv3util/util.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/cluster.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/compact_op.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/compact_op_test.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/compare.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/concurrency/doc.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/concurrency/election.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/concurrency/key.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/concurrency/main_test.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/concurrency/mutex.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/concurrency/session.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/concurrency/stm.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/config.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/credentials/credentials.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/ctx.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/ctx_test.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/doc.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/experimental/recipes/barrier.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/experimental/recipes/client.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/experimental/recipes/doc.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/experimental/recipes/double_barrier.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/experimental/recipes/grpc_gateway/user_add.sh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/experimental/recipes/key.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/experimental/recipes/priority_queue.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/experimental/recipes/queue.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/experimental/recipes/rwmutex.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/experimental/recipes/watch.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/internal/endpoint/endpoint.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/internal/endpoint/endpoint_test.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/internal/resolver/resolver.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/kv.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/lease.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/leasing/cache.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/leasing/doc.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/leasing/kv.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/leasing/txn.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/leasing/util.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/logger.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/main_test.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/maintenance.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/mirror/syncer.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/mock/mockserver/doc.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/mock/mockserver/mockserver.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/namespace/doc.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/namespace/kv.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/namespace/lease.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/namespace/util.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/namespace/util_test.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/namespace/watch.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/naming/doc.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/naming/endpoints/endpoints.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/naming/endpoints/endpoints_impl.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/naming/endpoints/internal/update.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/naming/resolver/resolver.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/op.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/op_test.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/options.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/ordering/doc.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/ordering/kv.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/ordering/kv_test.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/ordering/util.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/retry.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/retry_interceptor.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/retry_interceptor_test.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/snapshot/doc.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/snapshot/v3_snapshot.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/sort.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/txn.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/txn_test.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/utils.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/watch.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/watch_test.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/yaml/config.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/client/v3/yaml/config_test.go" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -85,14 +155,6 @@
     </key>
   </component>
   <component name="RunManager" selected="Go Build.local">
-    <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
-      <module name="etcd_cn" />
-      <working_directory value="$PROJECT_DIR$" />
-      <kind value="FILE" />
-      <directory value="$PROJECT_DIR$" />
-      <filePath value="$PROJECT_DIR$" />
-      <method v="2" />
-    </configuration>
     <configuration name="etcdctl" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true">
       <module name="etcd_cn" />
       <working_directory value="$PROJECT_DIR$" />
@@ -122,15 +184,6 @@
       <filePath value="$PROJECT_DIR$" />
       <framework value="gotest" />
       <pattern value="^\QTestKeyIndexFindGeneration\E$" />
-      <method v="2" />
-    </configuration>
-    <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
-      <module name="etcd_cn" />
-      <working_directory value="$PROJECT_DIR$" />
-      <kind value="DIRECTORY" />
-      <directory value="$PROJECT_DIR$" />
-      <filePath value="$PROJECT_DIR$" />
-      <framework value="gotest" />
       <method v="2" />
     </configuration>
     <configuration name="a" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
@@ -229,7 +282,7 @@
         </line-breakpoint>
         <line-breakpoint type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/etcd/etcdserver/v3_server.go</url>
-          <line>296</line>
+          <line>209</line>
           <option name="timeStamp" value="5" />
         </line-breakpoint>
         <line-breakpoint type="DlvLineBreakpoint">
@@ -338,11 +391,6 @@
           <option name="timeStamp" value="268" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/etcd/etcdserver/v3service_kv.go</url>
-          <line>131</line>
-          <option name="timeStamp" value="271" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/etcd/etcdserver/v3service_cluster.go</url>
           <line>240</line>
           <option name="timeStamp" value="275" />
@@ -366,11 +414,6 @@
           <url>file://$PROJECT_DIR$/etcd/etcdserver/v3service_cluster.go</url>
           <line>244</line>
           <option name="timeStamp" value="279" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/etcd/etcdserver/v3service_kv.go</url>
-          <line>119</line>
-          <option name="timeStamp" value="281" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/etcd/etcdserver/v3service_cluster.go</url>

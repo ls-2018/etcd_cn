@@ -120,93 +120,6 @@ func (s *EtcdServer) Alarm(ctx context.Context, r *pb.AlarmRequest) (*pb.AlarmRe
 	return resp.(*pb.AlarmResponse), nil
 }
 
-// OK 对外提供的接口
-func (s *EtcdServer) raftRequest(ctx context.Context, r pb.InternalRaftRequest) (proto.Message, error) {
-	return s.raftRequestOnce(ctx, r)
-}
-
-func (s *EtcdServer) raftRequestOnce(ctx context.Context, r pb.InternalRaftRequest) (proto.Message, error) {
-	result, err := s.processInternalRaftRequestOnce(ctx, r)
-	if err != nil {
-		return nil, err
-	}
-	if result.err != nil {
-		return nil, result.err
-	}
-	// startTime
-	if startTime, ok := ctx.Value(traceutil.StartTimeKey).(time.Time); ok && result.trace != nil {
-		applyStart := result.trace.GetStartTime()
-		result.trace.SetStartTime(startTime)
-		result.trace.InsertStep(0, applyStart, "处理raft请求")
-	}
-	return result.resp, nil
-}
-
-// 当客户端提交一条数据变更请求时
-func (s *EtcdServer) processInternalRaftRequestOnce(ctx context.Context, r pb.InternalRaftRequest) (*applyResult, error) {
-	// 判断已提交未apply的记录是否超过限制
-	ai := s.getAppliedIndex()
-	ci := s.getCommittedIndex()
-	if ci > ai+maxGapBetweenApplyAndCommitIndex {
-		return nil, ErrTooManyRequests
-	}
-
-	r.Header = &pb.RequestHeader{
-		ID: s.reqIDGen.Next(), // 生成一个requestID
-	}
-
-	// 检查authinfo是否不是InternalAuthenticateRequest
-	if r.Authenticate == nil {
-		authInfo, err := s.AuthInfoFromCtx(ctx)
-		if err != nil {
-			return nil, err
-		}
-		if authInfo != nil {
-			r.Header.Username = authInfo.Username
-			r.Header.AuthRevision = authInfo.Revision
-		}
-	}
-	// 反序列化请求数据
-
-	data, err := r.Marshal()
-	if err != nil {
-		return nil, err
-	}
-
-	if len(data) > int(s.Cfg.MaxRequestBytes) {
-		return nil, ErrRequestTooLarge
-	}
-
-	id := r.ID // 0
-	if id == 0 {
-		id = r.Header.ID
-	}
-	ch := s.w.Register(id) // 注册一个channel,等待处理完成
-
-	cctx, cancel := context.WithTimeout(ctx, s.Cfg.ReqTimeout()) // 设置请求超时
-	// cctx, cancel := context.WithTimeout(ctx, time.Second*1000) // 设置请求超时
-	defer cancel()
-
-	start := time.Now()
-	_ = s.applyEntryNormal
-	err = s.r.Propose(cctx, data) // 调用raft模块的Propose处理请求,存入到了待发送队列
-	if err != nil {
-		s.w.Trigger(id, nil)
-		return nil, err
-	}
-
-	select {
-	// 等待收到apply结果返回给客户端
-	case x := <-ch:
-		return x.(*applyResult), nil
-	case <-cctx.Done():
-		s.w.Trigger(id, nil)
-		return nil, s.parseProposeCtxErr(cctx.Err(), start)
-	case <-s.done:
-		return nil, ErrStopped
-	}
-}
-
 // Watchable returns a watchable interface attached to the etcdserver.
 func (s *EtcdServer) Watchable() mvcc.WatchableKV { return s.KV() }
 
@@ -314,25 +227,6 @@ func (s *EtcdServer) downgradeCancel(ctx context.Context) (*pb.DowngradeResponse
 
 // ----------------------------------------   OVER  ------------------------------------------------------------
 
-// etcdctl get  就是异步发送一条raft的消息
-func (s *EtcdServer) sendReadIndex(requestIndex uint64) error {
-	ctxToSend := uint64ToBigEndianBytes(requestIndex)
-
-	cctx, cancel := context.WithTimeout(context.Background(), s.Cfg.ReqTimeout())
-	// 就是异步发送一条raft的消息
-	err := s.r.ReadIndex(cctx, ctxToSend) // 发出去就完事了,  发到内存里
-	cancel()
-	if err == raft.ErrStopped {
-		return err
-	}
-	if err != nil {
-		lg := s.Logger()
-		lg.Warn("未能从Raft获取读取索引", zap.Error(err))
-		return err
-	}
-	return nil
-}
-
 // AuthInfoFromCtx 获取认证信息
 func (s *EtcdServer) AuthInfoFromCtx(ctx context.Context) (*auth.AuthInfo, error) {
 	authInfo, err := s.AuthStore().AuthInfoFromCtx(ctx)
@@ -371,24 +265,90 @@ func (s *EtcdServer) doSerialize(ctx context.Context, chk func(*auth.AuthInfo) e
 	return nil
 }
 
-// 进行一次 线性读取准备
-func (s *EtcdServer) linearizeReadNotify(ctx context.Context) error {
-	s.readMu.RLock()
-	nc := s.readNotifier
-	s.readMu.RUnlock()
+// OK 对外提供的接口
+func (s *EtcdServer) raftRequest(ctx context.Context, r pb.InternalRaftRequest) (proto.Message, error) {
+	return s.raftRequestOnce(ctx, r)
+}
 
-	select {
-	case s.readwaitc <- struct{}{}: // linearizableReadLoop就会开始结束阻塞开始工作
-	default:
+// ok
+func (s *EtcdServer) raftRequestOnce(ctx context.Context, r pb.InternalRaftRequest) (proto.Message, error) {
+	result, err := s.processInternalRaftRequestOnce(ctx, r)
+	if err != nil {
+		return nil, err
+	}
+	if result.err != nil {
+		return nil, result.err
+	}
+	// startTime
+	if startTime, ok := ctx.Value(traceutil.StartTimeKey).(time.Time); ok && result.trace != nil {
+		applyStart := result.trace.GetStartTime()
+		result.trace.SetStartTime(startTime)
+		result.trace.InsertStep(0, applyStart, "处理raft请求")
+	}
+	return result.resp, nil
+}
+
+// 当客户端提交一条数据变更请求时
+func (s *EtcdServer) processInternalRaftRequestOnce(ctx context.Context, r pb.InternalRaftRequest) (*applyResult, error) {
+	// 判断已提交未apply的记录是否超过限制
+	ai := s.getAppliedIndex()
+	ci := s.getCommittedIndex()
+	if ci > ai+maxGapBetweenApplyAndCommitIndex {
+		return nil, ErrTooManyRequests
 	}
 
-	// 等待读状态通知
+	r.Header = &pb.RequestHeader{
+		ID: s.reqIDGen.Next(), // 生成一个requestID
+	}
+
+	// 检查authinfo是否不是InternalAuthenticateRequest
+	if r.Authenticate == nil {
+		authInfo, err := s.AuthInfoFromCtx(ctx)
+		if err != nil {
+			return nil, err
+		}
+		if authInfo != nil {
+			r.Header.Username = authInfo.Username
+			r.Header.AuthRevision = authInfo.Revision
+		}
+	}
+	// 反序列化请求数据
+
+	data, err := r.Marshal()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(data) > int(s.Cfg.MaxRequestBytes) {
+		return nil, ErrRequestTooLarge
+	}
+
+	id := r.ID // 0
+	if id == 0 {
+		id = r.Header.ID
+	}
+	ch := s.w.Register(id) // 注册一个channel,等待处理完成
+
+	cctx, cancel := context.WithTimeout(ctx, s.Cfg.ReqTimeout()) // 设置请求超时
+	// cctx, cancel := context.WithTimeout(ctx, time.Second*1000) // 设置请求超时
+	defer cancel()
+
+	start := time.Now()
+	_ = s.applyEntryNormal
+	err = s.r.Propose(cctx, data) // 调用raft模块的Propose处理请求,存入到了待发送队列
+	if err != nil {
+		s.w.Trigger(id, nil)
+		return nil, err
+	}
+
 	select {
-	case <-nc.c:
-		return nc.err
-	case <-ctx.Done():
-		return ctx.Err()
+	// 等待收到apply结果返回给客户端
+	case x := <-ch:
+		return x.(*applyResult), nil
+	case <-cctx.Done():
+		s.w.Trigger(id, nil)
+		return nil, s.parseProposeCtxErr(cctx.Err(), start)
 	case <-s.done:
-		return ErrStopped
+		return nil, ErrStopped
 	}
 }

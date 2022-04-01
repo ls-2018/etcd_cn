@@ -70,22 +70,6 @@ func longestConnected(tp rafthttp.Transporter, membs []types.ID) (types.ID, bool
 	return longest, true
 }
 
-type notifier struct {
-	c   chan struct{}
-	err error
-}
-// 通知
-func newNotifier() *notifier {
-	return &notifier{
-		c: make(chan struct{}),
-	}
-}
-
-func (nc *notifier) notify(err error) {
-	nc.err = err
-	close(nc.c)
-}
-
 func warnOfFailedRequest(lg *zap.Logger, now time.Time, reqStringer fmt.Stringer, respMsg proto.Message, err error) {
 	var resp string
 	if !isNil(respMsg) {

@@ -95,7 +95,7 @@ func (aa *authApplierV3) DeleteRange(txn mvcc.TxnWrite, r *pb.DeleteRangeRequest
 		return nil, err
 	}
 	if r.PrevKv {
-		err := aa.as.IsRangePermitted(&aa.authInfo, []byte(r.Key), []byte(r.RangeEnd))// {a,b true}
+		err := aa.as.IsRangePermitted(&aa.authInfo, []byte(r.Key), []byte(r.RangeEnd)) // {a,b true}
 		if err != nil {
 			return nil, err
 		}

@@ -2,11 +2,12 @@ package etcdserver
 
 import (
 	"context"
+	"time"
+
 	"github.com/ls-2018/etcd_cn/etcd/etcdserver/api/membership"
 	"github.com/ls-2018/etcd_cn/etcd/mvcc"
 	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
 	"go.uber.org/zap"
-	"time"
 )
 
 // Apply 入口函数,负责处理内部的消息

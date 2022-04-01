@@ -114,8 +114,9 @@ func (s *EtcdServer) Range(ctx context.Context, r *pb.RangeRequest) (*pb.RangeRe
 			)
 		}
 	}(time.Now())
+	// 如果需要线性一致性读，执行 linearizableReadNotify
+	// 此处将会一直阻塞直到 apply index >= read index
 	if !r.Serializable {
-		// 需要阻塞等待直到读到最新的数据
 		err = s.linearizeReadNotify(ctx) // 发准备信号,并等待结果
 		trace.Step("在线性化读数之前，raft节点之间的一致。")
 		if err != nil {
@@ -129,6 +130,8 @@ func (s *EtcdServer) Range(ctx context.Context, r *pb.RangeRequest) (*pb.RangeRe
 
 	get := func() {
 		_ = applierV3backend{}
+		// 执行到这里说明读请求的 apply index >= read index
+		// 可以安全地读 bbolt 进行 read 操作
 		resp, err = s.applyV3Base.Range(ctx, nil, r)
 	}
 	if serr := s.doSerialize(ctx, chk, get); serr != nil {

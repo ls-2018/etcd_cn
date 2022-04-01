@@ -771,7 +771,7 @@ func (le *lessor) initAndRecover() {
 		le.leaseMap[ID] = &Lease{
 			ID:  ID,
 			ttl: lpb.TTL,
-			//itemSet将在恢复键值对将过期时间设置为永久 ，提升时刷新
+			// itemSet将在恢复键值对将过期时间设置为永久 ，提升时刷新
 			itemSet:      make(map[LeaseItem]struct{}),
 			expiry:       forever,
 			revokec:      make(chan struct{}),
