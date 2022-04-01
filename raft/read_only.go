@@ -26,8 +26,8 @@ import (
 // RequestCtx
 // 这个参数就是Node.ReadIndex()的结果回调.
 type ReadState struct {
-	Index      uint64
-	RequestCtx []byte
+	Index      uint64 // leader 节点已经committed的索引
+	RequestCtx []byte // 递增ID
 }
 
 type readIndexStatus struct {
@@ -46,11 +46,10 @@ type readOnly struct {
 		在etcd服务端收到MsgReadIndex消息时,会为其创建一个唯一的消息ID,并作为MsgReadIndex消息的第一条Entry记录.
 		在pendingReadIndex维护了消息ID与对应请求readIndexStatus实例的映射
 	*/
-	pendingReadIndex map[string]*readIndexStatus
-	readIndexQueue   []string // 记录了MsgReadIndex请求对应的消息ID,这样可以保证MsgReadIndex的顺序
+	pendingReadIndex map[string]*readIndexStatus // id -->readIndexStatus
+	readIndexQueue   []string                    // 记录了MsgReadIndex请求对应的消息ID,这样可以保证MsgReadIndex的顺序
 }
 
-// OK
 func newReadOnly(option ReadOnlyOption) *readOnly {
 	return &readOnly{
 		option:           option,

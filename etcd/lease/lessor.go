@@ -40,27 +40,16 @@ const (
 var v3_6 = semver.Version{Major: 3, Minor: 6}
 
 var (
-	forever = time.Time{}
-
-	// maximum number of leases to revoke per second; configurable for tests
-	leaseRevokeRate = 1000
-
-	// maximum number of lease checkpoints recorded to the consensus log per second; configurable for tests
-	leaseCheckpointRate = 1000
-
-	// the default interval of lease checkpoint
-	defaultLeaseCheckpointInterval = 5 * time.Minute
-
-	// maximum number of lease checkpoints to batch into a single consensus log entry
-	maxLeaseCheckpointBatchSize = 1000
-
-	// the default interval to check if the expired lease is revoked
-	defaultExpiredleaseRetryInterval = 3 * time.Second
-
-	ErrNotPrimary       = errors.New("not a primary lessor")
-	ErrLeaseNotFound    = errors.New("lease not found")
-	ErrLeaseExists      = errors.New("lease already exists")
-	ErrLeaseTTLTooLarge = errors.New("too large lease TTL")
+	forever                          = time.Time{}
+	leaseRevokeRate                  = 1000            // 每秒撤销租约的最大数量；可为测试配置
+	leaseCheckpointRate              = 1000            // 每秒记录在共识日志中的最大租约快照数量；可对测试进行配置
+	defaultLeaseCheckpointInterval   = 5 * time.Minute // 租赁快照的默认时间间隔
+	maxLeaseCheckpointBatchSize      = 1000            // 租约快照的最大数量，以批处理为一个单一的共识日志条目
+	defaultExpiredleaseRetryInterval = 3 * time.Second // 检查过期租约是否被撤销的默认时间间隔。
+	ErrNotPrimary                    = errors.New("不是主 lessor")
+	ErrLeaseNotFound                 = errors.New("lease没有发现")
+	ErrLeaseExists                   = errors.New("lease已存在")
+	ErrLeaseTTLTooLarge              = errors.New("过大的TTL")
 )
 
 // TxnDelete is a TxnWrite that only permits deletes. Defined here
@@ -108,9 +97,7 @@ type Lessor interface {
 	// If the lease does not exist, an error will be returned.
 	Detach(id LeaseID, items []LeaseItem) error
 
-	// Promote promotes the lessor to be the primary lessor. Primary lessor manages
-	// the expiration and renew of leases.
-	// Newly promoted lessor renew the TTL of all lease to extend + previous TTL.
+	// Promote 推动lessor成为主lessor。主lessor管理租约的到期和续期。新晋升的lessor更新所有租约的ttl 以延长先前的ttl
 	Promote(extend time.Duration)
 
 	// Demote demotes the lessor from being the primary lessor.
@@ -138,10 +125,8 @@ type Lessor interface {
 }
 
 type lessor struct {
-	mu sync.RWMutex
-	// demotec is set when the lessor is the primary.
-	// demotec will be closed if the lessor is demoted.
-	demotec              chan struct{}
+	mu                   sync.RWMutex
+	demotec              chan struct{} // 当lessor成为主时，会被设置。当被降级时，会被关闭
 	leaseMap             map[LeaseID]*Lease
 	leaseExpiredNotifier *LeaseExpiredNotifier
 	leaseCheckpointHeap  LeaseQueue
@@ -151,45 +136,37 @@ type lessor struct {
 	rd RangeDeleter
 	// When a lease's deadline should be persisted to preserve the remaining TTL across leader
 	// elections and restarts, the lessor will checkpoint the lease by the Checkpointer.
-	cp Checkpointer
-	// backend to persist leases. We only persist lease ID and expiry for now.
-	// The leased items can be recovered by iterating all the keys in kv.
-	b backend.Backend
-	// minLeaseTTL is the minimum lease TTL that can be granted for a lease. Any
-	// requests for shorter TTLs are extended to the minimum TTL.
-	minLeaseTTL int64
+	cp          Checkpointer
+	b           backend.Backend // 持久化租约到bolt.db.
+	minLeaseTTL int64           // 是可授予租赁的最小租期TTL。任何缩短TTL的请求都被扩展到最小TTL。
 	expiredC    chan []*Lease
 	// stopC is a channel whose closure indicates that the lessor should be stopped.
 	stopC chan struct{}
 	// doneC is a channel whose closure indicates that the lessor is stopped.
-	doneC chan struct{}
-	lg    *zap.Logger
-	// Wait duration between lease checkpoints.
-	checkpointInterval time.Duration
-	// the interval to check if the expired lease is revoked
-	expiredLeaseRetryInterval time.Duration
-	// whether lessor should always persist remaining TTL (always enabled in v3.6).
-	checkpointPersist bool
-	// cluster is used to adapt lessor logic based on cluster version
-	cluster cluster
+	doneC                     chan struct{}
+	lg                        *zap.Logger
+	checkpointInterval        time.Duration // 租赁快照的默认时间间隔
+	expiredLeaseRetryInterval time.Duration // 检查过期租约是否被撤销的默认时间间隔
+	checkpointPersist         bool          // lessor是否应始终保持剩余的TTL（在v3.6中始终启用）。
+	cluster                   cluster       // 基于集群版本  调整lessor逻辑
 }
 
 type cluster interface {
-	// Version is the cluster-wide minimum major.minor version.
-	Version() *semver.Version
+	Version() *semver.Version // 是整个集群的最小major.minor版本。
 }
 
 type LessorConfig struct {
-	MinLeaseTTL                int64
-	CheckpointInterval         time.Duration
-	ExpiredLeasesRetryInterval time.Duration
-	CheckpointPersist          bool
+	MinLeaseTTL                int64         // 是可授予租赁的最小租期TTL。任何缩短TTL的请求都被扩展到最小TTL。
+	CheckpointInterval         time.Duration // 租赁快照的默认时间间隔
+	ExpiredLeasesRetryInterval time.Duration // 租赁快照的默认时间间隔
+	CheckpointPersist          bool          // lessor是否应始终保持剩余的TTL（在v3.6中始终启用）。
 }
 
 func NewLessor(lg *zap.Logger, b backend.Backend, cluster cluster, cfg LessorConfig) Lessor {
 	return newLessor(lg, b, cluster, cfg)
 }
 
+// 创建租约管理器
 func newLessor(lg *zap.Logger, b backend.Backend, cluster cluster, cfg LessorConfig) *lessor {
 	checkpointInterval := cfg.CheckpointInterval
 	expiredLeaseRetryInterval := cfg.ExpiredLeasesRetryInterval
@@ -202,13 +179,13 @@ func newLessor(lg *zap.Logger, b backend.Backend, cluster cluster, cfg LessorCon
 	l := &lessor{
 		leaseMap:                  make(map[LeaseID]*Lease),
 		itemMap:                   make(map[LeaseItem]LeaseID),
-		leaseExpiredNotifier:      newLeaseExpiredNotifier(),
+		leaseExpiredNotifier:      newLeaseExpiredNotifier(), // 租约到期移除的队列
 		leaseCheckpointHeap:       make(LeaseQueue, 0),
 		b:                         b,
-		minLeaseTTL:               cfg.MinLeaseTTL,
-		checkpointInterval:        checkpointInterval,
-		expiredLeaseRetryInterval: expiredLeaseRetryInterval,
-		checkpointPersist:         cfg.CheckpointPersist,
+		minLeaseTTL:               cfg.MinLeaseTTL,           // 是可授予租赁的最小租期TTL。任何缩短TTL的请求都被扩展到最小TTL。
+		checkpointInterval:        checkpointInterval,        // 租赁快照的默认时间间隔
+		expiredLeaseRetryInterval: expiredLeaseRetryInterval, // 检查过期租约是否被撤销的默认时间间隔
+		checkpointPersist:         cfg.CheckpointPersist,     //  lessor是否应始终保持剩余的TTL（在v3.6中始终启用）。
 		// expiredC is a small buffered chan to avoid unnecessary blocking.
 		expiredC: make(chan []*Lease, 16),
 		stopC:    make(chan struct{}),
@@ -780,13 +757,12 @@ func (le *lessor) initAndRecover() {
 
 	tx.UnsafeCreateBucket(buckets.Lease)
 	_, vs := tx.UnsafeRange(buckets.Lease, int64ToBytes(0), int64ToBytes(math.MaxInt64), 0)
-	// TODO: copy vs and do decoding outside tx lock if lock contention becomes an issue.
 	for i := range vs {
 		var lpb leasepb.Lease
 		err := lpb.Unmarshal(vs[i])
 		if err != nil {
 			tx.Unlock()
-			panic("failed to unmarshal lease proto item")
+			panic("反序列化lease 消息失败")
 		}
 		ID := LeaseID(lpb.ID)
 		if lpb.TTL < le.minLeaseTTL {
@@ -795,8 +771,7 @@ func (le *lessor) initAndRecover() {
 		le.leaseMap[ID] = &Lease{
 			ID:  ID,
 			ttl: lpb.TTL,
-			// itemSet will be filled in when recover key-value pairs
-			// set expiry to forever, refresh when promoted
+			//itemSet将在恢复键值对将过期时间设置为永久 ，提升时刷新
 			itemSet:      make(map[LeaseItem]struct{}),
 			expiry:       forever,
 			revokec:      make(chan struct{}),
@@ -812,17 +787,13 @@ func (le *lessor) initAndRecover() {
 
 type Lease struct {
 	ID           LeaseID
-	ttl          int64 // time to live of the lease in seconds
-	remainingTTL int64 // remaining time to live in seconds, if zero valued it is considered unset and the full ttl should be used
-	// expiryMu protects concurrent accesses to expiry
-	expiryMu sync.RWMutex
-	// expiry is time when lease should expire. no expiration when expiry.IsZero() is true
-	expiry time.Time
-
-	// mu protects concurrent accesses to itemSet
-	mu      sync.RWMutex
-	itemSet map[LeaseItem]struct{}
-	revokec chan struct{}
+	ttl          int64                  // 租约的生存时间，以秒为单位
+	remainingTTL int64                  // 剩余生存时间，以秒为单位，如果为零，则视为未设置，应使用完整的tl。
+	expiryMu     sync.RWMutex           // 保护并发的访问
+	expiry       time.Time              // 是租约到期的时间。当expiry.IsZero()为真时，永久存在。
+	mu           sync.RWMutex           // 保护并发的访问 itemSet
+	itemSet      map[LeaseItem]struct{} //
+	revokec      chan struct{}          //
 }
 
 func (l *Lease) expired() bool {

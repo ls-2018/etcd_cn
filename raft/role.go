@@ -242,9 +242,11 @@ func stepLeader(r *raft, m pb.Message) error {
 		r.bcastAppend()
 		return nil
 	case pb.MsgReadIndex:
-		// 集群中只有一个投票成员(领导者).
+		// 表示当前集群只有一个节点，当前节点就是leader
 		if r.prstrack.IsSingleton() {
-			if resp := r.responseToReadIndexReq(m, r.raftLog.committed); resp.To != None {
+			//记录当前的commit index，称为ReadIndex；
+			resp := r.responseToReadIndexReq(m, r.raftLog.committed)
+			if resp.To != None {
 				r.send(resp)
 			}
 			return nil
@@ -257,7 +259,7 @@ func stepLeader(r *raft, m pb.Message) error {
 		}
 
 		// 发送消息读取响应
-		sendMsgReadIndexResponse(r, m)
+		sendMsgReadIndexResponse(r, m) // case pb.MsgReadIndex:
 
 		return nil
 	}
@@ -361,12 +363,14 @@ func stepLeader(r *raft, m pb.Message) error {
 		if r.readOnly.option != ReadOnlySafe || len(m.Context) == 0 {
 			return nil
 		}
-
+		// 判断leader有没有收到大多数节点的确认
+		// 也就是ReadIndex算法中，leader节点得到follower的确认，证明自己目前还是Leader
 		if r.prstrack.Voters.VoteResult(r.readOnly.recvAck(m.From, m.Context)) != quorum.VoteWon {
 			return nil
 		}
-
+		// 收到了响应节点超过半数，会清空readOnly中指定消息ID及之前的所有记录
 		rss := r.readOnly.advance(m)
+		// 返回follower的心跳回执
 		for _, rs := range rss {
 			if resp := r.responseToReadIndexReq(rs.req, rs.index); resp.To != None {
 				r.send(resp)
@@ -528,14 +532,14 @@ func stepFollower(r *raft, m pb.Message) error {
 		// extra round trip.
 		r.hup(campaignTransfer)
 
-	case pb.MsgReadIndex:	// ✅
+	case pb.MsgReadIndex: // ✅
 		if r.lead == None {
 			r.logger.Infof("%x 当前任期没有leader %d; 跳过读索引", r.id, r.Term)
 			return nil
 		}
 		m.To = r.lead
 		r.send(m)
-	case pb.MsgReadIndexResp:	// ✅
+	case pb.MsgReadIndexResp: // ✅
 		if len(m.Entries) != 1 {
 			r.logger.Errorf("%x  来自 %x的 MsgReadIndexResp 格式无效, 日志条数: %d", r.id, m.From, len(m.Entries))
 			return nil

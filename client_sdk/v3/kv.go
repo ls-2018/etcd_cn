@@ -93,6 +93,7 @@ func (kv *kv) Put(ctx context.Context, key, val string, opts ...OpOption) (*PutR
 	return r.put, toErr(ctx, err)
 }
 
+// Get etcdctl get
 func (kv *kv) Get(ctx context.Context, key string, opts ...OpOption) (*GetResponse, error) {
 	r, err := kv.Do(ctx, OpGet(key, opts...))
 	return r.get, toErr(ctx, err)

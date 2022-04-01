@@ -53,7 +53,7 @@ func (tr *storeTxnRead) rangeKeys(ctx context.Context, key, end []byte, curRev i
 	if rev < tr.s.compactMainRev {
 		return &RangeResult{KVs: nil, Count: -1, Rev: 0}, ErrCompacted
 	}
-	if ro.Count {
+	if ro.Count { // 是否统计修订版本数
 		total := tr.s.kvindex.CountRevisions(key, end, rev)
 		tr.trace.Step("从内存索引树中统计修订数")
 		return &RangeResult{KVs: nil, Count: total, Rev: curRev}, nil
@@ -118,6 +118,7 @@ func (tw *storeTxnWrite) Range(ctx context.Context, key, end []byte, ro RangeOpt
 	return tw.rangeKeys(ctx, key, end, rev, ro)
 }
 
+// DeleteRange etcdctl del a
 func (tw *storeTxnWrite) DeleteRange(key, end []byte) (int64, int64) {
 	if n := tw.deleteRange(key, end); n != 0 || len(tw.changes) > 0 {
 		return n, tw.beginRev + 1

@@ -14,7 +14,10 @@
 
 package clientv3
 
-import pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
+import (
+	"fmt"
+	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
+)
 
 type opType int
 
@@ -28,12 +31,10 @@ const (
 
 var noPrefixEnd = []byte{0}
 
-// Op represents an Operation that kv can execute.
 type Op struct {
 	t   opType
 	key string
 	end string
-
 	// for range
 	limit        int64
 	sort         *SortOption
@@ -134,7 +135,9 @@ func (op Op) MinCreateRev() int64 { return op.minCreateRev }
 func (op Op) MaxCreateRev() int64 { return op.maxCreateRev }
 
 // WithRangeBytes sets the byte slice for the Op's range end.
-func (op *Op) WithRangeBytes(end []byte) { op.end = string(end) }
+func (op *Op) WithRangeBytes(end []byte) {
+	op.end = string(end)
+}
 
 // ValueBytes returns the byte slice holding the Op's value, if any.
 func (op Op) ValueBytes() []byte { return []byte(op.val) }
@@ -191,6 +194,7 @@ func (op Op) toRequestOp() *pb.RequestOp {
 		return &pb.RequestOp{Request: &pb.RequestOp_RequestPut{RequestPut: r}}
 	case tDeleteRange:
 		r := &pb.DeleteRangeRequest{Key: op.key, RangeEnd: op.end, PrevKv: op.prevKV}
+		fmt.Println("----->", r)
 		return &pb.RequestOp{Request: &pb.RequestOp_RequestDeleteRange{RequestDeleteRange: r}}
 	case tTxn:
 		return &pb.RequestOp{Request: &pb.RequestOp_RequestTxn{RequestTxn: op.toTxnRequest()}}
@@ -356,10 +360,10 @@ func WithSort(target SortTarget, order SortOrder) OpOption {
 	}
 }
 
-// GetPrefixRangeEnd gets the range end of the prefix.
-// 'Get(foo, WithPrefix())' is equal to 'Get(foo, WithRange(GetPrefixRangeEnd(foo))'.
+// GetPrefixRangeEnd 得到前缀的范围端。
+// 例如  1  --->  [1,2)
 func GetPrefixRangeEnd(prefix string) string {
-	return string(getPrefix(prefix))
+	return getPrefix(prefix)
 }
 
 func getPrefix(key string) string {

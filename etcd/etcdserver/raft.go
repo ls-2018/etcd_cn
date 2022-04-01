@@ -439,7 +439,6 @@ func (r *raftNode) start(rh *raftReadyHandler) {
 				if rd.SoftState != nil {
 					// SoftState不为空的处理逻辑
 					newLeader := rd.SoftState.Lead != raft.None && rh.getLead() != rd.SoftState.Lead
-
 					rh.updateLead(rd.SoftState.Lead)
 					islead = rd.RaftState == raft.StateLeader
 					rh.updateLeadership(newLeader)
@@ -455,6 +454,7 @@ func (r *raftNode) start(rh *raftReadyHandler) {
 						return
 					}
 				}
+
 				// 生成apply请求
 				notifyc := make(chan struct{}, 1)
 				ap := apply{

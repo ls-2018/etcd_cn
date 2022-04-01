@@ -222,38 +222,6 @@ func uint64ToBigEndianBytes(number uint64) []byte {
 	return byteResult
 }
 
-// etcdctl get  就是异步发送一条raft的消息
-func (s *EtcdServer) sendReadIndex(requestIndex uint64) error {
-	ctxToSend := uint64ToBigEndianBytes(requestIndex)
-
-	cctx, cancel := context.WithTimeout(context.Background(), s.Cfg.ReqTimeout())
-	// 就是异步发送一条raft的消息
-	err := s.r.ReadIndex(cctx, ctxToSend) // 发出去就完事了,  发到内存里
-	cancel()
-	if err == raft.ErrStopped {
-		return err
-	}
-	if err != nil {
-		lg := s.Logger()
-		lg.Warn("未能从Raft获取读取索引", zap.Error(err))
-		return err
-	}
-	return nil
-}
-
-// AuthInfoFromCtx 获取认证信息
-func (s *EtcdServer) AuthInfoFromCtx(ctx context.Context) (*auth.AuthInfo, error) {
-	authInfo, err := s.AuthStore().AuthInfoFromCtx(ctx)
-	if authInfo != nil || err != nil {
-		return authInfo, err
-	}
-	if !s.Cfg.ClientCertAuthEnabled { // 是否验证客户端证书
-		return nil, nil
-	}
-	authInfo = s.AuthStore().AuthInfoFromTLS(ctx)
-	return authInfo, nil
-}
-
 func (s *EtcdServer) Downgrade(ctx context.Context, r *pb.DowngradeRequest) (*pb.DowngradeResponse, error) {
 	switch r.Action {
 	case pb.DowngradeRequest_VALIDATE:
@@ -348,6 +316,40 @@ func (s *EtcdServer) downgradeCancel(ctx context.Context) (*pb.DowngradeResponse
 
 // ----------------------------------------   OVER  ------------------------------------------------------------
 
+
+// etcdctl get  就是异步发送一条raft的消息
+func (s *EtcdServer) sendReadIndex(requestIndex uint64) error {
+	ctxToSend := uint64ToBigEndianBytes(requestIndex)
+
+	cctx, cancel := context.WithTimeout(context.Background(), s.Cfg.ReqTimeout())
+	// 就是异步发送一条raft的消息
+	err := s.r.ReadIndex(cctx, ctxToSend) // 发出去就完事了,  发到内存里
+	cancel()
+	if err == raft.ErrStopped {
+		return err
+	}
+	if err != nil {
+		lg := s.Logger()
+		lg.Warn("未能从Raft获取读取索引", zap.Error(err))
+		return err
+	}
+	return nil
+}
+
+// AuthInfoFromCtx 获取认证信息
+func (s *EtcdServer) AuthInfoFromCtx(ctx context.Context) (*auth.AuthInfo, error) {
+	authInfo, err := s.AuthStore().AuthInfoFromCtx(ctx)
+	if authInfo != nil || err != nil {
+		return authInfo, err
+	}
+	if !s.Cfg.ClientCertAuthEnabled { // 是否验证客户端证书
+		return nil, nil
+	}
+	authInfo = s.AuthStore().AuthInfoFromTLS(ctx)
+	return authInfo, nil
+}
+
+
 // doSerialize 为序列化的请求“get”处理认证逻辑，并由“chk”检查权限。身份验证失败时返回一个非空错误。
 func (s *EtcdServer) doSerialize(ctx context.Context, chk func(*auth.AuthInfo) error, get func()) error {
 	trace := traceutil.Get(ctx) // 从上下文获取trace
@@ -373,14 +375,14 @@ func (s *EtcdServer) doSerialize(ctx context.Context, chk func(*auth.AuthInfo) e
 	return nil
 }
 
-// 准备好了线性读取
+// 进行一次 线性读取准备
 func (s *EtcdServer) linearizableReadNotify(ctx context.Context) error {
 	s.readMu.RLock()
 	nc := s.readNotifier
 	s.readMu.RUnlock()
 
 	select {
-	case s.readwaitc <- struct{}{}:
+	case s.readwaitc <- struct{}{}: // linearizableReadLoop就会开始结束阻塞开始工作
 	default:
 	}
 

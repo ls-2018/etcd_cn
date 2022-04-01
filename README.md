@@ -496,13 +496,56 @@ HTTP/1.x 不支持多路复用,会创建大量的连接,消耗 server 端过多�
 HTTP/2.0 多路复用机制,减少了大量 watcher 等场景下的连接数； 3、使用 Lease 优化 TTL 机制,每个 Lease 具有一个 TTL,相同的 TTL 的 key 关联一个 Lease,Lease
 过期的时候自动删除相关联的所有 key,不再需要为每个 key 单独续期； 4、etcd v3 支持范围、分页查询,可避免大包等 expensive request.
 
-pb.Message.Entries =  [ pb.InternalRaftRequest ] 
+pb.Message.Entries =  [ pb.InternalRaftRequest ]
 
+etcd中每新建一个key ,会为其分配一个主版本,同时还有一个sub版本,长度17byte 格式： 8byte_8byte 例如[00000002_00000000]---> 转换成bolt.db的键值就是
+00000000000000025f0000000000000000
 
-etcd中每新建一个key ,会为其分配一个主版本,同时还有一个sub版本,长度17byte
-格式： 8byte_8byte
-例如[00000002_00000000]---> 转换成bolt.db的键值就是  00000000000000025f0000000000000000
+### 线性一致性读流程
 
+```
+localNode.run() 一直死循环
+  判断是否有ready的数据，其中 r.readStates就是一项指标
+  n.readyc <- ready 
+  
+---------------------------------
+raftNode.start
+  case rd := <-r.Ready():           消费端:  获取ready数据,包含r.ReadStates = r.readStates
+    select {
+    case r.readStateC <- rd.ReadStates[len(rd.ReadStates)-1]:  // 发送响应数据
+    case <-time.After(internalTimeout):
+        r.lg.Warn("发送读状态超时", zap.Duration("timeout", internalTimeout))
+    case <-r.stopped:
+        return
+    }
+---------------------------------
+leader:
+    stepLeader;case pb.MsgReadIndex:
+  1、集群只有一个节点  
+    r.readStates = append(r.readStates, ReadState{Index:r.raftLog.committed, RequestCtx: 自增ID})
+  2、
+    。。。
+          
 
+rd.ReadStates
+----------------------------------
+linearizableReadLoop                      发送MsgReadIndex消息,
+    s.requestCurrentIndex
+        1、s.sendReadIndex(自增ID)
+            s.r.ReadIndex                 发送pb.MsgReadIndex消息,数据是自增ID
+        2、case rs := <-s.r.readStateC:   等待响应   得到ReadState{Index:r.raftLog.committed, RequestCtx: 自增ID}
+        return r.raftLog.committed
+    r.raftLog.committed >= s.getAppliedIndex()     如果满足这个条件  
+    nr.notify(nil)                        相当于往nc.c发消息       
+--------------
+get
+linearizableReadNotify                    线性读,触发linearizableReadLoop,并等待结果
+  1、case s.readwaitc <- struct{}{}:      触发线性读 
+  2、case <-nc.c:                         等待结果
+     return nc.err  
+继续在本节点读取数据 
+          
+```
+				
 
 

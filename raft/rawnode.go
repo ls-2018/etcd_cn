@@ -114,22 +114,12 @@ func (rn *RawNode) Step(m pb.Message) error {
 	return ErrStepPeerNotFound
 }
 
-// Ready returns the outstanding work that the application needs to handle. This
-// includes appending and applying entries or a snapshot, updating the HardState,
-// and sending messages. The returned Ready() *must* be handled and subsequently
-// passed back via Advance().
-func (rn *RawNode) Ready() Ready {
-	rd := rn.readyWithoutAccept()
-	rn.acceptReady(rd)
-	return rd
-}
-
-// readyWithoutAccept 计算状态变化;返回ready结构体
+//   计算状态变化;返回ready结构体
 func (rn *RawNode) readyWithoutAccept() Ready {
 	return newReady(rn.raft, rn.prevSoftSt, rn.prevHardSt) // 计算状态变化
 }
 
-// acceptReady 当已经commit的消息提交给上层应用后 被调用
+// 当已经commit的消息提交给上层应用后 被调用
 func (rn *RawNode) acceptReady(rd Ready) {
 	if rd.SoftState != nil {
 		rn.prevSoftSt = rd.SoftState

@@ -17,8 +17,6 @@ type RaftKV interface {
 	Compact(ctx context.Context, r *pb.CompactionRequest) (*pb.CompactionResponse, error)
 }
 
-
-
 func (s *EtcdServer) DeleteRange(ctx context.Context, r *pb.DeleteRangeRequest) (*pb.DeleteRangeResponse, error) {
 	resp, err := s.raftRequest(ctx, pb.InternalRaftRequest{DeleteRange: r})
 	if err != nil {
@@ -116,14 +114,15 @@ func (s *EtcdServer) Range(ctx context.Context, r *pb.RangeRequest) (*pb.RangeRe
 			)
 		}
 	}(time.Now())
-
 	if !r.Serializable {
-		err = s.linearizableReadNotify(ctx) // 发准备信号
+		// 需要阻塞等待直到读到最新的数据
+		err = s.linearizableReadNotify(ctx) // 发准备信号,并等待结果
 		trace.Step("在线性化读数之前，raft节点之间的一致。")
 		if err != nil {
 			return nil, err
 		}
 	}
+	// serializable read 会直接读取当前节点的数据返回给客户端，它并不能保证返回给客户端的数据是最新的
 	chk := func(ai *auth.AuthInfo) error {
 		return s.authStore.IsRangePermitted(ai, []byte(r.Key), []byte(r.RangeEnd)) // health,nil
 	}

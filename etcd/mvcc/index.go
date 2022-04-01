@@ -70,7 +70,7 @@ func (ti *treeIndex) visit(key, end []byte, f func(ki *keyIndex) bool) {
 
 	ti.RLock()
 	defer ti.RUnlock()
-
+	//对树中[pivot, last]范围内的每个值调用迭代器，直到迭代器返回false。
 	ti.tree.AscendGreaterOrEqual(keyi, func(item btree.Item) bool {
 		if len(endi.key) > 0 && !item.Less(endi) {
 			return false

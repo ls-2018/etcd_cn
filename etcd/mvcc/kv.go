@@ -40,9 +40,9 @@ type ReadView interface {
 	//     before    			   cur
 	//             compact
 	//           rev       rev   		rev
-	FirstRev() int64 // 在打开txn时返回第一个KV修订。在压实之后，第一个修订增加到压实修订。
-	Rev() int64      // 在打开txn时返回KV的修订。
-	Range(ctx context.Context, key, end []byte, ro RangeOptions) (r *RangeResult, err error)
+	FirstRev() int64                                                                         // 在打开txn时返回第一个KV修订。在压实之后，第一个修订增加到压实修订。
+	Rev() int64                                                                              // 在打开txn时返回KV的修订。
+	Range(ctx context.Context, key, end []byte, ro RangeOptions) (r *RangeResult, err error) // 读取数据
 }
 
 // TxnRead 只读事务,不会锁住其他只读事务
@@ -52,15 +52,7 @@ type TxnRead interface {
 }
 
 type WriteView interface {
-	// DeleteRange deletes the given range from the store.
-	// A deleteRange increases the rev of the store if any key in the range exists.
-	// The number of key deleted will be returned.
-	// The returned rev is the current revision of the KV when the operation is executed.
-	// It also generates one event for each key delete in the event history.
-	// if the `end` is nil, deleteRange deletes the key.
-	// if the `end` is not nil, deleteRange deletes the keys in range [key, range_end).
-	DeleteRange(key, end []byte) (n, rev int64)
-
+	DeleteRange(key, end []byte) (n, rev int64) // 删除指定范围的数据
 	// Put 将给定的k v放入存储区。Put还接受额外的参数lease，将lease作为元数据附加到键值对上。KV实现 不验证租赁id。
 	// put还会增加存储的修订版本，并在事件历史中生成一个事件。返回的修订版本是执行操作时KV的当前修订版本。
 	Put(key, value []byte, lease lease.LeaseID) (rev int64)

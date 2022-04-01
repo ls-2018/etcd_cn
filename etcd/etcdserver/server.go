@@ -165,11 +165,11 @@ type Server interface {
 
 // EtcdServer 整个etcd节点的功能的入口,包含etcd节点运行过程中需要的大部分成员.
 type EtcdServer struct {
-	inflightSnapshots int64                    // 当前正在发送的snapshot数量
-	appliedIndex      uint64                   // 已经apply到状态机的日志index
-	committedIndex    uint64                   // 已经提交的日志index,也就是leader确认多数成员已经同步了的日志index
-	term              uint64                   // must use atomic operations to access; keep 64-bit aligned.
-	lead              uint64                   // must use atomic operations to access; keep 64-bit aligned.
+	inflightSnapshots int64  // 当前正在发送的snapshot数量
+	appliedIndex      uint64 // 已经apply到状态机的日志index
+	committedIndex    uint64 // 已经提交的日志index,也就是leader确认多数成员已经同步了的日志index
+	term              uint64
+	lead              uint64
 	consistIndex      cindex.ConsistentIndexer // 已经持久化到kvstore的index
 	r                 raftNode                 // 重要的数据结果,存储了raft的状态机信息.
 	readych           chan struct{}            // 启动成功并注册了自己到cluster,关闭这个通道.
@@ -534,14 +534,15 @@ func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 	srv.beHooks = temp.BeHooks
 	minTTL := time.Duration((3*cfg.ElectionTicks)/2) * heartbeat
 
-	// always recover lessor before kv. When we recover the mvcc.KV it will reattach keys to its leases.
-	// If we recover mvcc.KV first, it will attach the keys to the wrong lessor before it recovers.
-	srv.lessor = lease.NewLessor(srv.Logger(), srv.backend, srv.cluster, lease.LessorConfig{
-		MinLeaseTTL:                int64(math.Ceil(minTTL.Seconds())),
-		CheckpointInterval:         cfg.LeaseCheckpointInterval,
-		CheckpointPersist:          cfg.LeaseCheckpointPersist,
-		ExpiredLeasesRetryInterval: srv.Cfg.ReqTimeout(),
-	})
+	// 始终在KV之前恢复出租人。当我们恢复mvcc.KV时，它将把钥匙重新连接到它的租约上。如果我们先恢复mvcc.KV，它将在恢复前把钥匙附加到错误的出租人上。
+	srv.lessor = lease.NewLessor(srv.Logger(),
+		srv.backend, srv.cluster,
+		lease.LessorConfig{
+			MinLeaseTTL:                int64(math.Ceil(minTTL.Seconds())),
+			CheckpointInterval:         cfg.LeaseCheckpointInterval,
+			CheckpointPersist:          cfg.LeaseCheckpointPersist,
+			ExpiredLeasesRetryInterval: srv.Cfg.ReqTimeout(),
+		})
 
 	tp, err := auth.NewTokenProvider(cfg.Logger, cfg.AuthToken,
 		func(index uint64) <-chan struct{} {
@@ -740,16 +741,14 @@ func (s *EtcdServer) start() {
 	lg := s.Logger()
 
 	if s.Cfg.SnapshotCount == 0 { // 触发一次磁盘快照的提交事务的次数
-		lg.Info(
-			"更新快照数量为默认值",
+		lg.Info("更新快照数量为默认值",
 			zap.Uint64("given-snapshot-count", s.Cfg.SnapshotCount), // 触发一次磁盘快照的提交事务的次数
 			zap.Uint64("updated-snapshot-count", DefaultSnapshotCount),
 		)
 		s.Cfg.SnapshotCount = DefaultSnapshotCount // 触发一次磁盘快照的提交事务的次数
 	}
 	if s.Cfg.SnapshotCatchUpEntries == 0 {
-		lg.Info(
-			"将快照追赶条目更新为默认条目",
+		lg.Info("将快照追赶条目更新为默认条目",
 			zap.Uint64("given-snapshot-catchup-entries", s.Cfg.SnapshotCatchUpEntries),
 			zap.Uint64("updated-snapshot-catchup-entries", DefaultSnapshotCatchUpEntries),
 		)
@@ -986,6 +985,10 @@ func (s *EtcdServer) run() {
 	for {
 		select {
 		case ap := <-s.r.apply():
+			// 集群启动时,会先apply两条消息
+			//index1:EntryConfChange {"Type":0,"NodeID":10276657743932975437,"Context":"{\"id\":10276657743932975437,\"peerURLs\":[\"http://localhost:2380\"],\"name\":\"default\"}","ID":0}
+			//index2:EntryNormal nil    用于任期内第一次commit
+			//index3:EntryNormal {"ID":7587861549007417858,"Method":"PUT","Path":"/0/members/8e9e05c52164694d/attributes","Val":"{\"name\":\"default\",\"clientURLs\":[\"http://localhost:2379\"]}","Dir":false,"PrevValue":"","PrevIndex":0,"Expiration":0,"Wait":false,"Since":0,"Recursive":false,"Sorted":false,"Quorum":false,"Time":0,"Stream":false}
 			// 读取 放入applyc的消息
 			f := func(context.Context) {
 				s.applyAll(&ep, &ap)
@@ -1482,17 +1485,15 @@ func (s *EtcdServer) mayRemoveMember(id types.ID) error {
 	return nil
 }
 
-// FirstCommitInTermNotify returns channel that will backend unlocked on first
-// entry committed in new term, which is necessary for new leader to answer
-// read-only requests (leader is not able to respond any read-only requests
-// as long as linearizable semantic is required)
+// FirstCommitInTermNotify
+// 任期内第一次commit会往这个channel发个信号，这是新leader回答只读请求所必需的
+// Leader不能响应任何只读请求，只要线性语义是必需的
 func (s *EtcdServer) FirstCommitInTermNotify() <-chan struct{} {
 	s.firstCommitInTermMu.RLock()
 	defer s.firstCommitInTermMu.RUnlock()
 	return s.firstCommitInTermC
 }
 
-// RaftStatusGetter represents etcd etcd and Raft progress.
 type RaftStatusGetter interface {
 	ID() types.ID
 	Leader() types.ID
@@ -2097,6 +2098,7 @@ func (s *EtcdServer) notifyAboutFirstCommitInTerm() {
 	newNotifier := make(chan struct{})
 	s.firstCommitInTermMu.Lock()
 	notifierToClose := s.firstCommitInTermC
+	// 同于响应只读请求的
 	s.firstCommitInTermC = newNotifier
 	s.firstCommitInTermMu.Unlock()
 	close(notifierToClose)

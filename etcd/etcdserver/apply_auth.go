@@ -44,8 +44,7 @@ func (aa *authApplierV3) Apply(r *pb.InternalRaftRequest, shouldApplyV3 membersh
 	aa.mu.Lock()
 	defer aa.mu.Unlock()
 	if r.Header != nil {
-		// backward-compatible with pre-3.0 releases when internalRaftRequest
-		// does not have header field
+		// 当internalRaftRequest没有header时，向后兼容3.0之前的版本
 		aa.authInfo.Username = r.Header.Username
 		aa.authInfo.Revision = r.Header.AuthRevision
 	}
@@ -96,7 +95,7 @@ func (aa *authApplierV3) DeleteRange(txn mvcc.TxnWrite, r *pb.DeleteRangeRequest
 		return nil, err
 	}
 	if r.PrevKv {
-		err := aa.as.IsRangePermitted(&aa.authInfo, []byte(r.Key), []byte(r.RangeEnd))
+		err := aa.as.IsRangePermitted(&aa.authInfo, []byte(r.Key), []byte(r.RangeEnd))// {a,b true}
 		if err != nil {
 			return nil, err
 		}

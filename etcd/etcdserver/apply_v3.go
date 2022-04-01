@@ -175,11 +175,11 @@ func (a *applierV3backend) DeleteRange(txn mvcc.TxnWrite, dr *pb.DeleteRangeRequ
 	end := mkGteRange([]byte(dr.RangeEnd))
 
 	if txn == nil {
-		txn = a.s.kv.Write(traceutil.TODO())
+		txn = a.s.kv.Write(traceutil.TODO()) // 创建写事务
 		defer txn.End()
 	}
 
-	if dr.PrevKv {
+	if dr.PrevKv {//
 		rr, err := txn.Range(context.TODO(), []byte(dr.Key), end, mvcc.RangeOptions{})
 		if err != nil {
 			return nil, err
@@ -191,7 +191,7 @@ func (a *applierV3backend) DeleteRange(txn mvcc.TxnWrite, dr *pb.DeleteRangeRequ
 			}
 		}
 	}
-
+ 	// storeTxnWrite
 	resp.Deleted, resp.Header.Revision = txn.DeleteRange([]byte(dr.Key), end)
 	return resp, nil
 }
