@@ -45,24 +45,21 @@ var (
 	progressNotify   bool
 )
 
-// NewWatchCommand returns the cobra command for "watch".
 func NewWatchCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "watch [options] [key or prefix] [range_end] [--] [exec-command arg1 arg2 ...]",
-		Short: "Watches events stream on keys or prefixes",
+		Short: "监听键或前缀上的事件流",
 		Run:   watchCommandFunc,
 	}
 
-	cmd.Flags().BoolVarP(&watchInteractive, "interactive", "i", false, "Interactive mode")
-	cmd.Flags().BoolVar(&watchPrefix, "prefix", false, "Watch on a prefix if prefix is set")
-	cmd.Flags().Int64Var(&watchRev, "rev", 0, "Revision to start watching")
-	cmd.Flags().BoolVar(&watchPrevKey, "prev-kv", false, "get the previous key-value pair before the event happens")
-	cmd.Flags().BoolVar(&progressNotify, "progress-notify", false, "get periodic watch progress notification from etcd")
-
+	cmd.Flags().BoolVarP(&watchInteractive, "interactive", "i", false, "交互模式")
+	cmd.Flags().BoolVar(&watchPrefix, "prefix", false, "是否监听前缀")
+	cmd.Flags().Int64Var(&watchRev, "rev", 0, "从那个修订版本开始监听")
+	cmd.Flags().BoolVar(&watchPrevKey, "prev-kv", false, "获取事件发生之前的键值对")
+	cmd.Flags().BoolVar(&progressNotify, "progress-notify", false, "从etcd获取定期的监听进度通知")
 	return cmd
 }
 
-// watchCommandFunc executes the "watch" command.
 func watchCommandFunc(cmd *cobra.Command, args []string) {
 	envKey, envRange := os.Getenv("ETCDCTL_WATCH_KEY"), os.Getenv("ETCDCTL_WATCH_RANGE_END")
 	if envKey == "" && envRange != "" {
@@ -89,7 +86,7 @@ func watchCommandFunc(cmd *cobra.Command, args []string) {
 	if err = c.Close(); err != nil {
 		cobrautl.ExitWithError(cobrautl.ExitBadConnection, err)
 	}
-	cobrautl.ExitWithError(cobrautl.ExitInterrupted, fmt.Errorf("watch is canceled by the etcd"))
+	cobrautl.ExitWithError(cobrautl.ExitInterrupted, fmt.Errorf("etcd取消了监听"))
 }
 
 func watchInteractiveFunc(cmd *cobra.Command, osArgs []string, envKey, envRange string) {
@@ -167,10 +164,10 @@ func getWatchChan(c *clientv3.Client, args []string) (clientv3.WatchChan, error)
 func printWatchCh(c *clientv3.Client, ch clientv3.WatchChan, execArgs []string) {
 	for resp := range ch {
 		if resp.Canceled {
-			fmt.Fprintf(os.Stderr, "watch was canceled (%v)\n", resp.Err())
+			fmt.Fprintf(os.Stderr, "监听取消了 (%v)\n", resp.Err())
 		}
 		if resp.IsProgressNotify() {
-			fmt.Fprintf(os.Stdout, "progress notify: %d\n", resp.Header.Revision)
+			fmt.Fprintf(os.Stdout, "进程通知: %d\n", resp.Header.Revision)
 		}
 		display.Watch(resp)
 

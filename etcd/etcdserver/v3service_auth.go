@@ -32,8 +32,10 @@ type AuthClient interface {
 	RoleRevokePermission(ctx context.Context, in *pb.AuthRoleRevokePermissionRequest, opts ...grpc.CallOption) (*pb.AuthRoleRevokePermissionResponse, error)
 }
 
+// ------------------------------------------- OVER ---------------------------------------------------------vv
+
 func (s *EtcdServer) AuthEnable(ctx context.Context, r *pb.AuthEnableRequest) (*pb.AuthEnableResponse, error) {
-	resp, err := s.raftRequestOnce(ctx, pb.InternalRaftRequest{AuthEnable: r})
+	resp, err := s.raftRequest(ctx, pb.InternalRaftRequest{AuthEnable: r})
 	if err != nil {
 		return nil, err
 	}

@@ -6,14 +6,12 @@
   <component name="ChangeListManager">
     <list default="true" id="49524360-39b2-44cd-b702-de0461fb4222" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/watch.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/watch.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/auth/store.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/auth/store.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/v3_server.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/v3_server.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v2store/over_watcher.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/api/v2store/over_watcher.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/etcd/etcdserver/v3service_auth.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/v3service_auth.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/role_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/over_role_command.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/user_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/user_command.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/offical/api/v3/authpb/auth.pb.go" beforeDir="false" afterPath="$PROJECT_DIR$/offical/api/v3/authpb/auth.pb.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/offical/etcdserverpb/rpc.pb.go" beforeDir="false" afterPath="$PROJECT_DIR$/offical/etcdserverpb/rpc.pb.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/mvcc/watchable_store.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/mvcc/watchable_store.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/auth_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/auth_command.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/version_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/over_version_command.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/watch_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/watch_command.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -85,7 +83,7 @@
     <configuration name="etcdctl" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true">
       <module name="etcd_cn" />
       <working_directory value="$PROJECT_DIR$" />
-      <parameters value="user add root:root" />
+      <parameters value="watch  a --prefix=true --prev-kv=true --progress-notify=true" />
       <kind value="FILE" />
       <package value="github.com/ls-2018/etcd_cn" />
       <directory value="$PROJECT_DIR$" />
@@ -205,11 +203,6 @@
           <option name="timeStamp" value="97" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/etcd/mvcc/kv_view.go</url>
-          <line>46</line>
-          <option name="timeStamp" value="134" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/raftexample/httpapi.go</url>
           <line>43</line>
           <option name="timeStamp" value="168" />
@@ -225,11 +218,6 @@
           <option name="timeStamp" value="204" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/etcd/mvcc/kv_view.go</url>
-          <line>38</line>
-          <option name="timeStamp" value="227" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/etcd/mvcc/index.go</url>
           <line>110</line>
           <option name="timeStamp" value="241" />
@@ -243,11 +231,6 @@
           <url>file://$PROJECT_DIR$/client_sdk/v3/op.go</url>
           <line>196</line>
           <option name="timeStamp" value="246" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/client_sdk/v3/op.go</url>
-          <line>393</line>
-          <option name="timeStamp" value="248" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/client_sdk/v3/op.go</url>
@@ -386,11 +369,6 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/offical/etcdserverpb/rpc.pb.go</url>
-          <line>1285</line>
-          <option name="timeStamp" value="407" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/offical/etcdserverpb/rpc.pb.go</url>
           <line>5004</line>
           <option name="timeStamp" value="408" />
         </line-breakpoint>
@@ -403,6 +381,16 @@
           <url>file://$PROJECT_DIR$/etcdctl/ctlv3/command/user_command.go</url>
           <line>136</line>
           <option name="timeStamp" value="411" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcdctl/ctlv3/command/watch_command.go</url>
+          <line>171</line>
+          <option name="timeStamp" value="426" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcdctl/ctlv3/command/watch_command.go</url>
+          <line>74</line>
+          <option name="timeStamp" value="427" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
