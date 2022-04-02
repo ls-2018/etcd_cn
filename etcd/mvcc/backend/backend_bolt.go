@@ -55,7 +55,7 @@ type Backend interface {
 	SizeInUse() int64   // 实际使用的磁盘空间
 	OpenReadTxN() int64 // 返回当前读事务个数
 	Defrag() error      // 数据文件整理,会回收已删除key和已更新的key旧版本占用的磁盘
-	ForceCommit()
+	ForceCommit()       // 强制当前的批处理tx提交
 	Close() error
 }
 

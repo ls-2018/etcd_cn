@@ -32,12 +32,21 @@ type BackendGetter interface {
 
 type alarmSet map[types.ID]*pb.AlarmMember
 
-// AlarmStore persists alarms to the backend.
 type AlarmStore struct {
 	lg    *zap.Logger
 	mu    sync.Mutex
 	types map[pb.AlarmType]alarmSet
-
+	// {
+	//  "AlarmType_NONE": {
+	//  },
+	//  "AlarmType_NOSPACE": {
+	//    "1": {
+	//      "MemberID": "1",
+	//      "AlarmType": "AlarmType_NOSPACE"
+	//    }
+	//  },
+	//  "AlarmType_CORRUPT": {}
+	//}
 	bg BackendGetter
 }
 
@@ -50,6 +59,7 @@ func NewAlarmStore(lg *zap.Logger, bg BackendGetter) (*AlarmStore, error) {
 	return ret, err
 }
 
+// Activate 记录、入库警报
 func (a *AlarmStore) Activate(id types.ID, at pb.AlarmType) *pb.AlarmMember {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -61,7 +71,7 @@ func (a *AlarmStore) Activate(id types.ID, at pb.AlarmType) *pb.AlarmMember {
 
 	v, err := newAlarm.Marshal()
 	if err != nil {
-		a.lg.Panic("failed to marshal alarm member", zap.Error(err))
+		a.lg.Panic("序列化报警成员失败", zap.Error(err))
 	}
 
 	b := a.bg.Backend()
@@ -90,7 +100,7 @@ func (a *AlarmStore) Deactivate(id types.ID, at pb.AlarmType) *pb.AlarmMember {
 
 	v, err := m.Marshal()
 	if err != nil {
-		a.lg.Panic("failed to marshal alarm member", zap.Error(err))
+		a.lg.Panic("反序列化报警成员失败", zap.Error(err))
 	}
 
 	b := a.bg.Backend()

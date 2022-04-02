@@ -105,11 +105,7 @@ func (s *EtcdServer) newApplierV3Internal() applierV3Internal {
 }
 
 func (s *EtcdServer) newApplierV3() applierV3 {
-	return newAuthApplierV3(
-		s.AuthStore(),
-		newQuotaApplierV3(s, s.newApplierV3Backend()),
-		s.lessor,
-	)
+	return newAuthApplierV3(s.AuthStore(), newQuotaApplierV3(s, s.newApplierV3Backend()), s.lessor)
 }
 
 // Put raft 传递之后 实际上将k,v存储到应用内的逻辑
@@ -480,86 +476,6 @@ func (a *applierV3backend) LeaseCheckpoint(lc *pb.LeaseCheckpointRequest) (*pb.L
 		}
 	}
 	return &pb.LeaseCheckpointResponse{Header: newHeader(a.s)}, nil
-}
-
-func (a *applierV3backend) Alarm(ar *pb.AlarmRequest) (*pb.AlarmResponse, error) {
-	resp := &pb.AlarmResponse{}
-	oldCount := len(a.s.alarmStore.Get(ar.Alarm))
-
-	lg := a.s.Logger()
-	switch ar.Action {
-	case pb.AlarmRequest_GET:
-		resp.Alarms = a.s.alarmStore.Get(ar.Alarm)
-	case pb.AlarmRequest_ACTIVATE:
-		if ar.Alarm == pb.AlarmType_NONE {
-			break
-		}
-		m := a.s.alarmStore.Activate(types.ID(ar.MemberID), ar.Alarm)
-		if m == nil {
-			break
-		}
-		resp.Alarms = append(resp.Alarms, m)
-		activated := oldCount == 0 && len(a.s.alarmStore.Get(m.Alarm)) == 1
-		if !activated {
-			break
-		}
-
-		lg.Warn("alarm raised", zap.String("alarm", m.Alarm.String()), zap.String("from", types.ID(m.MemberID).String()))
-		switch m.Alarm {
-		case pb.AlarmType_CORRUPT:
-			a.s.applyV3 = newApplierV3Corrupt(a)
-		case pb.AlarmType_NOSPACE:
-			a.s.applyV3 = newApplierV3Capped(a)
-		default:
-			lg.Panic("unimplemented alarm activation", zap.String("alarm", fmt.Sprintf("%+v", m)))
-		}
-	case pb.AlarmRequest_DEACTIVATE:
-		m := a.s.alarmStore.Deactivate(types.ID(ar.MemberID), ar.Alarm)
-		if m == nil {
-			break
-		}
-		resp.Alarms = append(resp.Alarms, m)
-		deactivated := oldCount > 0 && len(a.s.alarmStore.Get(ar.Alarm)) == 0
-		if !deactivated {
-			break
-		}
-
-		switch m.Alarm {
-		case pb.AlarmType_NOSPACE, pb.AlarmType_CORRUPT:
-			// TODO: check kv hash before deactivating CORRUPT?
-			lg.Warn("alarm disarmed", zap.String("alarm", m.Alarm.String()), zap.String("from", types.ID(m.MemberID).String()))
-			a.s.applyV3 = a.s.newApplierV3()
-		default:
-			lg.Warn("unimplemented alarm deactivation", zap.String("alarm", fmt.Sprintf("%+v", m)))
-		}
-	default:
-		return nil, nil
-	}
-	return resp, nil
-}
-
-type applierV3Capped struct {
-	applierV3
-	q backendQuota
-}
-
-// newApplierV3Capped creates an applyV3 that will reject Puts and transactions
-// with Puts so that the number of keys in the store is capped.
-func newApplierV3Capped(base applierV3) applierV3 { return &applierV3Capped{applierV3: base} }
-
-func (a *applierV3Capped) Put(ctx context.Context, txn mvcc.TxnWrite, p *pb.PutRequest) (*pb.PutResponse, *traceutil.Trace, error) {
-	return nil, nil, ErrNoSpace
-}
-
-func (a *applierV3Capped) Txn(ctx context.Context, r *pb.TxnRequest) (*pb.TxnResponse, *traceutil.Trace, error) {
-	if a.q.Cost(r) > 0 {
-		return nil, nil, ErrNoSpace
-	}
-	return a.applierV3.Txn(ctx, r)
-}
-
-func (a *applierV3Capped) LeaseGrant(lc *pb.LeaseGrantRequest) (*pb.LeaseGrantResponse, error) {
-	return nil, ErrNoSpace
 }
 
 func (a *applierV3backend) AuthEnable() (*pb.AuthEnableResponse, error) {
@@ -1015,4 +931,58 @@ type kvSortByValue struct{ *kvSort }
 
 func (s *kvSortByValue) Less(i, j int) bool {
 	return bytes.Compare([]byte(s.kvs[i].Value), []byte(s.kvs[j].Value)) < 0
+}
+
+func (a *applierV3backend) Alarm(ar *pb.AlarmRequest) (*pb.AlarmResponse, error) {
+	resp := &pb.AlarmResponse{}
+	oldCount := len(a.s.alarmStore.Get(ar.Alarm)) // 获取指定类型的警报数量
+
+	lg := a.s.Logger()
+	switch ar.Action {
+	case pb.AlarmRequest_GET:
+		resp.Alarms = a.s.alarmStore.Get(ar.Alarm)
+	case pb.AlarmRequest_ACTIVATE:
+		if ar.Alarm == pb.AlarmType_NONE {
+			break
+		}
+		m := a.s.alarmStore.Activate(types.ID(ar.MemberID), ar.Alarm) // 记录、入库警报
+		if m == nil {
+			break
+		}
+		resp.Alarms = append(resp.Alarms, m)
+		activated := oldCount == 0 && len(a.s.alarmStore.Get(m.Alarm)) == 1
+		if !activated {
+			break
+		}
+		lg.Warn("发生警报", zap.String("alarm", m.Alarm.String()), zap.String("from", types.ID(m.MemberID).String()))
+		switch m.Alarm {
+		case pb.AlarmType_CORRUPT:
+			a.s.applyV3 = newApplierV3Corrupt(a)
+		case pb.AlarmType_NOSPACE:
+			a.s.applyV3 = newApplierV3Capped(a)
+		default:
+			lg.Panic("未实现的警报", zap.String("alarm", fmt.Sprintf("%+v", m)))
+		}
+	case pb.AlarmRequest_DEACTIVATE:
+		m := a.s.alarmStore.Deactivate(types.ID(ar.MemberID), ar.Alarm)
+		if m == nil {
+			break
+		}
+		resp.Alarms = append(resp.Alarms, m)
+		deactivated := oldCount > 0 && len(a.s.alarmStore.Get(ar.Alarm)) == 0
+		if !deactivated {
+			break
+		}
+
+		switch m.Alarm {
+		case pb.AlarmType_NOSPACE, pb.AlarmType_CORRUPT:
+			lg.Warn("警报解除", zap.String("alarm", m.Alarm.String()), zap.String("from", types.ID(m.MemberID).String()))
+			a.s.applyV3 = a.s.newApplierV3()
+		default:
+			lg.Warn("未实现的警报解除类型", zap.String("alarm", fmt.Sprintf("%+v", m)))
+		}
+	default:
+		return nil, nil
+	}
+	return resp, nil
 }

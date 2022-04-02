@@ -593,6 +593,7 @@ func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 
 	srv.applyV3Base = srv.newApplierV3Backend()
 	srv.applyV3Internal = srv.newApplierV3Internal()
+	// 启动时重置所有警报
 	if err = srv.restoreAlarms(); err != nil {
 		return nil, err
 	}
@@ -1949,6 +1950,7 @@ func (s *EtcdServer) Backend() backend.Backend {
 
 func (s *EtcdServer) AuthStore() auth.AuthStore { return s.authStore }
 
+// 启动时重置所有警报
 func (s *EtcdServer) restoreAlarms() error {
 	s.applyV3 = s.newApplierV3()
 	as, err := v3alarm.NewAlarmStore(s.lg, s)
@@ -1956,6 +1958,7 @@ func (s *EtcdServer) restoreAlarms() error {
 		return err
 	}
 	s.alarmStore = as
+	// 警报只有这两种类型
 	if len(as.Get(pb.AlarmType_NOSPACE)) > 0 {
 		s.applyV3 = newApplierV3Capped(s.applyV3)
 	}
@@ -2066,7 +2069,7 @@ func (s *EtcdServer) applyEntryNormal(e *raftpb.Entry) {
 	s.GoAttach(func() {
 		a := &pb.AlarmRequest{
 			MemberID: uint64(s.ID()),
-			Action:   pb.AlarmRequest_ACTIVATE, // 激活警报
+			Action:   pb.AlarmRequest_ACTIVATE, // 日志应用时, 激活警报
 			Alarm:    pb.AlarmType_NOSPACE,
 		}
 		s.raftRequest(s.ctx, pb.InternalRaftRequest{Alarm: a})

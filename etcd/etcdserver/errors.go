@@ -37,7 +37,7 @@ var (
 	ErrTooManyRequests               = errors.New("etcdserver: 太多的请求")
 	ErrUnhealthy                     = errors.New("etcdserver: 集群不健康")
 	ErrKeyNotFound                   = errors.New("etcdserver: key没找到")
-	ErrCorrupt                       = errors.New("etcdserver: corrupt cluster")
+	ErrCorrupt                       = errors.New("etcdserver: 损坏的集群")
 	ErrBadLeaderTransferee           = errors.New("etcdserver: bad leader transferee")
 	ErrClusterVersionUnavailable     = errors.New("etcdserver: cluster version not found during downgrade")
 	ErrWrongDowngradeVersionFormat   = errors.New("etcdserver: wrong downgrade target version format")

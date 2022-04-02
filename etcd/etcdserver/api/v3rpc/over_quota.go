@@ -43,7 +43,7 @@ func (qa *quotaAlarmer) check(ctx context.Context, r interface{}) error {
 	}
 	req := &pb.AlarmRequest{
 		MemberID: uint64(qa.id),
-		Action:   pb.AlarmRequest_ACTIVATE,
+		Action:   pb.AlarmRequest_ACTIVATE, //  check
 		Alarm:    pb.AlarmType_NOSPACE,
 	}
 	qa.a.Alarm(ctx, req)
@@ -53,11 +53,7 @@ func (qa *quotaAlarmer) check(ctx context.Context, r interface{}) error {
 func NewQuotaKVServer(s *etcdserver.EtcdServer) pb.KVServer {
 	return &quotaKVServer{
 		NewKVServer(s),
-		quotaAlarmer{
-			etcdserver.NewBackendQuota(s, "kv"),
-			s,
-			s.ID(),
-		},
+		quotaAlarmer{etcdserver.NewBackendQuota(s, "kv"), s, s.ID()},
 	}
 }
 

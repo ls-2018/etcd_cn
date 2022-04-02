@@ -5,108 +5,25 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="49524360-39b2-44cd-b702-de0461fb4222" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/etcd/etcdserver/alarms_method_overwirter.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/pkg/fileutil/fileutil_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/pkg/fileutil/lock_linux_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/pkg/fileutil/lock_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/pkg/fileutil/over_preallocate_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/pkg/fileutil/purge_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/pkg/fileutil/read_dir_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/pkg/logutil/zap_journal_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/pkg/pathutil/path_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/pkg/srv/srv_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/pkg/testutil/leak_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/pkg/tlsutil/cipher_suites_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/pkg/transport/keepalive_listener_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/pkg/transport/listener_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/pkg/transport/timeout_dialer_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/pkg/transport/timeout_listener_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/pkg/transport/timeout_transport_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/pkg/transport/transport_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/pkg/types/over_id_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/pkg/types/set_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/pkg/types/slice_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/pkg/types/urls_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/pkg/types/urlsmap_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v2/client_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v2/fake_transport_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v2/keys_bench_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v2/keys_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v2/members_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/client_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/clientv3util/example_key_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/compact_op_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/ctx_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/namespace/util_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/op_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/ordering/kv_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/txn_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/watch_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/yaml/config_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/code_debug/conn/addr_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/auth/jwt_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/auth/main_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/auth/range_perm_cache_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/auth/simple_token_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/auth/store_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/embed/auth_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/embed/config_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/embed/serve_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v2http/over_http_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v3compactor/compactor_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v3compactor/periodic_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v3compactor/revision_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v3rpc/util_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v3rpc/watch_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/cindex/cindex_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/lease/lease_queue_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/lease/leasehttp/http_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/lease/lessor_bench_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/lease/lessor_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/mvcc/kv_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/mvcc/kv_view.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/mvcc/kv_view.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/mvcc/kvstore_compaction_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/mvcc/kvstore_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/mvcc/kvstore_txn.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/mvcc/kvstore_txn.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/mvcc/watchable_store_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/mvcc/watcher_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/proxy/httpproxy/director_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/proxy/httpproxy/proxy_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/proxy/httpproxy/reverse_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/proxy/tcpproxy/userspace_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/wal/walpb/record_test.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/client_sdk/v3/maintenance.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/maintenance.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v3alarm/alarms.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/api/v3alarm/over_alarms.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v3rpc/header.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/api/v3rpc/header.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v3rpc/maintenance.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/api/v3rpc/maintenance.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v3rpc/over_quota.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/api/v3rpc/over_quota.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/apply_v3.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/apply_v3.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/corrupt.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/errors.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/errors.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/server.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/server.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/v3service_kv.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/v3service_kv.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/mvcc/backend/backend_bolt.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/mvcc/backend/backend_bolt.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/etcdctl/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/del_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/del_command.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/get_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/get_command.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/put_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/put_command.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/watch_command_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/adt/example_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/adt/interval_tree_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/crc/crc_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/expect/expect_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/httputil/httputil_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/idutil/id_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/ioutil/pagewriter_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/ioutil/readcloser_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/ioutil/reader_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/netutil/netutil_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/netutil/routes_linux_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/osutil/osutil_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/pbutil/over_pbutil_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/proxy/server_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/report/report_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/report/timeseries_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/schedule/schedule_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/stringutil/rand_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/traceutil/trace_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/wait/wait_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/wait/wait_time_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/raft/confchange/datadriven_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/raft/confchange/quick_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/raft/confchange/restore_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/raft/raftpb/confstate_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/raft/raftpb/raft_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/raft/tracker/over_progress_test.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/alarm_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/alarm_command.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/ep_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/ep_command.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/printer_simple.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/printer_simple.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/api/v3/v3rpc/rpctypes/error.go" beforeDir="false" afterPath="$PROJECT_DIR$/offical/api/v3/v3rpc/rpctypes/error.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/etcdserverpb/rpc.pb.go" beforeDir="false" afterPath="$PROJECT_DIR$/offical/etcdserverpb/rpc.pb.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -175,10 +92,18 @@
     </key>
   </component>
   <component name="RunManager" selected="Go Build.local">
+    <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
+      <module name="etcd_cn" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="FILE" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <method v="2" />
+    </configuration>
     <configuration name="etcdctl" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true">
       <module name="etcd_cn" />
       <working_directory value="$PROJECT_DIR$" />
-      <parameters value="del a --prefix=true --prev-kv=true" />
+      <parameters value="endpoint health" />
       <kind value="FILE" />
       <package value="github.com/ls-2018/etcd_cn" />
       <directory value="$PROJECT_DIR$" />
@@ -204,6 +129,15 @@
       <filePath value="$PROJECT_DIR$" />
       <framework value="gotest" />
       <pattern value="^\QTestKeyIndexFindGeneration\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
+      <module name="etcd_cn" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="DIRECTORY" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
       <method v="2" />
     </configuration>
     <configuration name="a" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
@@ -294,11 +228,6 @@
           <url>file://$PROJECT_DIR$/etcd/etcdserver/api_downgrade.go</url>
           <line>45</line>
           <option name="timeStamp" value="3" />
-        </line-breakpoint>
-        <line-breakpoint type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/etcd/etcdserver/corrupt.go</url>
-          <line>151</line>
-          <option name="timeStamp" value="4" />
         </line-breakpoint>
         <line-breakpoint type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/etcd/etcdserver/v3_server.go</url>
@@ -397,13 +326,43 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/etcd/etcdserver/apply_v3.go</url>
-          <line>173</line>
+          <line>168</line>
           <option name="timeStamp" value="307" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/etcd/mvcc/kv_del.go</url>
           <line>12</line>
           <option name="timeStamp" value="319" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/offical/etcdserverpb/rpc.pb.go</url>
+          <line>3784</line>
+          <option name="timeStamp" value="320" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcdctl/ctlv3/command/printer_simple.go</url>
+          <line>149</line>
+          <option name="timeStamp" value="328" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcdctl/ctlv3/command/ep_command.go</url>
+          <line>138</line>
+          <option name="timeStamp" value="330" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcdctl/ctlv3/command/ep_command.go</url>
+          <line>139</line>
+          <option name="timeStamp" value="331" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/client_sdk/v3/maintenance.go</url>
+          <line>99</line>
+          <option name="timeStamp" value="332" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd/proxy/grpcproxy/maintenance.go</url>
+          <line>78</line>
+          <option name="timeStamp" value="334" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

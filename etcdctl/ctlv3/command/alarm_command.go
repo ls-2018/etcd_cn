@@ -38,7 +38,7 @@ func NewAlarmCommand() *cobra.Command {
 func NewAlarmDisarmCommand() *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "disarm",
-		Short: "Disarms all alarms",
+		Short: "解除所有警报",
 		Run:   alarmDisarmCommandFunc,
 	}
 	return &cmd
@@ -61,7 +61,7 @@ func alarmDisarmCommandFunc(cmd *cobra.Command, args []string) {
 func NewAlarmListCommand() *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "list",
-		Short: "Lists all alarms",
+		Short: "列出所有警报",
 		Run:   alarmListCommandFunc,
 	}
 	return &cmd

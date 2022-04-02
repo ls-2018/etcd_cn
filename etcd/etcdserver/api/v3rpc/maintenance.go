@@ -43,8 +43,6 @@ type BackendGetter interface {
 }
 
 type Alarmer interface {
-	// Alarms is implemented in Server interface located in etcdserver/etcd.go
-	// It returns a list of alarms present in the AlarmStore
 	Alarms() []*pb.AlarmMember
 	Alarm(ctx context.Context, ar *pb.AlarmRequest) (*pb.AlarmResponse, error)
 }
@@ -201,18 +199,6 @@ func (ms *maintenanceServer) HashKV(ctx context.Context, r *pb.HashKVRequest) (*
 	return resp, nil
 }
 
-func (ms *maintenanceServer) Alarm(ctx context.Context, ar *pb.AlarmRequest) (*pb.AlarmResponse, error) {
-	resp, err := ms.a.Alarm(ctx, ar)
-	if err != nil {
-		return nil, togRPCError(err)
-	}
-	if resp.Header == nil {
-		resp.Header = &pb.ResponseHeader{}
-	}
-	ms.hdr.fill(resp.Header)
-	return resp, nil
-}
-
 func (ms *maintenanceServer) Status(ctx context.Context, ar *pb.StatusRequest) (*pb.StatusResponse, error) {
 	hdr := &pb.ResponseHeader{}
 	ms.hdr.fill(hdr)
@@ -312,4 +298,17 @@ func (ams *authMaintenanceServer) MoveLeader(ctx context.Context, tr *pb.MoveLea
 
 func (ams *authMaintenanceServer) Downgrade(ctx context.Context, r *pb.DowngradeRequest) (*pb.DowngradeResponse, error) {
 	return ams.maintenanceServer.Downgrade(ctx, r)
+}
+
+// Alarm ok
+func (ms *maintenanceServer) Alarm(ctx context.Context, ar *pb.AlarmRequest) (*pb.AlarmResponse, error) {
+	resp, err := ms.a.Alarm(ctx, ar)
+	if err != nil {
+		return nil, togRPCError(err)
+	}
+	if resp.Header == nil {
+		resp.Header = &pb.ResponseHeader{}
+	}
+	ms.hdr.fill(resp.Header)
+	return resp, nil
 }

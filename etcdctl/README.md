@@ -847,7 +847,7 @@ Provides alarm related commands
 
 ### ALARM DISARM
 
-`alarm disarm` Disarms all alarms
+`alarm disarm` 解除所有警报
 
 RPC: Alarm
 
@@ -870,7 +870,7 @@ etcdctl alarm disarm
 
 ### ALARM LIST
 
-`alarm list` lists all alarms.
+`alarm list` 列出所有警报.
 
 RPC: Alarm
 

@@ -217,8 +217,8 @@ type AlarmRequest_AlarmAction int32
 
 const (
 	AlarmRequest_GET        AlarmRequest_AlarmAction = 0
-	AlarmRequest_ACTIVATE   AlarmRequest_AlarmAction = 1
-	AlarmRequest_DEACTIVATE AlarmRequest_AlarmAction = 2
+	AlarmRequest_ACTIVATE   AlarmRequest_AlarmAction = 1 // 激活
+	AlarmRequest_DEACTIVATE AlarmRequest_AlarmAction = 2 // 取消
 )
 
 var AlarmRequest_AlarmAction_name = map[int32]string{
@@ -2378,13 +2378,8 @@ func (m *AlarmRequest) GetAlarm() AlarmType {
 }
 
 type AlarmMember struct {
-	// memberID is the ID of the member associated with the raised alarm.
-	MemberID uint64 `protobuf:"varint,1,opt,name=memberID,proto3" json:"memberID,omitempty"`
-	// alarm is the type of alarm which has been raised.
-	Alarm                AlarmType `protobuf:"varint,2,opt,name=alarm,proto3,enum=etcdserverpb.AlarmType" json:"alarm,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
-	XXX_unrecognized     []byte    `json:"-"`
-	XXX_sizecache        int32     `json:"-"`
+	MemberID uint64    `protobuf:"varint,1,opt,name=memberID,proto3" json:"memberID,omitempty"`
+	Alarm    AlarmType `protobuf:"varint,2,opt,name=alarm,proto3,enum=etcdserverpb.AlarmType" json:"alarm,omitempty"`
 }
 
 func (m *AlarmMember) Reset()         { *m = AlarmMember{} }
@@ -4722,7 +4717,6 @@ func (c *maintenanceClient) Downgrade(ctx context.Context, in *DowngradeRequest,
 	return out, nil
 }
 
-// MaintenanceServer is the server API for Maintenance service.
 type MaintenanceServer interface {
 	// Alarm activates, deactivates, and queries alarms regarding cluster health.
 	Alarm(context.Context, *AlarmRequest) (*AlarmResponse, error)
@@ -4748,41 +4742,6 @@ type MaintenanceServer interface {
 	// on the cluster version.
 	// Supported since etcd 3.5.
 	Downgrade(context.Context, *DowngradeRequest) (*DowngradeResponse, error)
-}
-
-// UnimplementedMaintenanceServer can be embedded to have forward compatible implementations.
-type UnimplementedMaintenanceServer struct{}
-
-func (*UnimplementedMaintenanceServer) Alarm(ctx context.Context, req *AlarmRequest) (*AlarmResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Alarm not implemented")
-}
-
-func (*UnimplementedMaintenanceServer) Status(ctx context.Context, req *StatusRequest) (*StatusResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Status not implemented")
-}
-
-func (*UnimplementedMaintenanceServer) Defragment(ctx context.Context, req *DefragmentRequest) (*DefragmentResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Defragment not implemented")
-}
-
-func (*UnimplementedMaintenanceServer) Hash(ctx context.Context, req *HashRequest) (*HashResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Hash not implemented")
-}
-
-func (*UnimplementedMaintenanceServer) HashKV(ctx context.Context, req *HashKVRequest) (*HashKVResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method HashKV not implemented")
-}
-
-func (*UnimplementedMaintenanceServer) Snapshot(req *SnapshotRequest, srv Maintenance_SnapshotServer) error {
-	return status.Errorf(codes.Unimplemented, "method Snapshot not implemented")
-}
-
-func (*UnimplementedMaintenanceServer) MoveLeader(ctx context.Context, req *MoveLeaderRequest) (*MoveLeaderResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method MoveLeader not implemented")
-}
-
-func (*UnimplementedMaintenanceServer) Downgrade(ctx context.Context, req *DowngradeRequest) (*DowngradeResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Downgrade not implemented")
 }
 
 func RegisterMaintenanceServer(s *grpc.Server, srv MaintenanceServer) {
@@ -5743,7 +5702,6 @@ func (m *DefragmentResponse) Marshal() (dAtA []byte, err error)               { 
 func (m *MoveLeaderRequest) Marshal() (dAtA []byte, err error)                { return json.Marshal(m) }
 func (m *MoveLeaderResponse) Marshal() (dAtA []byte, err error)               { return json.Marshal(m) }
 func (m *AlarmRequest) Marshal() (dAtA []byte, err error)                     { return json.Marshal(m) }
-func (m *AlarmMember) Marshal() (dAtA []byte, err error)                      { return json.Marshal(m) }
 func (m *AlarmResponse) Marshal() (dAtA []byte, err error)                    { return json.Marshal(m) }
 func (m *DowngradeRequest) Marshal() (dAtA []byte, err error)                 { return json.Marshal(m) }
 func (m *DowngradeResponse) Marshal() (dAtA []byte, err error)                { return json.Marshal(m) }
@@ -5954,62 +5912,62 @@ var (
 	ErrUnexpectedEndOfGroupRpc = fmt.Errorf("proto: unexpected end of group")
 )
 
-func (m *ResponseHeader) Unmarshal(dAtA []byte) error                 { return json.Unmarshal(dAtA, m) }
-func (m *RangeRequest) Unmarshal(dAtA []byte) error                   { return json.Unmarshal(dAtA, m) }
-func (m *RangeResponse) Unmarshal(dAtA []byte) error                  { return json.Unmarshal(dAtA, m) }
-func (m *PutRequest) Unmarshal(dAtA []byte) error                     { return json.Unmarshal(dAtA, m) }
-func (m *PutResponse) Unmarshal(dAtA []byte) error                    { return json.Unmarshal(dAtA, m) }
-func (m *DeleteRangeRequest) Unmarshal(dAtA []byte) error             { return json.Unmarshal(dAtA, m) }
-func (m *DeleteRangeResponse) Unmarshal(dAtA []byte) error            { return json.Unmarshal(dAtA, m) }
-func (m *RequestOp) Unmarshal(dAtA []byte) error                      { return json.Unmarshal(dAtA, m) }
-func (m *ResponseOp) Unmarshal(dAtA []byte) error                     { return json.Unmarshal(dAtA, m) }
-func (m *Compare) Unmarshal(dAtA []byte) error                        { return json.Unmarshal(dAtA, m) }
-func (m *TxnRequest) Unmarshal(dAtA []byte) error                     { return json.Unmarshal(dAtA, m) }
-func (m *TxnResponse) Unmarshal(dAtA []byte) error                    { return json.Unmarshal(dAtA, m) }
-func (m *CompactionRequest) Unmarshal(dAtA []byte) error              { return json.Unmarshal(dAtA, m) }
-func (m *CompactionResponse) Unmarshal(dAtA []byte) error             { return json.Unmarshal(dAtA, m) }
-func (m *HashRequest) Unmarshal(dAtA []byte) error                    { return json.Unmarshal(dAtA, m) }
-func (m *HashKVRequest) Unmarshal(dAtA []byte) error                  { return json.Unmarshal(dAtA, m) }
-func (m *HashKVResponse) Unmarshal(dAtA []byte) error                 { return json.Unmarshal(dAtA, m) }
-func (m *HashResponse) Unmarshal(dAtA []byte) error                   { return json.Unmarshal(dAtA, m) }
-func (m *SnapshotRequest) Unmarshal(dAtA []byte) error                { return json.Unmarshal(dAtA, m) }
-func (m *SnapshotResponse) Unmarshal(dAtA []byte) error               { return json.Unmarshal(dAtA, m) }
-func (m *WatchRequest) Unmarshal(dAtA []byte) error                   { return json.Unmarshal(dAtA, m) }
-func (m *WatchCreateRequest) Unmarshal(dAtA []byte) error             { return json.Unmarshal(dAtA, m) }
-func (m *WatchCancelRequest) Unmarshal(dAtA []byte) error             { return json.Unmarshal(dAtA, m) }
-func (m *WatchProgressRequest) Unmarshal(dAtA []byte) error           { return json.Unmarshal(dAtA, m) }
-func (m *WatchResponse) Unmarshal(dAtA []byte) error                  { return json.Unmarshal(dAtA, m) }
-func (m *LeaseGrantRequest) Unmarshal(dAtA []byte) error              { return json.Unmarshal(dAtA, m) }
-func (m *LeaseGrantResponse) Unmarshal(dAtA []byte) error             { return json.Unmarshal(dAtA, m) }
-func (m *LeaseRevokeRequest) Unmarshal(dAtA []byte) error             { return json.Unmarshal(dAtA, m) }
-func (m *LeaseRevokeResponse) Unmarshal(dAtA []byte) error            { return json.Unmarshal(dAtA, m) }
-func (m *LeaseCheckpoint) Unmarshal(dAtA []byte) error                { return json.Unmarshal(dAtA, m) }
-func (m *LeaseCheckpointRequest) Unmarshal(dAtA []byte) error         { return json.Unmarshal(dAtA, m) }
-func (m *LeaseCheckpointResponse) Unmarshal(dAtA []byte) error        { return json.Unmarshal(dAtA, m) }
-func (m *LeaseKeepAliveRequest) Unmarshal(dAtA []byte) error          { return json.Unmarshal(dAtA, m) }
-func (m *LeaseKeepAliveResponse) Unmarshal(dAtA []byte) error         { return json.Unmarshal(dAtA, m) }
-func (m *LeaseTimeToLiveRequest) Unmarshal(dAtA []byte) error         { return json.Unmarshal(dAtA, m) }
-func (m *LeaseTimeToLiveResponse) Unmarshal(dAtA []byte) error        { return json.Unmarshal(dAtA, m) }
-func (m *LeaseLeasesRequest) Unmarshal(dAtA []byte) error             { return json.Unmarshal(dAtA, m) }
-func (m *LeaseStatus) Unmarshal(dAtA []byte) error                    { return json.Unmarshal(dAtA, m) }
-func (m *LeaseLeasesResponse) Unmarshal(dAtA []byte) error            { return json.Unmarshal(dAtA, m) }
-func (m *Member) Unmarshal(dAtA []byte) error                         { return json.Unmarshal(dAtA, m) }
-func (m *MemberAddRequest) Unmarshal(dAtA []byte) error               { return json.Unmarshal(dAtA, m) }
-func (m *MemberAddResponse) Unmarshal(dAtA []byte) error              { return json.Unmarshal(dAtA, m) }
-func (m *MemberRemoveRequest) Unmarshal(dAtA []byte) error            { return json.Unmarshal(dAtA, m) }
-func (m *MemberRemoveResponse) Unmarshal(dAtA []byte) error           { return json.Unmarshal(dAtA, m) }
-func (m *MemberUpdateRequest) Unmarshal(dAtA []byte) error            { return json.Unmarshal(dAtA, m) }
-func (m *MemberUpdateResponse) Unmarshal(dAtA []byte) error           { return json.Unmarshal(dAtA, m) }
-func (m *MemberListRequest) Unmarshal(dAtA []byte) error              { return json.Unmarshal(dAtA, m) }
-func (m *MemberListResponse) Unmarshal(dAtA []byte) error             { return json.Unmarshal(dAtA, m) }
-func (m *MemberPromoteRequest) Unmarshal(dAtA []byte) error           { return json.Unmarshal(dAtA, m) }
-func (m *MemberPromoteResponse) Unmarshal(dAtA []byte) error          { return json.Unmarshal(dAtA, m) }
-func (m *DefragmentRequest) Unmarshal(dAtA []byte) error              { return json.Unmarshal(dAtA, m) }
-func (m *DefragmentResponse) Unmarshal(dAtA []byte) error             { return json.Unmarshal(dAtA, m) }
-func (m *MoveLeaderRequest) Unmarshal(dAtA []byte) error              { return json.Unmarshal(dAtA, m) }
-func (m *MoveLeaderResponse) Unmarshal(dAtA []byte) error             { return json.Unmarshal(dAtA, m) }
-func (m *AlarmRequest) Unmarshal(dAtA []byte) error                   { return json.Unmarshal(dAtA, m) }
-func (m *AlarmMember) Unmarshal(dAtA []byte) error                    { return json.Unmarshal(dAtA, m) }
+func (m *ResponseHeader) Unmarshal(dAtA []byte) error          { return json.Unmarshal(dAtA, m) }
+func (m *RangeRequest) Unmarshal(dAtA []byte) error            { return json.Unmarshal(dAtA, m) }
+func (m *RangeResponse) Unmarshal(dAtA []byte) error           { return json.Unmarshal(dAtA, m) }
+func (m *PutRequest) Unmarshal(dAtA []byte) error              { return json.Unmarshal(dAtA, m) }
+func (m *PutResponse) Unmarshal(dAtA []byte) error             { return json.Unmarshal(dAtA, m) }
+func (m *DeleteRangeRequest) Unmarshal(dAtA []byte) error      { return json.Unmarshal(dAtA, m) }
+func (m *DeleteRangeResponse) Unmarshal(dAtA []byte) error     { return json.Unmarshal(dAtA, m) }
+func (m *RequestOp) Unmarshal(dAtA []byte) error               { return json.Unmarshal(dAtA, m) }
+func (m *ResponseOp) Unmarshal(dAtA []byte) error              { return json.Unmarshal(dAtA, m) }
+func (m *Compare) Unmarshal(dAtA []byte) error                 { return json.Unmarshal(dAtA, m) }
+func (m *TxnRequest) Unmarshal(dAtA []byte) error              { return json.Unmarshal(dAtA, m) }
+func (m *TxnResponse) Unmarshal(dAtA []byte) error             { return json.Unmarshal(dAtA, m) }
+func (m *CompactionRequest) Unmarshal(dAtA []byte) error       { return json.Unmarshal(dAtA, m) }
+func (m *CompactionResponse) Unmarshal(dAtA []byte) error      { return json.Unmarshal(dAtA, m) }
+func (m *HashRequest) Unmarshal(dAtA []byte) error             { return json.Unmarshal(dAtA, m) }
+func (m *HashKVRequest) Unmarshal(dAtA []byte) error           { return json.Unmarshal(dAtA, m) }
+func (m *HashKVResponse) Unmarshal(dAtA []byte) error          { return json.Unmarshal(dAtA, m) }
+func (m *HashResponse) Unmarshal(dAtA []byte) error            { return json.Unmarshal(dAtA, m) }
+func (m *SnapshotRequest) Unmarshal(dAtA []byte) error         { return json.Unmarshal(dAtA, m) }
+func (m *SnapshotResponse) Unmarshal(dAtA []byte) error        { return json.Unmarshal(dAtA, m) }
+func (m *WatchRequest) Unmarshal(dAtA []byte) error            { return json.Unmarshal(dAtA, m) }
+func (m *WatchCreateRequest) Unmarshal(dAtA []byte) error      { return json.Unmarshal(dAtA, m) }
+func (m *WatchCancelRequest) Unmarshal(dAtA []byte) error      { return json.Unmarshal(dAtA, m) }
+func (m *WatchProgressRequest) Unmarshal(dAtA []byte) error    { return json.Unmarshal(dAtA, m) }
+func (m *WatchResponse) Unmarshal(dAtA []byte) error           { return json.Unmarshal(dAtA, m) }
+func (m *LeaseGrantRequest) Unmarshal(dAtA []byte) error       { return json.Unmarshal(dAtA, m) }
+func (m *LeaseGrantResponse) Unmarshal(dAtA []byte) error      { return json.Unmarshal(dAtA, m) }
+func (m *LeaseRevokeRequest) Unmarshal(dAtA []byte) error      { return json.Unmarshal(dAtA, m) }
+func (m *LeaseRevokeResponse) Unmarshal(dAtA []byte) error     { return json.Unmarshal(dAtA, m) }
+func (m *LeaseCheckpoint) Unmarshal(dAtA []byte) error         { return json.Unmarshal(dAtA, m) }
+func (m *LeaseCheckpointRequest) Unmarshal(dAtA []byte) error  { return json.Unmarshal(dAtA, m) }
+func (m *LeaseCheckpointResponse) Unmarshal(dAtA []byte) error { return json.Unmarshal(dAtA, m) }
+func (m *LeaseKeepAliveRequest) Unmarshal(dAtA []byte) error   { return json.Unmarshal(dAtA, m) }
+func (m *LeaseKeepAliveResponse) Unmarshal(dAtA []byte) error  { return json.Unmarshal(dAtA, m) }
+func (m *LeaseTimeToLiveRequest) Unmarshal(dAtA []byte) error  { return json.Unmarshal(dAtA, m) }
+func (m *LeaseTimeToLiveResponse) Unmarshal(dAtA []byte) error { return json.Unmarshal(dAtA, m) }
+func (m *LeaseLeasesRequest) Unmarshal(dAtA []byte) error      { return json.Unmarshal(dAtA, m) }
+func (m *LeaseStatus) Unmarshal(dAtA []byte) error             { return json.Unmarshal(dAtA, m) }
+func (m *LeaseLeasesResponse) Unmarshal(dAtA []byte) error     { return json.Unmarshal(dAtA, m) }
+func (m *Member) Unmarshal(dAtA []byte) error                  { return json.Unmarshal(dAtA, m) }
+func (m *MemberAddRequest) Unmarshal(dAtA []byte) error        { return json.Unmarshal(dAtA, m) }
+func (m *MemberAddResponse) Unmarshal(dAtA []byte) error       { return json.Unmarshal(dAtA, m) }
+func (m *MemberRemoveRequest) Unmarshal(dAtA []byte) error     { return json.Unmarshal(dAtA, m) }
+func (m *MemberRemoveResponse) Unmarshal(dAtA []byte) error    { return json.Unmarshal(dAtA, m) }
+func (m *MemberUpdateRequest) Unmarshal(dAtA []byte) error     { return json.Unmarshal(dAtA, m) }
+func (m *MemberUpdateResponse) Unmarshal(dAtA []byte) error    { return json.Unmarshal(dAtA, m) }
+func (m *MemberListRequest) Unmarshal(dAtA []byte) error       { return json.Unmarshal(dAtA, m) }
+func (m *MemberListResponse) Unmarshal(dAtA []byte) error      { return json.Unmarshal(dAtA, m) }
+func (m *MemberPromoteRequest) Unmarshal(dAtA []byte) error    { return json.Unmarshal(dAtA, m) }
+func (m *MemberPromoteResponse) Unmarshal(dAtA []byte) error   { return json.Unmarshal(dAtA, m) }
+func (m *DefragmentRequest) Unmarshal(dAtA []byte) error       { return json.Unmarshal(dAtA, m) }
+func (m *DefragmentResponse) Unmarshal(dAtA []byte) error      { return json.Unmarshal(dAtA, m) }
+func (m *MoveLeaderRequest) Unmarshal(dAtA []byte) error       { return json.Unmarshal(dAtA, m) }
+func (m *MoveLeaderResponse) Unmarshal(dAtA []byte) error      { return json.Unmarshal(dAtA, m) }
+func (m *AlarmRequest) Unmarshal(dAtA []byte) error            { return json.Unmarshal(dAtA, m) }
+
 func (m *AlarmResponse) Unmarshal(dAtA []byte) error                  { return json.Unmarshal(dAtA, m) }
 func (m *DowngradeRequest) Unmarshal(dAtA []byte) error               { return json.Unmarshal(dAtA, m) }
 func (m *DowngradeResponse) Unmarshal(dAtA []byte) error              { return json.Unmarshal(dAtA, m) }
@@ -6055,4 +6013,40 @@ func (m *AuthRoleGrantPermissionResponse) Unmarshal(dAtA []byte) error {
 
 func (m *AuthRoleRevokePermissionResponse) Unmarshal(dAtA []byte) error {
 	return json.Unmarshal(dAtA, m)
+}
+
+type alarmMember struct {
+	MemberID uint64 `protobuf:"varint,1,opt,name=memberID,proto3" json:"memberID,omitempty"`
+	Alarm    string `protobuf:"varint,2,opt,name=alarm,proto3,enum=etcdserverpb.AlarmType" json:"alarm,omitempty"`
+}
+
+func (m *AlarmMember) Marshal() (dAtA []byte, err error) {
+	a := alarmMember{MemberID: m.MemberID}
+	switch m.Alarm {
+	case 0:
+		a.Alarm = "NONE"
+	case 1:
+		a.Alarm = "NOSPACE"
+	case 2:
+		a.Alarm = "CORRUPT"
+	}
+
+	return json.Marshal(&a)
+}
+
+func (m *AlarmMember) Unmarshal(dAtA []byte) error {
+	a := alarmMember{}
+	err := json.Unmarshal(dAtA, &a)
+	if err == nil {
+		m.MemberID = a.MemberID
+		switch a.Alarm {
+		case "NONE":
+			m.Alarm = 0
+		case "NOSPACE":
+			m.Alarm = 1
+		case "CORRUPT":
+			m.Alarm = 2
+		}
+	}
+	return err
 }

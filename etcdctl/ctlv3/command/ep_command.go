@@ -124,12 +124,11 @@ func epHealthCommandFunc(cmd *cobra.Command, args []string) {
 				return
 			}
 			st := time.Now()
-			// get a random key. As long as we can get the response without an error, the
-			// endpoint is health.
+			// 得到一个随机的key。只要我们能够获得响应而没有错误，端点就是健康状态。
 			ctx, cancel := commandCtx(cmd)
 			_, err = cli.Get(ctx, "health")
 			eh := epHealth{Ep: ep, Health: false, Took: time.Since(st).String()}
-			// permission denied is OK since proposal goes through consensus to get it
+			// 权限拒绝是可以的，因为提案通过协商一致得到它
 			if err == nil || err == rpctypes.ErrPermissionDenied {
 				eh.Health = true
 			} else {
@@ -140,7 +139,7 @@ func epHealthCommandFunc(cmd *cobra.Command, args []string) {
 				resp, err := cli.AlarmList(ctx)
 				if err == nil && len(resp.Alarms) > 0 {
 					eh.Health = false
-					eh.Error = "Active Alarm(s): "
+					eh.Error = "存在警报(s): "
 					for _, v := range resp.Alarms {
 						switch v.Alarm {
 						case etcdserverpb.AlarmType_NOSPACE:
@@ -165,7 +164,7 @@ func epHealthCommandFunc(cmd *cobra.Command, args []string) {
 	close(hch)
 
 	errs := false
-	healthList := []epHealth{}
+	var healthList []epHealth
 	for h := range hch {
 		healthList = append(healthList, h)
 		if h.Error != "" {

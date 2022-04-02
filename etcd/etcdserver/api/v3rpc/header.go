@@ -35,7 +35,7 @@ func newHeader(s *etcdserver.EtcdServer) header {
 	}
 }
 
-// fill populates pb.ResponseHeader using etcdserver information
+// fill 填充pb。使用etcdserver信息的ResponseHeader
 func (h *header) fill(rh *pb.ResponseHeader) {
 	if rh == nil {
 		panic("unexpected nil resp.Header")

@@ -95,6 +95,7 @@ func NewMaintenanceFromMaintenanceClient(remote pb.MaintenanceClient, c *Client)
 	return api
 }
 
+// AlarmList OK
 func (m *maintenance) AlarmList(ctx context.Context) (*AlarmResponse, error) {
 	req := &pb.AlarmRequest{
 		Action:   pb.AlarmRequest_GET,

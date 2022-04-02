@@ -101,6 +101,11 @@ func (s *EtcdServer) Compact(ctx context.Context, r *pb.CompactionRequest) (*pb.
 
 // ---------------------------------------  OVER -------------------------------------------------------------
 
+// RaftRequest myself test
+func (s *EtcdServer) RaftRequest(ctx context.Context, r pb.InternalRaftRequest) {
+	s.raftRequest(ctx, r)
+}
+
 func (s *EtcdServer) Range(ctx context.Context, r *pb.RangeRequest) (*pb.RangeResponse, error) {
 	trace := traceutil.New("range", s.Logger(), traceutil.Field{Key: "range_begin", Value: string(r.Key)}, traceutil.Field{Key: "range_end", Value: string(r.RangeEnd)})
 	ctx = context.WithValue(ctx, traceutil.TraceKey, trace) // trace
