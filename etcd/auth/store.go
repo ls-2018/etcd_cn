@@ -90,15 +90,9 @@ type AuthenticateParamIndex struct{}
 // AuthenticateParamSimpleTokenPrefix is used for a key of context in the parameters of Authenticate()
 type AuthenticateParamSimpleTokenPrefix struct{}
 
-// AuthStore defines auth storage interface.
 type AuthStore interface {
-	// AuthEnable turns on the authentication feature
 	AuthEnable() error
-
-	// AuthDisable turns off the authentication feature
 	AuthDisable()
-
-	// IsAuthEnabled returns true if the authentication feature is enabled.
 	IsAuthEnabled() bool
 	Authenticate(ctx context.Context, username, password string) (*pb.AuthenticateResponse, error)
 	// Recover recovers the state of auth store from the given backend
@@ -421,6 +415,7 @@ func hasRootRole(u *authpb.User) bool {
 	return idx != len(u.Roles) && u.Roles[idx] == rootRole
 }
 
+// ok
 func (as *authStore) commitRevision(tx backend.BatchTx) {
 	atomic.AddUint64(&as.revision, 1)
 	revBytes := make([]byte, revBytesLen)
@@ -428,19 +423,22 @@ func (as *authStore) commitRevision(tx backend.BatchTx) {
 	tx.UnsafePut(buckets.Auth, revisionKey, revBytes)
 }
 
+// ok
 func getRevision(tx backend.BatchTx) uint64 {
 	_, vs := tx.UnsafeRange(buckets.Auth, revisionKey, nil, 0)
 	if len(vs) != 1 {
-		// this can happen in the initialization phase
 		return 0
 	}
 	return binary.BigEndian.Uint64(vs[0])
 }
 
+// ok
+
 func (as *authStore) setRevision(rev uint64) {
 	atomic.StoreUint64(&as.revision, rev)
 }
 
+// Revision ok
 func (as *authStore) Revision() uint64 {
 	return atomic.LoadUint64(&as.revision)
 }

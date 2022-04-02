@@ -6,8 +6,8 @@ import (
 	"log"
 	"time"
 
-	clientv3 "github.com/ls-2018/etcd_cn/offical/client/v3"
-	"github.com/ls-2018/etcd_cn/offical/client/v3/concurrency"
+	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
+	"github.com/ls-2018/etcd_cn/client_sdk/v3/concurrency"
 )
 
 func main() {

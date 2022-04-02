@@ -26,6 +26,16 @@ import (
 	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
 )
 
+type ClusterServerInterFace interface {
+	MemberList(ctx context.Context, response *pb.MemberListRequest) (*pb.MemberListResponse, error)
+	MemberAdd(ctx context.Context, response *pb.MemberAddRequest) (*pb.MemberAddResponse, error)
+	MemberRemove(ctx context.Context, response *pb.MemberRemoveRequest) (*pb.MemberRemoveResponse, error)
+	MemberUpdate(ctx context.Context, response *pb.MemberUpdateRequest) (*pb.MemberUpdateResponse, error)
+	MemberPromote(ctx context.Context, response *pb.MemberPromoteRequest) (*pb.MemberPromoteResponse, error)
+}
+
+var _ ClusterServerInterFace = &ClusterServer{}
+
 type ClusterServer struct {
 	cluster api.Cluster
 	server  *etcdserver.EtcdServer

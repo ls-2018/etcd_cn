@@ -53,7 +53,7 @@ func NewEndpointCommand() *cobra.Command {
 func newEpHealthCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "health",
-		Short: "检查端点的健康程度 `--endpoints` flag",
+		Short: "检查端点的健康程度",
 		Run:   epHealthCommandFunc,
 	}
 

@@ -3001,10 +3001,9 @@ func (m *AuthDisableResponse) GetHeader() *ResponseHeader {
 }
 
 type AuthStatusResponse struct {
-	Header  *ResponseHeader `protobuf:"bytes,1,opt,name=header,proto3" json:"header,omitempty"`
-	Enabled bool            `protobuf:"varint,2,opt,name=enabled,proto3" json:"enabled,omitempty"`
-	// authRevision is the current revision of auth store
-	AuthRevision uint64 `protobuf:"varint,3,opt,name=authRevision,proto3" json:"authRevision,omitempty"`
+	Header       *ResponseHeader `protobuf:"bytes,1,opt,name=header,proto3" json:"header,omitempty"`
+	Enabled      bool            `protobuf:"varint,2,opt,name=enabled,proto3" json:"enabled,omitempty"`
+	AuthRevision uint64          `protobuf:"varint,3,opt,name=authRevision,proto3" json:"authRevision,omitempty"`
 }
 
 func (m *AuthStatusResponse) Reset()         { *m = AuthStatusResponse{} }

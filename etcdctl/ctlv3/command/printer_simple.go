@@ -224,11 +224,11 @@ func (s *simplePrinter) RoleList(r v3.AuthRoleListResponse) {
 }
 
 func (s *simplePrinter) RoleDelete(role string, r v3.AuthRoleDeleteResponse) {
-	fmt.Printf("Role %s deleted\n", role)
+	fmt.Printf("角色 %s 删除了\n", role)
 }
 
 func (s *simplePrinter) RoleGrantPermission(role string, r v3.AuthRoleGrantPermissionResponse) {
-	fmt.Printf("Role %s updated\n", role)
+	fmt.Printf("角色 %s 已更新\n", role)
 }
 
 func (s *simplePrinter) RoleRevokePermission(role string, key string, end string, r v3.AuthRoleRevokePermissionResponse) {
@@ -257,19 +257,19 @@ func (s *simplePrinter) UserGet(name string, r v3.AuthUserGetResponse) {
 }
 
 func (s *simplePrinter) UserChangePassword(v3.AuthUserChangePasswordResponse) {
-	fmt.Println("Password updated")
+	fmt.Println("密码已更新")
 }
 
 func (s *simplePrinter) UserGrantRole(user string, role string, r v3.AuthUserGrantRoleResponse) {
-	fmt.Printf("Role %s is granted to user %s\n", role, user)
+	fmt.Printf("角色 %s 授予了用户 %s\n", role, user)
 }
 
 func (s *simplePrinter) UserRevokeRole(user string, role string, r v3.AuthUserRevokeRoleResponse) {
-	fmt.Printf("Role %s is revoked from user %s\n", role, user)
+	fmt.Printf("用户%s移除了角色 %s \n", user, role)
 }
 
 func (s *simplePrinter) UserDelete(user string, r v3.AuthUserDeleteResponse) {
-	fmt.Printf("User %s deleted\n", user)
+	fmt.Printf("用户 %s 已删除\n", user)
 }
 
 func (s *simplePrinter) UserList(r v3.AuthUserListResponse) {
@@ -279,6 +279,6 @@ func (s *simplePrinter) UserList(r v3.AuthUserListResponse) {
 }
 
 func (s *simplePrinter) AuthStatus(r v3.AuthStatusResponse) {
-	fmt.Println("Authentication Status:", r.Enabled)
-	fmt.Println("AuthRevision:", r.AuthRevision)
+	fmt.Println("身份认证是否开启:", r.Enabled)
+	fmt.Println("验证版本:", r.AuthRevision)
 }

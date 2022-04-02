@@ -402,13 +402,13 @@ func (a *applierV3backend) Apply(r *pb.InternalRaftRequest, shouldApplyV3 member
 	case r.Alarm != nil:
 		ar.resp, ar.err = a.s.applyV3.Alarm(r.Alarm) // ✅
 	case r.Authenticate != nil:
-		ar.resp, ar.err = a.s.applyV3.Authenticate(r.Authenticate)
+		ar.resp, ar.err = a.s.applyV3.Authenticate(r.Authenticate) // ✅
 	case r.AuthEnable != nil:
-		ar.resp, ar.err = a.s.applyV3.AuthEnable()
+		ar.resp, ar.err = a.s.applyV3.AuthEnable() // ✅
 	case r.AuthDisable != nil:
-		ar.resp, ar.err = a.s.applyV3.AuthDisable()
+		ar.resp, ar.err = a.s.applyV3.AuthDisable() // ✅
 	case r.AuthStatus != nil:
-		ar.resp, ar.err = a.s.applyV3.AuthStatus()
+		ar.resp, ar.err = a.s.applyV3.AuthStatus() // ✅
 	case r.AuthUserAdd != nil:
 		ar.resp, ar.err = a.s.applyV3.UserAdd(r.AuthUserAdd) // ✅
 	case r.AuthUserDelete != nil:
