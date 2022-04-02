@@ -1003,7 +1003,7 @@ func (wr *watchRequest) toPB() *pb.WatchRequest {
 	req := &pb.WatchCreateRequest{
 		StartRevision:  wr.rev,
 		Key:            string([]byte(wr.key)),
-		RangeEnd: string([]byte(wr.end)),
+		RangeEnd:       string([]byte(wr.end)),
 		ProgressNotify: wr.progressNotify,
 		Filters:        wr.filters,
 		PrevKv:         wr.prevKV,

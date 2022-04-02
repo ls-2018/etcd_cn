@@ -65,7 +65,6 @@ func (*UserAddOptions) Descriptor() ([]byte, []int) {
 	return fileDescriptor_8bbd6f3875b0e874, []int{0}
 }
 
-// User is a single entry in the bucket authUsers
 type User struct {
 	Name                 string          `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	Password             string          `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`

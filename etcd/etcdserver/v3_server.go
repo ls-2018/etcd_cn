@@ -421,6 +421,8 @@ func (a *applierV3backend) Apply(r *pb.InternalRaftRequest, shouldApplyV3 member
 		ar.resp, ar.err = a.s.applyV3.UserGet(r.AuthUserGet)
 	case r.AuthUserRevokeRole != nil:
 		ar.resp, ar.err = a.s.applyV3.UserRevokeRole(r.AuthUserRevokeRole)
+	case r.AuthUserList != nil:
+		ar.resp, ar.err = a.s.applyV3.UserList(r.AuthUserList)
 	case r.AuthRoleAdd != nil:
 		ar.resp, ar.err = a.s.applyV3.RoleAdd(r.AuthRoleAdd) // ✅
 	case r.AuthRoleGrantPermission != nil:
@@ -428,11 +430,10 @@ func (a *applierV3backend) Apply(r *pb.InternalRaftRequest, shouldApplyV3 member
 	case r.AuthRoleGet != nil:
 		ar.resp, ar.err = a.s.applyV3.RoleGet(r.AuthRoleGet) // ✅
 	case r.AuthRoleRevokePermission != nil:
-		ar.resp, ar.err = a.s.applyV3.RoleRevokePermission(r.AuthRoleRevokePermission)
+		ar.resp, ar.err = a.s.applyV3.RoleRevokePermission(r.AuthRoleRevokePermission) // ✅
 	case r.AuthRoleDelete != nil:
 		ar.resp, ar.err = a.s.applyV3.RoleDelete(r.AuthRoleDelete) // ✅
-	case r.AuthUserList != nil:
-		ar.resp, ar.err = a.s.applyV3.UserList(r.AuthUserList)
+
 	case r.AuthRoleList != nil:
 		ar.resp, ar.err = a.s.applyV3.RoleList(r.AuthRoleList) // ✅
 	default:

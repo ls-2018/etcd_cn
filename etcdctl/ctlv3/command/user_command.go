@@ -55,13 +55,13 @@ var (
 func newUserAddCommand() *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "add <user name or user:password> [options]",
-		Short: "Adds a new user",
+		Short: "添加新用户",
 		Run:   userAddCommandFunc,
 	}
 
-	cmd.Flags().BoolVar(&passwordInteractive, "interactive", true, "Read password from stdin instead of interactive terminal")
-	cmd.Flags().StringVar(&passwordFromFlag, "new-user-password", "", "Supply password from the command line flag")
-	cmd.Flags().BoolVar(&noPassword, "no-password", false, "Create a user without password (CN based auth only)")
+	cmd.Flags().BoolVar(&passwordInteractive, "interactive", true, "从stdin读取密码，而不是交互终端")
+	cmd.Flags().StringVar(&passwordFromFlag, "new-user-password", "", "从命令行标志提供密码")
+	cmd.Flags().BoolVar(&noPassword, "no-password", false, "创建一个没有密码的用户(仅基于CN的身份验证)")
 
 	return &cmd
 }
@@ -69,7 +69,7 @@ func newUserAddCommand() *cobra.Command {
 func newUserDeleteCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "delete <user name>",
-		Short: "Deletes a user",
+		Short: "删除一个用户",
 		Run:   userDeleteCommandFunc,
 	}
 }
@@ -77,11 +77,11 @@ func newUserDeleteCommand() *cobra.Command {
 func newUserGetCommand() *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "get <user name> [options]",
-		Short: "Gets detailed information of a user",
+		Short: "获取用户详情",
 		Run:   userGetCommandFunc,
 	}
 
-	cmd.Flags().BoolVar(&userShowDetail, "detail", false, "Show permissions of roles granted to the user")
+	cmd.Flags().BoolVar(&userShowDetail, "detail", false, "显示授予用户的角色的权限")
 
 	return &cmd
 }
@@ -89,7 +89,7 @@ func newUserGetCommand() *cobra.Command {
 func newUserListCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "list",
-		Short: "Lists all users",
+		Short: "显示所有用户",
 		Run:   userListCommandFunc,
 	}
 }
@@ -97,11 +97,11 @@ func newUserListCommand() *cobra.Command {
 func newUserChangePasswordCommand() *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "passwd <user name> [options]",
-		Short: "Changes password of user",
+		Short: "更改用户密码",
 		Run:   userChangePasswordCommandFunc,
 	}
 
-	cmd.Flags().BoolVar(&passwordInteractive, "interactive", true, "If true, read password from stdin instead of interactive terminal")
+	cmd.Flags().BoolVar(&passwordInteractive, "interactive", true, "如果为true，从stdin读取密码，而不是交互终端")
 
 	return &cmd
 }
@@ -109,7 +109,7 @@ func newUserChangePasswordCommand() *cobra.Command {
 func newUserGrantRoleCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "grant-role <user name> <role name>",
-		Short: "Grants a role to a user",
+		Short: "授予用户权限",
 		Run:   userGrantRoleCommandFunc,
 	}
 }
@@ -117,15 +117,14 @@ func newUserGrantRoleCommand() *cobra.Command {
 func newUserRevokeRoleCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "revoke-role <user name> <role name>",
-		Short: "Revokes a role from a user",
+		Short: "移除用户权限",
 		Run:   userRevokeRoleCommandFunc,
 	}
 }
 
-// userAddCommandFunc executes the "user add" command.
 func userAddCommandFunc(cmd *cobra.Command, args []string) {
 	if len(args) != 1 {
-		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("user add command requires user name as its argument"))
+		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("用户add命令需要用户名作为参数"))
 	}
 
 	var password string
@@ -135,7 +134,7 @@ func userAddCommandFunc(cmd *cobra.Command, args []string) {
 		NoPassword: false,
 	}
 
-	if !noPassword {
+	if !noPassword { // 创建一个没有密码的用户(仅基于CN的身份验证)
 		if passwordFromFlag != "" {
 			user = args[0]
 			password = passwordFromFlag
@@ -152,7 +151,7 @@ func userAddCommandFunc(cmd *cobra.Command, args []string) {
 				user = splitted[0]
 				password = splitted[1]
 				if len(user) == 0 {
-					cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("empty user name is not allowed"))
+					cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("用户名不允许为空"))
 				}
 			}
 		}
@@ -172,7 +171,7 @@ func userAddCommandFunc(cmd *cobra.Command, args []string) {
 // userDeleteCommandFunc executes the "user delete" command.
 func userDeleteCommandFunc(cmd *cobra.Command, args []string) {
 	if len(args) != 1 {
-		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("user delete command requires user name as its argument"))
+		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("用户删除命令需要用户名作为参数"))
 	}
 
 	resp, err := mustClientFromCmd(cmd).Auth.UserDelete(context.TODO(), args[0])
@@ -185,7 +184,7 @@ func userDeleteCommandFunc(cmd *cobra.Command, args []string) {
 // userGetCommandFunc executes the "user get" command.
 func userGetCommandFunc(cmd *cobra.Command, args []string) {
 	if len(args) != 1 {
-		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("user get command requires user name as its argument"))
+		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("用户get命令需要用户名作为参数"))
 	}
 
 	name := args[0]
@@ -213,7 +212,7 @@ func userGetCommandFunc(cmd *cobra.Command, args []string) {
 // userListCommandFunc executes the "user list" command.
 func userListCommandFunc(cmd *cobra.Command, args []string) {
 	if len(args) != 0 {
-		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("user list command requires no arguments"))
+		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("user list命令不需要参数"))
 	}
 
 	resp, err := mustClientFromCmd(cmd).Auth.UserList(context.TODO())
@@ -227,7 +226,7 @@ func userListCommandFunc(cmd *cobra.Command, args []string) {
 // userChangePasswordCommandFunc executes the "user passwd" command.
 func userChangePasswordCommandFunc(cmd *cobra.Command, args []string) {
 	if len(args) != 1 {
-		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("user passwd command requires user name as its argument"))
+		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("用户passwd命令需要用户名作为参数"))
 	}
 
 	var password string
@@ -249,7 +248,7 @@ func userChangePasswordCommandFunc(cmd *cobra.Command, args []string) {
 // userGrantRoleCommandFunc executes the "user grant-role" command.
 func userGrantRoleCommandFunc(cmd *cobra.Command, args []string) {
 	if len(args) != 2 {
-		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("user grant command requires user name and role name as its argument"))
+		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("user grant命令需要用户名和角色名作为参数"))
 	}
 
 	resp, err := mustClientFromCmd(cmd).Auth.UserGrantRole(context.TODO(), args[0], args[1])
@@ -263,7 +262,7 @@ func userGrantRoleCommandFunc(cmd *cobra.Command, args []string) {
 // userRevokeRoleCommandFunc executes the "user revoke-role" command.
 func userRevokeRoleCommandFunc(cmd *cobra.Command, args []string) {
 	if len(args) != 2 {
-		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("user revoke-role requires user name and role name as its argument"))
+		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("用户revoke-role需要用户名和角色名作为参数"))
 	}
 
 	resp, err := mustClientFromCmd(cmd).Auth.UserRevokeRole(context.TODO(), args[0], args[1])
@@ -275,24 +274,24 @@ func userRevokeRoleCommandFunc(cmd *cobra.Command, args []string) {
 }
 
 func readPasswordInteractive(name string) string {
-	prompt1 := fmt.Sprintf("Password of %s: ", name)
+	prompt1 := fmt.Sprintf("%s密码: ", name)
 	password1, err1 := speakeasy.Ask(prompt1)
 	if err1 != nil {
-		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("failed to ask password: %s", err1))
+		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("确认密码失败: %s", err1))
 	}
 
 	if len(password1) == 0 {
-		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("empty password"))
+		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("空密码"))
 	}
 
-	prompt2 := fmt.Sprintf("Type password of %s again for confirmation: ", name)
+	prompt2 := fmt.Sprintf("再次输入密码确认%s:", name)
 	password2, err2 := speakeasy.Ask(prompt2)
 	if err2 != nil {
-		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("failed to ask password: %s", err2))
+		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("确认密码失败 %s", err2))
 	}
 
 	if password1 != password2 {
-		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("given passwords are different"))
+		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("提供的密码不一致"))
 	}
 
 	return password1

@@ -1285,6 +1285,7 @@ type WatchRequest struct {
 func (m *WatchRequest) Marshal() (dAtA []byte, err error) {
 	return json.Marshal(m)
 }
+
 func (m *WatchRequest) Unmarshal(dAtA []byte) error {
 	err := json.Unmarshal(dAtA, m)
 	return err

@@ -103,6 +103,8 @@ func (s *EtcdServer) Authenticate(ctx context.Context, r *pb.AuthenticateRequest
 	return resp.(*pb.AuthenticateResponse), nil
 }
 
+// ------------------------------------------- OVER ---------------------------------------------------------vv
+
 func (s *EtcdServer) UserAdd(ctx context.Context, r *pb.AuthUserAddRequest) (*pb.AuthUserAddResponse, error) {
 	if r.Options == nil || !r.Options.NoPassword {
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(r.Password), s.authStore.BcryptCost())
@@ -177,14 +179,6 @@ func (s *EtcdServer) UserRevokeRole(ctx context.Context, r *pb.AuthUserRevokeRol
 	return resp.(*pb.AuthUserRevokeRoleResponse), nil
 }
 
-func (s *EtcdServer) RoleAdd(ctx context.Context, r *pb.AuthRoleAddRequest) (*pb.AuthRoleAddResponse, error) {
-	resp, err := s.raftRequest(ctx, pb.InternalRaftRequest{AuthRoleAdd: r})
-	if err != nil {
-		return nil, err
-	}
-	return resp.(*pb.AuthRoleAddResponse), nil
-}
-
 // ------------------------------------------- OVER ---------------------------------------------------------vv
 
 func (s *EtcdServer) RoleGrantPermission(ctx context.Context, r *pb.AuthRoleGrantPermissionRequest) (*pb.AuthRoleGrantPermissionResponse, error) {
@@ -225,4 +219,12 @@ func (s *EtcdServer) RoleDelete(ctx context.Context, r *pb.AuthRoleDeleteRequest
 		return nil, err
 	}
 	return resp.(*pb.AuthRoleDeleteResponse), nil
+}
+
+func (s *EtcdServer) RoleAdd(ctx context.Context, r *pb.AuthRoleAddRequest) (*pb.AuthRoleAddResponse, error) {
+	resp, err := s.raftRequest(ctx, pb.InternalRaftRequest{AuthRoleAdd: r})
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*pb.AuthRoleAddResponse), nil
 }
