@@ -138,8 +138,3 @@ func (s *EtcdServer) LeaseLeases(ctx context.Context, r *pb.LeaseLeasesRequest) 
 	return &pb.LeaseLeasesResponse{Header: newHeader(s), Leases: lss}, nil
 }
 
-// EtcdServer.LeaseGrant
-// EtcdServer.LeaseRevoke
-// EtcdServer.LeaseRenew
-// EtcdServer.LeaseTimeToLive
-// EtcdServer.LeaseLeases

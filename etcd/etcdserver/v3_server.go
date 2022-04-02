@@ -433,7 +433,6 @@ func (a *applierV3backend) Apply(r *pb.InternalRaftRequest, shouldApplyV3 member
 		ar.resp, ar.err = a.s.applyV3.RoleRevokePermission(r.AuthRoleRevokePermission) // ✅
 	case r.AuthRoleDelete != nil:
 		ar.resp, ar.err = a.s.applyV3.RoleDelete(r.AuthRoleDelete) // ✅
-
 	case r.AuthRoleList != nil:
 		ar.resp, ar.err = a.s.applyV3.RoleList(r.AuthRoleList) // ✅
 	default:

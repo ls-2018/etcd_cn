@@ -32,7 +32,6 @@ type (
 	LeaseID             int64
 )
 
-// LeaseGrantResponse wraps the protobuf message LeaseGrantResponse.
 type LeaseGrantResponse struct {
 	*pb.ResponseHeader
 	ID    LeaseID
@@ -40,14 +39,12 @@ type LeaseGrantResponse struct {
 	Error string
 }
 
-// LeaseKeepAliveResponse wraps the protobuf message LeaseKeepAliveResponse.
 type LeaseKeepAliveResponse struct {
 	*pb.ResponseHeader
 	ID  LeaseID
 	TTL int64
 }
 
-// LeaseTimeToLiveResponse wraps the protobuf message LeaseTimeToLiveResponse.
 type LeaseTimeToLiveResponse struct {
 	*pb.ResponseHeader
 	ID LeaseID `json:"id"`
@@ -62,13 +59,11 @@ type LeaseTimeToLiveResponse struct {
 	Keys [][]byte `json:"keys"`
 }
 
-// LeaseStatus represents a lease status.
 type LeaseStatus struct {
 	ID LeaseID `json:"id"`
 	// TODO: TTL int64
 }
 
-// LeaseLeasesResponse wraps the protobuf message LeaseLeasesResponse.
 type LeaseLeasesResponse struct {
 	*pb.ResponseHeader
 	Leases []LeaseStatus `json:"leases"`
@@ -106,44 +101,12 @@ func (e ErrKeepAliveHalted) Error() string {
 }
 
 type Lease interface {
-	// Grant creates a new lease.
 	Grant(ctx context.Context, ttl int64) (*LeaseGrantResponse, error)
-
-	// Revoke revokes the given lease.
 	Revoke(ctx context.Context, id LeaseID) (*LeaseRevokeResponse, error)
-
-	// TimeToLive retrieves the lease information of the given lease ID.
 	TimeToLive(ctx context.Context, id LeaseID, opts ...LeaseOption) (*LeaseTimeToLiveResponse, error)
-
-	// Leases retrieves all leases.
 	Leases(ctx context.Context) (*LeaseLeasesResponse, error)
-
-	// KeepAlive attempts to keep the given lease alive forever. If the keepalive responses posted
-	// to the channel are not consumed promptly the channel may become full. When full, the lease
-	// client will continue sending keep alive requests to the etcd etcd, but will drop responses
-	// until there is capacity on the channel to send more responses.
-	//
-	// If client keep alive loop halts with an unexpected error (e.g. "etcdserver: no leader") or
-	// canceled by the caller (e.g. context.Canceled), KeepAlive returns a ErrKeepAliveHalted error
-	// containing the error reason.
-	//
-	// The returned "LeaseKeepAliveResponse" channel closes if underlying keep
-	// alive stream is interrupted in some way the client cannot handle itself;
-	// given context "ctx" is canceled or timed out.
-	//
-	// TODO(v4.0): post errors to last keep alive message before closing
-	// (see https://github.com/etcd-io/etcd/pull/7866)
 	KeepAlive(ctx context.Context, id LeaseID) (<-chan *LeaseKeepAliveResponse, error)
-
-	// KeepAliveOnce renews the lease once. The response corresponds to the
-	// first message from calling KeepAlive. If the response has a recoverable
-	// error, KeepAliveOnce will retry the RPC with a new keep alive message.
-	//
-	// In most of the cases, Keepalive should be used instead of KeepAliveOnce.
 	KeepAliveOnce(ctx context.Context, id LeaseID) (*LeaseKeepAliveResponse, error)
-
-	// Close releases all resources Lease keeps for efficient communication
-	// with the etcd etcd.
 	Close() error
 }
 
@@ -176,7 +139,6 @@ type lessor struct {
 	lg *zap.Logger
 }
 
-// keepAlive multiplexes a keepalive for a lease over multiple channels
 type keepAlive struct {
 	chs  []chan<- *LeaseKeepAliveResponse
 	ctxs []context.Context

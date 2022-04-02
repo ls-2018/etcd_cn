@@ -4091,22 +4091,11 @@ var _Watch_serviceDesc = grpc.ServiceDesc{
 	Metadata: "rpc.proto",
 }
 
-// LeaseClient is the client API for Lease service.
-//
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type LeaseClient interface {
-	// LeaseGrant creates a lease which expires if the server does not receive a keepAlive
-	// within a given time to live period. All keys attached to the lease will be expired and
-	// deleted if the lease expires. Each expired key generates a delete event in the event history.
 	LeaseGrant(ctx context.Context, in *LeaseGrantRequest, opts ...grpc.CallOption) (*LeaseGrantResponse, error)
-	// LeaseRevoke revokes a lease. All keys attached to the lease will expire and be deleted.
 	LeaseRevoke(ctx context.Context, in *LeaseRevokeRequest, opts ...grpc.CallOption) (*LeaseRevokeResponse, error)
-	// LeaseKeepAlive keeps the lease alive by streaming keep alive requests from the client
-	// to the server and streaming keep alive responses from the server to the client.
 	LeaseKeepAlive(ctx context.Context, opts ...grpc.CallOption) (Lease_LeaseKeepAliveClient, error)
-	// LeaseTimeToLive retrieves lease information.
 	LeaseTimeToLive(ctx context.Context, in *LeaseTimeToLiveRequest, opts ...grpc.CallOption) (*LeaseTimeToLiveResponse, error)
-	// LeaseLeases lists all existing leases.
 	LeaseLeases(ctx context.Context, in *LeaseLeasesRequest, opts ...grpc.CallOption) (*LeaseLeasesResponse, error)
 }
 
@@ -4220,45 +4209,6 @@ func RegisterLeaseServer(s *grpc.Server, srv LeaseServer) {
 	s.RegisterService(&_Lease_serviceDesc, srv)
 }
 
-func _Lease_LeaseGrant_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(LeaseGrantRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(LeaseServer).LeaseGrant(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/etcdserverpb.Lease/LeaseGrant",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(LeaseServer).LeaseGrant(ctx, req.(*LeaseGrantRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Lease_LeaseRevoke_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(LeaseRevokeRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(LeaseServer).LeaseRevoke(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/etcdserverpb.Lease/LeaseRevoke",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(LeaseServer).LeaseRevoke(ctx, req.(*LeaseRevokeRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Lease_LeaseKeepAlive_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(LeaseServer).LeaseKeepAlive(&leaseLeaseKeepAliveServer{stream})
-}
 
 type Lease_LeaseKeepAliveServer interface {
 	Send(*LeaseKeepAliveResponse) error
@@ -4316,6 +4266,46 @@ func _Lease_LeaseLeases_Handler(srv interface{}, ctx context.Context, dec func(i
 		return srv.(LeaseServer).LeaseLeases(ctx, req.(*LeaseLeasesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
+}
+
+func _Lease_LeaseGrant_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LeaseGrantRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LeaseServer).LeaseGrant(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/etcdserverpb.Lease/LeaseGrant",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LeaseServer).LeaseGrant(ctx, req.(*LeaseGrantRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Lease_LeaseRevoke_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LeaseRevokeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LeaseServer).LeaseRevoke(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/etcdserverpb.Lease/LeaseRevoke",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LeaseServer).LeaseRevoke(ctx, req.(*LeaseRevokeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Lease_LeaseKeepAlive_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(LeaseServer).LeaseKeepAlive(&leaseLeaseKeepAliveServer{stream})
 }
 
 var _Lease_serviceDesc = grpc.ServiceDesc{

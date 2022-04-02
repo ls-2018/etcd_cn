@@ -29,7 +29,7 @@ import (
 func NewLeaseCommand() *cobra.Command {
 	lc := &cobra.Command{
 		Use:   "lease <subcommand>",
-		Short: "Lease related commands",
+		Short: "租约相关命令",
 	}
 
 	lc.AddCommand(NewLeaseGrantCommand())
@@ -45,7 +45,7 @@ func NewLeaseCommand() *cobra.Command {
 func NewLeaseGrantCommand() *cobra.Command {
 	lc := &cobra.Command{
 		Use:   "grant <ttl>",
-		Short: "Creates leases",
+		Short: "创建租约",
 
 		Run: leaseGrantCommandFunc,
 	}
@@ -77,7 +77,7 @@ func leaseGrantCommandFunc(cmd *cobra.Command, args []string) {
 func NewLeaseRevokeCommand() *cobra.Command {
 	lc := &cobra.Command{
 		Use:   "revoke <leaseID>",
-		Short: "Revokes leases",
+		Short: "移除租约",
 
 		Run: leaseRevokeCommandFunc,
 	}
@@ -107,7 +107,7 @@ var timeToLiveKeys bool
 func NewLeaseTimeToLiveCommand() *cobra.Command {
 	lc := &cobra.Command{
 		Use:   "timetolive <leaseID> [options]",
-		Short: "Get lease information",
+		Short: "获取租约信息",
 
 		Run: leaseTimeToLiveCommandFunc,
 	}
@@ -136,7 +136,7 @@ func leaseTimeToLiveCommandFunc(cmd *cobra.Command, args []string) {
 func NewLeaseListCommand() *cobra.Command {
 	lc := &cobra.Command{
 		Use:   "list",
-		Short: "List all active leases",
+		Short: "显示所有租约",
 		Run:   leaseListCommandFunc,
 	}
 	return lc
@@ -157,7 +157,7 @@ var leaseKeepAliveOnce bool
 func NewLeaseKeepAliveCommand() *cobra.Command {
 	lc := &cobra.Command{
 		Use:   "keep-alive [options] <leaseID>",
-		Short: "Keeps leases alive (renew)",
+		Short: "重续租约",
 
 		Run: leaseKeepAliveCommandFunc,
 	}
@@ -170,7 +170,7 @@ func NewLeaseKeepAliveCommand() *cobra.Command {
 // leaseKeepAliveCommandFunc executes the "lease keep-alive" command.
 func leaseKeepAliveCommandFunc(cmd *cobra.Command, args []string) {
 	if len(args) != 1 {
-		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("lease keep-alive command needs lease ID as argument"))
+		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("lease keep-alive命令需要lease ID作为参数"))
 	}
 
 	id := leaseFromArgs(args[0])
@@ -193,7 +193,7 @@ func leaseKeepAliveCommandFunc(cmd *cobra.Command, args []string) {
 	}
 
 	if _, ok := (display).(*simplePrinter); ok {
-		fmt.Printf("lease %016x expired or revoked.\n", id)
+		fmt.Printf("租约 %016x 过期或移除.\n", id)
 	}
 }
 

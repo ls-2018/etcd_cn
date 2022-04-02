@@ -82,7 +82,6 @@ type Lessor interface {
 	// given lease will be removed. If the ID does not exist, an error
 	// will be returned.
 	Revoke(id LeaseID) error
-
 	// Checkpoint applies the remainingTTL of a lease. The remainingTTL is used in Promote to set
 	// the expiry of leases to less than the full TTL when possible.
 	Checkpoint(id LeaseID, remainingTTL int64) error
@@ -90,37 +89,21 @@ type Lessor interface {
 	// Attach attaches given leaseItem to the lease with given LeaseID.
 	// If the lease does not exist, an error will be returned.
 	Attach(id LeaseID, items []LeaseItem) error
-
 	GetLease(item LeaseItem) LeaseID // 返回给定项目的LeaseID。如果没有找到租约，则返回NoLease值。
 
 	// Detach detaches given leaseItem from the lease with given LeaseID.
 	// If the lease does not exist, an error will be returned.
 	Detach(id LeaseID, items []LeaseItem) error
-
-	// Promote 推动lessor成为主lessor。主lessor管理租约的到期和续期。新晋升的lessor更新所有租约的ttl 以延长先前的ttl
-	Promote(extend time.Duration)
-
-	// Demote demotes the lessor from being the primary lessor.
+	Promote(extend time.Duration) // 推动lessor成为主lessor。主lessor管理租约的到期和续期。新晋升的lessor更新所有租约的ttl 以延长先前的ttl
 	Demote()
 
 	// Renew renews a lease with given ID. It returns the renewed TTL. If the ID does not exist,
 	// an error will be returned.
 	Renew(id LeaseID) (int64, error)
-
-	// Lookup gives the lease at a given lease id, if any
 	Lookup(id LeaseID) *Lease
-
-	// Leases lists all leases.
 	Leases() []*Lease
-
-	// ExpiredLeasesC 返回一个用于接收过期租约的CHAN.
-	ExpiredLeasesC() <-chan []*Lease
-
-	// Recover recovers the lessor state from the given backend and RangeDeleter.
+	ExpiredLeasesC() <-chan []*Lease // 返回一个用于接收过期租约的CHAN.
 	Recover(b backend.Backend, rd RangeDeleter)
-
-	// Stop stops the lessor for managing leases. The behavior of calling Stop multiple
-	// times is undefined.
 	Stop()
 }
 
