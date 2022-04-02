@@ -94,12 +94,12 @@ func newRoleGrantPermissionCommand() *cobra.Command {
 func newRoleRevokePermissionCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "revoke-permission <role name> <key> [endkey]",
-		Short: "Revokes a key from a role",
+		Short: "移除角色权限里的一个key",
 		Run:   roleRevokePermissionCommandFunc,
 	}
 
-	cmd.Flags().BoolVar(&rolePermPrefix, "prefix", false, "revoke a prefix permission")
-	cmd.Flags().BoolVar(&rolePermFromKey, "from-key", false, "revoke a permission of keys that are greater than or equal to the given key using byte compare")
+	cmd.Flags().BoolVar(&rolePermPrefix, "prefix", false, "取消前缀权限")
+	cmd.Flags().BoolVar(&rolePermFromKey, "from-key", false, "使用byte compare撤销大于或等于给定键的权限")
 
 	return cmd
 }
@@ -199,7 +199,7 @@ func permRange(args []string) (string, string) {
 		}
 
 		// Range permission is expressed as adt.BytesAffineInterval,
-		// so the empty prefix which should be matched with every key必须是like this ["\x00", <end>).
+		// so the empty prefix which should be matched with every key must be like this ["\x00", <end>).
 		key = "\x00"
 		if rolePermPrefix || rolePermFromKey {
 			// For the both cases of prefix and from-key, a permission with an empty key
