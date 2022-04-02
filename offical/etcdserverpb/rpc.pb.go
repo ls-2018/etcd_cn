@@ -1274,13 +1274,20 @@ type WatchRequest struct {
 	// request_union is a request to either create a new watcher or cancel an existing watcher.
 	//
 	// Types that are valid to be assigned to RequestUnion:
-	//	*WatchRequest_CreateRequest
-	//	*WatchRequest_CancelRequest
-	//	*WatchRequest_ProgressRequest
-	RequestUnion         isWatchRequest_RequestUnion `protobuf_oneof:"request_union"`
-	XXX_NoUnkeyedLiteral struct{}                    `json:"-"`
-	XXX_unrecognized     []byte                      `json:"-"`
-	XXX_sizecache        int32                       `json:"-"`
+	WatchRequest_CreateRequest   *WatchRequest_CreateRequest
+	WatchRequest_CancelRequest   *WatchRequest_CancelRequest
+	WatchRequest_ProgressRequest *WatchRequest_ProgressRequest
+	XXX_NoUnkeyedLiteral         struct{} `json:"-"`
+	XXX_unrecognized             []byte   `json:"-"`
+	XXX_sizecache                int32    `json:"-"`
+}
+
+func (m *WatchRequest) Marshal() (dAtA []byte, err error) {
+	return json.Marshal(m)
+}
+func (m *WatchRequest) Unmarshal(dAtA []byte) error {
+	err := json.Unmarshal(dAtA, m)
+	return err
 }
 
 func (m *WatchRequest) Reset()         { *m = WatchRequest{} }
@@ -1288,11 +1295,6 @@ func (m *WatchRequest) String() string { return proto.CompactTextString(m) }
 func (*WatchRequest) ProtoMessage()    {}
 func (*WatchRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_77a6da22d6a3feb1, []int{20}
-}
-
-type isWatchRequest_RequestUnion interface {
-	isWatchRequest_RequestUnion()
-	Size() int
 }
 
 type WatchRequest_CreateRequest struct {
@@ -1309,30 +1311,23 @@ func (*WatchRequest_CreateRequest) isWatchRequest_RequestUnion()   {}
 func (*WatchRequest_CancelRequest) isWatchRequest_RequestUnion()   {}
 func (*WatchRequest_ProgressRequest) isWatchRequest_RequestUnion() {}
 
-func (m *WatchRequest) GetRequestUnion() isWatchRequest_RequestUnion {
-	if m != nil {
-		return m.RequestUnion
-	}
-	return nil
-}
-
 func (m *WatchRequest) GetCreateRequest() *WatchCreateRequest {
-	if x, ok := m.GetRequestUnion().(*WatchRequest_CreateRequest); ok {
-		return x.CreateRequest
+	if m.WatchRequest_CreateRequest != nil {
+		return m.WatchRequest_CreateRequest.CreateRequest
 	}
 	return nil
 }
 
 func (m *WatchRequest) GetCancelRequest() *WatchCancelRequest {
-	if x, ok := m.GetRequestUnion().(*WatchRequest_CancelRequest); ok {
-		return x.CancelRequest
+	if m.WatchRequest_CancelRequest != nil {
+		return m.WatchRequest_CancelRequest.CancelRequest
 	}
 	return nil
 }
 
 func (m *WatchRequest) GetProgressRequest() *WatchProgressRequest {
-	if x, ok := m.GetRequestUnion().(*WatchRequest_ProgressRequest); ok {
-		return x.ProgressRequest
+	if m.WatchRequest_ProgressRequest != nil {
+		return m.WatchRequest_ProgressRequest.ProgressRequest
 	}
 	return nil
 }
@@ -1348,13 +1343,13 @@ func (*WatchRequest) XXX_OneofWrappers() []interface{} {
 
 type WatchCreateRequest struct {
 	// key is the key to register for watching.
-	Key []byte `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	Key string `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 	// range_end is the end of the range [key, range_end) to watch. If range_end is not given,
 	// only the key argument is watched. If range_end is equal to '\0', all keys greater than
 	// or equal to the key argument are watched.
 	// If the range_end is one bit larger than the given key,
 	// then all keys with the prefix (the given key) will be watched.
-	RangeEnd []byte `protobuf:"bytes,2,opt,name=range_end,json=rangeEnd,proto3" json:"range_end,omitempty"`
+	RangeEnd string `protobuf:"bytes,2,opt,name=range_end,json=rangeEnd,proto3" json:"range_end,omitempty"`
 	// start_revision is an optional revision to watch from (inclusive). No start_revision is "now".
 	StartRevision int64 `protobuf:"varint,3,opt,name=start_revision,json=startRevision,proto3" json:"start_revision,omitempty"`
 	// progress_notify is set so that the etcd server will periodically send a WatchResponse with
@@ -1386,14 +1381,14 @@ func (*WatchCreateRequest) Descriptor() ([]byte, []int) {
 
 func (m *WatchCreateRequest) GetKey() []byte {
 	if m != nil {
-		return m.Key
+		return []byte(m.Key)
 	}
 	return nil
 }
 
 func (m *WatchCreateRequest) GetRangeEnd() []byte {
 	if m != nil {
-		return m.RangeEnd
+		return []byte(m.RangeEnd)
 	}
 	return nil
 }
@@ -5541,27 +5536,27 @@ func encodeVarintRpc(dAtA []byte, offset int, v uint64) int {
 	return base
 }
 
-func (m *ResponseHeader) Marshal() (dAtA []byte, err error)                   { return json.Marshal(m) }
-func (m *RangeRequest) Marshal() (dAtA []byte, err error)                     { return json.Marshal(m) }
-func (m *RangeResponse) Marshal() (dAtA []byte, err error)                    { return json.Marshal(m) }
-func (m *PutRequest) Marshal() (dAtA []byte, err error)                       { return json.Marshal(m) }
-func (m *PutResponse) Marshal() (dAtA []byte, err error)                      { return json.Marshal(m) }
-func (m *DeleteRangeRequest) Marshal() (dAtA []byte, err error)               { return json.Marshal(m) }
-func (m *DeleteRangeResponse) Marshal() (dAtA []byte, err error)              { return json.Marshal(m) }
-func (m *RequestOp) Marshal() (dAtA []byte, err error)                        { return json.Marshal(m) }
-func (m *ResponseOp) Marshal() (dAtA []byte, err error)                       { return json.Marshal(m) }
-func (m *Compare) Marshal() (dAtA []byte, err error)                          { return json.Marshal(m) }
-func (m *TxnRequest) Marshal() (dAtA []byte, err error)                       { return json.Marshal(m) }
-func (m *TxnResponse) Marshal() (dAtA []byte, err error)                      { return json.Marshal(m) }
-func (m *CompactionRequest) Marshal() (dAtA []byte, err error)                { return json.Marshal(m) }
-func (m *CompactionResponse) Marshal() (dAtA []byte, err error)               { return json.Marshal(m) }
-func (m *HashRequest) Marshal() (dAtA []byte, err error)                      { return json.Marshal(m) }
-func (m *HashKVRequest) Marshal() (dAtA []byte, err error)                    { return json.Marshal(m) }
-func (m *HashKVResponse) Marshal() (dAtA []byte, err error)                   { return json.Marshal(m) }
-func (m *HashResponse) Marshal() (dAtA []byte, err error)                     { return json.Marshal(m) }
-func (m *SnapshotRequest) Marshal() (dAtA []byte, err error)                  { return json.Marshal(m) }
-func (m *SnapshotResponse) Marshal() (dAtA []byte, err error)                 { return json.Marshal(m) }
-func (m *WatchRequest) Marshal() (dAtA []byte, err error)                     { return json.Marshal(m) }
+func (m *ResponseHeader) Marshal() (dAtA []byte, err error)      { return json.Marshal(m) }
+func (m *RangeRequest) Marshal() (dAtA []byte, err error)        { return json.Marshal(m) }
+func (m *RangeResponse) Marshal() (dAtA []byte, err error)       { return json.Marshal(m) }
+func (m *PutRequest) Marshal() (dAtA []byte, err error)          { return json.Marshal(m) }
+func (m *PutResponse) Marshal() (dAtA []byte, err error)         { return json.Marshal(m) }
+func (m *DeleteRangeRequest) Marshal() (dAtA []byte, err error)  { return json.Marshal(m) }
+func (m *DeleteRangeResponse) Marshal() (dAtA []byte, err error) { return json.Marshal(m) }
+func (m *RequestOp) Marshal() (dAtA []byte, err error)           { return json.Marshal(m) }
+func (m *ResponseOp) Marshal() (dAtA []byte, err error)          { return json.Marshal(m) }
+func (m *Compare) Marshal() (dAtA []byte, err error)             { return json.Marshal(m) }
+func (m *TxnRequest) Marshal() (dAtA []byte, err error)          { return json.Marshal(m) }
+func (m *TxnResponse) Marshal() (dAtA []byte, err error)         { return json.Marshal(m) }
+func (m *CompactionRequest) Marshal() (dAtA []byte, err error)   { return json.Marshal(m) }
+func (m *CompactionResponse) Marshal() (dAtA []byte, err error)  { return json.Marshal(m) }
+func (m *HashRequest) Marshal() (dAtA []byte, err error)         { return json.Marshal(m) }
+func (m *HashKVRequest) Marshal() (dAtA []byte, err error)       { return json.Marshal(m) }
+func (m *HashKVResponse) Marshal() (dAtA []byte, err error)      { return json.Marshal(m) }
+func (m *HashResponse) Marshal() (dAtA []byte, err error)        { return json.Marshal(m) }
+func (m *SnapshotRequest) Marshal() (dAtA []byte, err error)     { return json.Marshal(m) }
+func (m *SnapshotResponse) Marshal() (dAtA []byte, err error)    { return json.Marshal(m) }
+
 func (m *WatchCreateRequest) Marshal() (dAtA []byte, err error)               { return json.Marshal(m) }
 func (m *WatchCancelRequest) Marshal() (dAtA []byte, err error)               { return json.Marshal(m) }
 func (m *WatchProgressRequest) Marshal() (dAtA []byte, err error)             { return json.Marshal(m) }
@@ -5826,7 +5821,6 @@ func (m *HashKVResponse) Unmarshal(dAtA []byte) error          { return json.Unm
 func (m *HashResponse) Unmarshal(dAtA []byte) error            { return json.Unmarshal(dAtA, m) }
 func (m *SnapshotRequest) Unmarshal(dAtA []byte) error         { return json.Unmarshal(dAtA, m) }
 func (m *SnapshotResponse) Unmarshal(dAtA []byte) error        { return json.Unmarshal(dAtA, m) }
-func (m *WatchRequest) Unmarshal(dAtA []byte) error            { return json.Unmarshal(dAtA, m) }
 func (m *WatchCreateRequest) Unmarshal(dAtA []byte) error      { return json.Unmarshal(dAtA, m) }
 func (m *WatchCancelRequest) Unmarshal(dAtA []byte) error      { return json.Unmarshal(dAtA, m) }
 func (m *WatchProgressRequest) Unmarshal(dAtA []byte) error    { return json.Unmarshal(dAtA, m) }

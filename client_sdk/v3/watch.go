@@ -635,7 +635,7 @@ func (w *watchGrpcStream) run() {
 						WatchId: pbresp.WatchId,
 					},
 				}
-				req := &pb.WatchRequest{RequestUnion: cr}
+				req := &pb.WatchRequest{WatchRequest_CancelRequest: cr}
 				w.lg.Debug("sending watch cancel request for failed dispatch", zap.Int64("watch-id", pbresp.WatchId))
 				if err := wc.Send(req); err != nil {
 					w.lg.Debug("failed to send watch cancel request", zap.Int64("watch-id", pbresp.WatchId), zap.Error(err))
@@ -677,7 +677,9 @@ func (w *watchGrpcStream) run() {
 						WatchId: ws.id,
 					},
 				}
-				req := &pb.WatchRequest{RequestUnion: cr}
+				req := &pb.WatchRequest{
+					WatchRequest_CancelRequest: cr,
+				}
 				w.lg.Debug("sending watch cancel request for closed watcher", zap.Int64("watch-id", ws.id))
 				if err := wc.Send(req); err != nil {
 					w.lg.Debug("failed to send watch cancel request", zap.Int64("watch-id", ws.id), zap.Error(err))
@@ -1000,22 +1002,22 @@ func (w *watchGrpcStream) openWatchClient() (ws pb.Watch_WatchClient, err error)
 func (wr *watchRequest) toPB() *pb.WatchRequest {
 	req := &pb.WatchCreateRequest{
 		StartRevision:  wr.rev,
-		Key:            []byte(wr.key),
-		RangeEnd:       []byte(wr.end),
+		Key:            string([]byte(wr.key)),
+		RangeEnd: string([]byte(wr.end)),
 		ProgressNotify: wr.progressNotify,
 		Filters:        wr.filters,
 		PrevKv:         wr.prevKV,
 		Fragment:       wr.fragment,
 	}
 	cr := &pb.WatchRequest_CreateRequest{CreateRequest: req}
-	return &pb.WatchRequest{RequestUnion: cr}
+	return &pb.WatchRequest{WatchRequest_CreateRequest: cr}
 }
 
 // toPB converts an internal progress request structure to its protobuf WatchRequest structure.
 func (pr *progressRequest) toPB() *pb.WatchRequest {
 	req := &pb.WatchProgressRequest{}
 	cr := &pb.WatchRequest_ProgressRequest{ProgressRequest: req}
-	return &pb.WatchRequest{RequestUnion: cr}
+	return &pb.WatchRequest{WatchRequest_ProgressRequest: cr}
 }
 
 func streamKeyFromCtx(ctx context.Context) string {

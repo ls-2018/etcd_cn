@@ -232,11 +232,11 @@ func (wps *watchProxyStream) recvLoop() error {
 		if err != nil {
 			return err
 		}
-		switch uv := req.RequestUnion.(type) {
-		case *pb.WatchRequest_CreateRequest:
+		if req.WatchRequest_CreateRequest != nil {
+			uv := req.WatchRequest_CreateRequest
 			cr := uv.CreateRequest
 
-			if err := wps.checkPermissionForWatch(cr.Key, cr.RangeEnd); err != nil {
+			if err := wps.checkPermissionForWatch([]byte(cr.Key), []byte(cr.RangeEnd)); err != nil {
 				wps.watchCh <- &pb.WatchResponse{
 					Header:       &pb.ResponseHeader{},
 					WatchId:      -1,
@@ -269,11 +269,12 @@ func (wps *watchProxyStream) recvLoop() error {
 			wps.ranges.add(w)
 			wps.mu.Unlock()
 			wps.lg.Debug("create watcher", zap.String("key", w.wr.key), zap.String("end", w.wr.end), zap.Int64("watcherId", wps.nextWatcherID))
-		case *pb.WatchRequest_CancelRequest:
+		} else if req.WatchRequest_CancelRequest != nil {
+			uv := req.WatchRequest_CancelRequest
 			wps.delete(uv.CancelRequest.WatchId)
 			wps.lg.Debug("cancel watcher", zap.Int64("watcherId", uv.CancelRequest.WatchId))
-		default:
-			// Panic or Fatalf would allow to network clients to crash the serve remotely.
+		} else {
+			//	Panic or Fatalf would allow to network clients to crash the serve remotely.
 			wps.lg.Error("not supported request type by gRPC proxy", zap.Stringer("request", req))
 		}
 	}

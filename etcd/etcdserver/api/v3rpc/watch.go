@@ -188,9 +188,9 @@ func (ws *watchServer) Watch(stream pb.Watch_WatchServer) (err error) {
 	go func() {
 		if rerr := sws.recvLoop(); rerr != nil {
 			if isClientCtxErr(stream.Context().Err(), rerr) {
-				sws.lg.Debug("failed to receive watch request from gRPC stream", zap.Error(rerr))
+				sws.lg.Debug("从gRPC流接收watch请求失败", zap.Error(rerr))
 			} else {
-				sws.lg.Warn("failed to receive watch request from gRPC stream", zap.Error(rerr))
+				sws.lg.Warn("从gRPC流接收watch请求失败", zap.Error(rerr))
 			}
 			errc <- rerr
 		}
@@ -231,7 +231,7 @@ func (sws *serverWatchStream) isWatchPermitted(wcr *pb.WatchCreateRequest) bool 
 		// if auth is enabled, IsRangePermitted() can cause an error
 		authInfo = &auth.AuthInfo{}
 	}
-	return sws.ag.AuthStore().IsRangePermitted(authInfo, wcr.Key, wcr.RangeEnd) == nil
+	return sws.ag.AuthStore().IsRangePermitted(authInfo, []byte(wcr.Key), []byte(wcr.RangeEnd)) == nil
 }
 
 func (sws *serverWatchStream) recvLoop() error {
@@ -244,25 +244,26 @@ func (sws *serverWatchStream) recvLoop() error {
 			return err
 		}
 
-		switch uv := req.RequestUnion.(type) {
-		case *pb.WatchRequest_CreateRequest:
+		if req.WatchRequest_CreateRequest != nil {
+			uv := &pb.WatchRequest_CreateRequest{}
+			uv = req.WatchRequest_CreateRequest
 			if uv.CreateRequest == nil {
-				break
+				continue
 			}
 
 			creq := uv.CreateRequest
 			if len(creq.Key) == 0 {
 				// \x00 is the smallest key
-				creq.Key = []byte{0}
+				creq.Key = string([]byte{0})
 			}
 			if len(creq.RangeEnd) == 0 {
 				// force nil since watchstream.Watch distinguishes
 				// between nil and []byte{} for single key / >=
-				creq.RangeEnd = nil
+				creq.RangeEnd = ""
 			}
 			if len(creq.RangeEnd) == 1 && creq.RangeEnd[0] == 0 {
 				// support  >= key queries
-				creq.RangeEnd = []byte{}
+				creq.RangeEnd = string([]byte{})
 			}
 
 			if !sws.isWatchPermitted(creq) {
@@ -289,7 +290,7 @@ func (sws *serverWatchStream) recvLoop() error {
 			if rev == 0 {
 				rev = wsrev + 1
 			}
-			id, err := sws.watchStream.Watch(mvcc.WatchID(creq.WatchId), creq.Key, creq.RangeEnd, rev, filters...)
+			id, err := sws.watchStream.Watch(mvcc.WatchID(creq.WatchId), []byte(creq.Key), []byte(creq.RangeEnd), rev, filters...)
 			if err == nil {
 				sws.mu.Lock()
 				if creq.ProgressNotify {
@@ -318,7 +319,11 @@ func (sws *serverWatchStream) recvLoop() error {
 				return nil
 			}
 
-		case *pb.WatchRequest_CancelRequest:
+		}
+		if req.WatchRequest_CancelRequest != nil {
+
+			uv := &pb.WatchRequest_CancelRequest{}
+			uv = req.WatchRequest_CancelRequest
 			if uv.CancelRequest != nil {
 				id := uv.CancelRequest.WatchId
 				err := sws.watchStream.Cancel(mvcc.WatchID(id))
@@ -335,19 +340,27 @@ func (sws *serverWatchStream) recvLoop() error {
 					sws.mu.Unlock()
 				}
 			}
-		case *pb.WatchRequest_ProgressRequest:
+
+		}
+		if req.WatchRequest_ProgressRequest != nil {
+			uv := &pb.WatchRequest_ProgressRequest{}
+			uv = req.WatchRequest_ProgressRequest
 			if uv.ProgressRequest != nil {
 				sws.ctrlStream <- &pb.WatchResponse{
 					Header:  sws.newResponseHeader(sws.watchStream.Rev()),
 					WatchId: -1, // response is not associated with any WatchId and will be broadcast to all watch channels
 				}
 			}
-		default:
-			// we probably should not shutdown the entire stream when
-			// receive an valid command.
-			// so just do nothing instead.
-			continue
 		}
+		//switch uv := req.RequestUnion.(type) {
+		//
+		//
+		//default:
+		//	// we probably should not shutdown the entire stream when
+		//	// receive an valid command.
+		//	// so just do nothing instead.
+		//	continue
+		//}
 	}
 }
 
