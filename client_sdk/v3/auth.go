@@ -157,33 +157,37 @@ func (auth *authClient) UserRevokeRole(ctx context.Context, name string, role st
 	return (*AuthUserRevokeRoleResponse)(resp), toErr(ctx, err)
 }
 
+// RoleAdd ok
 func (auth *authClient) RoleAdd(ctx context.Context, name string) (*AuthRoleAddResponse, error) {
 	resp, err := auth.remote.RoleAdd(ctx, &pb.AuthRoleAddRequest{Name: name}, auth.callOpts...)
 	return (*AuthRoleAddResponse)(resp), toErr(ctx, err)
 }
 
+// RoleGrantPermission ok
 func (auth *authClient) RoleGrantPermission(ctx context.Context, name string, key, rangeEnd string, permType PermissionType) (*AuthRoleGrantPermissionResponse, error) {
 	perm := &authpb.Permission{
-		Key:      []byte(key),
-		RangeEnd: []byte(rangeEnd),
+		Key:      key,
+		RangeEnd: rangeEnd,
 		PermType: authpb.Permission_Type(permType),
 	}
 	resp, err := auth.remote.RoleGrantPermission(ctx, &pb.AuthRoleGrantPermissionRequest{Name: name, Perm: perm}, auth.callOpts...)
 	return (*AuthRoleGrantPermissionResponse)(resp), toErr(ctx, err)
 }
 
+// RoleGet ok
 func (auth *authClient) RoleGet(ctx context.Context, role string) (*AuthRoleGetResponse, error) {
 	resp, err := auth.remote.RoleGet(ctx, &pb.AuthRoleGetRequest{Role: role}, auth.callOpts...)
 	return (*AuthRoleGetResponse)(resp), toErr(ctx, err)
 }
 
+// RoleList ok
 func (auth *authClient) RoleList(ctx context.Context) (*AuthRoleListResponse, error) {
 	resp, err := auth.remote.RoleList(ctx, &pb.AuthRoleListRequest{}, auth.callOpts...)
 	return (*AuthRoleListResponse)(resp), toErr(ctx, err)
 }
 
 func (auth *authClient) RoleRevokePermission(ctx context.Context, role string, key, rangeEnd string) (*AuthRoleRevokePermissionResponse, error) {
-	resp, err := auth.remote.RoleRevokePermission(ctx, &pb.AuthRoleRevokePermissionRequest{Role: role, Key: []byte(key), RangeEnd: []byte(rangeEnd)}, auth.callOpts...)
+	resp, err := auth.remote.RoleRevokePermission(ctx, &pb.AuthRoleRevokePermissionRequest{Role: role, Key: string(key), RangeEnd: string(rangeEnd)}, auth.callOpts...)
 	return (*AuthRoleRevokePermissionResponse)(resp), toErr(ctx, err)
 }
 
@@ -197,5 +201,5 @@ func StrToPermissionType(s string) (PermissionType, error) {
 	if ok {
 		return PermissionType(val), nil
 	}
-	return PermissionType(-1), fmt.Errorf("invalid permission type: %s", s)
+	return PermissionType(-1), fmt.Errorf("无效的权限类型: %s", s)
 }

@@ -57,7 +57,7 @@ func newRoleAddCommand() *cobra.Command {
 func newRoleDeleteCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "delete <role name>",
-		Short: "Deletes a role",
+		Short: "删除一个角色",
 		Run:   roleDeleteCommandFunc,
 	}
 }
@@ -65,7 +65,7 @@ func newRoleDeleteCommand() *cobra.Command {
 func newRoleGetCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "get <role name>",
-		Short: "Gets detailed information of a role",
+		Short: "获取一个角色的详细信息",
 		Run:   roleGetCommandFunc,
 	}
 }
@@ -73,7 +73,7 @@ func newRoleGetCommand() *cobra.Command {
 func newRoleListCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "list",
-		Short: "Lists all roles",
+		Short: "显示所有角色",
 		Run:   roleListCommandFunc,
 	}
 }
@@ -81,12 +81,12 @@ func newRoleListCommand() *cobra.Command {
 func newRoleGrantPermissionCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "grant-permission [options] <role name> <permission type> <key> [endkey]",
-		Short: "Grants a key to a role",
+		Short: "给角色授予一个权限",
 		Run:   roleGrantPermissionCommandFunc,
 	}
 
-	cmd.Flags().BoolVar(&rolePermPrefix, "prefix", false, "grant a prefix permission")
-	cmd.Flags().BoolVar(&rolePermFromKey, "from-key", false, "grant a permission of keys that are greater than or equal to the given key using byte compare")
+	cmd.Flags().BoolVar(&rolePermPrefix, "prefix", false, "授予前缀权限")
+	cmd.Flags().BoolVar(&rolePermFromKey, "from-key", false, "使用byte compare授予大于或等于给定键的权限")
 
 	return cmd
 }
@@ -132,7 +132,7 @@ func roleDeleteCommandFunc(cmd *cobra.Command, args []string) {
 
 func roleGetCommandFunc(cmd *cobra.Command, args []string) {
 	if len(args) != 1 {
-		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("role get command requires role name as its argument"))
+		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("role get命令需要角色名作为参数"))
 	}
 
 	name := args[0]
@@ -158,13 +158,12 @@ func roleListCommandFunc(cmd *cobra.Command, args []string) {
 	display.RoleList(*resp)
 }
 
-// roleGrantPermissionCommandFunc executes the "role grant-permission" command.
 func roleGrantPermissionCommandFunc(cmd *cobra.Command, args []string) {
 	if len(args) < 3 {
-		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("role grant command requires role name, permission type, and key [endkey] as its argument"))
+		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("role grant命令需要角色名、权限类型和关键字[endkey]作为参数"))
 	}
 
-	perm, err := clientv3.StrToPermissionType(args[1])
+	perm, err := clientv3.StrToPermissionType(args[1]) // read write readwrite
 	if err != nil {
 		cobrautl.ExitWithError(cobrautl.ExitBadArgs, err)
 	}
@@ -178,10 +177,9 @@ func roleGrantPermissionCommandFunc(cmd *cobra.Command, args []string) {
 	display.RoleGrantPermission(args[0], *resp)
 }
 
-// roleRevokePermissionCommandFunc executes the "role revoke-permission" command.
 func roleRevokePermissionCommandFunc(cmd *cobra.Command, args []string) {
 	if len(args) < 2 {
-		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("role revoke-permission command requires role name and key [endkey] as its argument"))
+		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("role revoke-permission命令需要角色名和关键字[endkey]作为参数"))
 	}
 
 	key, rangeEnd := permRange(args[1:])
@@ -197,7 +195,7 @@ func permRange(args []string) (string, string) {
 	var rangeEnd string
 	if len(key) == 0 {
 		if rolePermPrefix && rolePermFromKey {
-			cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("--from-key and --prefix flags are mutually exclusive"))
+			cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("--from-key and --prefix flags 是互相排斥的 "))
 		}
 
 		// Range permission is expressed as adt.BytesAffineInterval,

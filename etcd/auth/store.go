@@ -51,15 +51,15 @@ var (
 	ErrUserAlreadyExist     = errors.New("auth: user already exists")
 	ErrUserEmpty            = errors.New("auth: user name is empty")
 	ErrUserNotFound         = errors.New("auth: user not found")
-	ErrRoleAlreadyExist     = errors.New("auth: role already exists")
-	ErrRoleNotFound         = errors.New("auth: role not found")
+	ErrRoleAlreadyExist     = errors.New("auth: 角色已存在")
+	ErrRoleNotFound         = errors.New("auth: 角色不存在")
 	ErrRoleEmpty            = errors.New("auth: role name is empty")
 	ErrPermissionNotGiven   = errors.New("auth: permission not given")
 	ErrAuthFailed           = errors.New("auth: authentication failed, invalid user ID or password")
 	ErrNoPasswordUser       = errors.New("auth: authentication failed, password was given for no password user")
 	ErrPermissionDenied     = errors.New("auth: permission denied")
 	ErrRoleNotGranted       = errors.New("auth: role is not granted to the user")
-	ErrPermissionNotGranted = errors.New("auth: permission is not granted to the role")
+	ErrPermissionNotGranted = errors.New("auth: 角色没有权限")
 	ErrAuthNotEnabled       = errors.New("auth: authentication is not enabled")
 	ErrAuthOldRevision      = errors.New("auth: revision in header is old")
 	ErrInvalidAuthToken     = errors.New("auth: invalid auth token")
@@ -72,13 +72,11 @@ var (
 )
 
 const (
-	rootUser = "root"
-	rootRole = "root"
-
+	rootUser        = "root"
+	rootRole        = "root"
 	tokenTypeSimple = "simple"
 	tokenTypeJWT    = "jwt"
-
-	revBytesLen = 8
+	revBytesLen     = 8
 )
 
 type AuthInfo struct {
@@ -121,25 +119,18 @@ type AuthStore interface {
 	UserList(r *pb.AuthUserListRequest) (*pb.AuthUserListResponse, error)
 	RoleList(r *pb.AuthRoleListRequest) (*pb.AuthRoleListResponse, error)
 	IsPutPermitted(authInfo *AuthInfo, key []byte) error
-	IsRangePermitted(authInfo *AuthInfo, key, rangeEnd []byte) error // 检查用户的范围权限
-	IsDeleteRangePermitted(authInfo *AuthInfo, key, rangeEnd []byte) error
-	IsAdminPermitted(authInfo *AuthInfo) error
-	// GenTokenPrefix produces a random string in a case of simple token
-	// in a case of JWT, it produces an empty string
-	GenTokenPrefix() (string, error)
-
-	// Revision gets current revision of authStore
-	Revision() uint64
-
-	CheckPassword(username, password string) (uint64, error) // 检查给定的一对用户名和密码是否正确
-	Close() error                                            // 清理AuthStore
-	AuthInfoFromCtx(ctx context.Context) (*AuthInfo, error)  // 从grpc上下文获取认证信息
-	AuthInfoFromTLS(ctx context.Context) *AuthInfo           // 从grpc证书上下文获取认证信息
-
-	// WithRoot generates and installs a token that can be used as a root credential
-	WithRoot(ctx context.Context) context.Context
-	HasRole(user, role string) bool // 检查用户是否有该角色
-	BcryptCost() int                // 获取加密认证密码的散列强度
+	IsRangePermitted(authInfo *AuthInfo, key, rangeEnd []byte) error       // 检查用户的范围权限
+	IsDeleteRangePermitted(authInfo *AuthInfo, key, rangeEnd []byte) error //
+	IsAdminPermitted(authInfo *AuthInfo) error                             //
+	GenTokenPrefix() (string, error)                                       // 在简单令牌的情况下生成一个随机字符串，在JWT的情况下，它生成一个空字符串
+	Revision() uint64                                                      //
+	CheckPassword(username, password string) (uint64, error)               // 检查给定的一对用户名和密码是否正确
+	Close() error                                                          // 清理AuthStore
+	AuthInfoFromCtx(ctx context.Context) (*AuthInfo, error)                // 从grpc上下文获取认证信息
+	AuthInfoFromTLS(ctx context.Context) *AuthInfo                         // 从grpc证书上下文获取认证信息
+	WithRoot(ctx context.Context) context.Context                          // 生成并安装可作为根凭据使用的令牌
+	UserHasRole(user, role string) bool                                    // 检查用户是否有该角色
+	BcryptCost() int                                                       // 获取加密认证密码的散列强度
 }
 
 type TokenProvider interface {
@@ -153,17 +144,14 @@ type TokenProvider interface {
 
 type authStore struct {
 	// atomic operations; need 64-bit align, or 32-bit tests will crash
-	revision uint64
-
-	lg        *zap.Logger
-	be        backend.Backend
-	enabled   bool // 是否开启认证
-	enabledMu sync.RWMutex
-
+	revision       uint64 // 修订版本
+	lg             *zap.Logger
+	be             backend.Backend
+	enabled        bool // 是否开启认证
+	enabledMu      sync.RWMutex
 	rangePermCache map[string]*unifiedRangePermissions // username -> unifiedRangePermissions
-
-	tokenProvider TokenProvider
-	bcryptCost    int // the algorithm cost / strength for hashing auth passwords
+	tokenProvider  TokenProvider
+	bcryptCost     int // the algorithm cost / strength for hashing auth passwords
 }
 
 func (as *authStore) AuthEnable() error {
@@ -378,7 +366,7 @@ func (as *authStore) UserAdd(r *pb.AuthUserAddRequest) (*pb.AuthUserAddResponse,
 
 func (as *authStore) UserDelete(r *pb.AuthUserDeleteRequest) (*pb.AuthUserDeleteResponse, error) {
 	if as.enabled && r.Name == rootUser {
-		as.lg.Error("cannot delete 'root' user", zap.String("user-name", r.Name))
+		as.lg.Error("不能删除 'root' 用户", zap.String("user-name", r.Name))
 		return nil, ErrInvalidAuthMgmt
 	}
 
@@ -573,212 +561,8 @@ func (as *authStore) UserRevokeRole(r *pb.AuthUserRevokeRoleRequest) (*pb.AuthUs
 	return &pb.AuthUserRevokeRoleResponse{}, nil
 }
 
-func (as *authStore) RoleGet(r *pb.AuthRoleGetRequest) (*pb.AuthRoleGetResponse, error) {
-	tx := as.be.BatchTx()
-	tx.Lock()
-	defer tx.Unlock()
-
-	var resp pb.AuthRoleGetResponse
-
-	role := getRole(as.lg, tx, r.Role)
-	if role == nil {
-		return nil, ErrRoleNotFound
-	}
-	resp.Perm = append(resp.Perm, role.KeyPermission...)
-	return &resp, nil
-}
-
-func (as *authStore) RoleList(r *pb.AuthRoleListRequest) (*pb.AuthRoleListResponse, error) {
-	tx := as.be.BatchTx()
-	tx.Lock()
-	roles := getAllRoles(as.lg, tx)
-	tx.Unlock()
-
-	resp := &pb.AuthRoleListResponse{Roles: make([]string, len(roles))}
-	for i := range roles {
-		resp.Roles[i] = string(roles[i].Name)
-	}
-	return resp, nil
-}
-
-func (as *authStore) RoleRevokePermission(r *pb.AuthRoleRevokePermissionRequest) (*pb.AuthRoleRevokePermissionResponse, error) {
-	tx := as.be.BatchTx()
-	tx.Lock()
-	defer tx.Unlock()
-
-	role := getRole(as.lg, tx, r.Role)
-	if role == nil {
-		return nil, ErrRoleNotFound
-	}
-
-	updatedRole := &authpb.Role{
-		Name: role.Name,
-	}
-
-	for _, perm := range role.KeyPermission {
-		if !bytes.Equal(perm.Key, r.Key) || !bytes.Equal(perm.RangeEnd, r.RangeEnd) {
-			updatedRole.KeyPermission = append(updatedRole.KeyPermission, perm)
-		}
-	}
-
-	if len(role.KeyPermission) == len(updatedRole.KeyPermission) {
-		return nil, ErrPermissionNotGranted
-	}
-
-	putRole(as.lg, tx, updatedRole)
-
-	// TODO(mitake): currently single role update invalidates every cache
-	// It should be optimized.
-	as.clearCachedPerm()
-
-	as.commitRevision(tx)
-
-	as.lg.Info(
-		"revoked a permission on range",
-		zap.String("role-name", r.Role),
-		zap.String("key", string(r.Key)),
-		zap.String("range-end", string(r.RangeEnd)),
-	)
-	return &pb.AuthRoleRevokePermissionResponse{}, nil
-}
-
-func (as *authStore) RoleDelete(r *pb.AuthRoleDeleteRequest) (*pb.AuthRoleDeleteResponse, error) {
-	if as.enabled && r.Role == rootRole {
-		as.lg.Error("cannot delete 'root' role", zap.String("role-name", r.Role))
-		return nil, ErrInvalidAuthMgmt
-	}
-
-	tx := as.be.BatchTx()
-	tx.Lock()
-	defer tx.Unlock()
-
-	role := getRole(as.lg, tx, r.Role)
-	if role == nil {
-		return nil, ErrRoleNotFound
-	}
-
-	delRole(tx, r.Role)
-
-	users := getAllUsers(as.lg, tx)
-	for _, user := range users {
-		updatedUser := &authpb.User{
-			Name:     user.Name,
-			Password: user.Password,
-			Options:  user.Options,
-		}
-
-		for _, role := range user.Roles {
-			if role != r.Role {
-				updatedUser.Roles = append(updatedUser.Roles, role)
-			}
-		}
-
-		if len(updatedUser.Roles) == len(user.Roles) {
-			continue
-		}
-
-		putUser(as.lg, tx, updatedUser)
-
-		as.invalidateCachedPerm(string(user.Name))
-	}
-
-	as.commitRevision(tx)
-
-	as.lg.Info("deleted a role", zap.String("role-name", r.Role))
-	return &pb.AuthRoleDeleteResponse{}, nil
-}
-
-func (as *authStore) RoleAdd(r *pb.AuthRoleAddRequest) (*pb.AuthRoleAddResponse, error) {
-	if len(r.Name) == 0 {
-		return nil, ErrRoleEmpty
-	}
-
-	tx := as.be.BatchTx()
-	tx.Lock()
-	defer tx.Unlock()
-
-	role := getRole(as.lg, tx, r.Name)
-	if role != nil {
-		return nil, ErrRoleAlreadyExist
-	}
-
-	newRole := &authpb.Role{
-		Name: r.Name,
-	}
-
-	putRole(as.lg, tx, newRole)
-
-	as.commitRevision(tx)
-
-	as.lg.Info("created a role", zap.String("role-name", r.Name))
-	return &pb.AuthRoleAddResponse{}, nil
-}
-
 func (as *authStore) authInfoFromToken(ctx context.Context, token string) (*AuthInfo, bool) {
 	return as.tokenProvider.info(ctx, token, as.Revision())
-}
-
-type permSlice []*authpb.Permission
-
-func (perms permSlice) Len() int {
-	return len(perms)
-}
-
-func (perms permSlice) Less(i, j int) bool {
-	return bytes.Compare(perms[i].Key, perms[j].Key) < 0
-}
-
-func (perms permSlice) Swap(i, j int) {
-	perms[i], perms[j] = perms[j], perms[i]
-}
-
-func (as *authStore) RoleGrantPermission(r *pb.AuthRoleGrantPermissionRequest) (*pb.AuthRoleGrantPermissionResponse, error) {
-	if r.Perm == nil {
-		return nil, ErrPermissionNotGiven
-	}
-
-	tx := as.be.BatchTx()
-	tx.Lock()
-	defer tx.Unlock()
-
-	role := getRole(as.lg, tx, r.Name)
-	if role == nil {
-		return nil, ErrRoleNotFound
-	}
-
-	idx := sort.Search(len(role.KeyPermission), func(i int) bool {
-		return bytes.Compare(role.KeyPermission[i].Key, r.Perm.Key) >= 0
-	})
-
-	if idx < len(role.KeyPermission) && bytes.Equal(role.KeyPermission[idx].Key, r.Perm.Key) && bytes.Equal(role.KeyPermission[idx].RangeEnd, r.Perm.RangeEnd) {
-		// update existing permission
-		role.KeyPermission[idx].PermType = r.Perm.PermType
-	} else {
-		// append new permission to the role
-		newPerm := &authpb.Permission{
-			Key:      r.Perm.Key,
-			RangeEnd: r.Perm.RangeEnd,
-			PermType: r.Perm.PermType,
-		}
-
-		role.KeyPermission = append(role.KeyPermission, newPerm)
-		sort.Sort(permSlice(role.KeyPermission))
-	}
-
-	putRole(as.lg, tx, role)
-
-	// TODO(mitake): currently single role update invalidates every cache
-	// It should be optimized.
-	as.clearCachedPerm()
-
-	as.commitRevision(tx)
-
-	as.lg.Info(
-		"granted/updated a permission to a user",
-		zap.String("user-name", r.Name),
-		zap.String("permission-name", authpb.Permission_Type_name[int32(r.Perm.PermType)]),
-	)
-	return &pb.AuthRoleGrantPermissionResponse{}, nil
 }
 
 func (as *authStore) isOpPermitted(userName string, revision uint64, key, rangeEnd []byte, permTyp authpb.Permission_Type) error {
@@ -877,6 +661,7 @@ func getUser(lg *zap.Logger, tx backend.BatchTx, username string) *authpb.User {
 	return user
 }
 
+// 获取所有用户
 func getAllUsers(lg *zap.Logger, tx backend.BatchTx) []*authpb.User {
 	_, vs := tx.UnsafeRange(buckets.AuthUsers, []byte{0}, []byte{0xff}, -1)
 	if len(vs) == 0 {
@@ -888,17 +673,18 @@ func getAllUsers(lg *zap.Logger, tx backend.BatchTx) []*authpb.User {
 		user := &authpb.User{}
 		err := user.Unmarshal(vs[i])
 		if err != nil {
-			lg.Panic("failed to unmarshal 'authpb.User'", zap.Error(err))
+			lg.Panic("不能反序列化 'authpb.User'", zap.Error(err))
 		}
 		users[i] = user
 	}
 	return users
 }
 
+// OK
 func putUser(lg *zap.Logger, tx backend.BatchTx, user *authpb.User) {
 	b, err := user.Marshal()
 	if err != nil {
-		lg.Panic("failed to unmarshal 'authpb.User'", zap.Error(err))
+		lg.Panic("序列化失败 'authpb.User'", zap.Error(err))
 	}
 	tx.UnsafePut(buckets.AuthUsers, []byte(user.Name), b)
 }
@@ -916,7 +702,7 @@ func getRole(lg *zap.Logger, tx backend.BatchTx, rolename string) *authpb.Role {
 	role := &authpb.Role{}
 	err := role.Unmarshal(vs[0])
 	if err != nil {
-		lg.Panic("failed to unmarshal 'authpb.Role'", zap.Error(err))
+		lg.Panic("反序列化失败 'authpb.Role'", zap.Error(err))
 	}
 	return role
 }
@@ -939,19 +725,17 @@ func getAllRoles(lg *zap.Logger, tx backend.BatchTx) []*authpb.Role {
 	return roles
 }
 
+// ok
 func putRole(lg *zap.Logger, tx backend.BatchTx, role *authpb.Role) {
 	b, err := role.Marshal()
 	if err != nil {
-		lg.Panic(
-			"failed to marshal 'authpb.Role'",
-			zap.String("role-name", string(role.Name)),
-			zap.Error(err),
-		)
+		lg.Panic("序列化失败'authpb.Role'", zap.String("role-name", role.Name), zap.Error(err))
 	}
 
 	tx.UnsafePut(buckets.AuthRoles, []byte(role.Name), b)
 }
 
+// ok
 func delRole(tx backend.BatchTx, rolename string) {
 	tx.UnsafeDelete(buckets.AuthRoles, []byte(rolename))
 }
@@ -1153,12 +937,7 @@ func decomposeOpts(lg *zap.Logger, optstr string) (string, map[string]string, er
 }
 
 // NewTokenProvider creates a new token provider.
-func NewTokenProvider(
-	lg *zap.Logger,
-	tokenOpts string,
-	indexWaiter func(uint64) <-chan struct{},
-	TokenTTL time.Duration,
-) (TokenProvider, error) {
+func NewTokenProvider(lg *zap.Logger, tokenOpts string, indexWaiter func(uint64) <-chan struct{}, TokenTTL time.Duration) (TokenProvider, error) {
 	tokenType, typeSpecificOpts, err := decomposeOpts(lg, tokenOpts)
 	if err != nil {
 		return nil, ErrInvalidAuthOpts
@@ -1229,7 +1008,198 @@ func (as *authStore) WithRoot(ctx context.Context) context.Context {
 	return metadata.NewIncomingContext(ctx, tokenMD)
 }
 
-func (as *authStore) HasRole(user, role string) bool {
+func (as *authStore) BcryptCost() int {
+	return as.bcryptCost
+}
+
+// ---------------------------------------------------------------------------------------------------v
+
+// RoleRevokePermission ok
+func (as *authStore) RoleRevokePermission(r *pb.AuthRoleRevokePermissionRequest) (*pb.AuthRoleRevokePermissionResponse, error) {
+	tx := as.be.BatchTx()
+	tx.Lock()
+	defer tx.Unlock()
+
+	role := getRole(as.lg, tx, r.Role)
+	if role == nil {
+		return nil, ErrRoleNotFound
+	}
+
+	updatedRole := &authpb.Role{
+		Name: role.Name,
+	}
+
+	for _, perm := range role.KeyPermission {
+		if !strings.EqualFold(perm.Key, r.Key) || !strings.EqualFold(perm.RangeEnd, r.RangeEnd) {
+			updatedRole.KeyPermission = append(updatedRole.KeyPermission, perm)
+		}
+	}
+
+	if len(role.KeyPermission) == len(updatedRole.KeyPermission) {
+		return nil, ErrPermissionNotGranted
+	}
+
+	putRole(as.lg, tx, updatedRole)
+
+	as.clearCachedPerm()
+	as.commitRevision(tx)
+
+	as.lg.Info("撤销对range的权限", zap.String("role-name", r.Role), zap.String("key", r.Key), zap.String("range-end", r.RangeEnd))
+	return &pb.AuthRoleRevokePermissionResponse{}, nil
+}
+
+// RoleGrantPermission ok
+func (as *authStore) RoleGrantPermission(r *pb.AuthRoleGrantPermissionRequest) (*pb.AuthRoleGrantPermissionResponse, error) {
+	if r.Perm == nil {
+		return nil, ErrPermissionNotGiven
+	}
+
+	tx := as.be.BatchTx()
+	tx.Lock()
+	defer tx.Unlock()
+
+	role := getRole(as.lg, tx, r.Name)
+	if role == nil {
+		return nil, ErrRoleNotFound
+	}
+	// 在已有的权限中, 寻找第一个与key相等的，没找到的话 idx =len(role.KeyPermission)
+	idx := sort.Search(len(role.KeyPermission), func(i int) bool {
+		// a,a 0
+		// a b -1
+		// b a 1
+		// a,b,c,d,e
+		// c
+		return strings.Compare(role.KeyPermission[i].Key, r.Perm.Key) >= 0
+	})
+
+	if idx < len(role.KeyPermission) &&
+		strings.EqualFold(role.KeyPermission[idx].Key, r.Perm.Key) &&
+		strings.EqualFold(role.KeyPermission[idx].RangeEnd, r.Perm.RangeEnd) {
+		// 更新存在的权限
+		role.KeyPermission[idx].PermType = r.Perm.PermType
+	} else {
+		newPerm := &authpb.Permission{
+			Key:      r.Perm.Key,      // /
+			RangeEnd: r.Perm.RangeEnd, // ""
+			PermType: r.Perm.PermType, // readwrite
+		}
+
+		role.KeyPermission = append(role.KeyPermission, newPerm)
+		// 按照key 升序排列
+		sort.Sort(permSlice(role.KeyPermission))
+	}
+
+	putRole(as.lg, tx, role)
+	// 目前，单个角色更新会使每个缓存失效，应该进行优化。
+	as.clearCachedPerm()
+
+	as.commitRevision(tx)
+
+	as.lg.Info("授予/更新用户权限", zap.String("user-name", r.Name), zap.String("permission-name", authpb.Permission_Type_name[int32(r.Perm.PermType)]))
+	return &pb.AuthRoleGrantPermissionResponse{}, nil
+}
+
+// RoleList ok
+func (as *authStore) RoleList(r *pb.AuthRoleListRequest) (*pb.AuthRoleListResponse, error) {
+	tx := as.be.BatchTx()
+	tx.Lock()
+	roles := getAllRoles(as.lg, tx)
+	tx.Unlock()
+
+	resp := &pb.AuthRoleListResponse{Roles: make([]string, len(roles))}
+	for i := range roles {
+		resp.Roles[i] = string(roles[i].Name)
+	}
+	return resp, nil
+}
+
+// RoleDelete OK
+func (as *authStore) RoleDelete(r *pb.AuthRoleDeleteRequest) (*pb.AuthRoleDeleteResponse, error) {
+	if as.enabled && r.Role == rootRole {
+		as.lg.Error("不能删除 'root' 角色", zap.String("role-name", r.Role))
+		return nil, ErrInvalidAuthMgmt
+	}
+
+	tx := as.be.BatchTx()
+	tx.Lock()
+	defer tx.Unlock()
+
+	role := getRole(as.lg, tx, r.Role)
+	if role == nil {
+		return nil, ErrRoleNotFound
+	}
+
+	delRole(tx, r.Role)
+
+	users := getAllUsers(as.lg, tx) // 获取所有用户
+	for _, user := range users {
+		updatedUser := &authpb.User{
+			Name:     user.Name,
+			Password: user.Password,
+			Options:  user.Options,
+		}
+		for _, role := range user.Roles {
+			if role != r.Role {
+				updatedUser.Roles = append(updatedUser.Roles, role)
+			}
+		}
+		if len(updatedUser.Roles) == len(user.Roles) {
+			continue
+		}
+		putUser(as.lg, tx, updatedUser)
+		as.invalidateCachedPerm(user.Name)
+	}
+
+	as.commitRevision(tx)
+
+	as.lg.Info("删除了一个角色", zap.String("role-name", r.Role))
+	return &pb.AuthRoleDeleteResponse{}, nil
+}
+
+// RoleAdd OK
+func (as *authStore) RoleAdd(r *pb.AuthRoleAddRequest) (*pb.AuthRoleAddResponse, error) {
+	if len(r.Name) == 0 {
+		return nil, ErrRoleEmpty
+	}
+
+	tx := as.be.BatchTx()
+	tx.Lock()
+	defer tx.Unlock()
+
+	role := getRole(as.lg, tx, r.Name)
+	if role != nil {
+		return nil, ErrRoleAlreadyExist
+	}
+
+	newRole := &authpb.Role{
+		Name: r.Name,
+	}
+
+	putRole(as.lg, tx, newRole)
+
+	as.commitRevision(tx)
+
+	as.lg.Info("创建了一个角色", zap.String("role-name", r.Name))
+	return &pb.AuthRoleAddResponse{}, nil
+}
+
+// RoleGet ok
+func (as *authStore) RoleGet(r *pb.AuthRoleGetRequest) (*pb.AuthRoleGetResponse, error) {
+	tx := as.be.BatchTx()
+	tx.Lock()
+	defer tx.Unlock()
+
+	var resp pb.AuthRoleGetResponse
+
+	role := getRole(as.lg, tx, r.Role)
+	if role == nil {
+		return nil, ErrRoleNotFound
+	}
+	resp.Perm = append(resp.Perm, role.KeyPermission...)
+	return &resp, nil
+}
+
+func (as *authStore) UserHasRole(user, role string) bool {
 	tx := as.be.BatchTx()
 	tx.Lock()
 	u := getUser(as.lg, tx, user)
@@ -1248,6 +1218,20 @@ func (as *authStore) HasRole(user, role string) bool {
 	return false
 }
 
-func (as *authStore) BcryptCost() int {
-	return as.bcryptCost
+type permSlice []*authpb.Permission
+
+func (perms permSlice) Len() int {
+	return len(perms)
+}
+
+func (perms permSlice) Less(i, j int) bool {
+	// a,a 0
+	// a b -1
+	// b a 1
+
+	return strings.Compare(perms[i].Key, perms[j].Key) < 0
+}
+
+func (perms permSlice) Swap(i, j int) {
+	perms[i], perms[j] = perms[j], perms[i]
 }

@@ -199,7 +199,7 @@ func (aa *authApplierV3) UserGet(r *pb.AuthUserGetRequest) (*pb.AuthUserGetRespo
 
 func (aa *authApplierV3) RoleGet(r *pb.AuthRoleGetRequest) (*pb.AuthRoleGetResponse, error) {
 	err := aa.as.IsAdminPermitted(&aa.authInfo)
-	if err != nil && !aa.as.HasRole(aa.authInfo.Username, r.Role) {
+	if err != nil && !aa.as.UserHasRole(aa.authInfo.Username, r.Role) {
 		aa.authInfo.Username = ""
 		aa.authInfo.Revision = 0
 		return &pb.AuthRoleGetResponse{}, err

@@ -175,16 +175,16 @@ func (s *simplePrinter) MoveLeader(leader, target uint64, r v3.MoveLeaderRespons
 }
 
 func (s *simplePrinter) RoleAdd(role string, r v3.AuthRoleAddResponse) {
-	fmt.Printf("Role %s created\n", role)
+	fmt.Printf("角色 %s 已创建\n", role)
 }
 
 func (s *simplePrinter) RoleGet(role string, r v3.AuthRoleGetResponse) {
 	fmt.Printf("Role %s\n", role)
-	fmt.Println("KV Read:")
+	fmt.Println("---->KV Read:")
 
 	printRange := func(perm *v3.Permission) {
-		sKey := string(perm.Key)
-		sRangeEnd := string(perm.RangeEnd)
+		sKey := perm.Key
+		sRangeEnd := perm.RangeEnd
 		if sRangeEnd != "\x00" {
 			fmt.Printf("\t[%s, %s)", sKey, sRangeEnd)
 		} else {
@@ -199,17 +199,17 @@ func (s *simplePrinter) RoleGet(role string, r v3.AuthRoleGetResponse) {
 	for _, perm := range r.Perm {
 		if perm.PermType == v3.PermRead || perm.PermType == v3.PermReadWrite {
 			if len(perm.RangeEnd) == 0 {
-				fmt.Printf("\t%s\n", string(perm.Key))
+				fmt.Printf("\t%s\n", perm.Key)
 			} else {
 				printRange((*v3.Permission)(perm))
 			}
 		}
 	}
-	fmt.Println("KV Write:")
+	fmt.Println("---->KV Write:")
 	for _, perm := range r.Perm {
 		if perm.PermType == v3.PermWrite || perm.PermType == v3.PermReadWrite {
 			if len(perm.RangeEnd) == 0 {
-				fmt.Printf("\t%s\n", string(perm.Key))
+				fmt.Printf("\t%s\n", perm.Key)
 			} else {
 				printRange((*v3.Permission)(perm))
 			}

@@ -2930,8 +2930,8 @@ func (m *AuthRoleGrantPermissionRequest) GetPerm() *authpb.Permission {
 
 type AuthRoleRevokePermissionRequest struct {
 	Role     string `protobuf:"bytes,1,opt,name=role,proto3" json:"role,omitempty"`
-	Key      []byte `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
-	RangeEnd []byte `protobuf:"bytes,3,opt,name=range_end,json=rangeEnd,proto3" json:"range_end,omitempty"`
+	Key      string `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
+	RangeEnd string `protobuf:"bytes,3,opt,name=range_end,json=rangeEnd,proto3" json:"range_end,omitempty"`
 }
 
 func (m *AuthRoleRevokePermissionRequest) Reset()         { *m = AuthRoleRevokePermissionRequest{} }
@@ -2950,14 +2950,14 @@ func (m *AuthRoleRevokePermissionRequest) GetRole() string {
 
 func (m *AuthRoleRevokePermissionRequest) GetKey() []byte {
 	if m != nil {
-		return m.Key
+		return []byte(m.Key)
 	}
 	return nil
 }
 
 func (m *AuthRoleRevokePermissionRequest) GetRangeEnd() []byte {
 	if m != nil {
-		return m.RangeEnd
+		return []byte(m.RangeEnd)
 	}
 	return nil
 }
@@ -5122,113 +5122,24 @@ func (c *authClient) RoleRevokePermission(ctx context.Context, in *AuthRoleRevok
 	return out, nil
 }
 
-// AuthServer is the server API for Auth service.
 type AuthServer interface {
-	// AuthEnable enables authentication.
 	AuthEnable(context.Context, *AuthEnableRequest) (*AuthEnableResponse, error)
-	// AuthDisable disables authentication.
 	AuthDisable(context.Context, *AuthDisableRequest) (*AuthDisableResponse, error)
-	// AuthStatus displays authentication status.
 	AuthStatus(context.Context, *AuthStatusRequest) (*AuthStatusResponse, error)
-	// Authenticate processes an authenticate request.
 	Authenticate(context.Context, *AuthenticateRequest) (*AuthenticateResponse, error)
-	// UserAdd adds a new user. User name cannot be empty.
 	UserAdd(context.Context, *AuthUserAddRequest) (*AuthUserAddResponse, error)
-	// UserGet gets detailed user information.
 	UserGet(context.Context, *AuthUserGetRequest) (*AuthUserGetResponse, error)
-	// UserList gets a list of all users.
 	UserList(context.Context, *AuthUserListRequest) (*AuthUserListResponse, error)
-	// UserDelete deletes a specified user.
 	UserDelete(context.Context, *AuthUserDeleteRequest) (*AuthUserDeleteResponse, error)
-	// UserChangePassword changes the password of a specified user.
 	UserChangePassword(context.Context, *AuthUserChangePasswordRequest) (*AuthUserChangePasswordResponse, error)
-	// UserGrant grants a role to a specified user.
 	UserGrantRole(context.Context, *AuthUserGrantRoleRequest) (*AuthUserGrantRoleResponse, error)
-	// UserRevokeRole revokes a role of specified user.
 	UserRevokeRole(context.Context, *AuthUserRevokeRoleRequest) (*AuthUserRevokeRoleResponse, error)
-	// RoleAdd 添加一个角色. Role name cannot be empty.
 	RoleAdd(context.Context, *AuthRoleAddRequest) (*AuthRoleAddResponse, error)
-	// RoleGet gets detailed role information.
 	RoleGet(context.Context, *AuthRoleGetRequest) (*AuthRoleGetResponse, error)
-	// RoleList gets lists of all roles.
 	RoleList(context.Context, *AuthRoleListRequest) (*AuthRoleListResponse, error)
-	// RoleDelete deletes a specified role.
 	RoleDelete(context.Context, *AuthRoleDeleteRequest) (*AuthRoleDeleteResponse, error)
-	// RoleGrantPermission grants a permission of a specified key or range to a specified role.
 	RoleGrantPermission(context.Context, *AuthRoleGrantPermissionRequest) (*AuthRoleGrantPermissionResponse, error)
-	// RoleRevokePermission revokes a key or range permission of a specified role.
 	RoleRevokePermission(context.Context, *AuthRoleRevokePermissionRequest) (*AuthRoleRevokePermissionResponse, error)
-}
-
-// UnimplementedAuthServer can be embedded to have forward compatible implementations.
-type UnimplementedAuthServer struct{}
-
-func (*UnimplementedAuthServer) AuthEnable(ctx context.Context, req *AuthEnableRequest) (*AuthEnableResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AuthEnable not implemented")
-}
-
-func (*UnimplementedAuthServer) AuthDisable(ctx context.Context, req *AuthDisableRequest) (*AuthDisableResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AuthDisable not implemented")
-}
-
-func (*UnimplementedAuthServer) AuthStatus(ctx context.Context, req *AuthStatusRequest) (*AuthStatusResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AuthStatus not implemented")
-}
-
-func (*UnimplementedAuthServer) Authenticate(ctx context.Context, req *AuthenticateRequest) (*AuthenticateResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Authenticate not implemented")
-}
-
-func (*UnimplementedAuthServer) UserAdd(ctx context.Context, req *AuthUserAddRequest) (*AuthUserAddResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UserAdd not implemented")
-}
-
-func (*UnimplementedAuthServer) UserGet(ctx context.Context, req *AuthUserGetRequest) (*AuthUserGetResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UserGet not implemented")
-}
-
-func (*UnimplementedAuthServer) UserList(ctx context.Context, req *AuthUserListRequest) (*AuthUserListResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UserList not implemented")
-}
-
-func (*UnimplementedAuthServer) UserDelete(ctx context.Context, req *AuthUserDeleteRequest) (*AuthUserDeleteResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UserDelete not implemented")
-}
-
-func (*UnimplementedAuthServer) UserChangePassword(ctx context.Context, req *AuthUserChangePasswordRequest) (*AuthUserChangePasswordResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UserChangePassword not implemented")
-}
-
-func (*UnimplementedAuthServer) UserGrantRole(ctx context.Context, req *AuthUserGrantRoleRequest) (*AuthUserGrantRoleResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UserGrantRole not implemented")
-}
-
-func (*UnimplementedAuthServer) UserRevokeRole(ctx context.Context, req *AuthUserRevokeRoleRequest) (*AuthUserRevokeRoleResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UserRevokeRole not implemented")
-}
-
-func (*UnimplementedAuthServer) RoleAdd(ctx context.Context, req *AuthRoleAddRequest) (*AuthRoleAddResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RoleAdd not implemented")
-}
-
-func (*UnimplementedAuthServer) RoleGet(ctx context.Context, req *AuthRoleGetRequest) (*AuthRoleGetResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RoleGet not implemented")
-}
-
-func (*UnimplementedAuthServer) RoleList(ctx context.Context, req *AuthRoleListRequest) (*AuthRoleListResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RoleList not implemented")
-}
-
-func (*UnimplementedAuthServer) RoleDelete(ctx context.Context, req *AuthRoleDeleteRequest) (*AuthRoleDeleteResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RoleDelete not implemented")
-}
-
-func (*UnimplementedAuthServer) RoleGrantPermission(ctx context.Context, req *AuthRoleGrantPermissionRequest) (*AuthRoleGrantPermissionResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RoleGrantPermission not implemented")
-}
-
-func (*UnimplementedAuthServer) RoleRevokePermission(ctx context.Context, req *AuthRoleRevokePermissionRequest) (*AuthRoleRevokePermissionResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RoleRevokePermission not implemented")
 }
 
 func RegisterAuthServer(s *grpc.Server, srv AuthServer) {

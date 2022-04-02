@@ -86,8 +86,8 @@ func (*User) Descriptor() ([]byte, []int) {
 // Permission is a single entity
 type Permission struct {
 	PermType             Permission_Type `protobuf:"varint,1,opt,name=permType,proto3,enum=authpb.Permission_Type" json:"permType,omitempty"`
-	Key                  []byte          `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
-	RangeEnd             []byte          `protobuf:"bytes,3,opt,name=range_end,json=rangeEnd,proto3" json:"range_end,omitempty"`
+	Key                  string          `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
+	RangeEnd             string          `protobuf:"bytes,3,opt,name=range_end,json=rangeEnd,proto3" json:"range_end,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
 	XXX_unrecognized     []byte          `json:"-"`
 	XXX_sizecache        int32           `json:"-"`

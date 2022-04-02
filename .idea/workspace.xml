@@ -6,11 +6,21 @@
   <component name="ChangeListManager">
     <list default="true" id="49524360-39b2-44cd-b702-de0461fb4222" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/v3_entry.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/v3_entry.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/alarm_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/over_alarm_command.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client_sdk/v3/auth.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/auth.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/code_debug/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/code_debug/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/auth/range_perm_cache.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/auth/range_perm_cache.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/auth/store.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/auth/store.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/apply_v3.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/apply_v3.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/v3_entry.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/v3_server.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/v3_server.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/v3service_auth.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/v3service_auth.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/printer.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/printer.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/printer_simple.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/printer_simple.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/role_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/role_command.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/api/v3/authpb/auth.pb.go" beforeDir="false" afterPath="$PROJECT_DIR$/offical/api/v3/authpb/auth.pb.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/api/v3/v3rpc/rpctypes/error.go" beforeDir="false" afterPath="$PROJECT_DIR$/offical/api/v3/v3rpc/rpctypes/error.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/etcdserverpb/over.go" beforeDir="false" afterPath="$PROJECT_DIR$/offical/etcdserverpb/over.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/offical/etcdserverpb/rpc.pb.go" beforeDir="false" afterPath="$PROJECT_DIR$/offical/etcdserverpb/rpc.pb.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/offical/etcdserverpb/rpc.proto" beforeDir="false" afterPath="$PROJECT_DIR$/offical/etcdserverpb/rpc.proto" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -78,7 +88,7 @@
       <recent name="$PROJECT_DIR$/offical/api/v3" />
     </key>
   </component>
-  <component name="RunManager" selected="Go Build.local">
+  <component name="RunManager" selected="Go Build.go build main.go">
     <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
       <module name="etcd_cn" />
       <working_directory value="$PROJECT_DIR$" />
@@ -90,11 +100,19 @@
     <configuration name="etcdctl" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true">
       <module name="etcd_cn" />
       <working_directory value="$PROJECT_DIR$" />
-      <parameters value="endpoint health" />
+      <parameters value="role grant-permission root readwrite /" />
       <kind value="FILE" />
       <package value="github.com/ls-2018/etcd_cn" />
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$/etcdctl/main.go" />
+      <method v="2" />
+    </configuration>
+    <configuration name="go build main.go" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
+      <module name="etcd_cn" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="FILE" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$/code_debug/main.go" />
       <method v="2" />
     </configuration>
     <configuration name="local" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true">
@@ -127,27 +145,6 @@
       <framework value="gotest" />
       <method v="2" />
     </configuration>
-    <configuration name="a" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="etcd_cn" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/offical/api/v3" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/offical/api/v3/a.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <configuration name="req" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="etcd_cn" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -173,16 +170,16 @@
       <item itemvalue="Go Build.local" />
       <item itemvalue="Go Build.etcdctl" />
       <item itemvalue="Go Test.TestKeyIndexFindGeneration in github.com/ls-2018/etcd_cn/etcd_backend/mvcc" />
-      <item itemvalue="Python.a" />
       <item itemvalue="Python.req" />
+      <item itemvalue="Go Build.go build main.go" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Go Build.local" />
+        <item itemvalue="Go Build.go build main.go" />
         <item itemvalue="Go Build.etcdctl" />
+        <item itemvalue="Go Build.local" />
         <item itemvalue="Go Test.TestKeyIndexFindGeneration in github.com/ls-2018/etcd_cn/etcd_backend/mvcc" />
         <item itemvalue="Python.req" />
-        <item itemvalue="Python.a" />
       </list>
     </recent_temporary>
   </component>
@@ -220,11 +217,6 @@
           <url>file://$PROJECT_DIR$/etcd/etcdserver/v3_server.go</url>
           <line>209</line>
           <option name="timeStamp" value="5" />
-        </line-breakpoint>
-        <line-breakpoint type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/etcd/etcdserver/v3service_auth.go</url>
-          <line>59</line>
-          <option name="timeStamp" value="6" />
         </line-breakpoint>
         <line-breakpoint type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/etcd/etcdserver/v3service_cluster.go</url>
@@ -293,7 +285,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/etcd/auth/store.go</url>
-          <line>123</line>
+          <line>121</line>
           <option name="timeStamp" value="254" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
@@ -347,29 +339,54 @@
           <option name="timeStamp" value="334" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/etcd/etcdserver/v3_entry.go</url>
-          <line>81</line>
-          <option name="timeStamp" value="345" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/etcd/etcdserver/apply_v3.go</url>
-          <line>605</line>
-          <option name="timeStamp" value="346" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/etcd/etcdserver/apply_v3.go</url>
-          <line>557</line>
-          <option name="timeStamp" value="347" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/client_sdk/v3/auth.go</url>
-          <line>160</line>
+          <line>161</line>
           <option name="timeStamp" value="348" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/client_sdk/v3/retry.go</url>
           <line>289</line>
           <option name="timeStamp" value="349" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcdctl/ctlv3/command/printer_fields.go</url>
+          <line>189</line>
+          <option name="timeStamp" value="369" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcdctl/ctlv3/command/printer.go</url>
+          <line>113</line>
+          <option name="timeStamp" value="371" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcdctl/ctlv3/command/printer_simple.go</url>
+          <line>181</line>
+          <option name="timeStamp" value="372" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcdctl/ctlv3/command/printer_simple.go</url>
+          <line>185</line>
+          <option name="timeStamp" value="373" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcdctl/ctlv3/command/printer_simple.go</url>
+          <line>199</line>
+          <option name="timeStamp" value="375" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcdctl/ctlv3/command/printer_simple.go</url>
+          <line>209</line>
+          <option name="timeStamp" value="376" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd/etcdserver/v3_server.go</url>
+          <line>438</line>
+          <option name="timeStamp" value="384" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd/auth/store.go</url>
+          <line>574</line>
+          <option name="timeStamp" value="389" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

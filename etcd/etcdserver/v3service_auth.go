@@ -185,6 +185,8 @@ func (s *EtcdServer) RoleAdd(ctx context.Context, r *pb.AuthRoleAddRequest) (*pb
 	return resp.(*pb.AuthRoleAddResponse), nil
 }
 
+// ------------------------------------------- OVER ---------------------------------------------------------vv
+
 func (s *EtcdServer) RoleGrantPermission(ctx context.Context, r *pb.AuthRoleGrantPermissionRequest) (*pb.AuthRoleGrantPermissionResponse, error) {
 	resp, err := s.raftRequest(ctx, pb.InternalRaftRequest{AuthRoleGrantPermission: r})
 	if err != nil {

@@ -6,13 +6,15 @@ import (
 	"fmt"
 	math_bits "math/bits"
 	"net"
+	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/ls-2018/etcd_cn/offical/etcdserverpb"
 )
 
-func main() {
+func mai2n() {
 	fmt.Println(net.ParseIP("http://127.0.0.1:8080"))
 	fmt.Println(net.ParseIP("127.0.0.1:8080"))
 	fmt.Println(net.ParseIP("www.baidu.com"))
@@ -48,3 +50,52 @@ type (
 	Config      map[string]string
 	JointConfig [2]Config
 )
+
+func main() {
+	fmt.Println(strings.Compare("a", "b"))
+	fmt.Println(strings.Compare("a", "a"))
+	fmt.Println(strings.Compare("b", "ab"))
+	a := []*A{
+		{Key: "a"},
+		{Key: "b"},
+		{Key: "c"},
+		{Key: "d"},
+	}
+	sort.Sort(permSlice(a))
+	for _, i := range a {
+		fmt.Println(i.Key)
+	}
+
+	// 在已有的权限中,
+	idx := sort.Search(len(a), func(i int) bool {
+		// a,a 0
+		// a b -1
+		// b a 1
+		// a,b,c,d,e
+		// c
+		return strings.Compare(a[i].Key, "gc") >= 0
+	})
+	fmt.Println(idx)
+}
+
+type A struct {
+	Key string
+}
+
+type permSlice []*A
+
+func (perms permSlice) Len() int {
+	return len(perms)
+}
+
+func (perms permSlice) Less(i, j int) bool {
+	// a,a 0
+	// a b -1
+	// b a 1
+
+	return strings.Compare(perms[i].Key, perms[j].Key) < 0
+}
+
+func (perms permSlice) Swap(i, j int) {
+	perms[i], perms[j] = perms[j], perms[i]
+}

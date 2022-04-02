@@ -514,6 +514,7 @@ func (a *applierV3backend) UserAdd(r *pb.AuthUserAddRequest) (*pb.AuthUserAddRes
 	return resp, err
 }
 
+// UserDelete ok
 func (a *applierV3backend) UserDelete(r *pb.AuthUserDeleteRequest) (*pb.AuthUserDeleteResponse, error) {
 	resp, err := a.s.AuthStore().UserDelete(r)
 	if resp != nil {
@@ -554,6 +555,7 @@ func (a *applierV3backend) UserRevokeRole(r *pb.AuthUserRevokeRoleRequest) (*pb.
 	return resp, err
 }
 
+// RoleAdd ok
 func (a *applierV3backend) RoleAdd(r *pb.AuthRoleAddRequest) (*pb.AuthRoleAddResponse, error) {
 	resp, err := a.s.AuthStore().RoleAdd(r)
 	if resp != nil {
@@ -570,14 +572,6 @@ func (a *applierV3backend) RoleGrantPermission(r *pb.AuthRoleGrantPermissionRequ
 	return resp, err
 }
 
-func (a *applierV3backend) RoleGet(r *pb.AuthRoleGetRequest) (*pb.AuthRoleGetResponse, error) {
-	resp, err := a.s.AuthStore().RoleGet(r)
-	if resp != nil {
-		resp.Header = newHeader(a.s)
-	}
-	return resp, err
-}
-
 func (a *applierV3backend) RoleRevokePermission(r *pb.AuthRoleRevokePermissionRequest) (*pb.AuthRoleRevokePermissionResponse, error) {
 	resp, err := a.s.AuthStore().RoleRevokePermission(r)
 	if resp != nil {
@@ -586,24 +580,8 @@ func (a *applierV3backend) RoleRevokePermission(r *pb.AuthRoleRevokePermissionRe
 	return resp, err
 }
 
-func (a *applierV3backend) RoleDelete(r *pb.AuthRoleDeleteRequest) (*pb.AuthRoleDeleteResponse, error) {
-	resp, err := a.s.AuthStore().RoleDelete(r)
-	if resp != nil {
-		resp.Header = newHeader(a.s)
-	}
-	return resp, err
-}
-
 func (a *applierV3backend) UserList(r *pb.AuthUserListRequest) (*pb.AuthUserListResponse, error) {
 	resp, err := a.s.AuthStore().UserList(r)
-	if resp != nil {
-		resp.Header = newHeader(a.s)
-	}
-	return resp, err
-}
-
-func (a *applierV3backend) RoleList(r *pb.AuthRoleListRequest) (*pb.AuthRoleListResponse, error) {
-	resp, err := a.s.AuthStore().RoleList(r)
 	if resp != nil {
 		resp.Header = newHeader(a.s)
 	}
@@ -985,4 +963,31 @@ func (a *applierV3backend) Alarm(ar *pb.AlarmRequest) (*pb.AlarmResponse, error)
 		return nil, nil
 	}
 	return resp, nil
+}
+
+// RoleList ok
+func (a *applierV3backend) RoleList(r *pb.AuthRoleListRequest) (*pb.AuthRoleListResponse, error) {
+	resp, err := a.s.AuthStore().RoleList(r)
+	if resp != nil {
+		resp.Header = newHeader(a.s)
+	}
+	return resp, err
+}
+
+// RoleGet ok
+func (a *applierV3backend) RoleGet(r *pb.AuthRoleGetRequest) (*pb.AuthRoleGetResponse, error) {
+	resp, err := a.s.AuthStore().RoleGet(r)
+	if resp != nil {
+		resp.Header = newHeader(a.s)
+	}
+	return resp, err
+}
+
+// RoleDelete ok
+func (a *applierV3backend) RoleDelete(r *pb.AuthRoleDeleteRequest) (*pb.AuthRoleDeleteResponse, error) {
+	resp, err := a.s.AuthStore().RoleDelete(r)
+	if resp != nil {
+		resp.Header = newHeader(a.s)
+	}
+	return resp, err
 }

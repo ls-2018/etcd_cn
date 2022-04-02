@@ -42,13 +42,13 @@ func getMergedPerms(lg *zap.Logger, tx backend.BatchTx, userName string) *unifie
 			var rangeEnd []byte
 
 			if len(perm.RangeEnd) != 1 || perm.RangeEnd[0] != 0 {
-				rangeEnd = perm.RangeEnd
+				rangeEnd = []byte(perm.RangeEnd)
 			}
 
 			if len(perm.RangeEnd) != 0 {
-				ivl = adt.NewBytesAffineInterval(perm.Key, rangeEnd)
+				ivl = adt.NewBytesAffineInterval([]byte(perm.Key), rangeEnd)
 			} else {
-				ivl = adt.NewBytesAffinePoint(perm.Key)
+				ivl = adt.NewBytesAffinePoint([]byte(perm.Key))
 			}
 
 			switch perm.PermType {
@@ -132,6 +132,7 @@ func (as *authStore) clearCachedPerm() {
 	as.rangePermCache = make(map[string]*unifiedRangePermissions)
 }
 
+// 清除缓存中的全新信息, 之后重新生成
 func (as *authStore) invalidateCachedPerm(userName string) {
 	delete(as.rangePermCache, userName)
 }

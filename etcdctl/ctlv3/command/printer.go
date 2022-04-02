@@ -110,7 +110,10 @@ func (p *printerRPC) MoveLeader(leader, target uint64, r v3.MoveLeaderResponse) 
 	p.p((*pb.MoveLeaderResponse)(&r))
 }
 func (p *printerRPC) RoleAdd(_ string, r v3.AuthRoleAddResponse) { p.p((*pb.AuthRoleAddResponse)(&r)) }
-func (p *printerRPC) RoleGet(_ string, r v3.AuthRoleGetResponse) { p.p((*pb.AuthRoleGetResponse)(&r)) }
+func (p *printerRPC) RoleGet(_ string, r v3.AuthRoleGetResponse) {
+	p.p((*pb.AuthRoleGetResponse)(&r))
+}
+
 func (p *printerRPC) RoleDelete(_ string, r v3.AuthRoleDeleteResponse) {
 	p.p((*pb.AuthRoleDeleteResponse)(&r))
 }
