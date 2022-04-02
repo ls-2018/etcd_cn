@@ -45,7 +45,7 @@ func (a *applierV3backend) Apply(r *pb.InternalRaftRequest, shouldApplyV3 member
 	case r.Put != nil:
 		ar.resp, ar.trace, ar.err = a.s.applyV3.Put(context.TODO(), nil, r.Put) // ✅
 	case r.DeleteRange != nil:
-		ar.resp, ar.err = a.s.applyV3.DeleteRange(nil, r.DeleteRange)
+		ar.resp, ar.err = a.s.applyV3.DeleteRange(nil, r.DeleteRange) // ✅
 	case r.Txn != nil:
 		ar.resp, ar.trace, ar.err = a.s.applyV3.Txn(context.TODO(), r.Txn)
 	case r.Compaction != nil:
@@ -57,7 +57,7 @@ func (a *applierV3backend) Apply(r *pb.InternalRaftRequest, shouldApplyV3 member
 	case r.LeaseCheckpoint != nil:
 		ar.resp, ar.err = a.s.applyV3.LeaseCheckpoint(r.LeaseCheckpoint)
 	case r.Alarm != nil:
-		ar.resp, ar.err = a.s.applyV3.Alarm(r.Alarm)
+		ar.resp, ar.err = a.s.applyV3.Alarm(r.Alarm) // ✅
 	case r.Authenticate != nil:
 		ar.resp, ar.err = a.s.applyV3.Authenticate(r.Authenticate)
 	case r.AuthEnable != nil:
@@ -79,7 +79,7 @@ func (a *applierV3backend) Apply(r *pb.InternalRaftRequest, shouldApplyV3 member
 	case r.AuthUserRevokeRole != nil:
 		ar.resp, ar.err = a.s.applyV3.UserRevokeRole(r.AuthUserRevokeRole)
 	case r.AuthRoleAdd != nil:
-		ar.resp, ar.err = a.s.applyV3.RoleAdd(r.AuthRoleAdd)
+		ar.resp, ar.err = a.s.applyV3.RoleAdd(r.AuthRoleAdd) // ✅
 	case r.AuthRoleGrantPermission != nil:
 		ar.resp, ar.err = a.s.applyV3.RoleGrantPermission(r.AuthRoleGrantPermission)
 	case r.AuthRoleGet != nil:

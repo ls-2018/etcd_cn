@@ -4942,39 +4942,22 @@ var _Maintenance_serviceDesc = grpc.ServiceDesc{
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type AuthClient interface {
-	// AuthEnable enables authentication.
 	AuthEnable(ctx context.Context, in *AuthEnableRequest, opts ...grpc.CallOption) (*AuthEnableResponse, error)
-	// AuthDisable disables authentication.
 	AuthDisable(ctx context.Context, in *AuthDisableRequest, opts ...grpc.CallOption) (*AuthDisableResponse, error)
-	// AuthStatus displays authentication status.
 	AuthStatus(ctx context.Context, in *AuthStatusRequest, opts ...grpc.CallOption) (*AuthStatusResponse, error)
-	// Authenticate processes an authenticate request.
 	Authenticate(ctx context.Context, in *AuthenticateRequest, opts ...grpc.CallOption) (*AuthenticateResponse, error)
-	// UserAdd adds a new user. User name cannot be empty.
 	UserAdd(ctx context.Context, in *AuthUserAddRequest, opts ...grpc.CallOption) (*AuthUserAddResponse, error)
-	// UserGet gets detailed user information.
 	UserGet(ctx context.Context, in *AuthUserGetRequest, opts ...grpc.CallOption) (*AuthUserGetResponse, error)
-	// UserList gets a list of all users.
 	UserList(ctx context.Context, in *AuthUserListRequest, opts ...grpc.CallOption) (*AuthUserListResponse, error)
-	// UserDelete deletes a specified user.
 	UserDelete(ctx context.Context, in *AuthUserDeleteRequest, opts ...grpc.CallOption) (*AuthUserDeleteResponse, error)
-	// UserChangePassword changes the password of a specified user.
 	UserChangePassword(ctx context.Context, in *AuthUserChangePasswordRequest, opts ...grpc.CallOption) (*AuthUserChangePasswordResponse, error)
-	// UserGrant grants a role to a specified user.
 	UserGrantRole(ctx context.Context, in *AuthUserGrantRoleRequest, opts ...grpc.CallOption) (*AuthUserGrantRoleResponse, error)
-	// UserRevokeRole revokes a role of specified user.
 	UserRevokeRole(ctx context.Context, in *AuthUserRevokeRoleRequest, opts ...grpc.CallOption) (*AuthUserRevokeRoleResponse, error)
-	// RoleAdd adds a new role. Role name cannot be empty.
 	RoleAdd(ctx context.Context, in *AuthRoleAddRequest, opts ...grpc.CallOption) (*AuthRoleAddResponse, error)
-	// RoleGet gets detailed role information.
 	RoleGet(ctx context.Context, in *AuthRoleGetRequest, opts ...grpc.CallOption) (*AuthRoleGetResponse, error)
-	// RoleList gets lists of all roles.
 	RoleList(ctx context.Context, in *AuthRoleListRequest, opts ...grpc.CallOption) (*AuthRoleListResponse, error)
-	// RoleDelete deletes a specified role.
 	RoleDelete(ctx context.Context, in *AuthRoleDeleteRequest, opts ...grpc.CallOption) (*AuthRoleDeleteResponse, error)
-	// RoleGrantPermission grants a permission of a specified key or range to a specified role.
 	RoleGrantPermission(ctx context.Context, in *AuthRoleGrantPermissionRequest, opts ...grpc.CallOption) (*AuthRoleGrantPermissionResponse, error)
-	// RoleRevokePermission revokes a key or range permission of a specified role.
 	RoleRevokePermission(ctx context.Context, in *AuthRoleRevokePermissionRequest, opts ...grpc.CallOption) (*AuthRoleRevokePermissionResponse, error)
 }
 
@@ -5163,7 +5146,7 @@ type AuthServer interface {
 	UserGrantRole(context.Context, *AuthUserGrantRoleRequest) (*AuthUserGrantRoleResponse, error)
 	// UserRevokeRole revokes a role of specified user.
 	UserRevokeRole(context.Context, *AuthUserRevokeRoleRequest) (*AuthUserRevokeRoleResponse, error)
-	// RoleAdd adds a new role. Role name cannot be empty.
+	// RoleAdd 添加一个角色. Role name cannot be empty.
 	RoleAdd(context.Context, *AuthRoleAddRequest) (*AuthRoleAddResponse, error)
 	// RoleGet gets detailed role information.
 	RoleGet(context.Context, *AuthRoleGetRequest) (*AuthRoleGetResponse, error)

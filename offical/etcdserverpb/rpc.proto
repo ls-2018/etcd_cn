@@ -338,7 +338,7 @@ service Auth {
     };
   }
 
-  // RoleAdd adds a new role. Role name cannot be empty.
+  // RoleAdd 添加一个角色. Role name cannot be empty.
   rpc RoleAdd(AuthRoleAddRequest) returns (AuthRoleAddResponse) {
       option (google.api.http) = {
         post: "/v3/auth/role/add"

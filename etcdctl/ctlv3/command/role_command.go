@@ -49,7 +49,7 @@ func NewRoleCommand() *cobra.Command {
 func newRoleAddCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "add <role name>",
-		Short: "Adds a new role",
+		Short: "添加一个角色",
 		Run:   roleAddCommandFunc,
 	}
 }
@@ -104,10 +104,9 @@ func newRoleRevokePermissionCommand() *cobra.Command {
 	return cmd
 }
 
-// roleAddCommandFunc executes the "role add" command.
 func roleAddCommandFunc(cmd *cobra.Command, args []string) {
 	if len(args) != 1 {
-		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("role add command requires role name as its argument"))
+		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("role add命令需要角色名作为参数"))
 	}
 
 	resp, err := mustClientFromCmd(cmd).Auth.RoleAdd(context.TODO(), args[0])
@@ -118,7 +117,6 @@ func roleAddCommandFunc(cmd *cobra.Command, args []string) {
 	display.RoleAdd(args[0], *resp)
 }
 
-// roleDeleteCommandFunc executes the "role delete" command.
 func roleDeleteCommandFunc(cmd *cobra.Command, args []string) {
 	if len(args) != 1 {
 		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("role delete command requires role name as its argument"))
@@ -132,7 +130,6 @@ func roleDeleteCommandFunc(cmd *cobra.Command, args []string) {
 	display.RoleDelete(args[0], *resp)
 }
 
-// roleGetCommandFunc executes the "role get" command.
 func roleGetCommandFunc(cmd *cobra.Command, args []string) {
 	if len(args) != 1 {
 		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("role get command requires role name as its argument"))
