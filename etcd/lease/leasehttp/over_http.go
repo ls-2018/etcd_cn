@@ -36,7 +36,6 @@ var (
 	ErrLeaseHTTPTimeout = errors.New("waiting for node to catch up its applied index has timed out")
 )
 
-// NewHandler returns an http Handler for lease renewals
 func NewHandler(l lease.Lessor, waitch func() <-chan struct{}) http.Handler {
 	return &leaseHandler{l, waitch}
 }
@@ -64,7 +63,7 @@ func (h *leaseHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case LeasePrefix:
 		lreq := pb.LeaseKeepAliveRequest{}
 		if uerr := lreq.Unmarshal(b); uerr != nil {
-			http.Error(w, "error unmarshalling request", http.StatusBadRequest)
+			http.Error(w, "反序列失败", http.StatusBadRequest)
 			return
 		}
 		select {
@@ -83,7 +82,7 @@ func (h *leaseHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, rerr.Error(), http.StatusBadRequest)
 			return
 		}
-		// TODO: fill out ResponseHeader
+		// 填写ResponseHeader
 		resp := &pb.LeaseKeepAliveResponse{ID: lreq.ID, TTL: ttl}
 		v, err = resp.Marshal()
 		if err != nil {
@@ -108,7 +107,6 @@ func (h *leaseHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, lease.ErrLeaseNotFound.Error(), http.StatusNotFound)
 			return
 		}
-		// TODO: fill out ResponseHeader
 		resp := &leasepb.LeaseInternalResponse{
 			LeaseTimeToLiveResponse: &pb.LeaseTimeToLiveResponse{
 				Header:     &pb.ResponseHeader{},
@@ -141,10 +139,7 @@ func (h *leaseHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Write(v)
 }
 
-// RenewHTTP renews a lease at a given primary etcd.
-// TODO: Batch request in future?
 func RenewHTTP(ctx context.Context, id lease.LeaseID, url string, rt http.RoundTripper) (int64, error) {
-	// will post lreq protobuf to leader
 	lreq, err := (&pb.LeaseKeepAliveRequest{ID: int64(id)}).Marshal()
 	if err != nil {
 		return -1, err
@@ -189,7 +184,6 @@ func RenewHTTP(ctx context.Context, id lease.LeaseID, url string, rt http.RoundT
 	return lresp.TTL, nil
 }
 
-// TimeToLiveHTTP retrieves lease information of the given lease ID.
 func TimeToLiveHTTP(ctx context.Context, id lease.LeaseID, keys bool, url string, rt http.RoundTripper) (*leasepb.LeaseInternalResponse, error) {
 	// will post lreq protobuf to leader
 	lreq, err := (&leasepb.LeaseInternalRequest{

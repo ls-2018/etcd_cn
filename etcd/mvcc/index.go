@@ -190,7 +190,7 @@ func (ti *treeIndex) Compact(rev int64) map[revision]struct{} {
 	return available
 }
 
-// Keep finds all revisions to be kept for a Compaction at the given rev.
+// Keep 查找在给定版本之后的所有修订。
 func (ti *treeIndex) Keep(rev int64) map[revision]struct{} {
 	available := make(map[revision]struct{})
 	ti.RLock()

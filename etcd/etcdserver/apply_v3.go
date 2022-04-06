@@ -434,6 +434,7 @@ func (a *applierV3backend) applyTxn(ctx context.Context, txn mvcc.TxnWrite, rt *
 	return txns
 }
 
+// Compaction 移除kv 历史事件
 func (a *applierV3backend) Compaction(compaction *pb.CompactionRequest) (*pb.CompactionResponse, <-chan struct{}, *traceutil.Trace, error) {
 	resp := &pb.CompactionResponse{}
 	resp.Header = &pb.ResponseHeader{}
@@ -446,7 +447,7 @@ func (a *applierV3backend) Compaction(compaction *pb.CompactionRequest) (*pb.Com
 	if err != nil {
 		return nil, ch, nil, err
 	}
-	// get the current revision. which key to get is not important.
+	// 获得当前版本。拿哪把key并不重要。
 	rr, _ := a.s.KV().Range(context.TODO(), []byte("compaction"), nil, mvcc.RangeOptions{})
 	resp.Header.Revision = rr.Rev
 	return resp, ch, trace, err
@@ -473,24 +474,6 @@ func (a *applierV3backend) DowngradeInfoSet(r *membershippb.DowngradeInfoSetRequ
 		d = membership.DowngradeInfo{Enabled: true, TargetVersion: r.Ver}
 	}
 	a.s.cluster.SetDowngradeInfo(&d, shouldApplyV3)
-}
-
-type quotaApplierV3 struct {
-	applierV3 // applierV3backend
-	q         Quota
-}
-
-func newQuotaApplierV3(s *EtcdServer, app applierV3) applierV3 {
-	return &quotaApplierV3{app, NewBackendQuota(s, "v3-applier")}
-}
-
-func (a *quotaApplierV3) Put(ctx context.Context, txn mvcc.TxnWrite, p *pb.PutRequest) (*pb.PutResponse, *traceutil.Trace, error) {
-	ok := a.q.Available(p)
-	resp, trace, err := a.applierV3.Put(ctx, txn, p)
-	if err == nil && !ok {
-		err = ErrNoSpace
-	}
-	return resp, trace, err
 }
 
 func (a *quotaApplierV3) Txn(ctx context.Context, rt *pb.TxnRequest) (*pb.TxnResponse, *traceutil.Trace, error) {
@@ -998,4 +981,22 @@ func (a *quotaApplierV3) LeaseGrant(lc *pb.LeaseGrantRequest) (*pb.LeaseGrantRes
 		err = ErrNoSpace
 	}
 	return resp, err
+}
+
+type quotaApplierV3 struct {
+	applierV3 // applierV3backend
+	q         Quota
+}
+
+func newQuotaApplierV3(s *EtcdServer, app applierV3) applierV3 {
+	return &quotaApplierV3{app, NewBackendQuota(s, "v3-applier")}
+}
+
+func (a *quotaApplierV3) Put(ctx context.Context, txn mvcc.TxnWrite, p *pb.PutRequest) (*pb.PutResponse, *traceutil.Trace, error) {
+	ok := a.q.Available(p) // 判断给定的请求是否符合配额要求
+	resp, trace, err := a.applierV3.Put(ctx, txn, p)
+	if err == nil && !ok {
+		err = ErrNoSpace
+	}
+	return resp, trace, err
 }

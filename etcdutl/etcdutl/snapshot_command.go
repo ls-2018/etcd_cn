@@ -63,7 +63,7 @@ func newSnapshotStatusCommand() *cobra.Command {
 func NewSnapshotRestoreCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "restore <filename> --data-dir {output dir} [options]",
-		Short: "Restores an etcd member snapshot to an etcd directory",
+		Short: "将etcd成员快照恢复到etcd目录",
 		Run:   snapshotRestoreCommandFunc,
 	}
 	cmd.Flags().StringVar(&restoreDataDir, "data-dir", "", "Path to the output data directory")

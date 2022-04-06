@@ -1079,14 +1079,10 @@ func (m *TxnResponse) GetResponses() []*ResponseOp {
 	return nil
 }
 
-// CompactionRequest compacts the key-value store up to a given revision. All superseded keys
-// with a revision less than the compaction revision will be removed.
 type CompactionRequest struct {
-	// revision is the key-value store revision for the compaction operation.
+	//  Revision是用于压缩操作的键-值存储修订。
 	Revision int64 `protobuf:"varint,1,opt,name=revision,proto3" json:"revision,omitempty"`
-	// physical is set so the RPC will wait until the compaction is physically
-	// applied to the local database such that compacted entries are totally
-	// removed from the backend database.
+	//
 	Physical bool `protobuf:"varint,2,opt,name=physical,proto3" json:"physical,omitempty"`
 }
 
@@ -1235,9 +1231,8 @@ func (*SnapshotRequest) Descriptor() ([]byte, []int) {
 type SnapshotResponse struct {
 	// header has the current key-value store information. The first header in the snapshot
 	// stream indicates the point in time of the snapshot.
-	Header *ResponseHeader `protobuf:"bytes,1,opt,name=header,proto3" json:"header,omitempty"`
-	// remaining_bytes is the number of blob bytes to be sent after this message
-	RemainingBytes uint64 `protobuf:"varint,2,opt,name=remaining_bytes,json=remainingBytes,proto3" json:"remaining_bytes,omitempty"`
+	Header         *ResponseHeader `protobuf:"bytes,1,opt,name=header,proto3" json:"header,omitempty"`
+	RemainingBytes uint64          `protobuf:"varint,2,opt,name=remaining_bytes,json=remainingBytes,proto3" json:"remaining_bytes,omitempty"` // 剩余数据量
 	// blob contains the next chunk of the snapshot in the snapshot stream.
 	Blob []byte `protobuf:"bytes,3,opt,name=blob,proto3" json:"blob,omitempty"`
 }
@@ -3372,24 +3367,10 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type KVClient interface {
-	// Range gets the keys in the range from the key-value store.
 	Range(ctx context.Context, in *RangeRequest, opts ...grpc.CallOption) (*RangeResponse, error)
-	// Put puts the given key into the key-value store.
-	// A put request increments the revision of the key-value store
-	// and generates one event in the event history.
 	Put(ctx context.Context, in *PutRequest, opts ...grpc.CallOption) (*PutResponse, error)
-	// DeleteRange deletes the given range from the key-value store.
-	// A delete request increments the revision of the key-value store
-	// and generates a delete event in the event history for every deleted key.
 	DeleteRange(ctx context.Context, in *DeleteRangeRequest, opts ...grpc.CallOption) (*DeleteRangeResponse, error)
-	// Txn processes multiple requests in a single transaction.
-	// A txn request increments the revision of the key-value store
-	// and generates events with the same revision for every completed request.
-	// It is not allowed to modify the same key several times within one txn.
 	Txn(ctx context.Context, in *TxnRequest, opts ...grpc.CallOption) (*TxnResponse, error)
-	// Compact compacts the event history in the etcd key-value store. The key-value
-	// store should be periodically compacted or the event history will continue to grow
-	// indefinitely.
 	Compact(ctx context.Context, in *CompactionRequest, opts ...grpc.CallOption) (*CompactionResponse, error)
 }
 
@@ -3453,8 +3434,7 @@ type KVServer interface {
 	DeleteRange(context.Context, *DeleteRangeRequest) (*DeleteRangeResponse, error) // 范围删除
 	// Txn 在一个事务中处理多个请求.一个txn请求会增加键值存储的版本并为每个完成的请求生成具有相同版本的事件.不允许在一个txn中多次修改同一个键.
 	Txn(context.Context, *TxnRequest) (*TxnResponse, error)
-	// Compact 压缩 etcd 键值存储中的事件历史.该键值 存储器应定期压缩否则事件历史将继续无限地增长.
-	Compact(context.Context, *CompactionRequest) (*CompactionResponse, error) // 压缩
+	Compact(context.Context, *CompactionRequest) (*CompactionResponse, error) // 压缩 etcd 键值存储中的事件历史
 }
 
 // UnimplementedKVServer can be embedded to have forward compatible implementations.
@@ -3949,29 +3929,13 @@ var _Cluster_serviceDesc = grpc.ServiceDesc{
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MaintenanceClient interface {
-	// Alarm activates, deactivates, and queries alarms regarding cluster health.
 	Alarm(ctx context.Context, in *AlarmRequest, opts ...grpc.CallOption) (*AlarmResponse, error)
-	// Status gets the status of the member.
 	Status(ctx context.Context, in *StatusRequest, opts ...grpc.CallOption) (*StatusResponse, error)
-	// Defragment defragments a member's backend database to recover storage space.
 	Defragment(ctx context.Context, in *DefragmentRequest, opts ...grpc.CallOption) (*DefragmentResponse, error)
-	// Hash computes the hash of whole backend keyspace,
-	// including key, lease, and other buckets in storage.
-	// This is designed for testing ONLY!
-	// Do not rely on this in production with ongoing transactions,
-	// since Hash operation does not hold MVCC locks.
-	// Use "HashKV" API instead for "key" bucket consistency checks.
 	Hash(ctx context.Context, in *HashRequest, opts ...grpc.CallOption) (*HashResponse, error)
-	// HashKV computes the hash of all MVCC keys up to a given revision.
-	// It only iterates "key" bucket in backend storage.
 	HashKV(ctx context.Context, in *HashKVRequest, opts ...grpc.CallOption) (*HashKVResponse, error)
-	// Snapshot sends a snapshot of the entire backend from a member over a stream to a client.
 	Snapshot(ctx context.Context, in *SnapshotRequest, opts ...grpc.CallOption) (Maintenance_SnapshotClient, error)
-	// MoveLeader requests current leader node to transfer its leadership to transferee.
 	MoveLeader(ctx context.Context, in *MoveLeaderRequest, opts ...grpc.CallOption) (*MoveLeaderResponse, error)
-	// Downgrade requests downgrades, verifies feasibility or cancels downgrade
-	// on the cluster version.
-	// Supported since etcd 3.5.
 	Downgrade(ctx context.Context, in *DowngradeRequest, opts ...grpc.CallOption) (*DowngradeResponse, error)
 }
 
@@ -4079,22 +4043,11 @@ func (c *maintenanceClient) Downgrade(ctx context.Context, in *DowngradeRequest,
 }
 
 type MaintenanceServer interface {
-	// Alarm activates, deactivates, and queries alarms regarding cluster health.
 	Alarm(context.Context, *AlarmRequest) (*AlarmResponse, error)
-	// Status gets the status of the member.
 	Status(context.Context, *StatusRequest) (*StatusResponse, error)
-	// Defragment defragments a member's backend database to recover storage space.
 	Defragment(context.Context, *DefragmentRequest) (*DefragmentResponse, error)
-	// Hash computes the hash of whole backend keyspace,
-	// including key, lease, and other buckets in storage.
-	// This is designed for testing ONLY!
-	// Do not rely on this in production with ongoing transactions,
-	// since Hash operation does not hold MVCC locks.
-	// Use "HashKV" API instead for "key" bucket consistency checks.
 	Hash(context.Context, *HashRequest) (*HashResponse, error)
-	// HashKV computes the hash of all MVCC keys up to a given revision.
-	// It only iterates "key" bucket in backend storage.
-	HashKV(context.Context, *HashKVRequest) (*HashKVResponse, error)
+	HashKV(context.Context, *HashKVRequest) (*HashKVResponse, error) // 计算所有MVCC键的哈希值直到一个给定的修订。只遍历key桶
 	// Snapshot sends a snapshot of the entire backend from a member over a stream to a client.
 	Snapshot(*SnapshotRequest, Maintenance_SnapshotServer) error
 	// MoveLeader requests current leader node to transfer its leadership to transferee.

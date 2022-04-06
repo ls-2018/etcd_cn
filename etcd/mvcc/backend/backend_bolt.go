@@ -251,22 +251,22 @@ func (b *backend) ForceCommit() {
 	b.batchTx.Commit()
 }
 
+// Snapshot 获取一个blot.db快照结构体
 func (b *backend) Snapshot() Snapshot {
 	b.batchTx.Commit()
 
 	b.mu.RLock()
 	defer b.mu.RUnlock()
-	tx, err := b.db.Begin(false)
+	tx, err := b.db.Begin(false) // 读事务
 	if err != nil {
-		b.lg.Fatal("failed to begin tx", zap.Error(err))
+		b.lg.Fatal("开启读事务失败", zap.Error(err))
 	}
 
 	stopc, donec := make(chan struct{}), make(chan struct{})
-	dbBytes := tx.Size()
+	dbBytes := tx.Size() // 返回该事务所看到的当前数据库大小(以字节为单位)。
 	go func() {
 		defer close(donec)
-		// sendRateBytes is based on transferring snapshot data over a 1 gigabit/s connection
-		// assuming a min tcp throughput of 100MB/s.
+		// sendRateBytes基于1千兆/秒的连接传输快照数据，假设tcp最小吞吐量为100MB/s。
 		var sendRateBytes int64 = 100 * 1024 * 1024
 		warningTimeout := time.Duration(int64((float64(dbBytes) / float64(sendRateBytes)) * float64(time.Second)))
 		if warningTimeout < minSnapshotWarningTimeout {
@@ -278,15 +278,11 @@ func (b *backend) Snapshot() Snapshot {
 		for {
 			select {
 			case <-ticker.C:
-				b.lg.Warn(
-					"snapshotting taking too long to transfer",
-					zap.Duration("taking", time.Since(start)),
+				b.lg.Warn("快照传输时间过长", zap.Duration("taking", time.Since(start)),
 					zap.Int64("bytes", dbBytes),
 					zap.String("size", humanize.Bytes(uint64(dbBytes))),
 				)
-
 			case <-stopc:
-
 				return
 			}
 		}
@@ -305,11 +301,12 @@ func (b *backend) Hash(ignores func(bucketName, keyName []byte) bool) (uint32, e
 		for next, _ := c.First(); next != nil; next, _ = c.Next() {
 			b := tx.Bucket(next)
 			if b == nil {
-				return fmt.Errorf("cannot get hash of bucket %s", string(next))
+				return fmt.Errorf("获取桶的hash失败 %s", string(next))
 			}
 			h.Write(next)
 			b.ForEach(func(k, v []byte) error {
 				if ignores != nil && !ignores(next, k) {
+					fmt.Println(string(k), string(v))
 					h.Write(k)
 					h.Write(v)
 				}

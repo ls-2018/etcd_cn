@@ -89,17 +89,6 @@ func isTxnReadonly(r *pb.TxnRequest) bool {
 	return true
 }
 
-func (s *EtcdServer) Alarm(ctx context.Context, r *pb.AlarmRequest) (*pb.AlarmResponse, error) {
-	req := pb.InternalRaftRequest{Alarm: r}
-	// marshal, _ := json.Marshal(req)
-	// fmt.Println("marshal-->",string(marshal))
-	resp, err := s.raftRequestOnce(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	return resp.(*pb.AlarmResponse), nil
-}
-
 // Watchable returns a watchable interface attached to the etcdserver.
 func (s *EtcdServer) Watchable() mvcc.WatchableKV { return s.KV() }
 
@@ -372,7 +361,7 @@ func (a *applierV3backend) Apply(r *pb.InternalRaftRequest, shouldApplyV3 member
 	case r.Txn != nil:
 		ar.resp, ar.trace, ar.err = a.s.applyV3.Txn(context.TODO(), r.Txn)
 	case r.Compaction != nil:
-		ar.resp, ar.physc, ar.trace, ar.err = a.s.applyV3.Compaction(r.Compaction)
+		ar.resp, ar.physc, ar.trace, ar.err = a.s.applyV3.Compaction(r.Compaction) // ✅ 压缩kv 历史事件
 	case r.LeaseGrant != nil:
 		ar.resp, ar.err = a.s.applyV3.LeaseGrant(r.LeaseGrant) // ✅ 创建租约
 	case r.LeaseRevoke != nil:
@@ -441,4 +430,16 @@ func (s *EtcdServer) waitLeader(ctx context.Context) (*membership.Member, error)
 		return nil, ErrNoLeader
 	}
 	return leader, nil
+}
+
+// Alarm 发送警报信息
+func (s *EtcdServer) Alarm(ctx context.Context, r *pb.AlarmRequest) (*pb.AlarmResponse, error) {
+	req := pb.InternalRaftRequest{Alarm: r}
+	// marshal, _ := json.Marshal(req)
+	// fmt.Println("marshal-->",string(marshal))
+	resp, err := s.raftRequestOnce(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*pb.AlarmResponse), nil
 }

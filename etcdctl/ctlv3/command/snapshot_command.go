@@ -56,7 +56,7 @@ func NewSnapshotCommand() *cobra.Command {
 func NewSnapshotSaveCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "save <filename>",
-		Short: "Stores an etcd node backend snapshot to a given file",
+		Short: "将etcd节点后端快照存储到给定的文件",
 		Run:   snapshotSaveCommandFunc,
 	}
 }
@@ -77,17 +77,16 @@ Moved to 'etcdctl snapshot status ...'
 func NewSnapshotRestoreCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "restore <filename> [options]",
-		Short: "Restores an etcd member snapshot to an etcd directory",
+		Short: "将etcd成员快照恢复到etcd目录",
 		Run:   snapshotRestoreCommandFunc,
-		Long:  "Moved to `etcdctl snapshot restore ...`\n",
 	}
-	cmd.Flags().StringVar(&restoreDataDir, "data-dir", "", "Path to the data directory")
-	cmd.Flags().StringVar(&restoreWalDir, "wal-dir", "", "Path to the WAL directory (use --data-dir if none given)")
-	cmd.Flags().StringVar(&restoreCluster, "initial-cluster", initialClusterFromName(defaultName), "Initial cluster configuration for restore bootstrap")
-	cmd.Flags().StringVar(&restoreClusterToken, "initial-cluster-token", "etcd-cluster", "Initial cluster token for the etcd cluster during restore bootstrap")
-	cmd.Flags().StringVar(&restorePeerURLs, "initial-advertise-peer-urls", defaultInitialAdvertisePeerURLs, "List of this member's peer URLs to advertise to the rest of the cluster")
-	cmd.Flags().StringVar(&restoreName, "name", defaultName, "Human-readable name for this member")
-	cmd.Flags().BoolVar(&skipHashCheck, "skip-hash-check", false, "Ignore snapshot integrity hash value (required if copied from data directory)")
+	cmd.Flags().StringVar(&restoreDataDir, "data-dir", "", "数据目录")
+	cmd.Flags().StringVar(&restoreWalDir, "wal-dir", "", "wal目录 (use --data-dir if none given)")
+	cmd.Flags().StringVar(&restoreCluster, "initial-cluster", initialClusterFromName(defaultName), "初始集群配置")
+	cmd.Flags().StringVar(&restoreClusterToken, "initial-cluster-token", "etcd-cluster", "在恢复引导过程中etcd集群的初始群集令牌")
+	cmd.Flags().StringVar(&restorePeerURLs, "initial-advertise-peer-urls", defaultInitialAdvertisePeerURLs, "要通告给集群其他部分的该成员的对等url列表")
+	cmd.Flags().StringVar(&restoreName, "name", defaultName, "此成员的人类可读的名称")
+	cmd.Flags().BoolVar(&skipHashCheck, "skip-hash-check", false, "忽略快照完整性哈希值(从数据目录复制时需要)")
 
 	return cmd
 }
@@ -124,9 +123,8 @@ func snapshotStatusCommandFunc(cmd *cobra.Command, args []string) {
 }
 
 func snapshotRestoreCommandFunc(cmd *cobra.Command, args []string) {
-	fmt.Fprintf(os.Stderr, "Deprecated: Use `etcdutl snapshot restore` instead.\n\n")
-	etcdutl.SnapshotRestoreCommandFunc(restoreCluster, restoreClusterToken, restoreDataDir, restoreWalDir,
-		restorePeerURLs, restoreName, skipHashCheck, args)
+	fmt.Fprintf(os.Stderr, "弃用: 使用 `etcdutl snapshot restore` \n\n")
+	etcdutl.SnapshotRestoreCommandFunc(restoreCluster, restoreClusterToken, restoreDataDir, restoreWalDir, restorePeerURLs, restoreName, skipHashCheck, args)
 }
 
 func initialClusterFromName(name string) string {

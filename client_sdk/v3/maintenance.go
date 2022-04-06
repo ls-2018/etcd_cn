@@ -184,7 +184,7 @@ func (m *maintenance) Snapshot(ctx context.Context) (io.ReadCloser, error) {
 		return nil, toErr(ctx, err)
 	}
 
-	m.lg.Info("opened snapshot stream; downloading")
+	m.lg.Info("打开快照流;下载ing")
 	pr, pw := io.Pipe()
 	go func() {
 		for {
@@ -192,19 +192,13 @@ func (m *maintenance) Snapshot(ctx context.Context) (io.ReadCloser, error) {
 			if err != nil {
 				switch err {
 				case io.EOF:
-					m.lg.Info("completed snapshot read; closing")
+					m.lg.Info("快照读取完成;关闭ing")
 				default:
-					m.lg.Warn("failed to receive from snapshot stream; closing", zap.Error(err))
+					m.lg.Warn("从快照流接收失败;关闭ing", zap.Error(err))
 				}
 				pw.CloseWithError(err)
 				return
 			}
-
-			// can "resp == nil && err == nil"
-			// before we receive snapshot SHA digest?
-			// No, etcd sends EOF with an empty response
-			// after it sends SHA digest at the end
-
 			if _, werr := pw.Write(resp.Blob); werr != nil {
 				pw.CloseWithError(werr)
 				return

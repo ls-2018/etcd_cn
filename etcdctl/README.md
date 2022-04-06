@@ -335,7 +335,7 @@ RPC: Compact
 
 #### Options
 
-- physical -- 'true' to wait for compaction to physically remove all old revisions
+- physical -- 'true' 等待压缩以实际删除所有旧修订
 
 #### Output
 

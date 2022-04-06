@@ -175,15 +175,16 @@ func (s *store) compactBarrier(ctx context.Context, ch chan struct{}) {
 	close(ch)
 }
 
+// Hash OK
 func (s *store) Hash() (hash uint32, revision int64, err error) {
-	// TODO: hash and revision could be inconsistent, one possible fix is to add s.revMu.RLock() at the beginning of function, which is costly
-
+	// TODO: hash和revision可能不一致，一个可能的解决方案是在函数的开头添加s.revMu.RLock()，这是昂贵的
 	s.b.ForceCommit()
 	h, err := s.b.Hash(buckets.DefaultIgnores)
 
 	return h, s.currentRev, err
 }
 
+// HashByRev 计算所有MVCC修订到给定修订的哈希值。
 func (s *store) HashByRev(rev int64) (hash uint32, currentRev int64, compactRev int64, err error) {
 	s.mu.RLock()
 	s.revMu.RLock()

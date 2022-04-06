@@ -66,7 +66,7 @@ type ClusterStatusGetter interface {
 
 type maintenanceServer struct {
 	lg  *zap.Logger
-	rg  etcdserver.RaftStatusGetter
+	rg  etcdserver.RaftStatusGetter // 获取raft状态
 	kg  KVGetter
 	bg  BackendGetter
 	a   Alarmer
@@ -97,130 +97,6 @@ func (ms *maintenanceServer) Defragment(ctx context.Context, sr *pb.DefragmentRe
 
 // big enough size to hold >1 OS pages in the buffer
 const snapshotSendBufferSize = 32 * 1024
-
-func (ms *maintenanceServer) Snapshot(sr *pb.SnapshotRequest, srv pb.Maintenance_SnapshotServer) error {
-	snap := ms.bg.Backend().Snapshot()
-	pr, pw := io.Pipe()
-
-	defer pr.Close()
-
-	go func() {
-		snap.WriteTo(pw)
-		if err := snap.Close(); err != nil {
-			ms.lg.Warn("failed to close snapshot", zap.Error(err))
-		}
-		pw.Close()
-	}()
-
-	// record SHA digest of snapshot data
-	// used for integrity checks during snapshot restore operation
-	h := sha256.New()
-
-	sent := int64(0)
-	total := snap.Size()
-	size := humanize.Bytes(uint64(total))
-
-	start := time.Now()
-	ms.lg.Info("sending database snapshot to client",
-		zap.Int64("total-bytes", total),
-		zap.String("size", size),
-	)
-	for total-sent > 0 {
-		// buffer just holds read bytes from stream
-		// response size is multiple of OS page size, fetched in boltdb
-		// e.g. 4*1024
-		// NOTE: srv.Send does not wait until the message is received by the client.
-		// Therefore the buffer can not be safely reused between Send operations
-		buf := make([]byte, snapshotSendBufferSize)
-
-		n, err := io.ReadFull(pr, buf)
-		if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
-			return togRPCError(err)
-		}
-		sent += int64(n)
-
-		// if total is x * snapshotSendBufferSize. it is possible that
-		// resp.RemainingBytes == 0
-		// resp.Blob == zero byte but not nil
-		// does this make etcd response sent to client nil in proto
-		// and client stops receiving from snapshot stream before
-		// etcd sends snapshot SHA?
-		// No, the client will still receive non-nil response
-		// until etcd closes the stream with EOF
-		resp := &pb.SnapshotResponse{
-			RemainingBytes: uint64(total - sent),
-			Blob:           buf[:n],
-		}
-		if err = srv.Send(resp); err != nil {
-			return togRPCError(err)
-		}
-		h.Write(buf[:n])
-	}
-
-	// send SHA digest for integrity checks
-	// during snapshot restore operation
-	sha := h.Sum(nil)
-
-	ms.lg.Info("sending database sha256 checksum to client",
-		zap.Int64("total-bytes", total),
-		zap.Int("checksum-size", len(sha)),
-	)
-	hresp := &pb.SnapshotResponse{RemainingBytes: 0, Blob: sha}
-	if err := srv.Send(hresp); err != nil {
-		return togRPCError(err)
-	}
-
-	ms.lg.Info("successfully sent database snapshot to client",
-		zap.Int64("total-bytes", total),
-		zap.String("size", size),
-		zap.String("took", humanize.Time(start)),
-	)
-	return nil
-}
-
-func (ms *maintenanceServer) Hash(ctx context.Context, r *pb.HashRequest) (*pb.HashResponse, error) {
-	h, rev, err := ms.kg.KV().Hash()
-	if err != nil {
-		return nil, togRPCError(err)
-	}
-	resp := &pb.HashResponse{Header: &pb.ResponseHeader{Revision: rev}, Hash: h}
-	ms.hdr.fill(resp.Header)
-	return resp, nil
-}
-
-func (ms *maintenanceServer) HashKV(ctx context.Context, r *pb.HashKVRequest) (*pb.HashKVResponse, error) {
-	h, rev, compactRev, err := ms.kg.KV().HashByRev(r.Revision)
-	if err != nil {
-		return nil, togRPCError(err)
-	}
-
-	resp := &pb.HashKVResponse{Header: &pb.ResponseHeader{Revision: rev}, Hash: h, CompactRevision: compactRev}
-	ms.hdr.fill(resp.Header)
-	return resp, nil
-}
-
-func (ms *maintenanceServer) Status(ctx context.Context, ar *pb.StatusRequest) (*pb.StatusResponse, error) {
-	hdr := &pb.ResponseHeader{}
-	ms.hdr.fill(hdr)
-	resp := &pb.StatusResponse{
-		Header:           hdr,
-		Version:          version.Version,
-		Leader:           uint64(ms.rg.Leader()),
-		RaftIndex:        ms.rg.CommittedIndex(),
-		RaftAppliedIndex: ms.rg.AppliedIndex(),
-		RaftTerm:         ms.rg.Term(),
-		DbSize:           ms.bg.Backend().Size(),
-		DbSizeInUse:      ms.bg.Backend().SizeInUse(),
-		IsLearner:        ms.cs.IsLearner(),
-	}
-	if resp.Leader == raft.None {
-		resp.Errors = append(resp.Errors, etcdserver.ErrNoLeader.Error())
-	}
-	for _, a := range ms.a.Alarms() {
-		resp.Errors = append(resp.Errors, a.String())
-	}
-	return resp, nil
-}
 
 func (ms *maintenanceServer) MoveLeader(ctx context.Context, tr *pb.MoveLeaderRequest) (*pb.MoveLeaderResponse, error) {
 	if ms.rg.ID() != ms.rg.Leader() {
@@ -265,14 +141,6 @@ func (ams *authMaintenanceServer) Defragment(ctx context.Context, sr *pb.Defragm
 	return ams.maintenanceServer.Defragment(ctx, sr)
 }
 
-func (ams *authMaintenanceServer) Snapshot(sr *pb.SnapshotRequest, srv pb.Maintenance_SnapshotServer) error {
-	if err := ams.isAuthenticated(srv.Context()); err != nil {
-		return err
-	}
-
-	return ams.maintenanceServer.Snapshot(sr, srv)
-}
-
 func (ams *authMaintenanceServer) Hash(ctx context.Context, r *pb.HashRequest) (*pb.HashResponse, error) {
 	if err := ams.isAuthenticated(ctx); err != nil {
 		return nil, err
@@ -300,6 +168,8 @@ func (ams *authMaintenanceServer) Downgrade(ctx context.Context, r *pb.Downgrade
 	return ams.maintenanceServer.Downgrade(ctx, r)
 }
 
+// ------------------------------------  OVER ---------------------------------------------------------------
+
 // Alarm ok
 func (ms *maintenanceServer) Alarm(ctx context.Context, ar *pb.AlarmRequest) (*pb.AlarmResponse, error) {
 	resp, err := ms.a.Alarm(ctx, ar)
@@ -309,6 +179,126 @@ func (ms *maintenanceServer) Alarm(ctx context.Context, ar *pb.AlarmRequest) (*p
 	if resp.Header == nil {
 		resp.Header = &pb.ResponseHeader{}
 	}
+	ms.hdr.fill(resp.Header)
+	return resp, nil
+}
+
+// Status ok
+func (ms *maintenanceServer) Status(ctx context.Context, ar *pb.StatusRequest) (*pb.StatusResponse, error) {
+	hdr := &pb.ResponseHeader{}
+	ms.hdr.fill(hdr)
+	resp := &pb.StatusResponse{
+		Header:           hdr,
+		Version:          version.Version,
+		Leader:           uint64(ms.rg.Leader()),
+		RaftIndex:        ms.rg.CommittedIndex(),
+		RaftAppliedIndex: ms.rg.AppliedIndex(),
+		RaftTerm:         ms.rg.Term(),
+		DbSize:           ms.bg.Backend().Size(),
+		DbSizeInUse:      ms.bg.Backend().SizeInUse(),
+		IsLearner:        ms.cs.IsLearner(),
+	}
+	if resp.Leader == raft.None {
+		resp.Errors = append(resp.Errors, etcdserver.ErrNoLeader.Error())
+	}
+	for _, a := range ms.a.Alarms() {
+		resp.Errors = append(resp.Errors, a.String())
+	}
+	return resp, nil
+}
+
+// Snapshot 获取一个快照
+func (ams *authMaintenanceServer) Snapshot(sr *pb.SnapshotRequest, srv pb.Maintenance_SnapshotServer) error {
+	if err := ams.isAuthenticated(srv.Context()); err != nil {
+		return err
+	}
+
+	return ams.maintenanceServer.Snapshot(sr, srv)
+}
+
+// Snapshot 获取一个快照
+func (ms *maintenanceServer) Snapshot(sr *pb.SnapshotRequest, srv pb.Maintenance_SnapshotServer) error {
+	snap := ms.bg.Backend().Snapshot() // 快照结构体, 初始化 发送超时
+	pr, pw := io.Pipe()
+	defer pr.Close()
+
+	go func() {
+		snap.WriteTo(pw)
+		if err := snap.Close(); err != nil {
+			ms.lg.Warn("关闭快照失败", zap.Error(err))
+		}
+		pw.Close()
+	}()
+
+	// record快照恢复操作中用于完整性检查的快照数据的SHA摘要
+	h := sha256.New()
+
+	sent := int64(0)
+	total := snap.Size()
+	size := humanize.Bytes(uint64(total))
+
+	start := time.Now()
+	ms.lg.Info("往客户端发送一个快照", zap.Int64("total-bytes", total), zap.String("size", size))
+	for total-sent > 0 {
+		// buffer只保存从流中读取的字节，响应大小是OS页面大小的倍数，从boltdb中获取
+		// 例如4 * 1024
+		// Send并不等待消息被客户端接收。因此，在Send操作之间不能安全地重用缓冲区
+
+		buf := make([]byte, snapshotSendBufferSize)
+
+		n, err := io.ReadFull(pr, buf)
+		if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
+			return togRPCError(err)
+		}
+		sent += int64(n)
+
+		// 如果total是x * snapshotSendBufferSize。这种反应是有可能的。RemainingBytes = = 0
+		// 分别地。这是否使etcd响应发送到客户端nil在原型和客户端停止接收从快照流之前etcd发送快照SHA?
+		// 不，客户端仍然会收到非nil响应，直到etcd用EOF关闭流
+		resp := &pb.SnapshotResponse{
+			RemainingBytes: uint64(total - sent),
+			Blob:           buf[:n],
+		}
+		if err = srv.Send(resp); err != nil {
+			return togRPCError(err)
+		}
+		h.Write(buf[:n])
+	}
+
+	sha := h.Sum(nil)
+
+	ms.lg.Info("往客户端发送一个快照校验和", zap.Int64("total-bytes", total), zap.Int("checksum-size", len(sha)))
+	hresp := &pb.SnapshotResponse{RemainingBytes: 0, Blob: sha}
+	if err := srv.Send(hresp); err != nil {
+		return togRPCError(err)
+	}
+
+	ms.lg.Info("成功发送快照到客户端", zap.Int64("total-bytes", total),
+		zap.String("size", size),
+		zap.String("took", humanize.Time(start)),
+	)
+	return nil
+}
+
+// Hash ok
+func (ms *maintenanceServer) Hash(ctx context.Context, r *pb.HashRequest) (*pb.HashResponse, error) {
+	h, rev, err := ms.kg.KV().Hash()
+	if err != nil {
+		return nil, togRPCError(err)
+	}
+	resp := &pb.HashResponse{Header: &pb.ResponseHeader{Revision: rev}, Hash: h}
+	ms.hdr.fill(resp.Header)
+	return resp, nil
+}
+
+// HashKV OK
+func (ms *maintenanceServer) HashKV(ctx context.Context, r *pb.HashKVRequest) (*pb.HashKVResponse, error) {
+	h, rev, compactRev, err := ms.kg.KV().HashByRev(r.Revision)
+	if err != nil {
+		return nil, togRPCError(err)
+	}
+
+	resp := &pb.HashKVResponse{Header: &pb.ResponseHeader{Revision: rev}, Hash: h, CompactRevision: compactRev}
 	ms.hdr.fill(resp.Header)
 	return resp, nil
 }

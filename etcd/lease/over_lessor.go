@@ -134,25 +134,6 @@ func NewLessor(lg *zap.Logger, b backend.Backend, cluster cluster, cfg LessorCon
 	return newLessor(lg, b, cluster, cfg)
 }
 
-// Checkpoint 更新租约的剩余时间
-func (le *lessor) Checkpoint(id LeaseID, remainingTTL int64) error {
-	le.mu.Lock()
-	defer le.mu.Unlock()
-
-	if l, ok := le.leaseMap[id]; ok {
-		// 当检查点时，我们只更新剩余的TTL，Promote 负责将其应用于租赁到期。
-		l.remainingTTL = remainingTTL
-		if le.shouldPersistCheckpoints() { // true
-			l.persistTo(le.b)
-		}
-		if le.isPrimary() {
-			// 根据需要，安排下一个检查点
-			le.scheduleCheckpointIfNeeded(l)
-		}
-	}
-	return nil
-}
-
 func (le *lessor) shouldPersistCheckpoints() bool {
 	cv := le.cluster.Version()
 	return le.checkpointPersist || (cv != nil && greaterOrEqual(*cv, v3_6))
@@ -170,7 +151,6 @@ func (le *lessor) Promote(extend time.Duration) {
 
 	le.demotec = make(chan struct{})
 
-	// refresh the expiries of all leases.
 	// 刷新所有租约的过期时间
 	for _, l := range le.leaseMap {
 		l.refresh(extend)
@@ -190,7 +170,7 @@ func (le *lessor) Promote(extend time.Duration) {
 
 	baseWindow := leases[0].Remaining() // 剩余存活时间
 	nextWindow := baseWindow + time.Second
-	expires := 0
+	expires := 0 // 到期
 	// 失效期限少于总失效率，所以堆积的租约不会消耗整个失效限制
 	targetExpiresPerSecond := (3 * leaseRevokeRate) / 4
 	for _, l := range leases {
@@ -206,8 +186,7 @@ func (le *lessor) Promote(extend time.Duration) {
 			continue
 		}
 		rateDelay := float64(time.Second) * (float64(expires) / float64(targetExpiresPerSecond))
-		// If leases are extended by n seconds, leases n seconds ahead of the
-		// base window should be extended by only one second.
+		// 如果租期延长n秒，则比基本窗口早n秒的租期只应延长1秒。
 		rateDelay -= float64(remaining - baseWindow)
 		delay := time.Duration(rateDelay)
 		nextWindow = baseWindow + delay
@@ -245,100 +224,6 @@ func (le *lessor) Recover(b backend.Backend, rd RangeDeleter) {
 func (le *lessor) Stop() {
 	close(le.stopC)
 	<-le.doneC
-}
-
-// OK
-func (le *lessor) runLoop() {
-	defer close(le.doneC)
-	for {
-		// 查找所有过期的租约，并将其发送到过期的通道中等待撤销。
-		le.revokeExpiredLeases()
-		// 查找所有到期的预定租约检查点将它们提交给检查点以将它们持久化到共识日志中。
-		le.checkpointScheduledLeases()
-
-		select {
-		case <-time.After(500 * time.Millisecond):
-		case <-le.stopC:
-			return
-		}
-	}
-}
-
-// checkpointScheduledLeases 查找所有到期的预定租约检查点将它们提交给检查点以将它们持久化到共识日志中。
-func (le *lessor) checkpointScheduledLeases() {
-	var cps []*pb.LeaseCheckpoint
-
-	// rate limit
-	for i := 0; i < leaseCheckpointRate/2; i++ {
-		le.mu.Lock()
-		if le.isPrimary() {
-			cps = le.findDueScheduledCheckpoints(maxLeaseCheckpointBatchSize)
-		}
-		le.mu.Unlock()
-
-		if len(cps) != 0 {
-			// 定期批量地将 Lease 剩余的 TTL 基于 Raft Log 同步给 Follower 节点，Follower 节点收到 CheckPoint 请求后，
-			// 更新内存数据结构 LeaseMap 的剩余 TTL 信息。
-			le.cp(context.Background(), &pb.LeaseCheckpointRequest{Checkpoints: cps})
-		}
-		if len(cps) < maxLeaseCheckpointBatchSize {
-			return
-		}
-	}
-}
-
-// 开始执行检查 ,leader 变更时，防止ttl重置
-// 租约创建时、成为leader后、收到checkpoint 共识消息后
-func (le *lessor) scheduleCheckpointIfNeeded(lease *Lease) {
-	if le.cp == nil {
-		return
-	}
-	// 剩余存活时间,大于 checkpointInterval
-	le.checkpointInterval = time.Second * 5
-	if lease.getRemainingTTL() > int64(le.checkpointInterval.Seconds()) {
-		if le.lg != nil {
-			le.lg.Info("开始调度 租约 检查", zap.Int64("leaseID", int64(lease.ID)), zap.Duration("intervalSeconds", le.checkpointInterval))
-		}
-		heap.Push(&le.leaseCheckpointHeap, &LeaseWithTime{
-			id:   lease.ID,
-			time: time.Now().Add(le.checkpointInterval), // 300 秒后租约到期, 检查这个租约
-		})
-		le.lg.Info("租约", zap.Int("checkpoint", len(le.leaseCheckpointHeap)), zap.Int("lease", len(le.leaseMap)))
-	}
-}
-
-// 查找到期的检查点
-func (le *lessor) findDueScheduledCheckpoints(checkpointLimit int) []*pb.LeaseCheckpoint {
-	if le.cp == nil {
-		return nil
-	}
-
-	now := time.Now()
-	var cps []*pb.LeaseCheckpoint
-	for le.leaseCheckpointHeap.Len() > 0 && len(cps) < checkpointLimit {
-		lt := le.leaseCheckpointHeap[0]
-		if lt.time.After(now) { // 过了 检查点的时间
-			return cps
-		}
-		heap.Pop(&le.leaseCheckpointHeap)
-		var l *Lease
-		var ok bool
-		if l, ok = le.leaseMap[lt.id]; !ok {
-			continue
-		}
-		if !now.Before(l.expiry) {
-			continue
-		}
-		remainingTTL := int64(math.Ceil(l.expiry.Sub(now).Seconds())) // 剩余时间
-		if remainingTTL >= l.ttl {
-			continue
-		}
-		if le.lg != nil {
-			le.lg.Debug("检查租约ing", zap.Int64("leaseID", int64(lt.id)), zap.Int64("remainingTTL", remainingTTL))
-		}
-		cps = append(cps, &pb.LeaseCheckpoint{ID: int64(lt.id), RemainingTtl: remainingTTL})
-	}
-	return cps
 }
 
 // --------------------------------------------- OVER  -----------------------------------------------------------------
@@ -861,4 +746,117 @@ func (le *lessor) SetCheckpointer(cp Checkpointer) {
 	le.mu.Lock()
 	defer le.mu.Unlock()
 	le.cp = cp
+}
+
+// OK
+func (le *lessor) runLoop() {
+	defer close(le.doneC)
+	for {
+		// 查找所有过期的租约，并将其发送到过期的通道中等待撤销。
+		le.revokeExpiredLeases()
+		// 查找所有到期的预定租约检查点将它们提交给检查点以将它们持久化到共识日志中。
+		le.checkpointScheduledLeases()
+
+		select {
+		case <-time.After(500 * time.Millisecond):
+		case <-le.stopC:
+			return
+		}
+	}
+}
+
+// checkpointScheduledLeases 查找所有到期的预定租约检查点将它们提交给检查点以将它们持久化到共识日志中。
+func (le *lessor) checkpointScheduledLeases() {
+	var cps []*pb.LeaseCheckpoint
+
+	// rate limit
+	for i := 0; i < leaseCheckpointRate/2; i++ {
+		le.mu.Lock()
+		if le.isPrimary() {
+			cps = le.findDueScheduledCheckpoints(maxLeaseCheckpointBatchSize)
+		}
+		le.mu.Unlock()
+
+		if len(cps) != 0 {
+			// 定期批量地将 Lease 剩余的 TTL 基于 Raft Log 同步给 Follower 节点，Follower 节点收到 CheckPoint 请求后，
+			// 更新内存数据结构 LeaseMap 的剩余 TTL 信息。
+			le.cp(context.Background(), &pb.LeaseCheckpointRequest{Checkpoints: cps})
+		}
+		if len(cps) < maxLeaseCheckpointBatchSize {
+			return
+		}
+	}
+}
+
+// 开始执行检查 ,leader 变更时，防止ttl重置
+// 租约创建时、成为leader后、收到checkpoint 共识消息后
+func (le *lessor) scheduleCheckpointIfNeeded(lease *Lease) {
+	if le.cp == nil {
+		return
+	}
+	// 剩余存活时间,大于 checkpointInterval
+	le.checkpointInterval = time.Second * 5
+	if lease.getRemainingTTL() > int64(le.checkpointInterval.Seconds()) {
+		if le.lg != nil {
+			le.lg.Info("开始调度 租约 检查", zap.Int64("leaseID", int64(lease.ID)), zap.Duration("intervalSeconds", le.checkpointInterval))
+		}
+		heap.Push(&le.leaseCheckpointHeap, &LeaseWithTime{
+			id:   lease.ID,
+			time: time.Now().Add(le.checkpointInterval), // 300 秒后租约到期, 检查这个租约
+		})
+		le.lg.Info("租约", zap.Int("checkpoint", len(le.leaseCheckpointHeap)), zap.Int("lease", len(le.leaseMap)))
+	}
+}
+
+// 查找到期的检查点
+func (le *lessor) findDueScheduledCheckpoints(checkpointLimit int) []*pb.LeaseCheckpoint {
+	if le.cp == nil {
+		return nil
+	}
+
+	now := time.Now()
+	var cps []*pb.LeaseCheckpoint
+	for le.leaseCheckpointHeap.Len() > 0 && len(cps) < checkpointLimit {
+		lt := le.leaseCheckpointHeap[0]
+		if lt.time.After(now) { // 过了 检查点的时间
+			return cps
+		}
+		heap.Pop(&le.leaseCheckpointHeap)
+		var l *Lease
+		var ok bool
+		if l, ok = le.leaseMap[lt.id]; !ok {
+			continue
+		}
+		if !now.Before(l.expiry) {
+			continue
+		}
+		remainingTTL := int64(math.Ceil(l.expiry.Sub(now).Seconds())) // 剩余时间
+		if remainingTTL >= l.ttl {
+			continue
+		}
+		if le.lg != nil {
+			le.lg.Debug("检查租约ing", zap.Int64("leaseID", int64(lt.id)), zap.Int64("remainingTTL", remainingTTL))
+		}
+		cps = append(cps, &pb.LeaseCheckpoint{ID: int64(lt.id), RemainingTtl: remainingTTL})
+	}
+	return cps
+}
+
+// Checkpoint 更新租约的剩余时间
+func (le *lessor) Checkpoint(id LeaseID, remainingTTL int64) error {
+	le.mu.Lock()
+	defer le.mu.Unlock()
+
+	if l, ok := le.leaseMap[id]; ok {
+		// 当检查点时，我们只更新剩余的TTL，Promote 负责将其应用于租赁到期。
+		l.remainingTTL = remainingTTL
+		if le.shouldPersistCheckpoints() { // true
+			l.persistTo(le.b)
+		}
+		if le.isPrimary() {
+			// 根据需要，安排下一个检查点
+			le.scheduleCheckpointIfNeeded(l)
+		}
+	}
+	return nil
 }

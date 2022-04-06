@@ -60,26 +60,23 @@ func (s *EtcdServer) Txn(ctx context.Context, r *pb.TxnRequest) (*pb.TxnResponse
 	return resp.(*pb.TxnResponse), nil
 }
 
+// Compact ok
 func (s *EtcdServer) Compact(ctx context.Context, r *pb.CompactionRequest) (*pb.CompactionResponse, error) {
 	startTime := time.Now()
 	result, err := s.processInternalRaftRequestOnce(ctx, pb.InternalRaftRequest{Compaction: r})
 	trace := traceutil.TODO()
 	if result != nil && result.trace != nil {
 		trace = result.trace
-
 		applyStart := result.trace.GetStartTime()
 		result.trace.SetStartTime(startTime)
 		trace.InsertStep(0, applyStart, "处理raft请求")
 	}
 	if r.Physical && result != nil && result.physc != nil {
 		<-result.physc
-		// The compaction is done deleting keys; the hash is now settled
-		// but the data is not necessarily committed. If there's a crash,
-		// the hash may revert to a hash prior to compaction completing
-		// if the compaction resumes. Force the finished compaction to
-		// commit so it won't resume following a crash.
+		// 压实工作已经完成，删除了键；现在哈希已经解决了，但数据不一定被提交。如果出现崩溃，
+		// 如果压实工作恢复，哈希值可能会恢复到压实完成前的哈希值。强制完成的压实到 提交，这样它就不会在崩溃后恢复。
 		s.backend.ForceCommit()
-		trace.Step("physically apply compaction")
+		trace.Step("物理压实")
 	}
 	if err != nil {
 		return nil, err

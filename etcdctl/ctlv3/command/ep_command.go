@@ -63,18 +63,16 @@ func newEpHealthCommand() *cobra.Command {
 func newEpStatusCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "status",
-		Short: "Prints out the status of endpoints specified in `--endpoints` flag",
-		Long: `When --write-out is set to simple, this command prints out comma-separated status lists for each endpoint.
-The items in the lists are endpoint, ID, version, db size, is leader, is learner, raft term, raft index, raft applied index, errors.
-`,
-		Run: epStatusCommandFunc,
+		Short: "打印出指定端点的状态",
+		Long:  ``,
+		Run:   epStatusCommandFunc,
 	}
 }
 
 func newEpHashKVCommand() *cobra.Command {
 	hc := &cobra.Command{
 		Use:   "hashkv",
-		Short: "Prints the KV history hash for each endpoint in --endpoints",
+		Short: "输出每个端点的KV历史哈希值",
 		Run:   epHashKVCommandFunc,
 	}
 	hc.PersistentFlags().Int64Var(&epHashKVRev, "rev", 0, "maximum revision to hash (default: all revisions)")
@@ -185,7 +183,7 @@ type epStatus struct {
 func epStatusCommandFunc(cmd *cobra.Command, args []string) {
 	c := mustClientFromCmd(cmd)
 
-	statusList := []epStatus{}
+	var statusList []epStatus
 	var err error
 	for _, ep := range endpointsFromCluster(cmd) {
 		ctx, cancel := commandCtx(cmd)
@@ -193,7 +191,7 @@ func epStatusCommandFunc(cmd *cobra.Command, args []string) {
 		cancel()
 		if serr != nil {
 			err = serr
-			fmt.Fprintf(os.Stderr, "Failed to get the status of endpoint %s (%v)\n", ep, serr)
+			fmt.Fprintf(os.Stderr, "获取端点状态失败%s (%v)\n", ep, serr)
 			continue
 		}
 		statusList = append(statusList, epStatus{Ep: ep, Resp: resp})

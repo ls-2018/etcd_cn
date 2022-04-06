@@ -75,13 +75,14 @@ func newStreamInterceptor(s *etcdserver.EtcdServer) grpc.StreamServerInterceptor
 			return rpctypes.ErrGRPCNotCapable
 		}
 
-		if s.IsMemberExist(s.ID()) && s.IsLearner() && info.FullMethod != snapshotMethod { // learner does not support stream RPC except Snapshot
+		if s.IsMemberExist(s.ID()) && s.IsLearner() && info.FullMethod != snapshotMethod { // 除了快照，学习者不支持流RPC
 			return rpctypes.ErrGPRCNotSupportedForLearner
 		}
 
 		md, ok := metadata.FromIncomingContext(ss.Context())
 		if ok {
-			if ks := md[rpctypes.MetadataRequireLeaderKey]; len(ks) > 0 && ks[0] == rpctypes.MetadataHasLeader {
+			ks := md[rpctypes.MetadataRequireLeaderKey] // hasleader
+			if len(ks) > 0 && ks[0] == rpctypes.MetadataHasLeader {
 				if s.Leader() == types.ID(raft.None) {
 					return rpctypes.ErrGRPCNoLeader
 				}
