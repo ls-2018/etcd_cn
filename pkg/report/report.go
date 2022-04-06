@@ -67,15 +67,10 @@ func (s *Stats) copy() Stats {
 	return ss
 }
 
-// Report processes a result stream until it is closed, then produces a
-// string with information about the consumed result data.
+// Report  处理结果流直到它被关闭，然后生成一个包含有关所使用的结果数据的信息的字符串。
 type Report interface {
 	Results() chan<- Result
-
-	// Run returns results in print-friendly format.
 	Run() <-chan string
-
-	// Stats returns results in raw data.
 	Stats() <-chan Stats
 }
 
@@ -96,7 +91,9 @@ func NewReportSample(precision string) Report {
 	return r
 }
 
-func (r *report) Results() chan<- Result { return r.results }
+func (r *report) Results() chan<- Result {
+	return r.results
+}
 
 func (r *report) Run() <-chan string {
 	donec := make(chan string, 1)

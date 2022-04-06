@@ -20,6 +20,7 @@ package clientv3
 import (
 	"context"
 	"fmt"
+	"github.com/ls-2018/etcd_cn/code_debug/conf"
 	"io"
 	"sync"
 	"time"
@@ -48,8 +49,11 @@ func (c *Client) unaryClientInterceptor(optFuncs ...retryOption) grpc.UnaryClien
 				return err
 			}
 			c.GetLogger().Debug("重试调用", zap.String("target", cc.Target()), zap.Uint("attempt", attempt))
-			fmt.Println("--->:", req)    // key:"a" value:"b"
-			fmt.Println("--->:", method) // /etcdserverpb.KV/Put
+			if !conf.Perf {
+				fmt.Println("--->:", req)    // key:"a" value:"b"
+				fmt.Println("--->:", method) // /etcdserverpb.KV/Put
+			}
+
 			lastErr = invoker(ctx, method, req, reply, cc, grpcOpts...)
 			if lastErr == nil {
 				return nil

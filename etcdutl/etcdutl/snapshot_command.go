@@ -54,7 +54,7 @@ func NewSnapshotCommand() *cobra.Command {
 func newSnapshotStatusCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "status <filename>",
-		Short: "Gets backend snapshot status of a given file",
+		Short: "从给定的文件获取快照状态",
 		Long:  ``,
 		Run:   SnapshotStatusCommandFunc,
 	}

@@ -2,12 +2,17 @@ package conn
 
 import (
 	"fmt"
+	"github.com/ls-2018/etcd_cn/code_debug/conf"
 	"net"
 	"os/exec"
 	"strings"
 )
 
 func PrintConn(line string, c net.Conn) {
+	if conf.Perf {
+		return
+	}
+
 	_, port, _ := net.SplitHostPort(c.RemoteAddr().String())
 	res := SubCommand([]string{"zsh", "-c", fmt.Sprintf("lsof -itcp -n|grep '%s->'", port)})
 	if res == "" {

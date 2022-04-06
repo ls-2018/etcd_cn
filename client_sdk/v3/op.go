@@ -335,8 +335,7 @@ func WithLease(leaseID LeaseID) OpOption {
 	return func(op *Op) { op.leaseID = leaseID }
 }
 
-// WithLimit limits the number of results to return from 'Get' request.
-// If WithLimit is given a 0 limit, it is treated as no limit.
+// WithLimit 限制从'Get'请求返回的结果的数量。如果给WithLimit一个0限制，则它被视为没有限制。
 func WithLimit(n int64) OpOption { return func(op *Op) { op.limit = n } }
 
 // WithRev specifies the store revision for 'Get' request.

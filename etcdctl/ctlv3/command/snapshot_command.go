@@ -64,7 +64,7 @@ func NewSnapshotSaveCommand() *cobra.Command {
 func newSnapshotStatusCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "status <filename>",
-		Short: "[deprecated] Gets backend snapshot status of a given file",
+		Short: "[deprecated] 从给定的文件获取快照状态",
 		Long: `When --write-out is set to simple, this command prints out comma-separated status lists for each endpoint.
 The items in the lists are hash, revision, total keys, total size.
 
