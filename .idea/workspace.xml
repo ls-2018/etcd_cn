@@ -7,25 +7,17 @@
     <list default="true" id="49524360-39b2-44cd-b702-de0461fb4222" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client_sdk/v3/maintenance.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/maintenance.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/snapshot/v3_snapshot.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/snapshot/v3_snapshot.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v3rpc/interceptor.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/api/v3rpc/interceptor.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v3rpc/maintenance.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/api/v3rpc/maintenance.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/apply_v3.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/apply_v3.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/v3_server.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/v3_server.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/v3service_kv.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/v3service_kv.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/lease/doc.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/lease/leasehttp/doc.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/lease/leasehttp/http.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/lease/leasehttp/over_http.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/lease/lessor.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/lease/over_lessor.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/etcd/mvcc/backend/backend_bolt.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/mvcc/backend/backend_bolt.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/mvcc/index.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/mvcc/index.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/mvcc/kvstore.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/mvcc/kvstore.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/mvcc/over_kv_interface.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/mvcc/over_kv_interface.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcdctl/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/compaction_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/compaction_command.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/ep_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/ep_command.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/snapshot_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/snapshot_command.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcdutl/etcdutl/snapshot_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdutl/etcdutl/snapshot_command.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/compaction_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/over_compaction_command.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/defrag_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/defrag_command.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/del_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/over_del_command.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/ep_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/over_ep_command.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/get_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/over_get_command.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/lease_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/over_lease_command.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/member_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/member_command.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/put_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/over_put_command.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/user_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/over_user_command.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/offical/etcdserverpb/rpc.pb.go" beforeDir="false" afterPath="$PROJECT_DIR$/offical/etcdserverpb/rpc.pb.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -293,16 +285,6 @@
           <option name="timeStamp" value="328" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/etcdctl/ctlv3/command/ep_command.go</url>
-          <line>136</line>
-          <option name="timeStamp" value="330" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/etcdctl/ctlv3/command/ep_command.go</url>
-          <line>137</line>
-          <option name="timeStamp" value="331" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/client_sdk/v3/maintenance.go</url>
           <line>99</line>
           <option name="timeStamp" value="332" />
@@ -384,16 +366,16 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/offical/etcdserverpb/rpc.pb.go</url>
-          <line>4322</line>
+          <line>4323</line>
           <option name="timeStamp" value="408" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/etcdctl/ctlv3/command/user_command.go</url>
+          <url>file://$PROJECT_DIR$/etcdctl/ctlv3/command/over_user_command.go</url>
           <line>137</line>
           <option name="timeStamp" value="410" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/etcdctl/ctlv3/command/user_command.go</url>
+          <url>file://$PROJECT_DIR$/etcdctl/ctlv3/command/over_user_command.go</url>
           <line>136</line>
           <option name="timeStamp" value="411" />
         </line-breakpoint>
@@ -446,6 +428,11 @@
           <url>file://$PROJECT_DIR$/etcd/mvcc/kvstore.go</url>
           <line>189</line>
           <option name="timeStamp" value="576" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcdutl/etcdutl/snapshot_command.go</url>
+          <line>126</line>
+          <option name="timeStamp" value="586" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

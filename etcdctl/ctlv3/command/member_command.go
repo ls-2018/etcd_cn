@@ -92,7 +92,7 @@ func NewMemberUpdateCommand() *cobra.Command {
 func NewMemberListCommand() *cobra.Command {
 	cc := &cobra.Command{
 		Use:   "list",
-		Short: "Lists all members in the cluster",
+		Short: "显示集群所有成员",
 		Long: `When --write-out is set to simple, this command prints out comma-separated member lists for each endpoint.
 The items in the lists are ID, Status, Name, Peer Addrs, Client Addrs, Is Learner.
 `,

@@ -448,7 +448,7 @@ func (b *backend) defrag() error {
 
 	b.db, err = bolt.Open(dbp, 0o600, &defragmentedBoltOptions)
 	if err != nil {
-		b.lg.Fatal("failed to open database", zap.String("path", dbp), zap.Error(err))
+		b.lg.Fatal("打开数据库失败", zap.String("path", dbp), zap.Error(err))
 	}
 	b.batchTx.tx = b.unsafeBegin(true)
 

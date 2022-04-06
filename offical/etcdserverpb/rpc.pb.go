@@ -3965,6 +3965,7 @@ func (c *maintenanceClient) Status(ctx context.Context, in *StatusRequest, opts 
 	return out, nil
 }
 
+// Defragment 碎片整理
 func (c *maintenanceClient) Defragment(ctx context.Context, in *DefragmentRequest, opts ...grpc.CallOption) (*DefragmentResponse, error) {
 	out := new(DefragmentResponse)
 	err := c.cc.Invoke(ctx, "/etcdserverpb.Maintenance/Defragment", in, out, opts...)
@@ -4045,7 +4046,7 @@ func (c *maintenanceClient) Downgrade(ctx context.Context, in *DowngradeRequest,
 type MaintenanceServer interface {
 	Alarm(context.Context, *AlarmRequest) (*AlarmResponse, error)
 	Status(context.Context, *StatusRequest) (*StatusResponse, error)
-	Defragment(context.Context, *DefragmentRequest) (*DefragmentResponse, error)
+	Defragment(context.Context, *DefragmentRequest) (*DefragmentResponse, error) // 碎片整理
 	Hash(context.Context, *HashRequest) (*HashResponse, error)
 	HashKV(context.Context, *HashKVRequest) (*HashKVResponse, error) // 计算所有MVCC键的哈希值直到一个给定的修订。只遍历key桶
 	// Snapshot sends a snapshot of the entire backend from a member over a stream to a client.

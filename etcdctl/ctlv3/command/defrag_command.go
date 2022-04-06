@@ -25,15 +25,14 @@ import (
 
 var defragDataDir string
 
-// NewDefragCommand returns the cobra command for "Defrag".
 func NewDefragCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "defrag",
-		Short: "Defragments the storage of the etcd members with given endpoints",
+		Short: "对给定端点的etcd成员的存储进行碎片整理",
 		Run:   defragCommandFunc,
 	}
-	cmd.PersistentFlags().BoolVar(&epClusterEndpoints, "cluster", false, "use all endpoints from the cluster member list")
-	cmd.Flags().StringVar(&defragDataDir, "data-dir", "", "Optional. If present, defragments a data directory not in use by etcd.")
+	cmd.PersistentFlags().BoolVar(&epClusterEndpoints, "cluster", false, "使用集群成员列表中的所有端点")
+	cmd.Flags().StringVar(&defragDataDir, "data-dir", "", "可选的。如果存在，对etcd不使用的数据目录进行碎片整理。")
 	return cmd
 }
 
@@ -53,10 +52,10 @@ func defragCommandFunc(cmd *cobra.Command, args []string) {
 		_, err := c.Defragment(ctx, ep)
 		cancel()
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to defragment etcd member[%s] (%v)\n", ep, err)
+			fmt.Fprintf(os.Stderr, "整理etcd成员失败 [%s] (%v)\n", ep, err)
 			failures++
 		} else {
-			fmt.Printf("Finished defragmenting etcd member[%s]\n", ep)
+			fmt.Printf("整理etcd成员完成[%s]\n", ep)
 		}
 	}
 

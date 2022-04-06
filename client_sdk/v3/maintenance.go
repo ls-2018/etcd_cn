@@ -36,7 +36,7 @@ type (
 type Maintenance interface {
 	AlarmList(ctx context.Context) (*AlarmResponse, error)                            // 获取目前所有的警报
 	AlarmDisarm(ctx context.Context, m *AlarmMember) (*AlarmResponse, error)          // 解除警报
-	Defragment(ctx context.Context, endpoint string) (*DefragmentResponse, error)     // 碎片整理[etcd 内存里的数据]
+	Defragment(ctx context.Context, endpoint string) (*DefragmentResponse, error)     // 碎片整理
 	Status(ctx context.Context, endpoint string) (*StatusResponse, error)             // 获取端点的状态
 	HashKV(ctx context.Context, endpoint string, rev int64) (*HashKVResponse, error)  //
 	Snapshot(ctx context.Context) (io.ReadCloser, error)                              // 返回一个快照
@@ -139,6 +139,7 @@ func (m *maintenance) AlarmDisarm(ctx context.Context, am *AlarmMember) (*AlarmR
 	return nil, toErr(ctx, err)
 }
 
+// Defragment 碎片整理
 func (m *maintenance) Defragment(ctx context.Context, endpoint string) (*DefragmentResponse, error) {
 	remote, cancel, err := m.dial(endpoint)
 	if err != nil {

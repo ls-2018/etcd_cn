@@ -84,14 +84,15 @@ func NewMaintenanceServer(s *etcdserver.EtcdServer) pb.MaintenanceServer {
 	return &authMaintenanceServer{srv, s}
 }
 
+// Defragment 碎片整理
 func (ms *maintenanceServer) Defragment(ctx context.Context, sr *pb.DefragmentRequest) (*pb.DefragmentResponse, error) {
-	ms.lg.Info("starting defragment")
+	ms.lg.Info("开始 碎片整理")
 	err := ms.bg.Backend().Defrag()
 	if err != nil {
-		ms.lg.Warn("failed to defragment", zap.Error(err))
+		ms.lg.Warn("碎片整理是啊比", zap.Error(err))
 		return nil, err
 	}
-	ms.lg.Info("finished defragment")
+	ms.lg.Info("结束 碎片整理")
 	return &pb.DefragmentResponse{}, nil
 }
 
