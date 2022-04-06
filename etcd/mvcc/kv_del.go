@@ -24,6 +24,7 @@ func (tw *storeTxnWrite) DeleteRange(key, end []byte) (int64, int64) {
 	return 0, tw.beginRev
 }
 
+// 从k,v index中删除
 func (tw *storeTxnWrite) deleteRange(key, end []byte) int64 {
 	rrev := tw.beginRev
 	if len(tw.changes) > 0 {
@@ -35,7 +36,7 @@ func (tw *storeTxnWrite) deleteRange(key, end []byte) int64 {
 	}
 	for _, key := range keys {
 		tw.delete(key)
-	}
+	} // 4.20 号
 	return int64(len(keys))
 }
 

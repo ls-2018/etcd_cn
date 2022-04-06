@@ -84,7 +84,10 @@ func newWatchableStore(lg *zap.Logger, b backend.Backend, le lease.Lessor, cfg S
 	s.store.WriteView = &writeView{s}
 	if s.le != nil {
 		// 使用此存储作为删除器，因此撤销触发器监听事件
-		s.le.SetRangeDeleter(func() lease.TxnDelete { return s.Write(traceutil.TODO()) })
+		s.le.SetRangeDeleter(func() lease.TxnDelete {
+			return s.Write(traceutil.TODO())
+		},
+		)
 	}
 	s.wg.Add(2)
 	go s.syncWatchersLoop()

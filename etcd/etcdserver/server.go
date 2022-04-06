@@ -536,14 +536,12 @@ func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 	minTTL := time.Duration((3*cfg.ElectionTicks)/2) * heartbeat
 
 	// 始终在KV之前恢复出租人。当我们恢复mvcc.KV时，它将把钥匙重新连接到它的租约上。如果我们先恢复mvcc.KV，它将在恢复前把钥匙附加到错误的出租人上。
-	srv.lessor = lease.NewLessor(srv.Logger(),
-		srv.backend, srv.cluster,
-		lease.LessorConfig{
-			MinLeaseTTL:                int64(math.Ceil(minTTL.Seconds())),
-			CheckpointInterval:         cfg.LeaseCheckpointInterval,
-			CheckpointPersist:          cfg.LeaseCheckpointPersist,
-			ExpiredLeasesRetryInterval: srv.Cfg.ReqTimeout(),
-		})
+	srv.lessor = lease.NewLessor(srv.Logger(), srv.backend, srv.cluster, lease.LessorConfig{
+		MinLeaseTTL:                int64(math.Ceil(minTTL.Seconds())),
+		CheckpointInterval:         cfg.LeaseCheckpointInterval,
+		CheckpointPersist:          cfg.LeaseCheckpointPersist,
+		ExpiredLeasesRetryInterval: srv.Cfg.ReqTimeout(),
+	})
 
 	tp, err := auth.NewTokenProvider(cfg.Logger, cfg.AuthToken,
 		func(index uint64) <-chan struct{} {
@@ -767,18 +765,14 @@ func (s *EtcdServer) start() {
 	s.readNotifier = newNotifier()
 	s.leaderChanged = make(chan struct{})
 	if s.ClusterVersion() != nil {
-		lg.Info("启动etcd",
-			zap.String("local-member-id", s.ID().String()),
+		lg.Info("启动etcd", zap.String("local-member-id", s.ID().String()),
 			zap.String("local-etcd-version", version.Version),
 			zap.String("cluster-id", s.Cluster().ID().String()),
 			zap.String("cluster-version", version.Cluster(s.ClusterVersion().String())),
 		)
 	} else {
-		lg.Info("启动etcd",
-			zap.String("local-member-id", s.ID().String()),
-			zap.String("local-etcd-version", version.Version),
-			zap.String("cluster-version", "to_be_decided"),
-		)
+		lg.Info("启动etcd", zap.String("local-member-id", s.ID().String()),
+			zap.String("local-etcd-version", version.Version), zap.String("cluster-version", "to_be_decided"))
 	}
 
 	go s.run()
@@ -865,7 +859,7 @@ func (s *EtcdServer) run() {
 
 	sn, err := s.r.raftStorage.Snapshot()
 	if err != nil {
-		lg.Panic("failed to get snapshot from Raft storage", zap.Error(err))
+		lg.Panic("从Raft存储获取快照失败", zap.Error(err))
 	}
 
 	// asynchronously accept apply packets, dispatch progress in-order
@@ -978,8 +972,8 @@ func (s *EtcdServer) run() {
 			sched.Schedule(f)
 		case leases := <-expiredLeaseC:
 			s.GoAttach(func() {
-				// Increases throughput of expired leases deletion process through parallelization
-				c := make(chan struct{}, maxPendingRevokes)
+				// 通过并行化增加过期租约删除过程的吞吐量
+				c := make(chan struct{}, maxPendingRevokes) // 控制每一批  并发数为16
 				for _, lease := range leases {
 					select {
 					case c <- struct{}{}:
@@ -992,13 +986,8 @@ func (s *EtcdServer) run() {
 						_, lerr := s.LeaseRevoke(ctx, &pb.LeaseRevokeRequest{ID: int64(lid)})
 						if lerr == nil {
 						} else {
-							lg.Warn(
-								"failed to revoke lease",
-								zap.String("lease-id", fmt.Sprintf("%016x", lid)),
-								zap.Error(lerr),
-							)
+							lg.Warn("移除租约失败", zap.String("lease-id", fmt.Sprintf("%016x", lid)), zap.Error(lerr))
 						}
-
 						<-c
 					})
 				}
@@ -1474,14 +1463,6 @@ func (s *EtcdServer) FirstCommitInTermNotify() <-chan struct{} {
 	s.firstCommitInTermMu.RLock()
 	defer s.firstCommitInTermMu.RUnlock()
 	return s.firstCommitInTermC
-}
-
-type RaftStatusGetter interface {
-	ID() types.ID
-	Leader() types.ID
-	CommittedIndex() uint64
-	AppliedIndex() uint64
-	Term() uint64
 }
 
 type confChangeResponse struct {
@@ -2187,18 +2168,6 @@ func (s *EtcdServer) applyConfChange(cc raftpb.ConfChangeV1, confState *raftpb.C
 func (s *EtcdServer) Alarms() []*pb.AlarmMember {
 	return s.alarmStore.Get(pb.AlarmType_NONE)
 }
-
-func (s *EtcdServer) ID() types.ID { return s.id }
-
-func (s *EtcdServer) Leader() types.ID { return types.ID(s.getLead()) }
-
-func (s *EtcdServer) Lead() uint64 { return s.getLead() }
-
-func (s *EtcdServer) CommittedIndex() uint64 { return s.getCommittedIndex() }
-
-func (s *EtcdServer) AppliedIndex() uint64 { return s.getAppliedIndex() }
-
-func (s *EtcdServer) Term() uint64 { return s.getTerm() }
 
 func (s *EtcdServer) setCommittedIndex(v uint64) {
 	atomic.StoreUint64(&s.committedIndex, v)

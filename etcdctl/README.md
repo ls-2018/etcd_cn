@@ -538,7 +538,7 @@ RPC: LeaseTimeToLive
 
 #### Options
 
-- keys -- Get keys attached to this lease
+- keys -- 获取租约附加到了哪些key上
 
 #### Output
 

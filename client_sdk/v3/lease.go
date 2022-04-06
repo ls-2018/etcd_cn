@@ -16,6 +16,7 @@ package clientv3
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -175,6 +176,7 @@ func NewLeaseFromLeaseClient(remote pb.LeaseClient, c *Client, keepAliveTimeout 
 
 func (l *lessor) Grant(ctx context.Context, ttl int64) (*LeaseGrantResponse, error) {
 	r := &pb.LeaseGrantRequest{TTL: ttl}
+	fmt.Println("lease:", *r)
 	resp, err := l.remote.LeaseGrant(ctx, r, l.callOpts...)
 	if err == nil {
 		gresp := &LeaseGrantResponse{

@@ -43,7 +43,7 @@ var (
 	forever                          = time.Time{}
 	leaseRevokeRate                  = 1000            // 每秒撤销租约的最大数量；可为测试配置
 	leaseCheckpointRate              = 1000            // 每秒记录在共识日志中的最大租约快照数量；可对测试进行配置
-	defaultLeaseCheckpointInterval   = 5 * time.Minute // 租赁快照的默认时间间隔
+	defaultLeaseCheckpointInterval   = 5 * time.Minute // 租约快照的默认时间间隔
 	maxLeaseCheckpointBatchSize      = 1000            // 租约快照的最大数量，以批处理为一个单一的共识日志条目
 	defaultExpiredleaseRetryInterval = 3 * time.Second // 检查过期租约是否被撤销的默认时间间隔。
 	ErrNotPrimary                    = errors.New("不是主 lessor")
@@ -52,18 +52,14 @@ var (
 	ErrLeaseTTLTooLarge              = errors.New("过大的TTL")
 )
 
-// TxnDelete is a TxnWrite that only permits deletes. Defined here
-// to avoid circular dependency with mvcc.
 type TxnDelete interface {
 	DeleteRange(key, end []byte) (n, rev int64)
 	End()
 }
 
-// RangeDeleter is a TxnDelete constructor.
 type RangeDeleter func() TxnDelete
 
-// Checkpointer permits checkpointing of lease remaining TTLs to the consensus log. Defined here to
-// avoid circular dependency with mvcc.
+// Checkpointer 允许对租约剩余ttl的检查点到 wal日志。这里定义是为了避免与mvcc的循环依赖。
 type Checkpointer func(ctx context.Context, lc *pb.LeaseCheckpointRequest)
 
 type LeaseID int64
@@ -75,13 +71,8 @@ type Lessor interface {
 	// new TxnDeletes.
 	SetRangeDeleter(rd RangeDeleter)
 	SetCheckpointer(cp Checkpointer)
-
-	// Grant grants a lease that expires at least after TTL seconds.
-	Grant(id LeaseID, ttl int64) (*Lease, error)
-	// Revoke revokes a lease with given ID. The item attached to the
-	// given lease will be removed. If the ID does not exist, an error
-	// will be returned.
-	Revoke(id LeaseID) error
+	Grant(id LeaseID, ttl int64) (*Lease, error) // 创建一个制定了过期时间的租约
+	Revoke(id LeaseID) error                     // 移除租约
 	// Checkpoint applies the remainingTTL of a lease. The remainingTTL is used in Promote to set
 	// the expiry of leases to less than the full TTL when possible.
 	Checkpoint(id LeaseID, remainingTTL int64) error
@@ -96,12 +87,9 @@ type Lessor interface {
 	Detach(id LeaseID, items []LeaseItem) error
 	Promote(extend time.Duration) // 推动lessor成为主lessor。主lessor管理租约的到期和续期。新晋升的lessor更新所有租约的ttl 以延长先前的ttl
 	Demote()
-
-	// Renew renews a lease with given ID. It returns the renewed TTL. If the ID does not exist,
-	// an error will be returned.
-	Renew(id LeaseID) (int64, error)
+	Renew(id LeaseID) (int64, error) // 重新计算过期时间
 	Lookup(id LeaseID) *Lease
-	Leases() []*Lease
+	Leases() []*Lease                // 获取当前节点上的所有租约
 	ExpiredLeasesC() <-chan []*Lease // 返回一个用于接收过期租约的CHAN.
 	Recover(b backend.Backend, rd RangeDeleter)
 	Stop()
@@ -109,26 +97,21 @@ type Lessor interface {
 
 type lessor struct {
 	mu                   sync.RWMutex
-	demotec              chan struct{} // 当lessor成为主时，会被设置。当被降级时，会被关闭
-	leaseMap             map[LeaseID]*Lease
-	leaseExpiredNotifier *LeaseExpiredNotifier
-	leaseCheckpointHeap  LeaseQueue
+	demotec              chan struct{}      // 当lessor成为主时，会被设置。当被降级时，会被关闭
+	leaseMap             map[LeaseID]*Lease // 存储了所有的租约
+	leaseExpiredNotifier *ExpiredNotifier   // 租约到期管理
+	leaseCheckpointHeap  LeaseQueue         //
 	itemMap              map[LeaseItem]LeaseID
-	// When a lease expires, the lessor will delete the
-	// leased range (or key) by the RangeDeleter.
-	rd RangeDeleter
-	// When a lease's deadline should be persisted to preserve the remaining TTL across leader
-	// elections and restarts, the lessor will checkpoint the lease by the Checkpointer.
-	cp          Checkpointer
-	b           backend.Backend // 持久化租约到bolt.db.
-	minLeaseTTL int64           // 是可授予租赁的最小租期TTL。任何缩短TTL的请求都被扩展到最小TTL。
-	expiredC    chan []*Lease
+	rd                   RangeDeleter    // 租约过期时，使用范围删除
+	cp                   Checkpointer    // 当一个租约的最后期限应该被持久化，以保持跨领袖选举和重启的剩余TTL，出租人将通过Checkpointer对租约进行检查。
+	b                    backend.Backend // 持久化租约到bolt.db.
+	minLeaseTTL          int64           // 是可授予租约的最小租期TTL。任何缩短TTL的请求都被扩展到最小TTL。
+	expiredC             chan []*Lease   // 发送一批已经过期的租约
 	// stopC is a channel whose closure indicates that the lessor should be stopped.
-	stopC chan struct{}
-	// doneC is a channel whose closure indicates that the lessor is stopped.
-	doneC                     chan struct{}
+	stopC                     chan struct{}
+	doneC                     chan struct{} // close表明lessor被停止。
 	lg                        *zap.Logger
-	checkpointInterval        time.Duration // 租赁快照的默认时间间隔
+	checkpointInterval        time.Duration // 租约快照的默认时间间隔
 	expiredLeaseRetryInterval time.Duration // 检查过期租约是否被撤销的默认时间间隔
 	checkpointPersist         bool          // lessor是否应始终保持剩余的TTL（在v3.6中始终启用）。
 	cluster                   cluster       // 基于集群版本  调整lessor逻辑
@@ -139,9 +122,9 @@ type cluster interface {
 }
 
 type LessorConfig struct {
-	MinLeaseTTL                int64         // 是可授予租赁的最小租期TTL。任何缩短TTL的请求都被扩展到最小TTL。
-	CheckpointInterval         time.Duration // 租赁快照的默认时间间隔
-	ExpiredLeasesRetryInterval time.Duration // 租赁快照的默认时间间隔
+	MinLeaseTTL                int64         // 是可授予租约的最小租期TTL。任何缩短TTL的请求都被扩展到最小TTL。
+	CheckpointInterval         time.Duration // 租约快照的默认时间间隔
+	ExpiredLeasesRetryInterval time.Duration // 租约快照的默认时间间隔
 	CheckpointPersist          bool          // lessor是否应始终保持剩余的TTL（在v3.6中始终启用）。
 }
 
@@ -149,155 +132,11 @@ func NewLessor(lg *zap.Logger, b backend.Backend, cluster cluster, cfg LessorCon
 	return newLessor(lg, b, cluster, cfg)
 }
 
-// 创建租约管理器
-func newLessor(lg *zap.Logger, b backend.Backend, cluster cluster, cfg LessorConfig) *lessor {
-	checkpointInterval := cfg.CheckpointInterval
-	expiredLeaseRetryInterval := cfg.ExpiredLeasesRetryInterval
-	if checkpointInterval == 0 {
-		checkpointInterval = defaultLeaseCheckpointInterval
-	}
-	if expiredLeaseRetryInterval == 0 {
-		expiredLeaseRetryInterval = defaultExpiredleaseRetryInterval
-	}
-	l := &lessor{
-		leaseMap:                  make(map[LeaseID]*Lease),
-		itemMap:                   make(map[LeaseItem]LeaseID),
-		leaseExpiredNotifier:      newLeaseExpiredNotifier(), // 租约到期移除的队列
-		leaseCheckpointHeap:       make(LeaseQueue, 0),
-		b:                         b,
-		minLeaseTTL:               cfg.MinLeaseTTL,           // 是可授予租赁的最小租期TTL。任何缩短TTL的请求都被扩展到最小TTL。
-		checkpointInterval:        checkpointInterval,        // 租赁快照的默认时间间隔
-		expiredLeaseRetryInterval: expiredLeaseRetryInterval, // 检查过期租约是否被撤销的默认时间间隔
-		checkpointPersist:         cfg.CheckpointPersist,     //  lessor是否应始终保持剩余的TTL（在v3.6中始终启用）。
-		// expiredC is a small buffered chan to avoid unnecessary blocking.
-		expiredC: make(chan []*Lease, 16),
-		stopC:    make(chan struct{}),
-		doneC:    make(chan struct{}),
-		lg:       lg,
-		cluster:  cluster,
-	}
-	l.initAndRecover()
-
-	go l.runLoop()
-
-	return l
-}
-
-// isPrimary indicates if this lessor is the primary lessor. The primary
-// lessor manages lease expiration and renew.
-//
-// in etcd, raft leader is the primary. Thus there might be two primary
-// leaders at the same time (raft allows concurrent leader but with different term)
-// for at most a leader election timeout.
-// The old primary leader cannot affect the correctness since its proposal has a
-// smaller term and will not be committed.
-//
-// TODO: raft follower do not forward lease management proposals. There might be a
-// very small window (within second normally which depends on go scheduling) that
-// a raft follow is the primary between the raft leader demotion and lessor demotion.
-// Usually this should not be a problem. Lease should not be that sensitive to timing.
-func (le *lessor) isPrimary() bool {
-	return le.demotec != nil
-}
-
-func (le *lessor) SetRangeDeleter(rd RangeDeleter) {
-	le.mu.Lock()
-	defer le.mu.Unlock()
-
-	le.rd = rd
-}
-
 func (le *lessor) SetCheckpointer(cp Checkpointer) {
 	le.mu.Lock()
 	defer le.mu.Unlock()
 
 	le.cp = cp
-}
-
-func (le *lessor) Grant(id LeaseID, ttl int64) (*Lease, error) {
-	if id == NoLease {
-		return nil, ErrLeaseNotFound
-	}
-
-	if ttl > MaxLeaseTTL {
-		return nil, ErrLeaseTTLTooLarge
-	}
-
-	// TODO: when lessor is under high load, it should give out lease
-	// with longer TTL to reduce renew load.
-	l := &Lease{
-		ID:      id,
-		ttl:     ttl,
-		itemSet: make(map[LeaseItem]struct{}),
-		revokec: make(chan struct{}),
-	}
-
-	le.mu.Lock()
-	defer le.mu.Unlock()
-
-	if _, ok := le.leaseMap[id]; ok {
-		return nil, ErrLeaseExists
-	}
-
-	if l.ttl < le.minLeaseTTL {
-		l.ttl = le.minLeaseTTL
-	}
-
-	if le.isPrimary() {
-		l.refresh(0)
-	} else {
-		l.forever()
-	}
-
-	le.leaseMap[id] = l
-	l.persistTo(le.b)
-
-	if le.isPrimary() {
-		item := &LeaseWithTime{id: l.ID, time: l.expiry}
-		le.leaseExpiredNotifier.RegisterOrUpdate(item)
-		le.scheduleCheckpointIfNeeded(l)
-	}
-
-	return l, nil
-}
-
-func (le *lessor) Revoke(id LeaseID) error {
-	le.mu.Lock()
-
-	l := le.leaseMap[id]
-	if l == nil {
-		le.mu.Unlock()
-		return ErrLeaseNotFound
-	}
-	defer close(l.revokec)
-	// unlock before doing external work
-	le.mu.Unlock()
-
-	if le.rd == nil {
-		return nil
-	}
-
-	txn := le.rd()
-
-	// sort keys so deletes are in same order among all members,
-	// otherwise the backend hashes will be different
-	keys := l.Keys()
-	sort.StringSlice(keys).Sort()
-	for _, key := range keys {
-		txn.DeleteRange([]byte(key), nil)
-	}
-
-	le.mu.Lock()
-	defer le.mu.Unlock()
-	delete(le.leaseMap, l.ID)
-	// lease deletion needs to be in the same backend transaction with the
-	// kv deletion. Or we might end up with not executing the revoke or not
-	// deleting the keys if etcdserver fails in between.
-	le.b.BatchTx().UnsafeDelete(buckets.Lease, int64ToBytes(int64(l.ID)))
-
-	txn.End()
-
-	return nil
 }
 
 func (le *lessor) Checkpoint(id LeaseID, remainingTTL int64) error {
@@ -327,79 +166,12 @@ func greaterOrEqual(first, second semver.Version) bool {
 	return !first.LessThan(second)
 }
 
-// Renew renews an existing lease. If the given lease does not exist or
-// has expired, an error will be returned.
-func (le *lessor) Renew(id LeaseID) (int64, error) {
-	le.mu.RLock()
-	if !le.isPrimary() {
-		// forward renew request to primary instead of returning error.
-		le.mu.RUnlock()
-		return -1, ErrNotPrimary
-	}
-
-	demotec := le.demotec
-
-	l := le.leaseMap[id]
-	if l == nil {
-		le.mu.RUnlock()
-		return -1, ErrLeaseNotFound
-	}
-	// Clear remaining TTL when we renew if it is set
-	clearRemainingTTL := le.cp != nil && l.remainingTTL > 0
-
-	le.mu.RUnlock()
-	if l.expired() {
-		select {
-		// A expired lease might be pending for revoking or going through
-		// quorum to be revoked. To be accurate, renew request must wait for the
-		// deletion to complete.
-		case <-l.revokec:
-			return -1, ErrLeaseNotFound
-		// The expired lease might fail to be revoked if the primary changes.
-		// The caller will retry on ErrNotPrimary.
-		case <-demotec:
-			return -1, ErrNotPrimary
-		case <-le.stopC:
-			return -1, ErrNotPrimary
-		}
-	}
-
-	// Clear remaining TTL when we renew if it is set
-	// By applying a RAFT entry only when the remainingTTL is already set, we limit the number
-	// of RAFT entries written per lease to a max of 2 per checkpoint interval.
-	if clearRemainingTTL {
-		le.cp(context.Background(), &pb.LeaseCheckpointRequest{Checkpoints: []*pb.LeaseCheckpoint{{ID: int64(l.ID), Remaining_TTL: 0}}})
-	}
-
-	le.mu.Lock()
-	l.refresh(0)
-	item := &LeaseWithTime{id: l.ID, time: l.expiry}
-	le.leaseExpiredNotifier.RegisterOrUpdate(item)
-	le.mu.Unlock()
-
-	return l.ttl, nil
-}
-
-func (le *lessor) Lookup(id LeaseID) *Lease {
-	le.mu.RLock()
-	defer le.mu.RUnlock()
-	return le.leaseMap[id]
-}
-
 func (le *lessor) unsafeLeases() []*Lease {
 	leases := make([]*Lease, 0, len(le.leaseMap))
 	for _, l := range le.leaseMap {
 		leases = append(leases, l)
 	}
 	return leases
-}
-
-func (le *lessor) Leases() []*Lease {
-	le.mu.RLock()
-	ls := le.unsafeLeases()
-	le.mu.RUnlock()
-	sort.Sort(leasesByExpiry(ls))
-	return ls
 }
 
 func (le *lessor) Promote(extend time.Duration) {
@@ -539,10 +311,6 @@ func (le *lessor) Recover(b backend.Backend, rd RangeDeleter) {
 	le.initAndRecover()
 }
 
-func (le *lessor) ExpiredLeasesC() <-chan []*Lease {
-	return le.expiredC
-}
-
 func (le *lessor) Stop() {
 	close(le.stopC)
 	<-le.doneC
@@ -550,9 +318,10 @@ func (le *lessor) Stop() {
 
 func (le *lessor) runLoop() {
 	defer close(le.doneC)
-
 	for {
+		// 查找所有过期的租约，并将其发送到过期的通道中等待撤销。
 		le.revokeExpiredLeases()
+		// 查找所有预定的到期租约检查点，并将它们提交到检查指针，以便将它们持久化到一致日志中。
 		le.checkpointScheduledLeases()
 
 		select {
@@ -563,35 +332,7 @@ func (le *lessor) runLoop() {
 	}
 }
 
-// revokeExpiredLeases finds all leases past their expiry and sends them to expired channel for
-// to be revoked.
-func (le *lessor) revokeExpiredLeases() {
-	var ls []*Lease
-
-	// rate limit
-	revokeLimit := leaseRevokeRate / 2
-
-	le.mu.RLock()
-	if le.isPrimary() {
-		ls = le.findExpiredLeases(revokeLimit)
-	}
-	le.mu.RUnlock()
-
-	if len(ls) != 0 {
-		select {
-		case <-le.stopC:
-			return
-		case le.expiredC <- ls:
-		default:
-			// the receiver of expiredC is probably busy handling
-			// other stuff
-			// let's try this next time after 500ms
-		}
-	}
-}
-
-// checkpointScheduledLeases finds all scheduled lease checkpoints that are due and
-// submits them to the checkpointer to persist them to the consensus log.
+// checkpointScheduledLeases  查找所有预定的到期租约检查点，并将它们提交到检查指针，以便将它们持久化到一致日志中。
 func (le *lessor) checkpointScheduledLeases() {
 	var cps []*pb.LeaseCheckpoint
 
@@ -620,76 +361,15 @@ func (le *lessor) clearLeaseExpiredNotifier() {
 	le.leaseExpiredNotifier = newLeaseExpiredNotifier()
 }
 
-// expireExists returns true if expiry items exist.
-// It pops only when expiry item exists.
-// "next" is true, to indicate that it may exist in next attempt.
-func (le *lessor) expireExists() (l *Lease, ok bool, next bool) {
-	if le.leaseExpiredNotifier.Len() == 0 {
-		return nil, false, false
-	}
-
-	item := le.leaseExpiredNotifier.Poll()
-	l = le.leaseMap[item.id]
-	if l == nil {
-		// lease has expired or been revoked
-		// no need to revoke (nothing is expiry)
-		le.leaseExpiredNotifier.Unregister() // O(log N)
-		return nil, false, true
-	}
-	now := time.Now()
-	if now.Before(item.time) /* item.time: expiration time */ {
-		// Candidate expirations are caught up, reinsert this item
-		// and no need to revoke (nothing is expiry)
-		return l, false, false
-	}
-
-	// recheck if revoke is complete after retry interval
-	item.time = now.Add(le.expiredLeaseRetryInterval)
-	le.leaseExpiredNotifier.RegisterOrUpdate(item)
-	return l, true, false
-}
-
-// findExpiredLeases loops leases in the leaseMap until reaching expired limit
-// and returns the expired leases that needed to be revoked.
-func (le *lessor) findExpiredLeases(limit int) []*Lease {
-	leases := make([]*Lease, 0, 16)
-
-	for {
-		l, ok, next := le.expireExists()
-		if !ok && !next {
-			break
-		}
-		if !ok {
-			continue
-		}
-		if next {
-			continue
-		}
-
-		if l.expired() {
-			leases = append(leases, l)
-
-			// reach expired limit
-			if len(leases) == limit {
-				break
-			}
-		}
-	}
-
-	return leases
-}
-
+// 开始执行检查
 func (le *lessor) scheduleCheckpointIfNeeded(lease *Lease) {
 	if le.cp == nil {
 		return
 	}
 
-	if lease.RemainingTTL() > int64(le.checkpointInterval.Seconds()) {
+	if lease.getRemainingTTL() > int64(le.checkpointInterval.Seconds()) {
 		if le.lg != nil {
-			le.lg.Debug("Scheduling lease checkpoint",
-				zap.Int64("leaseID", int64(lease.ID)),
-				zap.Duration("intervalSeconds", le.checkpointInterval),
-			)
+			le.lg.Debug("开始调度 租约 检查", zap.Int64("leaseID", int64(lease.ID)), zap.Duration("intervalSeconds", le.checkpointInterval))
 		}
 		heap.Push(&le.leaseCheckpointHeap, &LeaseWithTime{
 			id:   lease.ID,
@@ -704,7 +384,7 @@ func (le *lessor) findDueScheduledCheckpoints(checkpointLimit int) []*pb.LeaseCh
 	}
 
 	now := time.Now()
-	cps := []*pb.LeaseCheckpoint{}
+	var cps []*pb.LeaseCheckpoint
 	for le.leaseCheckpointHeap.Len() > 0 && len(cps) < checkpointLimit {
 		lt := le.leaseCheckpointHeap[0]
 		if lt.time.After(now) /* lt.time: next checkpoint time */ {
@@ -734,6 +414,7 @@ func (le *lessor) findDueScheduledCheckpoints(checkpointLimit int) []*pb.LeaseCh
 	return cps
 }
 
+// 从bolt.db恢复租约信息
 func (le *lessor) initAndRecover() {
 	tx := le.b.BatchTx()
 	tx.Lock()
@@ -761,7 +442,7 @@ func (le *lessor) initAndRecover() {
 			remainingTTL: lpb.RemainingTTL,
 		}
 	}
-	le.leaseExpiredNotifier.Init()
+	le.leaseExpiredNotifier.Init() // 填充mq.m
 	heap.Init(&le.leaseCheckpointHeap)
 	tx.Unlock()
 
@@ -769,92 +450,29 @@ func (le *lessor) initAndRecover() {
 }
 
 type Lease struct {
-	ID           LeaseID
+	ID           LeaseID                // 租约ID ,   自增得到的,
 	ttl          int64                  // 租约的生存时间，以秒为单位
 	remainingTTL int64                  // 剩余生存时间，以秒为单位，如果为零，则视为未设置，应使用完整的tl。
 	expiryMu     sync.RWMutex           // 保护并发的访问
 	expiry       time.Time              // 是租约到期的时间。当expiry.IsZero()为真时，永久存在。
 	mu           sync.RWMutex           // 保护并发的访问 itemSet
-	itemSet      map[LeaseItem]struct{} //
+	itemSet      map[LeaseItem]struct{} // 哪些租约附加到了key
 	revokec      chan struct{}          //
 }
 
-func (l *Lease) expired() bool {
-	return l.Remaining() <= 0
-}
-
-func (l *Lease) persistTo(b backend.Backend) {
-	key := int64ToBytes(int64(l.ID))
-
-	lpb := leasepb.Lease{ID: int64(l.ID), TTL: l.ttl, RemainingTTL: l.remainingTTL}
-	val, err := lpb.Marshal()
-	if err != nil {
-		panic("failed to marshal lease proto item")
-	}
-
-	b.BatchTx().Lock()
-	b.BatchTx().UnsafePut(buckets.Lease, key, val)
-	b.BatchTx().Unlock()
-}
-
-// TTL returns the TTL of the Lease.
-func (l *Lease) TTL() int64 {
-	return l.ttl
-}
-
-// RemainingTTL returns the last checkpointed remaining TTL of the lease.
-// TODO(jpbetz): do not expose this utility method
-func (l *Lease) RemainingTTL() int64 {
-	if l.remainingTTL > 0 {
-		return l.remainingTTL
-	}
-	return l.ttl
-}
-
-// refresh refreshes the expiry of the lease.
+// refresh 刷新租约的过期时间
 func (l *Lease) refresh(extend time.Duration) {
-	newExpiry := time.Now().Add(extend + time.Duration(l.RemainingTTL())*time.Second)
+	newExpiry := time.Now().Add(extend + time.Duration(l.getRemainingTTL())*time.Second)
 	l.expiryMu.Lock()
 	defer l.expiryMu.Unlock()
 	l.expiry = newExpiry
 }
 
-// forever sets the expiry of lease to be forever.
+// forever 设置永久过期时间,当不是主lessor
 func (l *Lease) forever() {
 	l.expiryMu.Lock()
 	defer l.expiryMu.Unlock()
 	l.expiry = forever
-}
-
-// Keys returns all the keys attached to the lease.
-func (l *Lease) Keys() []string {
-	l.mu.RLock()
-	keys := make([]string, 0, len(l.itemSet))
-	for k := range l.itemSet {
-		keys = append(keys, k.Key)
-	}
-	l.mu.RUnlock()
-	return keys
-}
-
-// Remaining returns the remaining time of the lease.
-func (l *Lease) Remaining() time.Duration {
-	l.expiryMu.RLock()
-	defer l.expiryMu.RUnlock()
-	if l.expiry.IsZero() {
-		return time.Duration(math.MaxInt64)
-	}
-	return time.Until(l.expiry)
-}
-
-type LeaseItem struct {
-	Key string
-}
-
-func int64ToBytes(n int64) []byte {
-	bytes := make([]byte, 8)
-	binary.BigEndian.PutUint64(bytes, uint64(n))
-	return bytes
 }
 
 // FakeLessor is a fake implementation of Lessor interface.
@@ -873,7 +491,8 @@ func (fl *FakeLessor) Checkpoint(id LeaseID, remainingTTL int64) error { return 
 
 func (fl *FakeLessor) Attach(id LeaseID, items []LeaseItem) error { return nil }
 
-func (fl *FakeLessor) GetLease(item LeaseItem) LeaseID            { return 0 }
+func (fl *FakeLessor) GetLease(item LeaseItem) LeaseID { return 0 }
+
 func (fl *FakeLessor) Detach(id LeaseID, items []LeaseItem) error { return nil }
 
 func (fl *FakeLessor) Promote(extend time.Duration) {}
@@ -898,3 +517,344 @@ type FakeTxnDelete struct {
 
 func (ftd *FakeTxnDelete) DeleteRange(key, end []byte) (n, rev int64) { return 0, 0 }
 func (ftd *FakeTxnDelete) End()                                       { ftd.Unlock() }
+
+// --------------------------------------------- OVER  -----------------------------------------------------------------
+
+// Grant 创建租约
+func (le *lessor) Grant(id LeaseID, ttl int64) (*Lease, error) {
+	if id == NoLease {
+		return nil, ErrLeaseNotFound
+	}
+
+	if ttl > MaxLeaseTTL {
+		return nil, ErrLeaseTTLTooLarge
+	}
+
+	// lessor在高负荷时，应延长租期，以减少续租。
+	l := &Lease{
+		ID:      id,
+		ttl:     ttl,
+		itemSet: make(map[LeaseItem]struct{}),
+		revokec: make(chan struct{}),
+	}
+
+	le.mu.Lock()
+	defer le.mu.Unlock()
+
+	if _, ok := le.leaseMap[id]; ok {
+		return nil, ErrLeaseExists
+	}
+
+	if l.ttl < le.minLeaseTTL {
+		l.ttl = le.minLeaseTTL
+	}
+
+	if le.isPrimary() { // 是否还是主lessor
+		l.refresh(0) // 刷新租约的过期时间
+	} else {
+		l.forever()
+	}
+
+	le.leaseMap[id] = l
+	l.persistTo(le.b)
+
+	if le.isPrimary() {
+		item := &LeaseWithTime{id: l.ID, time: l.expiry}
+		le.leaseExpiredNotifier.RegisterOrUpdate(item)
+		le.scheduleCheckpointIfNeeded(l)
+	}
+
+	return l, nil
+}
+
+// expireExists 返回是否有已过期的租约, next 表明它可能在下次尝试中存在。
+func (le *lessor) expireExists() (l *Lease, ok bool, next bool) {
+	if le.leaseExpiredNotifier.Len() == 0 {
+		return nil, false, false
+	}
+
+	item := le.leaseExpiredNotifier.Poll() // 获取第一个,不会从堆中剔除
+	l = le.leaseMap[item.id]
+	if l == nil {
+		// 租约已过期或 已经被移除，不需要再次移除
+		le.leaseExpiredNotifier.Unregister() // O(log N)  弹出第一个
+		return nil, false, true
+	}
+	now := time.Now()
+	if now.Before(item.time) {
+		// 判断时间有没有过期
+		return l, false, false
+	}
+
+	// recheck if revoke is complete after retry interval
+	item.time = now.Add(le.expiredLeaseRetryInterval)
+	le.leaseExpiredNotifier.RegisterOrUpdate(item)
+	return l, true, false
+}
+
+// findExpiredLeases 查找已过期的租约,有数量限制
+func (le *lessor) findExpiredLeases(limit int) []*Lease {
+	leases := make([]*Lease, 0, 16)
+
+	for {
+		l, ok, next := le.expireExists() // 获取一个已过期的 租约，以及之后是否可能仍然存在
+		if !ok && !next {
+			// 当前没有，以后不存在
+			break
+		}
+		if !ok {
+			// 当前没有
+			continue
+		}
+		if next {
+			// 以后存在
+			continue
+		}
+		//
+		if l.expired() {
+			leases = append(leases, l)
+			if len(leases) == limit {
+				break
+			}
+		}
+	}
+
+	return leases
+}
+
+// revokeExpiredLeases 查找所有过期的租约，并将其发送到过期的通道中等待撤销。
+func (le *lessor) revokeExpiredLeases() {
+	var ls []*Lease
+
+	// 每秒撤销租约的最大数量,  500ms调用一次，那么限制应该改为 /2
+	revokeLimit := leaseRevokeRate / 2
+
+	le.mu.RLock()
+	if le.isPrimary() { // 主
+		ls = le.findExpiredLeases(revokeLimit)
+	}
+	le.mu.RUnlock()
+
+	if len(ls) != 0 {
+		select {
+		case <-le.stopC:
+			return
+		case le.expiredC <- ls:
+		default:
+			// expiredC的接收器可能正在忙着处理其他东西，下次500ms后再试
+		}
+	}
+}
+
+// ExpiredLeasesC 返回一批已过期的租约
+func (le *lessor) ExpiredLeasesC() <-chan []*Lease {
+	return le.expiredC
+}
+
+// Revoke 从kvindex以及bolt.db中删除
+func (le *lessor) Revoke(id LeaseID) error {
+	le.mu.Lock()
+
+	l := le.leaseMap[id]
+	if l == nil {
+		le.mu.Unlock()
+		return ErrLeaseNotFound
+	}
+	defer close(l.revokec)
+	le.mu.Unlock()
+	// mvcc.newWatchableStore
+	if le.rd == nil {
+		return nil
+	}
+
+	txn := le.rd()
+
+	// 对键进行排序，以便在所有成员中以相同的顺序删除，否则后台的哈希值将是不同的。
+	keys := l.Keys()
+	sort.StringSlice(keys).Sort()
+	for _, key := range keys { // 该租约附加到了哪些key上
+		txn.DeleteRange([]byte(key), nil) // 从内存 kvindex 中 删除
+	}
+
+	le.mu.Lock()
+	defer le.mu.Unlock()
+	delete(le.leaseMap, l.ID)
+	// 租约的删除需要与kv的删除在同一个后台事务中。否则，如果 etcdserver 在两者之间发生故障，我们可能会出现不执行撤销或不删除钥匙的结果。
+	le.b.BatchTx().UnsafeDelete(buckets.Lease, int64ToBytes(int64(l.ID))) // 删除bolt.db 里的key
+	txn.End()
+	return nil
+}
+
+// Remaining 返回剩余时间
+func (l *Lease) Remaining() time.Duration {
+	l.expiryMu.RLock()
+	defer l.expiryMu.RUnlock()
+	if l.expiry.IsZero() {
+		return time.Duration(math.MaxInt64)
+	}
+	return time.Until(l.expiry)
+}
+
+type LeaseItem struct {
+	Key string
+}
+
+func int64ToBytes(n int64) []byte {
+	bytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(bytes, uint64(n))
+	return bytes
+}
+
+// 是否已过期
+func (l *Lease) expired() bool {
+	return l.Remaining() <= 0
+}
+
+// 持久化租约
+func (l *Lease) persistTo(b backend.Backend) {
+	key := int64ToBytes(int64(l.ID))
+
+	lpb := leasepb.Lease{ID: int64(l.ID), TTL: l.ttl, RemainingTTL: l.remainingTTL}
+	val, err := lpb.Marshal()
+	if err != nil {
+		panic("序列化lease消息失败")
+	}
+
+	b.BatchTx().Lock()
+	b.BatchTx().UnsafePut(buckets.Lease, key, val)
+	b.BatchTx().Unlock()
+}
+
+func (l *Lease) TTL() int64 {
+	return l.ttl
+}
+
+// Keys 返回当前组约绑定到了哪些key
+func (l *Lease) Keys() []string {
+	l.mu.RLock()
+	keys := make([]string, 0, len(l.itemSet))
+	for k := range l.itemSet {
+		keys = append(keys, k.Key)
+	}
+	l.mu.RUnlock()
+	return keys
+}
+
+// getRemainingTTL returns the last checkpointed remaining TTL of the lease.
+func (l *Lease) getRemainingTTL() int64 {
+	if l.remainingTTL > 0 {
+		return l.remainingTTL
+	}
+	return l.ttl
+}
+
+// 创建租约管理器
+func newLessor(lg *zap.Logger, b backend.Backend, cluster cluster, cfg LessorConfig) *lessor {
+	checkpointInterval := cfg.CheckpointInterval
+	expiredLeaseRetryInterval := cfg.ExpiredLeasesRetryInterval
+	if checkpointInterval == 0 {
+		checkpointInterval = defaultLeaseCheckpointInterval
+	}
+	if expiredLeaseRetryInterval == 0 {
+		expiredLeaseRetryInterval = defaultExpiredleaseRetryInterval
+	}
+	l := &lessor{
+		leaseMap:                  make(map[LeaseID]*Lease),
+		itemMap:                   make(map[LeaseItem]LeaseID),
+		leaseExpiredNotifier:      newLeaseExpiredNotifier(), // 租约到期移除的队列
+		leaseCheckpointHeap:       make(LeaseQueue, 0),
+		b:                         b,                         // bolt.db
+		minLeaseTTL:               cfg.MinLeaseTTL,           // 是可授予租约的最小租期TTL。任何缩短TTL的请求都被扩展到最小TTL。
+		checkpointInterval:        checkpointInterval,        // 租约快照的默认时间间隔
+		expiredLeaseRetryInterval: expiredLeaseRetryInterval, // 检查过期租约是否被撤销的默认时间间隔
+		checkpointPersist:         cfg.CheckpointPersist,     //  lessor是否应始终保持剩余的TTL（在v3.6中始终启用）。
+		expiredC:                  make(chan []*Lease, 16),   // 避免不必要的阻塞
+		stopC:                     make(chan struct{}),
+		doneC:                     make(chan struct{}),
+		lg:                        lg,
+		cluster:                   cluster,
+	}
+	l.initAndRecover() // 从bolt.db恢复租约信息
+
+	go l.runLoop() // 开始检查是否有快过期的租约
+
+	return l
+}
+
+// isPrimary 表示该出租人是否为主要出租人。主出租人负责管理租约的到期和更新。
+// 在etcd中，raft leader是主要的。因此，在同一时间可能有两个主要的领导者（raft允许同时存在的领导者，但任期不同），最多是一个领导者选举超时。
+// 旧的主要领导者不能影响正确性，因为它的提议有一个较小的期限，不会被提交。
+// TODO：raft的跟随者不转发租约管理提案。可能会有一个非常小的窗口（通常在一秒钟之内，这取决于调度），在raft领导者降级和lessor降级之间
+// 通常情况下，这不应该是一个问题。租约对时间不应该那么敏感。
+func (le *lessor) isPrimary() bool {
+	return le.demotec != nil
+}
+
+// SetRangeDeleter 主要是设置一个用于获取delete的写事务的函数
+func (le *lessor) SetRangeDeleter(rd RangeDeleter) {
+	le.mu.Lock()
+	defer le.mu.Unlock()
+	le.rd = rd
+}
+
+// Renew 在租约有效期内，重新计算过期时间
+func (le *lessor) Renew(id LeaseID) (int64, error) {
+	le.mu.RLock()
+	if !le.isPrimary() {
+		le.mu.RUnlock()
+		return -1, ErrNotPrimary
+	}
+
+	demotec := le.demotec
+
+	l := le.leaseMap[id]
+	if l == nil {
+		le.mu.RUnlock()
+		return -1, ErrLeaseNotFound
+	}
+	// 清空剩余时间
+	clearRemainingTTL := le.cp != nil && l.remainingTTL > 0
+
+	le.mu.RUnlock()
+	if l.expired() { // 租约过期了
+		select {
+		case <-l.revokec: // 当租约到期,会关闭
+			return -1, ErrLeaseNotFound
+		case <-demotec:
+			return -1, ErrNotPrimary
+		case <-le.stopC:
+			return -1, ErrNotPrimary
+		}
+	}
+
+	// Clear remaining TTL when we renew if it is set
+	// By applying a RAFT entry only when the remainingTTL is already set, we limit the number
+	// of RAFT entries written per lease to a max of 2 per checkpoint interval.
+	if clearRemainingTTL {
+		le.cp(context.Background(), &pb.LeaseCheckpointRequest{Checkpoints: []*pb.LeaseCheckpoint{{ID: int64(l.ID), Remaining_TTL: 0}}})
+	}
+
+	le.mu.Lock()
+	l.refresh(0)
+	item := &LeaseWithTime{id: l.ID, time: l.expiry}
+	le.leaseExpiredNotifier.RegisterOrUpdate(item)
+	le.mu.Unlock()
+
+	return l.ttl, nil
+}
+
+// Lookup 查找租约
+func (le *lessor) Lookup(id LeaseID) *Lease {
+	le.mu.RLock()
+	defer le.mu.RUnlock()
+	return le.leaseMap[id]
+}
+
+// Leases 获取当前节点上的所有租约
+func (le *lessor) Leases() []*Lease {
+	le.mu.RLock()
+	ls := le.unsafeLeases()
+	le.mu.RUnlock()
+	sort.Sort(leasesByExpiry(ls))
+	return ls
+}

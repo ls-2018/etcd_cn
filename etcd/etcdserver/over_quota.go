@@ -47,7 +47,7 @@ type backendQuota struct {
 }
 
 const (
-	leaseOverhead = 64  // 是对租赁物的存储成本的估计.
+	leaseOverhead = 64  // 是对租约物的存储成本的估计.
 	kvOverhead    = 256 // 是对存储一个密钥的元数据的成本的估计.
 )
 
@@ -118,7 +118,7 @@ func (b *backendQuota) Cost(v interface{}) int {
 	case *pb.LeaseGrantRequest:
 		return leaseOverhead
 	default:
-		panic("unexpected cost")
+		panic("未知的 cost")
 	}
 }
 

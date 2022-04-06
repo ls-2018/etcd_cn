@@ -89,26 +89,6 @@ func isTxnReadonly(r *pb.TxnRequest) bool {
 	return true
 }
 
-func (s *EtcdServer) waitLeader(ctx context.Context) (*membership.Member, error) {
-	leader := s.cluster.Member(s.Leader())
-	for leader == nil {
-		// wait an election
-		dur := time.Duration(s.Cfg.ElectionTicks) * time.Duration(s.Cfg.TickMs) * time.Millisecond
-		select {
-		case <-time.After(dur):
-			leader = s.cluster.Member(s.Leader())
-		case <-s.stopping:
-			return nil, ErrStopped
-		case <-ctx.Done():
-			return nil, ErrNoLeader
-		}
-	}
-	if leader == nil || len(leader.PeerURLs) == 0 {
-		return nil, ErrNoLeader
-	}
-	return leader, nil
-}
-
 func (s *EtcdServer) Alarm(ctx context.Context, r *pb.AlarmRequest) (*pb.AlarmResponse, error) {
 	req := pb.InternalRaftRequest{Alarm: r}
 	// marshal, _ := json.Marshal(req)
@@ -394,9 +374,9 @@ func (a *applierV3backend) Apply(r *pb.InternalRaftRequest, shouldApplyV3 member
 	case r.Compaction != nil:
 		ar.resp, ar.physc, ar.trace, ar.err = a.s.applyV3.Compaction(r.Compaction)
 	case r.LeaseGrant != nil:
-		ar.resp, ar.err = a.s.applyV3.LeaseGrant(r.LeaseGrant)
+		ar.resp, ar.err = a.s.applyV3.LeaseGrant(r.LeaseGrant) // ✅ 创建租约
 	case r.LeaseRevoke != nil:
-		ar.resp, ar.err = a.s.applyV3.LeaseRevoke(r.LeaseRevoke)
+		ar.resp, ar.err = a.s.applyV3.LeaseRevoke(r.LeaseRevoke) // ✅ 删除租约
 	case r.LeaseCheckpoint != nil:
 		ar.resp, ar.err = a.s.applyV3.LeaseCheckpoint(r.LeaseCheckpoint)
 	case r.Alarm != nil:
@@ -439,4 +419,25 @@ func (a *applierV3backend) Apply(r *pb.InternalRaftRequest, shouldApplyV3 member
 		a.s.lg.Panic("没有实现应用", zap.Stringer("raft-request", r))
 	}
 	return ar
+}
+
+// 等待leader就绪
+func (s *EtcdServer) waitLeader(ctx context.Context) (*membership.Member, error) {
+	leader := s.cluster.Member(s.Leader())
+	for leader == nil {
+		// 等待选举超时
+		dur := time.Duration(s.Cfg.ElectionTicks) * time.Duration(s.Cfg.TickMs) * time.Millisecond
+		select {
+		case <-time.After(dur):
+			leader = s.cluster.Member(s.Leader())
+		case <-s.stopping:
+			return nil, ErrStopped
+		case <-ctx.Done():
+			return nil, ErrNoLeader
+		}
+	}
+	if leader == nil || len(leader.PeerURLs) == 0 {
+		return nil, ErrNoLeader
+	}
+	return leader, nil
 }

@@ -53,7 +53,7 @@ type TxnRead interface {
 
 type WriteView interface {
 	DeleteRange(key, end []byte) (n, rev int64) // 删除指定范围的数据
-	// Put 将给定的k v放入存储区。Put还接受额外的参数lease，将lease作为元数据附加到键值对上。KV实现 不验证租赁id。
+	// Put 将给定的k v放入存储区。Put还接受额外的参数lease，将lease作为元数据附加到键值对上。KV实现 不验证租约id。
 	// put还会增加存储的修订版本，并在事件历史中生成一个事件。返回的修订版本是执行操作时KV的当前修订版本。
 	Put(key, value []byte, lease lease.LeaseID) (rev int64)
 }

@@ -38,9 +38,10 @@ type quotaAlarmer struct {
 
 // check 请求是否满足配额.如果没有足够的空间.忽略请求并发出自由空间警报.
 func (qa *quotaAlarmer) check(ctx context.Context, r interface{}) error {
-	if qa.q.Available(r) {
+	if qa.q.Available(r) { // 检查存储空间
 		return nil
 	}
+	// 没有存储空间
 	req := &pb.AlarmRequest{
 		MemberID: uint64(qa.id),
 		Action:   pb.AlarmRequest_ACTIVATE, //  check

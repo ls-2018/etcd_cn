@@ -452,32 +452,6 @@ func (a *applierV3backend) Compaction(compaction *pb.CompactionRequest) (*pb.Com
 	return resp, ch, trace, err
 }
 
-func (a *applierV3backend) LeaseGrant(lc *pb.LeaseGrantRequest) (*pb.LeaseGrantResponse, error) {
-	l, err := a.s.lessor.Grant(lease.LeaseID(lc.ID), lc.TTL)
-	resp := &pb.LeaseGrantResponse{}
-	if err == nil {
-		resp.ID = int64(l.ID)
-		resp.TTL = l.TTL()
-		resp.Header = newHeader(a.s)
-	}
-	return resp, err
-}
-
-func (a *applierV3backend) LeaseRevoke(lc *pb.LeaseRevokeRequest) (*pb.LeaseRevokeResponse, error) {
-	err := a.s.lessor.Revoke(lease.LeaseID(lc.ID))
-	return &pb.LeaseRevokeResponse{Header: newHeader(a.s)}, err
-}
-
-func (a *applierV3backend) LeaseCheckpoint(lc *pb.LeaseCheckpointRequest) (*pb.LeaseCheckpointResponse, error) {
-	for _, c := range lc.Checkpoints {
-		err := a.s.lessor.Checkpoint(lease.LeaseID(c.ID), c.Remaining_TTL)
-		if err != nil {
-			return &pb.LeaseCheckpointResponse{Header: newHeader(a.s)}, err
-		}
-	}
-	return &pb.LeaseCheckpointResponse{Header: newHeader(a.s)}, nil
-}
-
 func (a *applierV3backend) ClusterVersionSet(r *membershippb.ClusterVersionSetRequest, shouldApplyV3 membership.ShouldApplyV3) {
 	a.s.cluster.SetVersion(semver.Must(semver.NewVersion(r.Ver)), api.UpdateCapability, shouldApplyV3)
 }
@@ -501,13 +475,51 @@ func (a *applierV3backend) DowngradeInfoSet(r *membershippb.DowngradeInfoSetRequ
 	a.s.cluster.SetDowngradeInfo(&d, shouldApplyV3)
 }
 
+// LeaseGrant 创建租约
+func (a *applierV3backend) LeaseGrant(lc *pb.LeaseGrantRequest) (*pb.LeaseGrantResponse, error) {
+	l, err := a.s.lessor.Grant(lease.LeaseID(lc.ID), lc.TTL)
+	resp := &pb.LeaseGrantResponse{}
+	if err == nil {
+		resp.ID = int64(l.ID)
+		resp.TTL = l.TTL()
+		resp.Header = newHeader(a.s)
+	}
+	return resp, err
+}
+
+// LeaseRevoke ok
+func (a *applierV3backend) LeaseRevoke(lc *pb.LeaseRevokeRequest) (*pb.LeaseRevokeResponse, error) {
+	err := a.s.lessor.Revoke(lease.LeaseID(lc.ID))
+	return &pb.LeaseRevokeResponse{Header: newHeader(a.s)}, err
+}
+
+func (a *applierV3backend) LeaseCheckpoint(lc *pb.LeaseCheckpointRequest) (*pb.LeaseCheckpointResponse, error) {
+	for _, c := range lc.Checkpoints {
+		err := a.s.lessor.Checkpoint(lease.LeaseID(c.ID), c.Remaining_TTL)
+		if err != nil {
+			return &pb.LeaseCheckpointResponse{Header: newHeader(a.s)}, err
+		}
+	}
+	return &pb.LeaseCheckpointResponse{Header: newHeader(a.s)}, nil
+}
+
 type quotaApplierV3 struct {
-	applierV3
-	q Quota
+	applierV3 // applierV3backend
+	q         Quota
 }
 
 func newQuotaApplierV3(s *EtcdServer, app applierV3) applierV3 {
 	return &quotaApplierV3{app, NewBackendQuota(s, "v3-applier")}
+}
+
+// LeaseGrant 检查空间\创建租约
+func (a *quotaApplierV3) LeaseGrant(lc *pb.LeaseGrantRequest) (*pb.LeaseGrantResponse, error) {
+	ok := a.q.Available(lc)
+	resp, err := a.applierV3.LeaseGrant(lc)
+	if err == nil && !ok {
+		err = ErrNoSpace
+	}
+	return resp, err
 }
 
 func (a *quotaApplierV3) Put(ctx context.Context, txn mvcc.TxnWrite, p *pb.PutRequest) (*pb.PutResponse, *traceutil.Trace, error) {
@@ -526,15 +538,6 @@ func (a *quotaApplierV3) Txn(ctx context.Context, rt *pb.TxnRequest) (*pb.TxnRes
 		err = ErrNoSpace
 	}
 	return resp, trace, err
-}
-
-func (a *quotaApplierV3) LeaseGrant(lc *pb.LeaseGrantRequest) (*pb.LeaseGrantResponse, error) {
-	ok := a.q.Available(lc)
-	resp, err := a.applierV3.LeaseGrant(lc)
-	if err == nil && !ok {
-		err = ErrNoSpace
-	}
-	return resp, err
 }
 
 func checkRequests(rv mvcc.ReadView, rt *pb.TxnRequest, txnPath []bool, f checkReqFunc) (int, error) {

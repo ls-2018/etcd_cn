@@ -27,9 +27,9 @@ import (
 )
 
 type authApplierV3 struct {
-	applierV3
-	as     auth.AuthStore
-	lessor lease.Lessor
+	applierV3                // applierV3backend
+	as        auth.AuthStore // 内循环时,提供认证token
+	lessor    lease.Lessor   // 租约管理者
 	// mu serializes Apply so that user isn't corrupted and so that
 	// serialized requests don't leak data from TOCTOU errors
 	mu       sync.Mutex
@@ -167,12 +167,13 @@ func (aa *authApplierV3) Txn(ctx context.Context, rt *pb.TxnRequest) (*pb.TxnRes
 }
 
 func (aa *authApplierV3) LeaseRevoke(lc *pb.LeaseRevokeRequest) (*pb.LeaseRevokeResponse, error) {
-	if err := aa.checkLeasePuts(lease.LeaseID(lc.ID)); err != nil {
+	if err := aa.checkLeasePuts(lease.LeaseID(lc.ID)); err != nil { // 检查租约是否存在
 		return nil, err
 	}
 	return aa.applierV3.LeaseRevoke(lc)
 }
 
+// 检查租约更新的key是否有权限操作
 func (aa *authApplierV3) checkLeasePuts(leaseID lease.LeaseID) error {
 	lease := aa.lessor.Lookup(leaseID)
 	if lease != nil {

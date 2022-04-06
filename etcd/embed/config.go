@@ -273,7 +273,7 @@ type Config struct {
 	// ExperimentalEnableLeaseCheckpoint enables leader to send regular checkpoints to other members to prevent reset of remaining TTL on leader change.
 	ExperimentalEnableLeaseCheckpoint bool `json:"experimental-enable-lease-checkpoint"`
 	// ExperimentalEnableLeaseCheckpointPersist
-	// 启用持续的剩余TTL,以防止长期租赁的无限期自动续约.在v3.6中始终启用.应该用于确保从启用该功能的v3.5集群顺利升级.
+	// 启用持续的剩余TTL,以防止长期租约的无限期自动续约.在v3.6中始终启用.应该用于确保从启用该功能的v3.5集群顺利升级.
 	// 需要启用 experimental-enable-lease-checkpoint
 	// Deprecated in v3.6.
 	// TODO: Delete in v3.7

@@ -31,7 +31,7 @@ var (
 	ErrGRPCFutureRev     = status.New(codes.OutOfRange, "etcdserver: mvcc: 所需的修订版是一个未来版本").Err()
 	ErrGRPCNoSpace       = status.New(codes.ResourceExhausted, "etcdserver: mvcc: database space exceeded").Err()
 
-	ErrGRPCLeaseNotFound    = status.New(codes.NotFound, "etcdserver: requested lease not found").Err()
+	ErrGRPCLeaseNotFound    = status.New(codes.NotFound, "etcdserver: 请求的租约不存在").Err()
 	ErrGRPCLeaseExist       = status.New(codes.FailedPrecondition, "etcdserver: lease already exists").Err()
 	ErrGRPCLeaseTTLTooLarge = status.New(codes.OutOfRange, "etcdserver: too large lease TTL").Err()
 

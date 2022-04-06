@@ -53,22 +53,21 @@ func NewLeaseGrantCommand() *cobra.Command {
 	return lc
 }
 
-// leaseGrantCommandFunc executes the "lease grant" command.
 func leaseGrantCommandFunc(cmd *cobra.Command, args []string) {
 	if len(args) != 1 {
-		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("lease grant command needs TTL argument"))
+		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("lease grant命令需要TTL参数"))
 	}
 
 	ttl, err := strconv.ParseInt(args[0], 10, 64)
 	if err != nil {
-		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("bad TTL (%v)", err))
+		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("错误的ttl (%v)", err))
 	}
 
 	ctx, cancel := commandCtx(cmd)
 	resp, err := mustClientFromCmd(cmd).Grant(ctx, ttl)
 	cancel()
 	if err != nil {
-		cobrautl.ExitWithError(cobrautl.ExitError, fmt.Errorf("failed to grant lease (%v)", err))
+		cobrautl.ExitWithError(cobrautl.ExitError, fmt.Errorf("创建租约失败 (%v)", err))
 	}
 	display.Grant(*resp)
 }
@@ -111,7 +110,7 @@ func NewLeaseTimeToLiveCommand() *cobra.Command {
 
 		Run: leaseTimeToLiveCommandFunc,
 	}
-	lc.Flags().BoolVar(&timeToLiveKeys, "keys", false, "Get keys attached to this lease")
+	lc.Flags().BoolVar(&timeToLiveKeys, "keys", false, "获取租约附加到了哪些key上")
 
 	return lc
 }
@@ -157,7 +156,7 @@ var leaseKeepAliveOnce bool
 func NewLeaseKeepAliveCommand() *cobra.Command {
 	lc := &cobra.Command{
 		Use:   "keep-alive [options] <leaseID>",
-		Short: "重续租约",
+		Short: "重续租约 [renew]",
 
 		Run: leaseKeepAliveCommandFunc,
 	}

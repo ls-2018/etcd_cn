@@ -7,10 +7,26 @@
     <list default="true" id="49524360-39b2-44cd-b702-de0461fb4222" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client_sdk/v3/lease.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/lease.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/code_debug/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/code_debug/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/embed/config.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/embed/config.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/alarms_method_overwirter.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/over_alarms_method_overwirter.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v3rpc/lease.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/api/v3rpc/lease.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v3rpc/over_quota.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/api/v3rpc/over_quota.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/apply_auth.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/apply_auth.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/apply_v3.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/apply_v3.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/errors.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/errors.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/over_quota.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/over_quota.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/server.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/server.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/etcd/etcdserver/v3_server.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/v3_server.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/etcd/etcdserver/v3service_lease.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/v3service_lease.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/lease/lease_queue.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/lease/over_lease_queue.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/etcd/lease/lessor.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/lease/lessor.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/mvcc/kv.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/mvcc/kv.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/mvcc/kv_del.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/mvcc/kv_del.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/mvcc/watchable_store.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/mvcc/watchable_store.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcdctl/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/lease_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/lease_command.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/api/v3/v3rpc/rpctypes/error.go" beforeDir="false" afterPath="$PROJECT_DIR$/offical/api/v3/v3rpc/rpctypes/error.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/offical/etcdserverpb/rpc.pb.go" beforeDir="false" afterPath="$PROJECT_DIR$/offical/etcdserverpb/rpc.pb.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -80,6 +96,14 @@
     </key>
   </component>
   <component name="RunManager" selected="Go Build.local">
+    <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
+      <module name="etcd_cn" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="FILE" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <method v="2" />
+    </configuration>
     <configuration name="etcdctl" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true">
       <module name="etcd_cn" />
       <working_directory value="$PROJECT_DIR$" />
@@ -117,6 +141,15 @@
       <filePath value="$PROJECT_DIR$" />
       <framework value="gotest" />
       <pattern value="^\QTestKeyIndexFindGeneration\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
+      <module name="etcd_cn" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="DIRECTORY" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
       <method v="2" />
     </configuration>
     <configuration name="req" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
@@ -269,7 +302,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/offical/etcdserverpb/rpc.pb.go</url>
-          <line>3779</line>
+          <line>3404</line>
           <option name="timeStamp" value="320" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
@@ -364,12 +397,12 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/offical/etcdserverpb/rpc.pb.go</url>
-          <line>4020</line>
+          <line>3645</line>
           <option name="timeStamp" value="404" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/offical/etcdserverpb/rpc.pb.go</url>
-          <line>4993</line>
+          <line>4369</line>
           <option name="timeStamp" value="408" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
@@ -399,13 +432,8 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/etcd/etcdserver/apply_v3.go</url>
-          <line>989</line>
+          <line>992</line>
           <option name="timeStamp" value="429" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/etcd/etcdserver/api/v3rpc/lease.go</url>
-          <line>43</line>
-          <option name="timeStamp" value="430" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/etcd/etcdserver/v3_server.go</url>
@@ -413,24 +441,44 @@
           <option name="timeStamp" value="432" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/etcd/etcdserver/v3_server.go</url>
-          <line>398</line>
-          <option name="timeStamp" value="433" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/etcd/etcdserver/v3_server.go</url>
-          <line>396</line>
-          <option name="timeStamp" value="434" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/etcd/etcdserver/api/v3rpc/lease.go</url>
-          <line>77</line>
-          <option name="timeStamp" value="435" />
+          <url>file://$PROJECT_DIR$/etcd/lease/lessor.go</url>
+          <line>430</line>
+          <option name="timeStamp" value="472" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/etcd/etcdserver/v3service_lease.go</url>
           <line>132</line>
-          <option name="timeStamp" value="436" />
+          <option name="timeStamp" value="487" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd/mvcc/kv_del.go</url>
+          <line>20</line>
+          <option name="timeStamp" value="499" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd/etcdserver/v3service_lease.go</url>
+          <line>49</line>
+          <option name="timeStamp" value="510" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd/lease/lessor.go</url>
+          <line>186</line>
+          <option name="timeStamp" value="511" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd/lease/lessor.go</url>
+          <line>138</line>
+          <option name="timeStamp" value="513" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd/lease/lessor.go</url>
+          <line>201</line>
+          <option name="timeStamp" value="514" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd/etcdserver/v3service_lease.go</url>
+          <line>84</line>
+          <option name="timeStamp" value="517" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

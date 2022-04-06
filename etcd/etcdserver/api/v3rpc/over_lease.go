@@ -40,24 +40,6 @@ func NewLeaseServer(s *etcdserver.EtcdServer) pb.LeaseServer {
 	return srv
 }
 
-func (ls *LeaseServer) LeaseGrant(ctx context.Context, cr *pb.LeaseGrantRequest) (*pb.LeaseGrantResponse, error) {
-	resp, err := ls.le.LeaseGrant(ctx, cr)
-	if err != nil {
-		return nil, togRPCError(err)
-	}
-	ls.hdr.fill(resp.Header)
-	return resp, nil
-}
-
-func (ls *LeaseServer) LeaseRevoke(ctx context.Context, rr *pb.LeaseRevokeRequest) (*pb.LeaseRevokeResponse, error) {
-	resp, err := ls.le.LeaseRevoke(ctx, rr)
-	if err != nil {
-		return nil, togRPCError(err)
-	}
-	ls.hdr.fill(resp.Header)
-	return resp, nil
-}
-
 func (ls *LeaseServer) LeaseTimeToLive(ctx context.Context, rr *pb.LeaseTimeToLiveRequest) (*pb.LeaseTimeToLiveResponse, error) {
 	resp, err := ls.le.LeaseTimeToLive(ctx, rr)
 	if err != nil && err != lease.ErrLeaseNotFound {
@@ -74,6 +56,7 @@ func (ls *LeaseServer) LeaseTimeToLive(ctx context.Context, rr *pb.LeaseTimeToLi
 	return resp, nil
 }
 
+// LeaseLeases 获取当前节点上的所有租约
 func (ls *LeaseServer) LeaseLeases(ctx context.Context, rr *pb.LeaseLeasesRequest) (*pb.LeaseLeasesResponse, error) {
 	resp, err := ls.le.LeaseLeases(ctx, rr)
 	if err != nil && err != lease.ErrLeaseNotFound {
@@ -89,6 +72,7 @@ func (ls *LeaseServer) LeaseLeases(ctx context.Context, rr *pb.LeaseLeasesReques
 	return resp, nil
 }
 
+// LeaseKeepAlive OK
 func (ls *LeaseServer) LeaseKeepAlive(stream pb.Lease_LeaseKeepAliveServer) (err error) {
 	errc := make(chan error, 1)
 	go func() {
@@ -97,7 +81,6 @@ func (ls *LeaseServer) LeaseKeepAlive(stream pb.Lease_LeaseKeepAliveServer) (err
 	select {
 	case err = <-errc:
 	case <-stream.Context().Done():
-		// the only etcd-side cancellation is noleader for now.
 		err = stream.Context().Err()
 		if err == context.Canceled {
 			err = rpctypes.ErrGRPCNoLeader
@@ -114,19 +97,15 @@ func (ls *LeaseServer) leaseKeepAlive(stream pb.Lease_LeaseKeepAliveServer) erro
 		}
 		if err != nil {
 			if isClientCtxErr(stream.Context().Err(), err) {
-				ls.lg.Debug("failed to receive lease keepalive request from gRPC stream", zap.Error(err))
+				ls.lg.Debug("从gRPC流获取lease keepalive请求失败", zap.Error(err))
 			} else {
-				ls.lg.Warn("failed to receive lease keepalive request from gRPC stream", zap.Error(err))
+				ls.lg.Warn("从gRPC流获取lease keepalive请求失败", zap.Error(err))
 			}
 			return err
 		}
 
-		// Create header before we sent out the renew request.
-		// This can make sure that the revision is strictly smaller or equal to
-		// when the keepalive happened at the local etcd (when the local etcd is the leader)
-		// or remote leader.
-		// Without this, a lease might be revoked at rev 3 but client can see the keepalive succeeded
-		// at rev 4.
+		// 在发送更新请求之前创建报头。这可以确保修订严格小于或等于本地etcd(当本地etcd是leader时)或远端leader发生keepalive。
+		// 如果没有这个，租约可能在rev 3被撤销，但客户端可以看到在rev 4成功的keepalive。
 		resp := &pb.LeaseKeepAliveResponse{ID: req.ID, Header: &pb.ResponseHeader{}}
 		ls.hdr.fill(resp.Header)
 
@@ -144,9 +123,9 @@ func (ls *LeaseServer) leaseKeepAlive(stream pb.Lease_LeaseKeepAliveServer) erro
 		err = stream.Send(resp)
 		if err != nil {
 			if isClientCtxErr(stream.Context().Err(), err) {
-				ls.lg.Debug("failed to send lease keepalive response to gRPC stream", zap.Error(err))
+				ls.lg.Debug("往grpc Stream发送lease Keepalive响应失败", zap.Error(err))
 			} else {
-				ls.lg.Warn("failed to send lease keepalive response to gRPC stream", zap.Error(err))
+				ls.lg.Warn("往grpc Stream发送lease Keepalive响应失败", zap.Error(err))
 			}
 			return err
 		}
@@ -158,11 +137,22 @@ type quotaLeaseServer struct {
 	qa quotaAlarmer
 }
 
+// LeaseGrant 创建租约
 func (s *quotaLeaseServer) LeaseGrant(ctx context.Context, cr *pb.LeaseGrantRequest) (*pb.LeaseGrantResponse, error) {
-	if err := s.qa.check(ctx, cr); err != nil {
+	if err := s.qa.check(ctx, cr); err != nil { // 检查存储空间是否还有空余，以及抛出警报
 		return nil, err
 	}
 	return s.LeaseServer.LeaseGrant(ctx, cr)
+}
+
+// LeaseGrant 创建租约
+func (ls *LeaseServer) LeaseGrant(ctx context.Context, cr *pb.LeaseGrantRequest) (*pb.LeaseGrantResponse, error) {
+	resp, err := ls.le.LeaseGrant(ctx, cr)
+	if err != nil {
+		return nil, togRPCError(err)
+	}
+	ls.hdr.fill(resp.Header)
+	return resp, nil
 }
 
 func NewQuotaLeaseServer(s *etcdserver.EtcdServer) pb.LeaseServer {
@@ -170,4 +160,14 @@ func NewQuotaLeaseServer(s *etcdserver.EtcdServer) pb.LeaseServer {
 		NewLeaseServer(s),
 		quotaAlarmer{etcdserver.NewBackendQuota(s, "lease"), s, s.ID()},
 	}
+}
+
+// LeaseRevoke OK
+func (ls *LeaseServer) LeaseRevoke(ctx context.Context, rr *pb.LeaseRevokeRequest) (*pb.LeaseRevokeResponse, error) {
+	resp, err := ls.le.LeaseRevoke(ctx, rr)
+	if err != nil {
+		return nil, togRPCError(err)
+	}
+	ls.hdr.fill(resp.Header)
+	return resp, nil
 }

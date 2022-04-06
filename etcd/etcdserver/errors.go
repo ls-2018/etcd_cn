@@ -25,7 +25,7 @@ var (
 	ErrCanceled                      = errors.New("etcdserver: 请求取消")
 	ErrTimeout                       = errors.New("etcdserver: 请求超时")
 	ErrTimeoutDueToLeaderFail        = errors.New("etcdserver: 请求超时,可能是由于之前的领导者失败了")
-	ErrTimeoutDueToConnectionLost    = errors.New("etcdserver: 请求超时,可能是由于连接丢失.")
+	ErrTimeoutDueToConnectionLost    = errors.New("etcdserver: 请求超时,可能是由于连接丢失")
 	ErrTimeoutLeaderTransfer         = errors.New("etcdserver: 请求超时,领导者转移时间过长")
 	ErrLeaderChanged                 = errors.New("etcdserver: 领导者转移了")
 	ErrNotEnoughStartedMembers       = errors.New("etcdserver: re-configuration failed due to not enough started members")

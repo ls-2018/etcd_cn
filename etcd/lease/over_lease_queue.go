@@ -19,9 +19,6 @@ import (
 	"time"
 )
 
-// LeaseWithTime contains lease object with a time.
-// For the lessor's lease heap, time identifies the lease expiration time.
-// For the lessor's lease checkpoint heap, the time identifies the next lease checkpoint time.
 type LeaseWithTime struct {
 	id    LeaseID
 	time  time.Time
@@ -58,22 +55,25 @@ func (pq *LeaseQueue) Pop() interface{} {
 	return item
 }
 
-// LeaseExpiredNotifier  一个租约只能保存一个key，`Register`将更新相应的租约时间。
+var _ heap.Interface = &LeaseQueue{}
+
+// ExpiredNotifier  一个租约只能保存一个key，`Register`将更新相应的租约时间。
 // 用于通知lessor移除过期租约的队列
-type LeaseExpiredNotifier struct {
+type ExpiredNotifier struct {
 	m     map[LeaseID]*LeaseWithTime
 	queue LeaseQueue
 }
 
 // 租约到期通知器
-func newLeaseExpiredNotifier() *LeaseExpiredNotifier {
-	return &LeaseExpiredNotifier{
+func newLeaseExpiredNotifier() *ExpiredNotifier {
+	return &ExpiredNotifier{
 		m:     make(map[LeaseID]*LeaseWithTime),
 		queue: make(LeaseQueue, 0),
 	}
 }
 
-func (mq *LeaseExpiredNotifier) Init() {
+// Init ok
+func (mq *ExpiredNotifier) Init() {
 	heap.Init(&mq.queue)
 	mq.m = make(map[LeaseID]*LeaseWithTime)
 	for _, item := range mq.queue {
@@ -81,29 +81,31 @@ func (mq *LeaseExpiredNotifier) Init() {
 	}
 }
 
-func (mq *LeaseExpiredNotifier) RegisterOrUpdate(item *LeaseWithTime) {
+// RegisterOrUpdate 注册或更新管理的租约
+func (mq *ExpiredNotifier) RegisterOrUpdate(item *LeaseWithTime) {
 	if old, ok := mq.m[item.id]; ok {
-		old.time = item.time
-		heap.Fix(&mq.queue, old.index)
+		old.time = item.time           // 过期时间
+		heap.Fix(&mq.queue, old.index) // 当元素值,发生改变, Fix会重新调整顺序
 	} else {
-		heap.Push(&mq.queue, item)
+		heap.Push(&mq.queue, item) // 创建
 		mq.m[item.id] = item
 	}
 }
 
-func (mq *LeaseExpiredNotifier) Unregister() *LeaseWithTime {
+func (mq *ExpiredNotifier) Unregister() *LeaseWithTime {
 	item := heap.Pop(&mq.queue).(*LeaseWithTime)
 	delete(mq.m, item.id)
 	return item
 }
 
-func (mq *LeaseExpiredNotifier) Poll() *LeaseWithTime {
+// Poll 获取第一个要快要过期的租约
+func (mq *ExpiredNotifier) Poll() *LeaseWithTime {
 	if mq.Len() == 0 {
 		return nil
 	}
 	return mq.queue[0]
 }
 
-func (mq *LeaseExpiredNotifier) Len() int {
+func (mq *ExpiredNotifier) Len() int {
 	return len(mq.m)
 }

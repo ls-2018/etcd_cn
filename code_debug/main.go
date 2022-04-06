@@ -51,7 +51,7 @@ type (
 	JointConfig [2]Config
 )
 
-func main() {
+func main3() {
 	fmt.Println(strings.Compare("a", "b"))
 	fmt.Println(strings.Compare("a", "a"))
 	fmt.Println(strings.Compare("b", "ab"))
@@ -98,4 +98,7 @@ func (perms permSlice) Less(i, j int) bool {
 
 func (perms permSlice) Swap(i, j int) {
 	perms[i], perms[j] = perms[j], perms[i]
+}
+
+func main() {
 }
