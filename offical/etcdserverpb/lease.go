@@ -122,10 +122,8 @@ func (m *LeaseRevokeResponse) GetHeader() *ResponseHeader {
 }
 
 type LeaseCheckpoint struct {
-	// ID is the lease ID to checkpoint.
-	ID int64 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
-	// Remaining_TTL is the remaining time until expiry of the lease.
-	Remaining_TTL int64 `protobuf:"varint,2,opt,name=remaining_TTL,json=remainingTTL,proto3" json:"remaining_TTL,omitempty"`
+	ID           int64 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`                                         // 租约ID
+	RemainingTtl int64 `protobuf:"varint,2,opt,name=remaining_TTL,json=remainingTTL,proto3" json:"remaining_TTL,omitempty"` // 剩余的存活时间
 }
 
 func (m *LeaseCheckpoint) Reset()         { *m = LeaseCheckpoint{} }
@@ -144,7 +142,7 @@ func (m *LeaseCheckpoint) GetID() int64 {
 
 func (m *LeaseCheckpoint) GetRemaining_TTL() int64 {
 	if m != nil {
-		return m.Remaining_TTL
+		return m.RemainingTtl
 	}
 	return 0
 }

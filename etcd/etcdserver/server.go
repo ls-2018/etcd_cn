@@ -597,8 +597,10 @@ func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 	}
 
 	if srv.Cfg.EnableLeaseCheckpoint {
-		// setting checkpointer enables lease checkpoint feature.
+		// 通过设置checkpointer使能租期检查点功能。
 		srv.lessor.SetCheckpointer(func(ctx context.Context, cp *pb.LeaseCheckpointRequest) {
+			// 定期批量地将 Lease 剩余的 TTL 基于 Raft Log 同步给 Follower 节点，Follower 节点收到 CheckPoint 请求后，
+			// 更新内存数据结构 LeaseMap 的剩余 TTL 信息。
 			srv.raftRequestOnce(ctx, pb.InternalRaftRequest{LeaseCheckpoint: cp})
 		})
 	}
@@ -885,8 +887,9 @@ func (s *EtcdServer) run() {
 		updateLead: func(lead uint64) { s.setLead(lead) },
 		updateLeadership: func(newLeader bool) {
 			if !s.isLeader() {
+				// 自己不是leader了
 				if s.lessor != nil {
-					s.lessor.Demote()
+					s.lessor.Demote() // 持久化所有租约
 				}
 				if s.compactor != nil {
 					s.compactor.Pause()
@@ -1989,7 +1992,7 @@ func (s *EtcdServer) applyEntryNormal(e *raftpb.Entry) {
 		s.notifyAboutFirstCommitInTerm() // 被任期内 第一次commit更新channel
 		// 当本地成员是leader 并完成了上一任期的所有条目时促进follower.
 		if s.isLeader() {
-			// TODO
+			// 成为leader时，初始化租约管理器
 			s.lessor.Promote(s.Cfg.ElectionTimeout())
 		}
 		return

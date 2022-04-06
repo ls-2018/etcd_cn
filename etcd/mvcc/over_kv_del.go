@@ -40,6 +40,7 @@ func (tw *storeTxnWrite) deleteRange(key, end []byte) int64 {
 	return int64(len(keys))
 }
 
+// bolt.db 删除数据
 func (tw *storeTxnWrite) delete(key []byte) {
 	indexBytes := newRevBytes()
 	idxRev := revision{main: tw.beginRev + 1, sub: int64(len(tw.changes))}
@@ -51,10 +52,7 @@ func (tw *storeTxnWrite) delete(key []byte) {
 
 	d, err := kv.Marshal()
 	if err != nil {
-		tw.storeTxnRead.s.lg.Fatal(
-			"failed to marshal mvccpb.KeyValue",
-			zap.Error(err),
-		)
+		tw.storeTxnRead.s.lg.Fatal("序列化失败 mvccpb.KeyValue", zap.Error(err))
 	}
 
 	tw.tx.UnsafeSeqPut(buckets.Key, indexBytes, d)
@@ -74,10 +72,7 @@ func (tw *storeTxnWrite) delete(key []byte) {
 	if leaseID != lease.NoLease {
 		err = tw.s.le.Detach(leaseID, []lease.LeaseItem{item})
 		if err != nil {
-			tw.storeTxnRead.s.lg.Error(
-				"failed to detach old lease from a key",
-				zap.Error(err),
-			)
+			tw.storeTxnRead.s.lg.Error("未能从key上分离出旧租约", zap.Error(err))
 		}
 	}
 }

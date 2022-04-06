@@ -269,9 +269,8 @@ type Config struct {
 	// ExperimentalEnableV2V3 configures URLs that expose deprecated V2 API working on V3 store.
 	// Deprecated in v3.5.
 	// TODO: Delete in v3.6 (https://github.com/etcd-io/etcd/issues/12913)
-	ExperimentalEnableV2V3 string `json:"experimental-enable-v2v3"`
-	// ExperimentalEnableLeaseCheckpoint enables leader to send regular checkpoints to other members to prevent reset of remaining TTL on leader change.
-	ExperimentalEnableLeaseCheckpoint bool `json:"experimental-enable-lease-checkpoint"`
+	ExperimentalEnableV2V3            string `json:"experimental-enable-v2v3"`
+	ExperimentalEnableLeaseCheckpoint bool   `json:"experimental-enable-lease-checkpoint"` // 允许leader定期向其他成员发送检查点，以防止leader变化时剩余TTL重置。
 	// ExperimentalEnableLeaseCheckpointPersist
 	// 启用持续的剩余TTL,以防止长期租约的无限期自动续约.在v3.6中始终启用.应该用于确保从启用该功能的v3.5集群顺利升级.
 	// 需要启用 experimental-enable-lease-checkpoint

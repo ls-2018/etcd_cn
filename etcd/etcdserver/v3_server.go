@@ -378,7 +378,8 @@ func (a *applierV3backend) Apply(r *pb.InternalRaftRequest, shouldApplyV3 member
 	case r.LeaseRevoke != nil:
 		ar.resp, ar.err = a.s.applyV3.LeaseRevoke(r.LeaseRevoke) // ✅ 删除租约
 	case r.LeaseCheckpoint != nil:
-		ar.resp, ar.err = a.s.applyV3.LeaseCheckpoint(r.LeaseCheckpoint)
+		// 避免 leader 变更时,导致的租约重置
+		ar.resp, ar.err = a.s.applyV3.LeaseCheckpoint(r.LeaseCheckpoint) // ✅
 	case r.Alarm != nil:
 		ar.resp, ar.err = a.s.applyV3.Alarm(r.Alarm) // ✅
 	case r.Authenticate != nil:

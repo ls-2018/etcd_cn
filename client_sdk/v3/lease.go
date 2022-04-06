@@ -227,6 +227,7 @@ func (l *lessor) Leases(ctx context.Context) (*LeaseLeasesResponse, error) {
 	return nil, toErr(ctx, err)
 }
 
+// KeepAlive 尝试保持给定的租约永久alive
 func (l *lessor) KeepAlive(ctx context.Context, id LeaseID) (<-chan *LeaseKeepAliveResponse, error) {
 	ch := make(chan *LeaseKeepAliveResponse, LeaseResponseChSize)
 
@@ -260,7 +261,9 @@ func (l *lessor) KeepAlive(ctx context.Context, id LeaseID) (<-chan *LeaseKeepAl
 
 	go l.keepAliveCtxCloser(ctx, id, ka.donec)
 	l.firstKeepAliveOnce.Do(func() {
+		// 500毫秒一次，不断的发送保持活动请求
 		go l.recvKeepAliveLoop()
+		// 删除等待太久没反馈的租约
 		go l.deadlineLoop()
 	})
 
@@ -408,6 +411,7 @@ func (l *lessor) recvKeepAliveLoop() (gerr error) {
 			}
 		} else {
 			for {
+				// 打开一个新的lease stream并开始发送保持活动请求。
 				resp, err := stream.Recv()
 				if err != nil {
 					if canceledByCaller(l.stopCtx, err) {
@@ -419,7 +423,8 @@ func (l *lessor) recvKeepAliveLoop() (gerr error) {
 					}
 					break
 				}
-
+				// 根据LeaseKeepAliveResponse更新租约
+				// 如果租约过期删除所有alive channels
 				l.recvKeepAlive(resp)
 			}
 		}
@@ -433,8 +438,10 @@ func (l *lessor) recvKeepAliveLoop() (gerr error) {
 }
 
 // resetRecv opens a new lease stream and starts sending keep alive requests.
+// 打开一个新的lease stream并开始发送保持活动请求。
 func (l *lessor) resetRecv() (pb.Lease_LeaseKeepAliveClient, error) {
 	sctx, cancel := context.WithCancel(l.stopCtx)
+	// 建立服务端和客户端连接的lease stream
 	stream, err := l.remote.LeaseKeepAlive(sctx, append(l.callOpts, withMax(0))...)
 	if err != nil {
 		cancel()
@@ -498,6 +505,7 @@ func (l *lessor) recvKeepAlive(resp *pb.LeaseKeepAliveResponse) {
 
 // deadlineLoop reaps any keep alive channels that have not received a response
 // within the lease TTL
+// 获取在租约TTL中没有收到响应的任何保持活动的通道
 func (l *lessor) deadlineLoop() {
 	for {
 		select {
@@ -509,6 +517,7 @@ func (l *lessor) deadlineLoop() {
 		l.mu.Lock()
 		for id, ka := range l.keepAlives {
 			if ka.deadline.Before(now) {
+				// 等待响应太久；租约可能已过期
 				// waited too long for response; lease may be expired
 				ka.close()
 				delete(l.keepAlives, id)
@@ -519,6 +528,7 @@ func (l *lessor) deadlineLoop() {
 }
 
 // sendKeepAliveLoop sends keep alive requests for the lifetime of the given stream.
+// 在给定流的生命周期内发送保持活动请求
 func (l *lessor) sendKeepAliveLoop(stream pb.Lease_LeaseKeepAliveClient) {
 	for {
 		var tosend []LeaseID

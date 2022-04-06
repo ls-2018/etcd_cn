@@ -201,7 +201,7 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 		EnableGRPCGateway:                        cfg.EnableGRPCGateway,                    // 启用grpc网关,将 http 转换成 grpc / true
 		ExperimentalEnableDistributedTracing:     cfg.ExperimentalEnableDistributedTracing, // 默认false
 		UnsafeNoFsync:                            cfg.UnsafeNoFsync,
-		EnableLeaseCheckpoint:                    cfg.ExperimentalEnableLeaseCheckpoint,
+		EnableLeaseCheckpoint:                    cfg.ExperimentalEnableLeaseCheckpoint, // 允许leader定期向其他成员发送检查点，以防止leader变化时剩余TTL重置。
 		LeaseCheckpointPersist:                   cfg.ExperimentalEnableLeaseCheckpointPersist,
 		CompactionBatchLimit:                     cfg.ExperimentalCompactionBatchLimit,
 		WatchProgressNotifyInterval:              cfg.ExperimentalWatchProgressNotifyInterval,
