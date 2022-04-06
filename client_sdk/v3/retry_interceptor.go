@@ -20,10 +20,11 @@ package clientv3
 import (
 	"context"
 	"fmt"
-	"github.com/ls-2018/etcd_cn/code_debug/conf"
 	"io"
 	"sync"
 	"time"
+
+	"github.com/ls-2018/etcd_cn/code_debug/conf"
 
 	"github.com/ls-2018/etcd_cn/offical/api/v3/v3rpc/rpctypes"
 	"go.uber.org/zap"

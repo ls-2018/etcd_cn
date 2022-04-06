@@ -18,7 +18,6 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
-	"github.com/ls-2018/etcd_cn/code_debug/conf"
 	"math"
 	"math/rand"
 	"os"
@@ -26,6 +25,8 @@ import (
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/ls-2018/etcd_cn/code_debug/conf"
 
 	"gopkg.in/cheggaaa/pb.v1"
 
@@ -47,7 +48,7 @@ var (
 )
 
 type checkPerfCfg struct {
-	limit    int // 并发数
+	limit    int // 每秒并发数
 	clients  int // 客户端
 	duration int
 }
@@ -236,7 +237,7 @@ func newCheckPerfCommand(cmd *cobra.Command, args []string) {
 
 	ok = true
 	if len(s.ErrorDist) != 0 {
-		fmt.Println("FAIL: too many errors")
+		fmt.Println("FAIL: 错误太多")
 		for k, v := range s.ErrorDist {
 			fmt.Printf("FAIL: ERROR(%v) -> %d\n", k, v)
 		}
@@ -371,7 +372,7 @@ func newCheckDatascaleCommand(cmd *cobra.Command, args []string) {
 		os.Exit(cobrautl.ExitError)
 	}
 
-	fmt.Println(fmt.Sprintf("Start data scale check for work load [%v key-value pairs, %v bytes per key-value, %v concurrent clients].", cfg.limit, cfg.kvSize, cfg.clients))
+	fmt.Println(fmt.Sprintf("启动工作负载的数据规模检查[%v key-value pairs, %v bytes per key-value, %v concurrent clients].", cfg.limit, cfg.kvSize, cfg.clients))
 	bar := pb.New(cfg.limit)
 	bar.Format("Bom !")
 	bar.Start()

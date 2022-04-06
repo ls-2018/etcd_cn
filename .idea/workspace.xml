@@ -6,14 +6,9 @@
   <component name="ChangeListManager">
     <list default="true" id="49524360-39b2-44cd-b702-de0461fb4222" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/op.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/op.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/retry_interceptor.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/retry_interceptor.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/code_debug/conn/addr.go" beforeDir="false" afterPath="$PROJECT_DIR$/code_debug/conn/addr.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/check.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/check.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/snapshot_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/snapshot_command.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcdutl/etcdutl/snapshot_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdutl/etcdutl/snapshot_command.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/ctl.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/ctl.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pkg/report/report.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/report/report.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/report/weighted.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/report/weighted.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -231,7 +226,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/client_sdk/v3/op.go</url>
-          <line>402</line>
+          <line>401</line>
           <option name="timeStamp" value="249" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
@@ -418,6 +413,11 @@
           <url>file://$PROJECT_DIR$/etcdctl/ctlv3/command/check.go</url>
           <line>141</line>
           <option name="timeStamp" value="587" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/pkg/report/report.go</url>
+          <line>184</line>
+          <option name="timeStamp" value="589" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

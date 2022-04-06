@@ -2,10 +2,11 @@ package conn
 
 import (
 	"fmt"
-	"github.com/ls-2018/etcd_cn/code_debug/conf"
 	"net"
 	"os/exec"
 	"strings"
+
+	"github.com/ls-2018/etcd_cn/code_debug/conf"
 )
 
 func PrintConn(line string, c net.Conn) {

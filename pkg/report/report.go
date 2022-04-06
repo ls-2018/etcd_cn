@@ -36,7 +36,9 @@ type Result struct {
 	Weight float64
 }
 
-func (res *Result) Duration() time.Duration { return res.End.Sub(res.Start) }
+func (res *Result) Duration() time.Duration {
+	return res.End.Sub(res.Start)
+}
 
 type report struct {
 	results   chan Result
@@ -49,13 +51,13 @@ type report struct {
 // Stats exposes results raw data.
 type Stats struct {
 	AvgTotal   float64
-	Fastest    float64
-	Slowest    float64
+	Fastest    float64 // 请求最快的时间
+	Slowest    float64 // 请求最长的时间
 	Average    float64
 	Stddev     float64
 	RPS        float64
-	Total      time.Duration
-	ErrorDist  map[string]int
+	Total      time.Duration  // 总花费时间
+	ErrorDist  map[string]int // 错误计数
 	Lats       []float64
 	TimeSeries TimeSeries
 }
