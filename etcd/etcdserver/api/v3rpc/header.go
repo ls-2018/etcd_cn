@@ -21,7 +21,7 @@ import (
 
 type header struct {
 	clusterID int64
-	memberID  int64
+	memberID  int64 // 本节点的ID
 	sg        etcdserver.RaftStatusGetter
 	rev       func() int64
 }

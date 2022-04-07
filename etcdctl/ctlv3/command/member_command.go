@@ -35,7 +35,7 @@ var (
 func NewMemberCommand() *cobra.Command {
 	mc := &cobra.Command{
 		Use:   "member <subcommand>",
-		Short: "Membership related commands",
+		Short: "节点相关的命令",
 	}
 
 	mc.AddCommand(NewMemberAddCommand())
@@ -51,13 +51,13 @@ func NewMemberCommand() *cobra.Command {
 func NewMemberAddCommand() *cobra.Command {
 	cc := &cobra.Command{
 		Use:   "add <memberName> [options]",
-		Short: "Adds a member into the cluster",
+		Short: "添加一个节点",
 
 		Run: memberAddCommandFunc,
 	}
 
-	cc.Flags().StringVar(&memberPeerURLs, "peer-urls", "", "comma separated peer URLs for the new member.")
-	cc.Flags().BoolVar(&isLearner, "learner", false, "indicates if the new member is raft learner")
+	cc.Flags().StringVar(&memberPeerURLs, "peer-urls", "", "用逗号分隔新成员的对等url。")
+	cc.Flags().BoolVar(&isLearner, "learner", false, "表示新成员是否为learner")
 
 	return cc
 }
@@ -78,7 +78,7 @@ func NewMemberRemoveCommand() *cobra.Command {
 func NewMemberUpdateCommand() *cobra.Command {
 	cc := &cobra.Command{
 		Use:   "update <memberID> [options]",
-		Short: "Updates a member in the cluster",
+		Short: "更新节点通信地址",
 
 		Run: memberUpdateCommandFunc,
 	}
@@ -93,11 +93,7 @@ func NewMemberListCommand() *cobra.Command {
 	cc := &cobra.Command{
 		Use:   "list",
 		Short: "显示集群所有成员",
-		Long: `When --write-out is set to simple, this command prints out comma-separated member lists for each endpoint.
-The items in the lists are ID, Status, Name, Peer Addrs, Client Addrs, Is Learner.
-`,
-
-		Run: memberListCommandFunc,
+		Run:   memberListCommandFunc,
 	}
 
 	return cc
@@ -107,11 +103,8 @@ The items in the lists are ID, Status, Name, Peer Addrs, Client Addrs, Is Learne
 func NewMemberPromoteCommand() *cobra.Command {
 	cc := &cobra.Command{
 		Use:   "promote <memberID>",
-		Short: "Promotes a non-voting member in the cluster",
-		Long: `Promotes a non-voting learner member to a voting one in the cluster.
-`,
-
-		Run: memberPromoteCommandFunc,
+		Short: "提升一个learner节点",
+		Run:   memberPromoteCommandFunc,
 	}
 
 	return cc

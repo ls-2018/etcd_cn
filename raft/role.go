@@ -98,40 +98,17 @@ func (r *raft) Step(m pb.Message) error {
 		// 1. 投票情况是已经投过了
 		// 2. 没投过并且没有leader
 		// 3. 预投票并且term大
+
+		// case  leader 转移 ---> raft Timeout -> follower --->  all
+		// 如果转移m.From会默认填充leader id，  --->  r.Vote == m.From =true   ； r.Vote == None =false   ; m.Type == pb.MsgPreVote=false   canVote是False
 		canVote := r.Vote == m.From || (r.Vote == None && r.lead == None) || (m.Type == pb.MsgPreVote && m.Term > r.Term)
 		if canVote && r.raftLog.isUpToDate(m.Index, m.LogTerm) {
-			// Note: it turns out that that learners必须是allowed to cast votes.
-			// This seems counter- intuitive but is necessary in the situation in which
-			// a learner has been promoted (i.e. is now a voter) but has not learned
-			// about this yet.
-			// For example, consider a group in which id=1 is a learner and id=2 and
-			// id=3 are voters. A configuration change promoting 1 can be committed on
-			// the quorum `{2,3}` without the config change being appended to the
-			// learner's log. If the leader (say 2) fails, there are de facto two
-			// voters remaining. Only 3 can win an election (due to its log containing
-			// all committed entries), but to do so it will need 1 to vote. But 1
-			// considers itself a learner and will continue to do so until 3 has
-			// stepped up as leader, replicates the conf change to 1, and 1 applies it.
-			// Ultimately, by receiving a request to vote, the learner realizes that
-			// the candidate believes it to be a voter, and that it should act
-			// accordingly. The candidate's config may be stale, too; but in that case
-			// it won't win the election, at least in the absence of the bug discussed
-			// in:
-			// https://github.com/etcd-io/etcd/issues/7625#issuecomment-488798263.
+
 			r.logger.Infof("%x [logterm: %d, index: %d, vote: %x] cast %s for %x [logterm: %d, index: %d] at term %d",
 				r.id, r.raftLog.lastTerm(), r.raftLog.lastIndex(), r.Vote, m.Type, m.From, m.LogTerm, m.Index, r.Term)
-			// When responding to Msg{Pre,}Vote messages we include the term
-			// from the message, not the local term. To see why, consider the
-			// case where a single localNode was previously partitioned away and
-			// it's local term is now out of date. If we include the local term
-			// (recall that for pre-votes we don't update the local term), the
-			// (pre-)campaigning localNode on the other end will proceed to ignore
-			// the message (it ignores all out of date messages).
-			// The term in the original message and current local term are the
-			// same in the case of regular votes, but different for pre-votes.
 			r.send(pb.Message{To: m.From, Term: m.Term, Type: voteRespMsgType(m.Type)})
 			if m.Type == pb.MsgVote {
-				// Only record real votes.
+				// 只记录真实的投票。
 				r.electionElapsed = 0
 				r.Vote = m.From // 当前节点的选票投给了谁做我Leader
 			}
@@ -405,37 +382,39 @@ func stepLeader(r *raft, m pb.Message) error {
 		if pr.State == tracker.StateReplicate {
 			pr.BecomeProbe()
 		}
-		r.logger.Debugf("%x failed to send message to %x because it is unreachable [%s]", r.id, m.From, pr)
+		r.logger.Debugf("%x 发送消息到 %x  失败 ，因为不可达[%s]", r.id, m.From, pr)
 	case pb.MsgTransferLeader:
+		// pr 当前leader对该节点状态的记录
+		// client ---> raft --- > leader
+		// client ---> raft --- > follower --- > leader
 		if pr.IsLearner {
-			r.logger.Debugf("%x is learner. Ignored transferring leadership", r.id)
+			r.logger.Debugf("%x 是learner。忽视转移领导", r.id)
 			return nil
 		}
 		leadTransferee := m.From
 		lastLeadTransferee := r.leadTransferee
 		if lastLeadTransferee != None {
 			if lastLeadTransferee == leadTransferee {
-				r.logger.Infof("%x [term %d] transfer leadership to %x is in progress, ignores request to same localNode %x",
-					r.id, r.Term, leadTransferee, leadTransferee)
+				r.logger.Infof("%x [term %d] 正在转移leader给%x，忽略对同一个localNode的请求%x", r.id, r.Term, leadTransferee, leadTransferee)
 				return nil
 			}
-			r.abortLeaderTransfer()
-			r.logger.Infof("%x [term %d] abort previous transferring leadership to %x", r.id, r.Term, lastLeadTransferee)
+			r.abortLeaderTransfer() // 上一个leader转移没完成，又进行下一个
+			r.logger.Infof("%x [term %d] 取消先前的领导权移交 %x", r.id, r.Term, lastLeadTransferee)
 		}
 		if leadTransferee == r.id {
-			r.logger.Debugf("%x is already leader. Ignored transferring leadership to self", r.id)
+			r.logger.Debugf("%x 已经是leader", r.id)
 			return nil
 		}
-		// Transfer leadership to third party.
-		r.logger.Infof("%x [term %d] starts to transfer leadership to %x", r.id, r.Term, leadTransferee)
-		// Transfer leadership should be finished in one electionTimeout, so reset r.electionElapsed.
+		r.logger.Infof("%x [term %d] 开始进行leader转移to %x", r.id, r.Term, leadTransferee)
+		// 转移领导权应该在一个electionTimeout中完成，因此重置r.e tionelapsed。
 		r.electionElapsed = 0
 		r.leadTransferee = leadTransferee
 		if pr.Match == r.raftLog.lastIndex() {
-			r.sendTimeoutNow(leadTransferee)
-			r.logger.Infof("%x sends MsgTimeoutNow to %x immediately as %x already has up-to-date log", r.id, leadTransferee, leadTransferee)
+			// leader转移 follower 发送申请投票消息，但是任期不会增加， context 是CampaignTransfer
+			r.sendTimeoutNow(leadTransferee) // 发送方,指定为了下任leader
+			r.logger.Infof("%x 立即发送MsgTimeoutNow到%x，因为%x已经有最新的日志", r.id, leadTransferee, leadTransferee)
 		} else {
-			r.sendAppend(leadTransferee)
+			r.sendAppend(leadTransferee) // 发送转移到哪个节点,用于加快该节点的日志进度
 		}
 	}
 	return nil
@@ -482,7 +461,7 @@ func stepCandidate(r *raft, m pb.Message) error {
 			r.becomeFollower(r.Term, None) // 注意,此时任期没有改变
 		}
 	case pb.MsgTimeoutNow:
-		r.logger.Debugf("%x [term %d state %v] ignored MsgTimeoutNow from %x", r.id, r.Term, r.state, m.From)
+		r.logger.Debugf("%x [term %d state %v] 忽略 MsgTimeoutNow 消息from %x", r.id, r.Term, r.state, m.From)
 	}
 	return nil
 }
@@ -521,16 +500,14 @@ func stepFollower(r *raft, m pb.Message) error {
 		r.handleSnapshot(m)
 	case pb.MsgTransferLeader:
 		if r.lead == None {
-			r.logger.Infof("%x no leader at term %d; dropping leader transfer msg", r.id, r.Term)
+			r.logger.Infof("%x no leader at term %d; 丢弃leader转移消息", r.id, r.Term)
 			return nil
 		}
 		m.To = r.lead
 		r.send(m)
 	case pb.MsgTimeoutNow:
-		r.logger.Infof("%x [term %d] received MsgTimeoutNow from %x and starts an election to get leadership.", r.id, r.Term, m.From)
-		// Leadership transfers never use pre-vote even if r.preVote is true; we
-		// know we are not recovering from a partition so there is no need for the
-		// extra round trip.
+		r.logger.Infof("%x [term %d] 收到来自 %x(下任leader) 的MsgTimeoutNow，并开始选举获得领导。", r.id, r.Term, m.From)
+		// 即使r.preVote为真，领导层转移也不会使用pre-vote;我们知道我们不是在从一个分区恢复，所以不需要额外的往返。
 		r.hup(campaignTransfer)
 
 	case pb.MsgReadIndex: // ✅

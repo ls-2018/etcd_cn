@@ -272,16 +272,16 @@ func (n *localNode) ApplyConfChange(cc pb.ConfChangeI) *pb.ConfState {
 	return &cs
 }
 
+// ------------------------------------------	over --------------------------------------------------------------
+
+// TransferLeadership leader 由 lead转移给transferee
 func (n *localNode) TransferLeadership(ctx context.Context, lead, transferee uint64) {
 	select {
-	// manually set 'from' and 'to', so that leader can voluntarily transfers its leadership
 	case n.recvc <- pb.Message{Type: pb.MsgTransferLeader, From: transferee, To: lead}:
 	case <-n.done:
 	case <-ctx.Done():
 	}
 }
-
-// ------------------------------------------	over --------------------------------------------------------------
 
 // ReadIndex etcdctl get 会走这里，rctx 是一个生成的索引
 func (n *localNode) ReadIndex(ctx context.Context, rctx []byte) error {

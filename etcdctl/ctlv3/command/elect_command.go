@@ -17,6 +17,7 @@ package command
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -35,28 +36,28 @@ var electListen bool
 func NewElectCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "elect <election-name> [proposal]",
-		Short: "Observes and participates in leader election",
+		Short: "观察并参与leader选举",
 		Run:   electCommandFunc,
 	}
-	cmd.Flags().BoolVarP(&electListen, "listen", "l", false, "observation mode")
+	cmd.Flags().BoolVarP(&electListen, "listen", "l", false, "观察模式")
 	return cmd
 }
 
 func electCommandFunc(cmd *cobra.Command, args []string) {
 	if len(args) != 1 && len(args) != 2 {
-		cobrautl.ExitWithError(cobrautl.ExitBadArgs, errors.New("elect takes one election name argument and an optional proposal argument"))
+		cobrautl.ExitWithError(cobrautl.ExitBadArgs, errors.New("elect -l id"))
 	}
 	c := mustClientFromCmd(cmd)
 
 	var err error
 	if len(args) == 1 {
 		if !electListen {
-			cobrautl.ExitWithError(cobrautl.ExitBadArgs, errors.New("no proposal argument but -l not set"))
+			cobrautl.ExitWithError(cobrautl.ExitBadArgs, errors.New("没有proposal参数，并且-l没有设置"))
 		}
 		err = observe(c, args[0])
 	} else {
 		if electListen {
-			cobrautl.ExitWithError(cobrautl.ExitBadArgs, errors.New("proposal given but -l is set"))
+			cobrautl.ExitWithError(cobrautl.ExitBadArgs, errors.New("有proposal参数，但是-l设置了"))
 		}
 		err = campaign(c, args[0], args[1])
 	}
@@ -65,11 +66,13 @@ func electCommandFunc(cmd *cobra.Command, args []string) {
 	}
 }
 
+// 观察
 func observe(c *clientv3.Client, election string) error {
 	s, err := concurrency.NewSession(c)
 	if err != nil {
 		return err
 	}
+	fmt.Println("election:----->", election)
 	e := concurrency.NewElection(s, election)
 	ctx, cancel := context.WithCancel(context.TODO())
 
@@ -93,12 +96,13 @@ func observe(c *clientv3.Client, election string) error {
 	select {
 	case <-ctx.Done():
 	default:
-		return errors.New("elect: observer lost")
+		return errors.New("elect: 观察者丢失")
 	}
 
 	return nil
 }
 
+// 运动
 func campaign(c *clientv3.Client, election string, prop string) error {
 	s, err := concurrency.NewSession(c)
 	if err != nil {
@@ -120,7 +124,6 @@ func campaign(c *clientv3.Client, election string, prop string) error {
 		return err
 	}
 
-	// print key since elected
 	resp, err := c.Get(ctx, e.Key())
 	if err != nil {
 		return err
@@ -130,7 +133,7 @@ func campaign(c *clientv3.Client, election string, prop string) error {
 	select {
 	case <-donec:
 	case <-s.Done():
-		return errors.New("elect: session expired")
+		return errors.New("elect: 会话过期")
 	}
 
 	return e.Resign(context.TODO())

@@ -795,7 +795,7 @@ func (le *lessor) scheduleCheckpointIfNeeded(lease *Lease) {
 		return
 	}
 	// 剩余存活时间,大于 checkpointInterval
-	le.checkpointInterval = time.Second * 5
+	le.checkpointInterval = time.Second * 20
 	if lease.getRemainingTTL() > int64(le.checkpointInterval.Seconds()) {
 		if le.lg != nil {
 			le.lg.Info("开始调度 租约 检查", zap.Int64("leaseID", int64(lease.ID)), zap.Duration("intervalSeconds", le.checkpointInterval))

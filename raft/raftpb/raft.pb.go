@@ -319,7 +319,7 @@ type Message struct {
 	Type MessageType `protobuf:"varint,1,opt,name=type,enum=raftpb.MessageType" json:"type"`
 	// 消息的目标节点 ID,在急群中每个节点都有一个唯一的id作为标识
 	To uint64 `protobuf:"varint,2,opt,name=to" json:"to"`
-	// 发送消息的节点ID.在集群中,每个节点都拥有一个唯一ID作为标识.
+	// 发送消息的节点ID.在集群中,每个节点都拥有一个唯一ID作为标识.,或者leader转移的下一个跳
 	From uint64 `protobuf:"varint,3,opt,name=from" json:"from"`
 	// 发送消息的节点的Term值. 如果Term值为0,则为本地消息,在etcd刊负模块的实现中,对本地消息进行特殊处理.
 	Term uint64 `protobuf:"varint,4,opt,name=term" json:"term"`

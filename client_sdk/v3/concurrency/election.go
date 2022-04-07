@@ -30,17 +30,15 @@ var (
 )
 
 type Election struct {
-	session *Session
-
-	keyPrefix string
-
+	session       *Session
+	keyPrefix     string
 	leaderKey     string
 	leaderRev     int64
 	leaderSession *Session
 	hdr           *pb.ResponseHeader
 }
 
-// NewElection returns a new election on a given key prefix.
+// NewElection 返回给定关键字前缀上的新选举结果。
 func NewElection(s *Session, pfx string) *Election {
 	return &Election{session: s, keyPrefix: pfx + "/"}
 }
@@ -56,16 +54,10 @@ func ResumeElection(s *Session, pfx string, leaderKey string, leaderRev int64) *
 	}
 }
 
-// Campaign puts a value as eligible for the election on the prefix
-// key.
-// Multiple sessions can participate in the election for the
-// same prefix, but only one can be the leader at a time.
-//
-// If the context is 'context.TODO()/context.Background()', the Campaign
-// will continue to be blocked for other keys to be deleted, unless etcd
-// returns a non-recoverable error (e.g. ErrCompacted).
-// Otherwise, until the context is not cancelled or timed-out, Campaign will
-// continue to be blocked until it becomes the leader.
+// Campaign 在前缀键上放置一个符合选举条件的值。
+// 对于同一个前缀，多个会议可以参与选举，但一次只能有一个领导人。
+// 如果context是'context. todo ()/context. background ()'， Campaign将继续被阻塞，以便其他key被删除，除非etcd返回一个不可恢复的错误(例如ErrCompacted)。
+// 否则，直到上下文没有被取消或超时，Campaign将继续被阻塞，直到它成为leader。
 func (e *Election) Campaign(ctx context.Context, val string) error {
 	s := e.session
 	client := e.session.Client()
@@ -82,7 +74,7 @@ func (e *Election) Campaign(ctx context.Context, val string) error {
 	if !resp.Succeeded {
 		kv := resp.Responses[0].GetResponseRange().Kvs[0]
 		e.leaderRev = kv.CreateRevision
-		if string(kv.Value) != val {
+		if kv.Value != val {
 			if err = e.Proclaim(ctx, val); err != nil {
 				e.Resign(ctx)
 				return err
@@ -92,7 +84,7 @@ func (e *Election) Campaign(ctx context.Context, val string) error {
 
 	_, err = waitDeletes(ctx, client, e.keyPrefix, e.leaderRev-1)
 	if err != nil {
-		// clean up in case of context cancel
+		// 在上下文取消的情况下清理
 		select {
 		case <-ctx.Done():
 			e.Resign(client.Ctx())
@@ -106,7 +98,7 @@ func (e *Election) Campaign(ctx context.Context, val string) error {
 	return nil
 }
 
-// Proclaim lets the leader announce a new value without another election.
+// Proclaim  让leader宣布一个新的值，而不需要一次选举。
 func (e *Election) Proclaim(ctx context.Context, val string) error {
 	if e.leaderSession == nil {
 		return ErrElectionNotLeader
@@ -157,19 +149,14 @@ func (e *Election) Leader(ctx context.Context) (*v3.GetResponse, error) {
 	return resp, nil
 }
 
-// Observe returns a channel that reliably observes ordered leader proposals
-// as GetResponse values on every current elected leader key. It will not
-// necessarily fetch all historical leader updates, but will always post the
-// most recent leader value.
-//
-// The channel closes when the context is canceled or the underlying watcher
-// is otherwise disrupted.
+// Observe 返回一个通道，该通道可靠地观察有序的leader proposal 作为响应
 func (e *Election) Observe(ctx context.Context) <-chan v3.GetResponse {
 	retc := make(chan v3.GetResponse)
 	go e.observe(ctx, retc)
 	return retc
 }
 
+// 观察 节点变更
 func (e *Election) observe(ctx context.Context, ch chan<- v3.GetResponse) {
 	client := e.session.Client()
 
@@ -185,7 +172,7 @@ func (e *Election) observe(ctx context.Context, ch chan<- v3.GetResponse) {
 
 		if len(resp.Kvs) == 0 {
 			cctx, cancel := context.WithCancel(ctx)
-			// wait for first key put on prefix
+			// 等待在这个前缀更新第一个值wait for first key put on prefix
 			opts := []v3.OpOption{v3.WithRev(resp.Header.Revision), v3.WithPrefix()}
 			wch := client.Watch(cctx, e.keyPrefix, opts...)
 			for kv == nil {
@@ -195,6 +182,7 @@ func (e *Election) observe(ctx context.Context, ch chan<- v3.GetResponse) {
 					return
 				}
 				// only accept puts; a delete will make observe() spin
+				// 只接受put;删除操作将使observe()重试
 				for _, ev := range wr.Events {
 					if ev.Type == mvccpb.PUT {
 						hdr, kv = &wr.Header, ev.Kv
@@ -217,7 +205,7 @@ func (e *Election) observe(ctx context.Context, ch chan<- v3.GetResponse) {
 		}
 
 		cctx, cancel := context.WithCancel(ctx)
-		wch := client.Watch(cctx, string(kv.Key), v3.WithRev(hdr.Revision+1))
+		wch := client.Watch(cctx, kv.Key, v3.WithRev(hdr.Revision+1))
 		keyDeleted := false
 		for !keyDeleted {
 			wr, ok := <-wch
@@ -244,11 +232,8 @@ func (e *Election) observe(ctx context.Context, ch chan<- v3.GetResponse) {
 	}
 }
 
-// Key returns the leader key if elected, empty string otherwise.
 func (e *Election) Key() string { return e.leaderKey }
 
-// Rev returns the leader key's creation revision, if elected.
 func (e *Election) Rev() int64 { return e.leaderRev }
 
-// Header is the response header from the last successful election proposal.
 func (e *Election) Header() *pb.ResponseHeader { return e.hdr }

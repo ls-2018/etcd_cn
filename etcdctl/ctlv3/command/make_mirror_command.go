@@ -49,20 +49,19 @@ var (
 func NewMakeMirrorCommand() *cobra.Command {
 	c := &cobra.Command{
 		Use:   "make-mirror [options] <destination>",
-		Short: "Makes a mirror at the destination etcd cluster",
+		Short: "在目标etcd集群上创建镜像",
 		Run:   makeMirrorCommandFunc,
 	}
 
-	c.Flags().StringVar(&mmprefix, "prefix", "", "Key-value prefix to mirror")
-	c.Flags().StringVar(&mmdestprefix, "dest-prefix", "", "destination prefix to mirror a prefix to a different prefix in the destination cluster")
-	c.Flags().BoolVar(&mmnodestprefix, "no-dest-prefix", false, "mirror key-values to the root of the destination cluster")
-	c.Flags().StringVar(&mmcert, "dest-cert", "", "Identify secure client using this TLS certificate file for the destination cluster")
-	c.Flags().StringVar(&mmkey, "dest-key", "", "Identify secure client using this TLS key file")
-	c.Flags().StringVar(&mmcacert, "dest-cacert", "", "Verify certificates of TLS enabled secure servers using this CA bundle")
-	// TODO: secure by default when etcd enables secure gRPC by default.
-	c.Flags().BoolVar(&mminsecureTr, "dest-insecure-transport", true, "Disable transport security for client connections")
-	c.Flags().StringVar(&mmuser, "dest-user", "", "Destination username[:password] for authentication (prompt if password is not supplied)")
-	c.Flags().StringVar(&mmpassword, "dest-password", "", "Destination password for authentication (if this option is used, --user option shouldn't include password)")
+	c.Flags().StringVar(&mmprefix, "prefix", "", "为那个前缀打快照")
+	c.Flags().StringVar(&mmdestprefix, "dest-prefix", "", "将一个source前缀 镜像到 目标集群中的另一个前缀")
+	c.Flags().BoolVar(&mmnodestprefix, "no-dest-prefix", false, "kv镜像到另一个集群的根目录下")
+	c.Flags().StringVar(&mmcert, "dest-cert", "", "使用此TLS证书文件为目标集群识别安全客户端")
+	c.Flags().StringVar(&mmkey, "dest-key", "", "使用此TLS私钥文件为目标集群识别安全客户端")
+	c.Flags().StringVar(&mmcacert, "dest-cacert", "", "使用此CA包验证启用TLS的安全服务器的证书")
+	c.Flags().BoolVar(&mminsecureTr, "dest-insecure-transport", true, "为客户端连接禁用传输安全性")
+	c.Flags().StringVar(&mmuser, "dest-user", "", "目标集群的 username[:password]")
+	c.Flags().StringVar(&mmpassword, "dest-password", "", "目标集群的密码")
 
 	return c
 }
@@ -120,7 +119,7 @@ func makeMirrorCommandFunc(cmd *cobra.Command, args []string) {
 		scfg:             sec,
 		acfg:             auth,
 	}
-	dc := cc.mustClient()
+	dc := cc.mustClient() // 目标集群
 	c := mustClientFromCmd(cmd)
 
 	err := makeMirror(context.TODO(), c, dc)
@@ -133,7 +132,7 @@ func makeMirror(ctx context.Context, c *clientv3.Client, dc *clientv3.Client) er
 	go func() {
 		for {
 			time.Sleep(30 * time.Second)
-			fmt.Println(atomic.LoadInt64(&total))
+			fmt.Println("total--->:", atomic.LoadInt64(&total))
 		}
 	}()
 
@@ -141,7 +140,7 @@ func makeMirror(ctx context.Context, c *clientv3.Client, dc *clientv3.Client) er
 
 	rc, errc := s.SyncBase(ctx)
 
-	// if destination prefix is specified and remove destination prefix is true return error
+	// 如果指定并删除目的前缀，则返回错误
 	if mmnodestprefix && len(mmdestprefix) > 0 {
 		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("`--dest-prefix` and `--no-dest-prefix` cannot be set at the same time, choose one"))
 	}
@@ -153,7 +152,7 @@ func makeMirror(ctx context.Context, c *clientv3.Client, dc *clientv3.Client) er
 
 	for r := range rc {
 		for _, kv := range r.Kvs {
-			_, err := dc.Put(ctx, modifyPrefix(string(kv.Key)), string(kv.Value))
+			_, err := dc.Put(ctx, modifyPrefix(kv.Key), kv.Value)
 			if err != nil {
 				return err
 			}
@@ -188,10 +187,10 @@ func makeMirror(ctx context.Context, c *clientv3.Client, dc *clientv3.Client) er
 			lastRev = nextRev
 			switch ev.Type {
 			case mvccpb.PUT:
-				ops = append(ops, clientv3.OpPut(modifyPrefix(string(ev.Kv.Key)), string(ev.Kv.Value)))
+				ops = append(ops, clientv3.OpPut(modifyPrefix(ev.Kv.Key), ev.Kv.Value))
 				atomic.AddInt64(&total, 1)
 			case mvccpb.DELETE:
-				ops = append(ops, clientv3.OpDelete(modifyPrefix(string(ev.Kv.Key))))
+				ops = append(ops, clientv3.OpDelete(modifyPrefix(ev.Kv.Key)))
 				atomic.AddInt64(&total, 1)
 			default:
 				panic("unexpected event type")

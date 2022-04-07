@@ -272,8 +272,7 @@ func (DowngradeRequest_DowngradeAction) EnumDescriptor() ([]byte, []int) {
 type ResponseHeader struct {
 	// cluster_id is the ID of the cluster which sent the response.
 	ClusterId uint64 `protobuf:"varint,1,opt,name=cluster_id,json=clusterId,proto3" json:"cluster_id,omitempty"`
-	// member_id is the ID of the member which sent the response.
-	MemberId uint64 `protobuf:"varint,2,opt,name=member_id,json=memberId,proto3" json:"member_id,omitempty"`
+	MemberId  uint64 `protobuf:"varint,2,opt,name=member_id,json=memberId,proto3" json:"member_id,omitempty"`
 	// revision is the key-value store revision when the request was applied.
 	// For watch progress responses, the header.revision indicates progress. All future events
 	// recieved in this stream are guaranteed to have a higher revision number than the
@@ -4016,13 +4015,8 @@ type MaintenanceServer interface {
 	Defragment(context.Context, *DefragmentRequest) (*DefragmentResponse, error) // 碎片整理
 	Hash(context.Context, *HashRequest) (*HashResponse, error)
 	HashKV(context.Context, *HashKVRequest) (*HashKVResponse, error) // 计算所有MVCC键的哈希值直到一个给定的修订。只遍历key桶
-	// Snapshot sends a snapshot of the entire backend from a member over a stream to a client.
 	Snapshot(*SnapshotRequest, Maintenance_SnapshotServer) error
-	// MoveLeader requests current leader node to transfer its leadership to transferee.
 	MoveLeader(context.Context, *MoveLeaderRequest) (*MoveLeaderResponse, error)
-	// Downgrade requests downgrades, verifies feasibility or cancels downgrade
-	// on the cluster version.
-	// Supported since etcd 3.5.
 	Downgrade(context.Context, *DowngradeRequest) (*DowngradeResponse, error)
 }
 

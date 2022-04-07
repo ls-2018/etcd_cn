@@ -1234,7 +1234,7 @@ func (s *EtcdServer) isLeader() bool {
 	return uint64(s.ID()) == s.Lead()
 }
 
-// MoveLeader transfers the leader to the given transferee.
+// MoveLeader leader转移
 func (s *EtcdServer) MoveLeader(ctx context.Context, lead, transferee uint64) error {
 	if !s.cluster.IsMemberExist(types.ID(transferee)) || s.cluster.Member(types.ID(transferee)).IsLearner {
 		return ErrBadLeaderTransferee
@@ -1245,13 +1245,13 @@ func (s *EtcdServer) MoveLeader(ctx context.Context, lead, transferee uint64) er
 
 	lg := s.Logger()
 	lg.Info(
-		"leadership transfer starting",
+		"开始leader转移",
 		zap.String("local-member-id", s.ID().String()),
 		zap.String("current-leader-member-id", types.ID(lead).String()),
 		zap.String("transferee-member-id", types.ID(transferee).String()),
 	)
 
-	s.r.TransferLeadership(ctx, lead, transferee)
+	s.r.TransferLeadership(ctx, lead, transferee) // 开始leader转移
 	for s.Lead() != transferee {
 		select {
 		case <-ctx.Done(): // time out
@@ -1260,9 +1260,9 @@ func (s *EtcdServer) MoveLeader(ctx context.Context, lead, transferee uint64) er
 		}
 	}
 
-	// TODO: drain all requests, or drop all messages to the old leader
+	// 耗尽所有请求,或者驱逐掉所有就leader的消息
 	lg.Info(
-		"leadership transfer finished",
+		"leader转移完成",
 		zap.String("local-member-id", s.ID().String()),
 		zap.String("old-leader-member-id", types.ID(lead).String()),
 		zap.String("new-leader-member-id", types.ID(transferee).String()),
@@ -1271,7 +1271,6 @@ func (s *EtcdServer) MoveLeader(ctx context.Context, lead, transferee uint64) er
 	return nil
 }
 
-// TransferLeadership transfers the leader to the chosen transferee.
 func (s *EtcdServer) TransferLeadership() error {
 	lg := s.Logger()
 	if !s.isLeader() {
@@ -1314,16 +1313,11 @@ func (s *EtcdServer) HardStop() {
 	<-s.done
 }
 
-// Stop stops the etcd gracefully, and shuts down the running goroutine.
-// Stop should backend called after a Start(s), otherwise it will block forever.
-// When stopping leader, Stop transfers its leadership to one of its peers
-// before stopping the etcd.
-// Stop terminates the Server and performs any necessary finalization.
-// Do and Process cannot backend called after Stop has been invoked.
+// Stop 优雅停止本节点, 如果是leader要等leader转移
 func (s *EtcdServer) Stop() {
 	lg := s.Logger()
 	if err := s.TransferLeadership(); err != nil {
-		lg.Warn("leadership transfer failed", zap.String("local-member-id", s.ID().String()), zap.Error(err))
+		lg.Warn("leader转移失败", zap.String("local-member-id", s.ID().String()), zap.Error(err))
 	}
 	s.HardStop()
 }
@@ -1765,13 +1759,6 @@ func (s *EtcdServer) MendPeer(id types.ID) {
 func (s *EtcdServer) PauseSending() { s.r.pauseSending() }
 
 func (s *EtcdServer) ResumeSending() { s.r.resumeSending() }
-
-func (s *EtcdServer) ClusterVersion() *semver.Version {
-	if s.cluster == nil {
-		return nil
-	}
-	return s.cluster.Version()
-}
 
 // monitorVersions checks the member's version every monitorVersionInterval.
 // It updates the cluster version if all members agrees on a higher one.
@@ -2228,4 +2215,11 @@ func (s *EtcdServer) Process(ctx context.Context, m raftpb.Message) error {
 	var _ raft.RaftNodeInterFace = raftNode{}
 	//_ = raftNode{}.Step
 	return s.r.Step(ctx, m)
+}
+
+func (s *EtcdServer) ClusterVersion() *semver.Version {
+	if s.cluster == nil {
+		return nil
+	}
+	return s.cluster.Version()
 }

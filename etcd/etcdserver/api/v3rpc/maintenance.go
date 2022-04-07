@@ -99,6 +99,7 @@ func (ms *maintenanceServer) Defragment(ctx context.Context, sr *pb.DefragmentRe
 // big enough size to hold >1 OS pages in the buffer
 const snapshotSendBufferSize = 32 * 1024
 
+// MoveLeader OK
 func (ms *maintenanceServer) MoveLeader(ctx context.Context, tr *pb.MoveLeaderRequest) (*pb.MoveLeaderResponse, error) {
 	if ms.rg.ID() != ms.rg.Leader() {
 		return nil, rpctypes.ErrGRPCNotLeader

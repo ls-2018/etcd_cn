@@ -25,17 +25,12 @@ const (
 	batchLimit = 1000
 )
 
-// Syncer syncs with the key-value state of an etcd cluster.
 type Syncer interface {
-	// SyncBase syncs the base state of the key-value state.
-	// The key-value state are sent through the returned chan.
-	SyncBase(ctx context.Context) (<-chan clientv3.GetResponse, chan error)
-	// SyncUpdates syncs the updates of the key-value state.
-	// The update events are sent through the returned chan.
-	SyncUpdates(ctx context.Context) clientv3.WatchChan
+	SyncBase(ctx context.Context) (<-chan clientv3.GetResponse, chan error) // 同步k-v 状态。通过返回的chan发送。
+	SyncUpdates(ctx context.Context) clientv3.WatchChan                     // 在同步base数据后，同步增量数据
 }
 
-// NewSyncer creates a Syncer.
+// NewSyncer 同步器
 func NewSyncer(c *clientv3.Client, prefix string, rev int64) Syncer {
 	return &syncer{c: c, prefix: prefix, rev: rev}
 }
@@ -50,7 +45,7 @@ func (s *syncer) SyncBase(ctx context.Context) (<-chan clientv3.GetResponse, cha
 	respchan := make(chan clientv3.GetResponse, 1024)
 	errchan := make(chan error, 1)
 
-	// if rev is not specified, we will choose the most recent revision.
+	// 如果没有指定rev，我们将选择最近的修订。
 	if s.rev == 0 {
 		resp, err := s.c.Get(ctx, "foo")
 		if err != nil {
@@ -71,14 +66,10 @@ func (s *syncer) SyncBase(ctx context.Context) (<-chan clientv3.GetResponse, cha
 		opts := []clientv3.OpOption{clientv3.WithLimit(batchLimit), clientv3.WithRev(s.rev)}
 
 		if len(s.prefix) == 0 {
-			// If len(s.prefix) == 0, we will sync the entire key-value space.
-			// We then range from the smallest key (0x00) to the end.
+			// 同步所有kv
 			opts = append(opts, clientv3.WithFromKey())
 			key = "\x00"
 		} else {
-			// If len(s.prefix) != 0, we will sync key-value space with given prefix.
-			// We then range from the prefix to the next prefix if exists. Or we will
-			// range from the prefix to the end if the next prefix does not exists.
 			opts = append(opts, clientv3.WithRange(clientv3.GetPrefixRangeEnd(s.prefix)))
 			key = s.prefix
 		}

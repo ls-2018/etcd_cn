@@ -443,13 +443,10 @@ func WithMinCreateRev(rev int64) OpOption { return func(op *Op) { op.minCreateRe
 // WithMaxCreateRev filters out keys for Get with creation revisions greater than the given revision.
 func WithMaxCreateRev(rev int64) OpOption { return func(op *Op) { op.maxCreateRev = rev } }
 
-// WithFirstCreate gets the key with the oldest creation revision in the request range.
 func WithFirstCreate() []OpOption { return withTop(SortByCreateRevision, SortAscend) }
 
-// WithLastCreate gets the key with the latest creation revision in the request range.
 func WithLastCreate() []OpOption { return withTop(SortByCreateRevision, SortDescend) }
 
-// WithFirstKey gets the lexically first key in the request range.
 func WithFirstKey() []OpOption { return withTop(SortByKey, SortAscend) }
 
 // WithLastKey gets the lexically last key in the request range.

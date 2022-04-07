@@ -461,7 +461,7 @@ func (r *raft) maybeSendAppend(to uint64, sendIfEmpty bool) bool {
 	return true
 }
 
-// 置空 leader转移目标
+// 取消 先前的领导权移交
 func (r *raft) abortLeaderTransfer() {
 	r.leadTransferee = None
 }
@@ -631,7 +631,7 @@ func (r *raft) hup(t CampaignType) {
 }
 
 // campaign 开始竞选
-func (r *raft) campaign(t CampaignType) {
+func (r *raft) campaign(t CampaignType) { // CampaignTransfer
 	if !r.roleUp() {
 		r.logger.Warningf("%x is 无法推动;不应该调用 campaign()", r.id)
 	}
@@ -643,7 +643,7 @@ func (r *raft) campaign(t CampaignType) {
 		// 在增加r.Term之前,将本节点打算增加到的任期数通过rpc发送出去
 		term = r.Term + 1
 	} else {
-		r.becomeCandidate() // // 变成竞选者角色,更新状态、step、任期加1
+		r.becomeCandidate() // 变成竞选者角色,更新状态、step、任期加1
 		voteMsg = pb.MsgVote
 		term = r.Term
 	}
@@ -654,7 +654,9 @@ func (r *raft) campaign(t CampaignType) {
 	// vote	直接给自己投票
 	//		单机 : 那么此时给自己投一票,res是VoteWon
 	// 		多机:此时是VotePending
-	if _, _, res := r.poll(r.id, voteRespMsgType(voteMsg), true); res == quorum.VoteWon {
+	//  如果是leader转移的话，不会发送vote消息
+	_, _, res := r.poll(r.id, voteRespMsgType(voteMsg), true) // 获取自己的竞选结果
+	if res == quorum.VoteWon {
 		// 我们在为自己投票后赢得了选举(这肯定意味着 这是一个单一的本地节点集群).推进到下一个状态.
 		if t == campaignPreElection {
 			r.campaign(campaignElection)
@@ -675,6 +677,7 @@ func (r *raft) campaign(t CampaignType) {
 		}
 		sort.Slice(ids, func(i, j int) bool { return ids[i] < ids[j] })
 	}
+
 	for _, id := range ids {
 		if id == r.id {
 			// 不给自己投票
@@ -686,11 +689,14 @@ func (r *raft) campaign(t CampaignType) {
 		if t == campaignTransfer { // leader开始转移
 			ctx = []byte(t)
 		}
+		// leader转移 follower 发送申请投票消息，但是任期不会增加， context 是CampaignTransfer
+		// 给所有节点发消息
 		r.send(pb.Message{Term: term, To: id, Type: voteMsg, Index: r.raftLog.lastIndex(), LogTerm: r.raftLog.lastTerm(), Context: ctx})
+		_ = r.Step
 	}
 }
 
-// 节点ID,投票响应类型,true
+// 返回  "节点ID" 的投票响应类型,true
 func (r *raft) poll(id uint64, t pb.MessageType, v bool) (granted int, rejected int, result quorum.VoteResult) {
 	if v {
 		r.logger.Infof("%x 收到 %s 从 %x 在任期 %d", r.id, t, id, r.Term)
@@ -782,5 +788,5 @@ func (r *raft) committedEntryInCurrentTerm() bool {
 
 // 发送超时消息
 func (r *raft) sendTimeoutNow(to uint64) {
-	r.send(pb.Message{To: to, Type: pb.MsgTimeoutNow})
+	r.send(pb.Message{To: to, Type: pb.MsgTimeoutNow}) // 给指定节点发消息
 }

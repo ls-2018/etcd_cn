@@ -35,8 +35,8 @@ var txnInteractive bool
 // NewTxnCommand returns the cobra command for "txn".
 func NewTxnCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "txn [options]",
-		Short: "Txn processes all the requests in one transaction",
+		Use:   "txn [options] ",
+		Short: "在一个事务里处理所有请求  c(\"a\") = \"22222\"",
 		Run:   txnCommandFunc,
 	}
 	cmd.Flags().BoolVarP(&txnInteractive, "interactive", "i", false, "Input transaction in interactive mode")
@@ -165,7 +165,7 @@ func parseCompare(line string) (*clientv3.Cmp, error) {
 	if len(lparenSplit) != 2 {
 		return nil, fmt.Errorf("malformed comparison: %s", line)
 	}
-
+	//   c("a") = "22222"
 	target := lparenSplit[0]
 	n, serr := fmt.Sscanf(lparenSplit[1], "%q) %s %q", &key, &op, &val)
 	if n != 3 {
