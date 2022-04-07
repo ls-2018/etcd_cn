@@ -67,16 +67,18 @@ func (p *fieldsPrinter) Put(r v3.PutResponse) {
 func (p *fieldsPrinter) Txn(r v3.TxnResponse) {
 	p.hdr(r.Header)
 	fmt.Println(`"Succeeded" :`, r.Succeeded)
-	for _, resp := range r.Responses {
-		switch v := resp.Response.(type) {
-		case *pb.ResponseOp_ResponseDeleteRange:
+	for _, r := range r.Responses {
+		if r.ResponseOp_ResponseDeleteRange != nil {
+			v := r.ResponseOp_ResponseDeleteRange
 			p.Del((v3.DeleteResponse)(*v.ResponseDeleteRange))
-		case *pb.ResponseOp_ResponsePut:
+		} else if r.ResponseOp_ResponsePut != nil {
+			v := r.ResponseOp_ResponsePut
 			p.Put((v3.PutResponse)(*v.ResponsePut))
-		case *pb.ResponseOp_ResponseRange:
+		} else if r.ResponseOp_ResponseRange != nil {
+			v := r.ResponseOp_ResponseRange
 			p.Get((v3.GetResponse)(*v.ResponseRange))
-		default:
-			fmt.Printf("\"Unknown\" : %q\n", fmt.Sprintf("%+v", v))
+		} else {
+			fmt.Printf("unexpected response %+v\n", r)
 		}
 	}
 }

@@ -106,17 +106,18 @@ func (aa *authApplierV3) DeleteRange(txn mvcc.TxnWrite, r *pb.DeleteRangeRequest
 
 func checkTxnReqsPermission(as auth.AuthStore, ai *auth.AuthInfo, reqs []*pb.RequestOp) error {
 	for _, requ := range reqs {
-		switch tv := requ.Request.(type) {
-		case *pb.RequestOp_RequestRange:
+		if requ.RequestOp_RequestRange != nil {
+			tv := requ.RequestOp_RequestRange
 			if tv.RequestRange == nil {
 				continue
 			}
-
 			if err := as.IsRangePermitted(ai, []byte(tv.RequestRange.Key), []byte(tv.RequestRange.RangeEnd)); err != nil {
 				return err
 			}
 
-		case *pb.RequestOp_RequestPut:
+		}
+		if requ.RequestOp_RequestPut != nil {
+			tv := requ.RequestOp_RequestPut
 			if tv.RequestPut == nil {
 				continue
 			}
@@ -125,7 +126,9 @@ func checkTxnReqsPermission(as auth.AuthStore, ai *auth.AuthInfo, reqs []*pb.Req
 				return err
 			}
 
-		case *pb.RequestOp_RequestDeleteRange:
+		}
+		if requ.RequestOp_RequestDeleteRange != nil {
+			tv := requ.RequestOp_RequestDeleteRange
 			if tv.RequestDeleteRange == nil {
 				continue
 			}

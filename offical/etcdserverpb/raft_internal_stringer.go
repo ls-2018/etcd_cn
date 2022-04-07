@@ -85,11 +85,9 @@ func NewLoggableTxnRequest(request *TxnRequest) *txnRequestStringer {
 func (as *txnRequestStringer) String() string {
 	var compare []string
 	for _, c := range as.Request.Compare {
-		switch cv := c.TargetUnion.(type) {
-		case *Compare_Value:
-			compare = append(compare, newLoggableValueCompare(c, cv).String())
-		default:
-			// nothing to redact
+		if c.Compare_Value != nil {
+			compare = append(compare, newLoggableValueCompare(c, c.Compare_Value).String())
+		} else {
 			compare = append(compare, c.String())
 		}
 	}
@@ -119,14 +117,13 @@ func newLoggableRequestOp(op *RequestOp) *requestOpStringer {
 }
 
 func (as *requestOpStringer) String() string {
-	switch op := as.Op.Request.(type) {
-	case *RequestOp_RequestPut:
-		return fmt.Sprintf("request_put:<%s>", NewLoggablePutRequest(op.RequestPut).String())
-	case *RequestOp_RequestTxn:
-		return fmt.Sprintf("request_txn:<%s>", NewLoggableTxnRequest(op.RequestTxn).String())
-	default:
-		// nothing to redact
+	if as.Op.RequestOp_RequestPut != nil {
+		return fmt.Sprintf("request_put:<%s>", NewLoggablePutRequest(as.Op.RequestOp_RequestPut.RequestPut).String())
 	}
+	if as.Op.RequestOp_RequestTxn != nil {
+		return fmt.Sprintf("request_txn:<%s>", NewLoggableTxnRequest(as.Op.RequestOp_RequestTxn.RequestTxn).String())
+	}
+
 	return as.Op.String()
 }
 

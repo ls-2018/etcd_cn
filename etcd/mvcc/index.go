@@ -15,6 +15,7 @@
 package mvcc
 
 import (
+	"fmt"
 	"sort"
 	"sync"
 
@@ -65,16 +66,20 @@ func (ti *treeIndex) Put(key []byte, rev revision) {
 	okeyi.put(ti.lg, rev.main, rev.sub)
 }
 
+// 遍历
 func (ti *treeIndex) visit(key, end []byte, f func(ki *keyIndex) bool) {
 	keyi, endi := &keyIndex{key: string(key)}, &keyIndex{key: string(end)}
 
 	ti.RLock()
 	defer ti.RUnlock()
 	// 对树中[pivot, last]范围内的每个值调用迭代器，直到迭代器返回false。
+	// 假如获取前缀为b   那么结束就是c   , 因为是自增的
+
 	ti.tree.AscendGreaterOrEqual(keyi, func(item btree.Item) bool {
 		if len(endi.key) > 0 && !item.Less(endi) {
 			return false
 		}
+		fmt.Println("keyIndex ---->:", item.(*keyIndex).key)
 		if !f(item.(*keyIndex)) {
 			return false
 		}

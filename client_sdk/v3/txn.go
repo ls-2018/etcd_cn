@@ -35,20 +35,9 @@ import (
 //	 ).Commit()
 //
 type Txn interface {
-	// If takes a list of comparison. If all comparisons passed in succeed,
-	// the operations passed into Then() will be executed. Or the operations
-	// passed into Else() will be executed.
 	If(cs ...Cmp) Txn
-
-	// Then takes a list of operations. The Ops list will be executed, if the
-	// comparisons passed in If() succeed.
 	Then(ops ...Op) Txn
-
-	// Else takes a list of operations. The Ops list will be executed, if the
-	// comparisons passed in If() fail.
 	Else(ops ...Op) Txn
-
-	// Commit tries to commit the transaction.
 	Commit() (*TxnResponse, error)
 }
 

@@ -20,7 +20,6 @@ import (
 	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 
 	"github.com/ls-2018/etcd_cn/offical/api/v3/v3rpc/rpctypes"
-	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
 )
 
 type kvPrefix struct {
@@ -159,25 +158,32 @@ func (kv *kvPrefix) unprefixDeleteResponse(resp *clientv3.DeleteResponse) {
 
 func (kv *kvPrefix) unprefixTxnResponse(resp *clientv3.TxnResponse) {
 	for _, r := range resp.Responses {
-		switch tv := r.Response.(type) {
-		case *pb.ResponseOp_ResponseRange:
+		if r.ResponseOp_ResponseRange != nil {
+			tv := r.ResponseOp_ResponseRange
 			if tv.ResponseRange != nil {
 				kv.unprefixGetResponse((*clientv3.GetResponse)(tv.ResponseRange))
 			}
-		case *pb.ResponseOp_ResponsePut:
+		}
+		if r.ResponseOp_ResponsePut != nil {
+			tv := r.ResponseOp_ResponsePut
 			if tv.ResponsePut != nil {
 				kv.unprefixPutResponse((*clientv3.PutResponse)(tv.ResponsePut))
 			}
-		case *pb.ResponseOp_ResponseDeleteRange:
+		}
+
+		if r.ResponseOp_ResponseDeleteRange != nil {
+			tv := r.ResponseOp_ResponseDeleteRange
 			if tv.ResponseDeleteRange != nil {
 				kv.unprefixDeleteResponse((*clientv3.DeleteResponse)(tv.ResponseDeleteRange))
 			}
-		case *pb.ResponseOp_ResponseTxn:
+		}
+		if r.ResponseOp_ResponseTxn != nil {
+			tv := r.ResponseOp_ResponseTxn
 			if tv.ResponseTxn != nil {
 				kv.unprefixTxnResponse((*clientv3.TxnResponse)(tv.ResponseTxn))
 			}
-		default:
 		}
+
 	}
 }
 

@@ -61,6 +61,7 @@ func (m *InternalRaftRequest) Marshal() (dAtA []byte, err error) {
 		Header:                   m.Header,
 		ID:                       m.ID,
 		V2:                       m.V2,
+		Txn:                      m.Txn,
 		DeleteRange:              m.DeleteRange,
 		AuthRoleRevokePermission: m.AuthRoleRevokePermission,
 		AuthRoleGet:              m.AuthRoleGet,
@@ -126,6 +127,7 @@ func (m *InternalRaftRequest) Unmarshal(dAtA []byte) error {
 	}
 	m.Header = a.Header
 	m.ID = a.ID
+	m.Txn = a.Txn
 	m.V2 = a.V2
 	m.DeleteRange = a.DeleteRange
 	m.AuthRoleRevokePermission = a.AuthRoleRevokePermission

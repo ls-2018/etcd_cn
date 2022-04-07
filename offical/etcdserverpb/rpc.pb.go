@@ -671,14 +671,13 @@ type RequestOp struct {
 	// request is a union of request types accepted by a transaction.
 	//
 	// Types that are valid to be assigned to Request:
-	//	*RequestOp_RequestRange
-	//	*RequestOp_RequestPut
-	//	*RequestOp_RequestDeleteRange
-	//	*RequestOp_RequestTxn
-	Request              isRequestOp_Request `protobuf_oneof:"request"`
-	XXX_NoUnkeyedLiteral struct{}            `json:"-"`
-	XXX_unrecognized     []byte              `json:"-"`
-	XXX_sizecache        int32               `json:"-"`
+	RequestOp_RequestRange       *RequestOp_RequestRange
+	RequestOp_RequestPut         *RequestOp_RequestPut
+	RequestOp_RequestDeleteRange *RequestOp_RequestDeleteRange
+	RequestOp_RequestTxn         *RequestOp_RequestTxn
+	XXX_NoUnkeyedLiteral         struct{} `json:"-"`
+	XXX_unrecognized             []byte   `json:"-"`
+	XXX_sizecache                int32    `json:"-"`
 }
 
 func (m *RequestOp) Reset()         { *m = RequestOp{} }
@@ -711,37 +710,30 @@ func (*RequestOp_RequestPut) isRequestOp_Request()         {}
 func (*RequestOp_RequestDeleteRange) isRequestOp_Request() {}
 func (*RequestOp_RequestTxn) isRequestOp_Request()         {}
 
-func (m *RequestOp) GetRequest() isRequestOp_Request {
-	if m != nil {
-		return m.Request
-	}
-	return nil
-}
-
 func (m *RequestOp) GetRequestRange() *RangeRequest {
-	if x, ok := m.GetRequest().(*RequestOp_RequestRange); ok {
-		return x.RequestRange
+	if m.RequestOp_RequestRange != nil {
+		return m.RequestOp_RequestRange.RequestRange
 	}
 	return nil
 }
 
 func (m *RequestOp) GetRequestPut() *PutRequest {
-	if x, ok := m.GetRequest().(*RequestOp_RequestPut); ok {
-		return x.RequestPut
+	if m.RequestOp_RequestPut != nil {
+		return m.RequestOp_RequestPut.RequestPut
 	}
 	return nil
 }
 
 func (m *RequestOp) GetRequestDeleteRange() *DeleteRangeRequest {
-	if x, ok := m.GetRequest().(*RequestOp_RequestDeleteRange); ok {
-		return x.RequestDeleteRange
+	if m.RequestOp_RequestDeleteRange != nil {
+		return m.RequestOp_RequestDeleteRange.RequestDeleteRange
 	}
 	return nil
 }
 
 func (m *RequestOp) GetRequestTxn() *TxnRequest {
-	if x, ok := m.GetRequest().(*RequestOp_RequestTxn); ok {
-		return x.RequestTxn
+	if m.RequestOp_RequestTxn != nil {
+		return m.RequestOp_RequestTxn.RequestTxn
 	}
 	return nil
 }
@@ -764,10 +756,14 @@ type ResponseOp struct {
 	//	*ResponseOp_ResponsePut
 	//	*ResponseOp_ResponseDeleteRange
 	//	*ResponseOp_ResponseTxn
-	Response             isResponseOp_Response `protobuf_oneof:"response"`
-	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
-	XXX_unrecognized     []byte                `json:"-"`
-	XXX_sizecache        int32                 `json:"-"`
+	ResponseOp_ResponseRange       *ResponseOp_ResponseRange
+	ResponseOp_ResponsePut         *ResponseOp_ResponsePut
+	ResponseOp_ResponseDeleteRange *ResponseOp_ResponseDeleteRange
+	ResponseOp_ResponseTxn         *ResponseOp_ResponseTxn
+	// Response             isResponseOp_Response `protobuf_oneof:"response"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
 func (m *ResponseOp) Reset()         { *m = ResponseOp{} }
@@ -800,37 +796,30 @@ func (*ResponseOp_ResponsePut) isResponseOp_Response()         {}
 func (*ResponseOp_ResponseDeleteRange) isResponseOp_Response() {}
 func (*ResponseOp_ResponseTxn) isResponseOp_Response()         {}
 
-func (m *ResponseOp) GetResponse() isResponseOp_Response {
-	if m != nil {
-		return m.Response
-	}
-	return nil
-}
-
 func (m *ResponseOp) GetResponseRange() *RangeResponse {
-	if x, ok := m.GetResponse().(*ResponseOp_ResponseRange); ok {
-		return x.ResponseRange
+	if m.ResponseOp_ResponseRange != nil {
+		return m.ResponseOp_ResponseRange.ResponseRange
 	}
 	return nil
 }
 
 func (m *ResponseOp) GetResponsePut() *PutResponse {
-	if x, ok := m.GetResponse().(*ResponseOp_ResponsePut); ok {
-		return x.ResponsePut
+	if m.ResponseOp_ResponsePut != nil {
+		return m.ResponseOp_ResponsePut.ResponsePut
 	}
 	return nil
 }
 
 func (m *ResponseOp) GetResponseDeleteRange() *DeleteRangeResponse {
-	if x, ok := m.GetResponse().(*ResponseOp_ResponseDeleteRange); ok {
-		return x.ResponseDeleteRange
+	if m.ResponseOp_ResponseDeleteRange != nil {
+		return m.ResponseOp_ResponseDeleteRange.ResponseDeleteRange
 	}
 	return nil
 }
 
 func (m *ResponseOp) GetResponseTxn() *TxnResponse {
-	if x, ok := m.GetResponse().(*ResponseOp_ResponseTxn); ok {
-		return x.ResponseTxn
+	if m.ResponseOp_ResponseTxn != nil {
+		return m.ResponseOp_ResponseTxn.ResponseTxn
 	}
 	return nil
 }
@@ -846,19 +835,23 @@ func (*ResponseOp) XXX_OneofWrappers() []interface{} {
 }
 
 type Compare struct {
-	// result is logical comparison operation for this comparison.
 	Result Compare_CompareResult `protobuf:"varint,1,opt,name=result,proto3,enum=etcdserverpb.Compare_CompareResult" json:"result,omitempty"`
-	// target is the key-value field to inspect for the comparison.
 	Target Compare_CompareTarget `protobuf:"varint,2,opt,name=target,proto3,enum=etcdserverpb.Compare_CompareTarget" json:"target,omitempty"`
-	// key is the subject key for the comparison operation.
-	Key string `protobuf:"bytes,3,opt,name=key,proto3" json:"key,omitempty"`
+	Key    string                `protobuf:"bytes,3,opt,name=key,proto3" json:"key,omitempty"`
 	// Types that are valid to be assigned to TargetUnion:
 	//	*Compare_Version
 	//	*Compare_CreateRevision
 	//	*Compare_ModRevision
 	//	*Compare_Value
 	//	*Compare_Lease
-	TargetUnion isCompare_TargetUnion `protobuf_oneof:"target_union"`
+	// TargetUnion isCompare_TargetUnion `protobuf_oneof:"target_union"`
+
+	Compare_Value          *Compare_Value
+	Compare_Version        *Compare_Version
+	Compare_CreateRevision *Compare_CreateRevision
+	Compare_ModRevision    *Compare_ModRevision
+	Compare_Lease          *Compare_Lease
+
 	// range_end compares the given target to all keys in the range [key, range_end).
 	// See RangeRequest for more details on key ranges.
 	RangeEnd string `protobuf:"bytes,64,opt,name=range_end,json=rangeEnd,proto3" json:"range_end,omitempty"`
@@ -898,13 +891,6 @@ func (*Compare_ModRevision) isCompare_TargetUnion()    {}
 func (*Compare_Value) isCompare_TargetUnion()          {}
 func (*Compare_Lease) isCompare_TargetUnion()          {}
 
-func (m *Compare) GetTargetUnion() isCompare_TargetUnion {
-	if m != nil {
-		return m.TargetUnion
-	}
-	return nil
-}
-
 func (m *Compare) GetResult() Compare_CompareResult {
 	if m != nil {
 		return m.Result
@@ -927,36 +913,36 @@ func (m *Compare) GetKey() string {
 }
 
 func (m *Compare) GetVersion() int64 {
-	if x, ok := m.GetTargetUnion().(*Compare_Version); ok {
-		return x.Version
+	if m.Compare_Version != nil {
+		return m.Compare_Version.Version
 	}
 	return 0
 }
 
 func (m *Compare) GetCreateRevision() int64 {
-	if x, ok := m.GetTargetUnion().(*Compare_CreateRevision); ok {
-		return x.CreateRevision
+	if m.Compare_CreateRevision != nil {
+		return m.Compare_CreateRevision.CreateRevision
 	}
 	return 0
 }
 
 func (m *Compare) GetModRevision() int64 {
-	if x, ok := m.GetTargetUnion().(*Compare_ModRevision); ok {
-		return x.ModRevision
+	if m.Compare_ModRevision != nil {
+		return m.Compare_ModRevision.ModRevision
 	}
 	return 0
 }
 
 func (m *Compare) GetValue() string {
-	if x, ok := m.GetTargetUnion().(*Compare_Value); ok {
-		return x.Value
+	if m.Compare_Value != nil {
+		return m.Compare_Value.Value
 	}
 	return ""
 }
 
 func (m *Compare) GetLease() int64 {
-	if x, ok := m.GetTargetUnion().(*Compare_Lease); ok {
-		return x.Lease
+	if m.Compare_Lease != nil {
+		return m.Compare_Lease.Lease
 	}
 	return 0
 }

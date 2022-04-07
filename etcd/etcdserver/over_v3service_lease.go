@@ -2,6 +2,7 @@ package etcdserver
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/ls-2018/etcd_cn/etcd/lease"
@@ -29,6 +30,8 @@ func (s *EtcdServer) LeaseGrant(ctx context.Context, r *pb.LeaseGrantRequest) (*
 		r.ID = int64(s.reqIDGen.Next() & ((1 << 63) - 1))
 	}
 	resp, err := s.raftRequest(ctx, pb.InternalRaftRequest{LeaseGrant: r})
+	fmt.Println("LeaseGrant--->:", resp)
+
 	if err != nil {
 		return nil, err
 	}

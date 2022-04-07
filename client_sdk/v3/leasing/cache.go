@@ -295,7 +295,7 @@ func (lc *leaseCache) evalOps(ops []v3.Op) ([]*v3pb.ResponseOp, bool) {
 			return nil, false
 		}
 		resps[i] = &v3pb.ResponseOp{
-			Response: &v3pb.ResponseOp_ResponseRange{
+			ResponseOp_ResponseRange: &v3pb.ResponseOp_ResponseRange{
 				ResponseRange: (*v3pb.RangeResponse)(resp),
 			},
 		}

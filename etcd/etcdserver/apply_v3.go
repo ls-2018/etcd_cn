@@ -268,20 +268,22 @@ func newTxnResp(rt *pb.TxnRequest, txnPath []bool) (txnResp *pb.TxnResponse, txn
 		Header:    &pb.ResponseHeader{},
 	}
 	for i, req := range reqs {
-		switch tv := req.Request.(type) {
-		case *pb.RequestOp_RequestRange:
-			resps[i] = &pb.ResponseOp{Response: &pb.ResponseOp_ResponseRange{}}
-		case *pb.RequestOp_RequestPut:
-			resps[i] = &pb.ResponseOp{Response: &pb.ResponseOp_ResponsePut{}}
-		case *pb.RequestOp_RequestDeleteRange:
-			resps[i] = &pb.ResponseOp{Response: &pb.ResponseOp_ResponseDeleteRange{}}
-		case *pb.RequestOp_RequestTxn:
-			resp, txns := newTxnResp(tv.RequestTxn, txnPath[1:])
-			resps[i] = &pb.ResponseOp{Response: &pb.ResponseOp_ResponseTxn{ResponseTxn: resp}}
+		if req.RequestOp_RequestRange != nil {
+			resps[i] = &pb.ResponseOp{ResponseOp_ResponseRange: &pb.ResponseOp_ResponseRange{}}
+		}
+		if req.RequestOp_RequestPut != nil {
+			resps[i] = &pb.ResponseOp{ResponseOp_ResponsePut: &pb.ResponseOp_ResponsePut{}}
+		}
+		if req.RequestOp_RequestDeleteRange != nil {
+			resps[i] = &pb.ResponseOp{ResponseOp_ResponseDeleteRange: &pb.ResponseOp_ResponseDeleteRange{}}
+		}
+		if req.RequestOp_RequestTxn != nil {
+			resp, txns := newTxnResp(req.RequestOp_RequestTxn.RequestTxn, txnPath[1:])
+			resps[i] = &pb.ResponseOp{ResponseOp_ResponseTxn: &pb.ResponseOp_ResponseTxn{ResponseTxn: resp}}
 			txnPath = txnPath[1+txns:]
 			txnCount += txns + 1
-		default:
 		}
+
 	}
 	return txnResp, txnCount
 }
@@ -293,10 +295,11 @@ func compareToPath(rv mvcc.ReadView, rt *pb.TxnRequest) []bool {
 		ops = rt.Failure
 	}
 	for _, op := range ops {
-		tv, ok := op.Request.(*pb.RequestOp_RequestTxn)
-		if !ok || tv.RequestTxn == nil {
+		tv := op.RequestOp_RequestTxn
+		if tv == nil || tv.RequestTxn == nil {
 			continue
 		}
+
 		txnPath = append(txnPath, compareToPath(rv, tv.RequestTxn)...)
 	}
 	return txnPath
@@ -345,28 +348,30 @@ func compareKV(c *pb.Compare, ckv mvccpb.KeyValue) bool {
 	switch c.Target {
 	case pb.Compare_VALUE:
 		v := []byte{}
-		if tv, _ := c.TargetUnion.(*pb.Compare_Value); tv != nil {
-			v = []byte(tv.Value)
+
+		if c.Compare_Value != nil {
+			v = []byte(c.Compare_Value.Value)
 		}
+
 		result = bytes.Compare([]byte(ckv.Value), v)
 	case pb.Compare_CREATE:
-		if tv, _ := c.TargetUnion.(*pb.Compare_CreateRevision); tv != nil {
-			rev = tv.CreateRevision
+		if c.Compare_CreateRevision != nil {
+			rev = c.Compare_CreateRevision.CreateRevision
 		}
 		result = compareInt64(ckv.CreateRevision, rev)
 	case pb.Compare_MOD:
-		if tv, _ := c.TargetUnion.(*pb.Compare_ModRevision); tv != nil {
-			rev = tv.ModRevision
+		if c.Compare_ModRevision != nil {
+			rev = c.Compare_ModRevision.ModRevision
 		}
 		result = compareInt64(ckv.ModRevision, rev)
 	case pb.Compare_VERSION:
-		if tv, _ := c.TargetUnion.(*pb.Compare_Version); tv != nil {
-			rev = tv.Version
+		if c.Compare_Version != nil {
+			rev = c.Compare_Version.Version
 		}
 		result = compareInt64(ckv.Version, rev)
 	case pb.Compare_LEASE:
-		if tv, _ := c.TargetUnion.(*pb.Compare_Lease); tv != nil {
-			rev = tv.Lease
+		if c.Compare_Lease != nil {
+			rev = c.Compare_Lease.Lease
 		}
 		result = compareInt64(ckv.Lease, rev)
 	}
@@ -392,9 +397,10 @@ func (a *applierV3backend) applyTxn(ctx context.Context, txn mvcc.TxnWrite, rt *
 
 	lg := a.s.Logger()
 	for i, req := range reqs {
-		respi := tresp.Responses[i].Response
-		switch tv := req.Request.(type) {
-		case *pb.RequestOp_RequestRange:
+
+		if req.RequestOp_RequestRange != nil {
+			respi := tresp.Responses[i].ResponseOp_ResponseRange
+			tv := req.RequestOp_RequestRange
 			trace.StartSubTrace(
 				traceutil.Field{Key: "req_type", Value: "range"},
 				traceutil.Field{Key: "range_begin", Value: string(tv.RequestRange.Key)},
@@ -403,9 +409,13 @@ func (a *applierV3backend) applyTxn(ctx context.Context, txn mvcc.TxnWrite, rt *
 			if err != nil {
 				lg.Panic("unexpected error during txn", zap.Error(err))
 			}
-			respi.(*pb.ResponseOp_ResponseRange).ResponseRange = resp
+			respi.ResponseRange = resp
 			trace.StopSubTrace()
-		case *pb.RequestOp_RequestPut:
+
+		}
+		if req.RequestOp_RequestPut != nil {
+			respi := tresp.Responses[i].ResponseOp_ResponsePut
+			tv := req.RequestOp_RequestPut
 			trace.StartSubTrace(
 				traceutil.Field{Key: "req_type", Value: "put"},
 				traceutil.Field{Key: "key", Value: string(tv.RequestPut.Key)},
@@ -414,22 +424,27 @@ func (a *applierV3backend) applyTxn(ctx context.Context, txn mvcc.TxnWrite, rt *
 			if err != nil {
 				lg.Panic("unexpected error during txn", zap.Error(err))
 			}
-			respi.(*pb.ResponseOp_ResponsePut).ResponsePut = resp
+			respi.ResponsePut = resp
 			trace.StopSubTrace()
-		case *pb.RequestOp_RequestDeleteRange:
+		}
+
+		if req.RequestOp_RequestDeleteRange != nil {
+			respi := tresp.Responses[i].ResponseOp_ResponseDeleteRange
+			tv := req.RequestOp_RequestDeleteRange
 			resp, err := a.DeleteRange(txn, tv.RequestDeleteRange)
 			if err != nil {
 				lg.Panic("unexpected error during txn", zap.Error(err))
 			}
-			respi.(*pb.ResponseOp_ResponseDeleteRange).ResponseDeleteRange = resp
-		case *pb.RequestOp_RequestTxn:
-			resp := respi.(*pb.ResponseOp_ResponseTxn).ResponseTxn
+			respi.ResponseDeleteRange = resp
+		}
+		if req.RequestOp_RequestTxn != nil {
+			resp := tresp.Responses[i].ResponseOp_ResponseTxn.ResponseTxn
+			tv := req.RequestOp_RequestTxn
 			applyTxns := a.applyTxn(ctx, txn, tv.RequestTxn, txnPath[1:], resp)
 			txns += applyTxns + 1
 			txnPath = txnPath[applyTxns+1:]
-		default:
-			// empty union
 		}
+
 	}
 	return txns
 }
@@ -492,7 +507,9 @@ func checkRequests(rv mvcc.ReadView, rt *pb.TxnRequest, txnPath []bool, f checkR
 		reqs = rt.Failure
 	}
 	for _, req := range reqs {
-		if tv, ok := req.Request.(*pb.RequestOp_RequestTxn); ok && tv.RequestTxn != nil {
+		// tv, ok := req.Request.(*pb.RequestOp_RequestTxn)
+		tv := req.RequestOp_RequestTxn
+		if req.RequestOp_RequestTxn != nil && req.RequestOp_RequestTxn.RequestTxn != nil {
 			txns, err := checkRequests(rv, tv.RequestTxn, txnPath[1:], f)
 			if err != nil {
 				return 0, err
@@ -509,11 +526,14 @@ func checkRequests(rv mvcc.ReadView, rt *pb.TxnRequest, txnPath []bool, f checkR
 }
 
 func (a *applierV3backend) checkRequestPut(rv mvcc.ReadView, reqOp *pb.RequestOp) error {
-	tv, ok := reqOp.Request.(*pb.RequestOp_RequestPut)
-	if !ok || tv.RequestPut == nil {
+	if reqOp.RequestOp_RequestPut == nil {
 		return nil
 	}
-	req := tv.RequestPut
+	if reqOp.RequestOp_RequestPut.RequestPut == nil {
+		return nil
+	}
+
+	req := reqOp.RequestOp_RequestPut.RequestPut
 	if req.IgnoreValue || req.IgnoreLease {
 		// expects previous key-value, error if not exist
 		rr, err := rv.Range(context.TODO(), []byte(req.Key), nil, mvcc.RangeOptions{})
@@ -533,11 +553,14 @@ func (a *applierV3backend) checkRequestPut(rv mvcc.ReadView, reqOp *pb.RequestOp
 }
 
 func (a *applierV3backend) checkRequestRange(rv mvcc.ReadView, reqOp *pb.RequestOp) error {
-	tv, ok := reqOp.Request.(*pb.RequestOp_RequestRange)
-	if !ok || tv.RequestRange == nil {
+	if reqOp.RequestOp_RequestRange == nil {
 		return nil
 	}
-	req := tv.RequestRange
+	if reqOp.RequestOp_RequestRange.RequestRange == nil {
+		return nil
+	}
+
+	req := reqOp.RequestOp_RequestRange.RequestRange
 	switch {
 	case req.Revision == 0:
 		return nil
@@ -557,7 +580,7 @@ func removeNeedlessRangeReqs(txn *pb.TxnRequest) {
 	f := func(ops []*pb.RequestOp) []*pb.RequestOp {
 		j := 0
 		for i := 0; i < len(ops); i++ {
-			if _, ok := ops[i].Request.(*pb.RequestOp_RequestRange); ok {
+			if ops[i].RequestOp_RequestRange != nil {
 				continue
 			}
 			ops[j] = ops[i]

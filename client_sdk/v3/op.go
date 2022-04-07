@@ -189,16 +189,16 @@ func (op Op) toTxnRequest() *pb.TxnRequest {
 func (op Op) toRequestOp() *pb.RequestOp {
 	switch op.t {
 	case tRange:
-		return &pb.RequestOp{Request: &pb.RequestOp_RequestRange{RequestRange: op.toRangeRequest()}}
+		return &pb.RequestOp{RequestOp_RequestRange: &pb.RequestOp_RequestRange{RequestRange: op.toRangeRequest()}}
 	case tPut:
 		r := &pb.PutRequest{Key: op.key, Value: op.val, Lease: int64(op.leaseID), PrevKv: op.prevKV, IgnoreValue: op.ignoreValue, IgnoreLease: op.ignoreLease}
-		return &pb.RequestOp{Request: &pb.RequestOp_RequestPut{RequestPut: r}}
+		return &pb.RequestOp{RequestOp_RequestPut: &pb.RequestOp_RequestPut{RequestPut: r}}
 	case tDeleteRange:
 		r := &pb.DeleteRangeRequest{Key: op.key, RangeEnd: op.end, PrevKv: op.prevKV}
 		fmt.Println("----->", r)
-		return &pb.RequestOp{Request: &pb.RequestOp_RequestDeleteRange{RequestDeleteRange: r}}
+		return &pb.RequestOp{RequestOp_RequestDeleteRange: &pb.RequestOp_RequestDeleteRange{RequestDeleteRange: r}}
 	case tTxn:
-		return &pb.RequestOp{Request: &pb.RequestOp_RequestTxn{RequestTxn: op.toTxnRequest()}}
+		return &pb.RequestOp{RequestOp_RequestTxn: &pb.RequestOp_RequestTxn{RequestTxn: op.toTxnRequest()}}
 	default:
 		panic("Unknown Op")
 	}

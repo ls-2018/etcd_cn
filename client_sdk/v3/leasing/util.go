@@ -38,20 +38,20 @@ func evalCmp(resp *v3.GetResponse, tcmp v3.Cmp) bool {
 		kv := resp.Kvs[0]
 		switch tcmp.Target {
 		case v3pb.Compare_VALUE:
-			if tv, _ := tcmp.TargetUnion.(*v3pb.Compare_Value); tv != nil {
-				result = bytes.Compare([]byte(kv.Value), []byte(tv.Value))
+			if tcmp.Compare_Value != nil {
+				result = bytes.Compare([]byte(kv.Value), []byte(tcmp.Compare_Value.Value))
 			}
 		case v3pb.Compare_CREATE:
-			if tv, _ := tcmp.TargetUnion.(*v3pb.Compare_CreateRevision); tv != nil {
-				result = compareInt64(kv.CreateRevision, tv.CreateRevision)
+			if tcmp.Compare_CreateRevision != nil {
+				result = compareInt64(kv.CreateRevision, tcmp.Compare_CreateRevision.CreateRevision)
 			}
 		case v3pb.Compare_MOD:
-			if tv, _ := tcmp.TargetUnion.(*v3pb.Compare_ModRevision); tv != nil {
-				result = compareInt64(kv.ModRevision, tv.ModRevision)
+			if tcmp.Compare_ModRevision != nil {
+				result = compareInt64(kv.ModRevision, tcmp.Compare_ModRevision.ModRevision)
 			}
 		case v3pb.Compare_VERSION:
-			if tv, _ := tcmp.TargetUnion.(*v3pb.Compare_Version); tv != nil {
-				result = compareInt64(kv.Version, tv.Version)
+			if tcmp.Compare_Version != nil {
+				result = compareInt64(kv.Version, tcmp.Compare_Version.Version)
 			}
 		}
 	}

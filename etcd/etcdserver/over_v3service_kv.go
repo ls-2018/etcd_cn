@@ -19,14 +19,11 @@ type RaftKV interface {
 
 func (s *EtcdServer) Txn(ctx context.Context, r *pb.TxnRequest) (*pb.TxnResponse, error) {
 	if isTxnReadonly(r) {
-		trace := traceutil.New("transaction",
-			s.Logger(),
-			traceutil.Field{Key: "read_only", Value: true},
-		)
+		trace := traceutil.New("transaction", s.Logger(), traceutil.Field{Key: "read_only", Value: true})
 		ctx = context.WithValue(ctx, traceutil.TraceKey, trace)
 		if !isTxnSerializable(r) {
 			err := s.linearizeReadNotify(ctx)
-			trace.Step("agreement among raft nodes before linearized reading")
+			trace.Step("在线性读之前，保持raft节点间的一致性")
 			if err != nil {
 				return nil, err
 			}
@@ -51,8 +48,6 @@ func (s *EtcdServer) Txn(ctx context.Context, r *pb.TxnRequest) (*pb.TxnResponse
 	}
 	return resp.(*pb.TxnResponse), nil
 }
-
-// ---------------------------------------  OVER -------------------------------------------------------------
 
 func (s *EtcdServer) DeleteRange(ctx context.Context, r *pb.DeleteRangeRequest) (*pb.DeleteRangeResponse, error) {
 	resp, err := s.raftRequest(ctx, pb.InternalRaftRequest{DeleteRange: r})

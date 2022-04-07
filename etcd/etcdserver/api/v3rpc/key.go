@@ -162,7 +162,8 @@ func checkIntervals(reqs []*pb.RequestOp) (map[string]struct{}, adt.IntervalTree
 
 	// collect deletes from this level; build first to check lower level overlapped puts
 	for _, req := range reqs {
-		tv, ok := req.Request.(*pb.RequestOp_RequestDeleteRange)
+		ok := req.RequestOp_RequestDeleteRange != nil
+		tv := req.RequestOp_RequestDeleteRange
 		if !ok {
 			continue
 		}
@@ -182,7 +183,8 @@ func checkIntervals(reqs []*pb.RequestOp) (map[string]struct{}, adt.IntervalTree
 	// collect children puts/deletes
 	puts := make(map[string]struct{})
 	for _, req := range reqs {
-		tv, ok := req.Request.(*pb.RequestOp_RequestTxn)
+		ok := req.RequestOp_RequestTxn != nil
+		tv := req.RequestOp_RequestTxn
 		if !ok {
 			continue
 		}
@@ -222,7 +224,8 @@ func checkIntervals(reqs []*pb.RequestOp) (map[string]struct{}, adt.IntervalTree
 
 	// collect and check this level's puts
 	for _, req := range reqs {
-		tv, ok := req.Request.(*pb.RequestOp_RequestPut)
+		ok := req.RequestOp_RequestPut != nil
+		tv := req.RequestOp_RequestPut
 		if !ok || tv.RequestPut == nil {
 			continue
 		}
@@ -239,20 +242,22 @@ func checkIntervals(reqs []*pb.RequestOp) (map[string]struct{}, adt.IntervalTree
 }
 
 func checkRequestOp(u *pb.RequestOp, maxTxnOps int) error {
-	// TODO: ensure only one of the field is set.
-	switch uv := u.Request.(type) {
-	case *pb.RequestOp_RequestRange:
-		return checkRangeRequest(uv.RequestRange)
-	case *pb.RequestOp_RequestPut:
-		return checkPutRequest(uv.RequestPut)
-	case *pb.RequestOp_RequestDeleteRange:
-		return checkDeleteRequest(uv.RequestDeleteRange)
-	case *pb.RequestOp_RequestTxn:
-		return checkTxnRequest(uv.RequestTxn, maxTxnOps)
-	default:
-		// empty op / nil entry
-		return rpctypes.ErrGRPCKeyNotFound
+	if u.RequestOp_RequestRange != nil {
+		return checkRangeRequest(u.RequestOp_RequestRange.RequestRange)
 	}
+
+	if u.RequestOp_RequestPut != nil {
+		return checkPutRequest(u.RequestOp_RequestPut.RequestPut)
+	}
+	if u.RequestOp_RequestDeleteRange != nil {
+		return checkDeleteRequest(u.RequestOp_RequestDeleteRange.RequestDeleteRange)
+	}
+	if u.RequestOp_RequestTxn != nil {
+		return checkTxnRequest(u.RequestOp_RequestTxn.RequestTxn, maxTxnOps)
+	}
+
+	// empty op / nil entry
+	return rpctypes.ErrGRPCKeyNotFound
 }
 
 // --------------------------------------------  OVER  ----------------------------------------------------

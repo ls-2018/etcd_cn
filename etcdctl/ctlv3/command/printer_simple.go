@@ -21,7 +21,6 @@ import (
 
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
 	v3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
-	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
 )
 
 type simplePrinter struct {
@@ -58,14 +57,16 @@ func (s *simplePrinter) Txn(resp v3.TxnResponse) {
 
 	for _, r := range resp.Responses {
 		fmt.Println("")
-		switch v := r.Response.(type) {
-		case *pb.ResponseOp_ResponseDeleteRange:
+		if r.ResponseOp_ResponseDeleteRange != nil {
+			v := r.ResponseOp_ResponseDeleteRange
 			s.Del((v3.DeleteResponse)(*v.ResponseDeleteRange))
-		case *pb.ResponseOp_ResponsePut:
+		} else if r.ResponseOp_ResponsePut != nil {
+			v := r.ResponseOp_ResponsePut
 			s.Put((v3.PutResponse)(*v.ResponsePut))
-		case *pb.ResponseOp_ResponseRange:
-			s.Get(((v3.GetResponse)(*v.ResponseRange)))
-		default:
+		} else if r.ResponseOp_ResponseRange != nil {
+			v := r.ResponseOp_ResponseRange
+			s.Get((v3.GetResponse)(*v.ResponseRange))
+		} else {
 			fmt.Printf("unexpected response %+v\n", r)
 		}
 	}

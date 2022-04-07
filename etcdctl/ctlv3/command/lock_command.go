@@ -37,7 +37,7 @@ var lockTTL = 10
 func NewLockCommand() *cobra.Command {
 	c := &cobra.Command{
 		Use:   "lock <lockname> [exec-command arg1 arg2 ...]",
-		Short: "Acquires a named lock",
+		Short: "获取命名锁",
 		Run:   lockCommandFunc,
 	}
 	c.Flags().IntVarP(&lockTTL, "ttl", "", lockTTL, "timeout for session")

@@ -55,15 +55,15 @@ func Compare(cmp Cmp, result string, v interface{}) Cmp {
 		if !ok {
 			panic("bad compare value")
 		}
-		cmp.TargetUnion = &pb.Compare_Value{Value: val}
+		cmp.Compare_Value = &pb.Compare_Value{Value: val}
 	case pb.Compare_VERSION:
-		cmp.TargetUnion = &pb.Compare_Version{Version: mustInt64(v)}
+		cmp.Compare_Version = &pb.Compare_Version{Version: mustInt64(v)}
 	case pb.Compare_CREATE:
-		cmp.TargetUnion = &pb.Compare_CreateRevision{CreateRevision: mustInt64(v)}
+		cmp.Compare_CreateRevision = &pb.Compare_CreateRevision{CreateRevision: mustInt64(v)}
 	case pb.Compare_MOD:
-		cmp.TargetUnion = &pb.Compare_ModRevision{ModRevision: mustInt64(v)}
+		cmp.Compare_ModRevision = &pb.Compare_ModRevision{ModRevision: mustInt64(v)}
 	case pb.Compare_LEASE:
-		cmp.TargetUnion = &pb.Compare_Lease{Lease: mustInt64orLeaseID(v)}
+		cmp.Compare_Lease = &pb.Compare_Lease{Lease: mustInt64orLeaseID(v)}
 	default:
 		panic("Unknown compare type")
 	}
@@ -100,14 +100,16 @@ func (cmp *Cmp) WithKeyBytes(key []byte) { cmp.Key = string(key) }
 
 // ValueBytes returns the byte slice holding the comparison value, if any.
 func (cmp *Cmp) ValueBytes() []byte {
-	if tu, ok := cmp.TargetUnion.(*pb.Compare_Value); ok {
-		return []byte(tu.Value)
+	if cmp.Compare_Value != nil {
+		return []byte(cmp.Compare_Value.Value)
 	}
 	return nil
 }
 
 // WithValueBytes sets the byte slice for the comparison's value.
-func (cmp *Cmp) WithValueBytes(v []byte) { cmp.TargetUnion.(*pb.Compare_Value).Value = string(v) }
+func (cmp *Cmp) WithValueBytes(v []byte) {
+	cmp.Compare_Value.Value = string(v)
+}
 
 // WithRange sets the comparison to scan the range [key, end).
 func (cmp Cmp) WithRange(end string) Cmp {

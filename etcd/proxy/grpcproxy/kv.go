@@ -80,17 +80,21 @@ func (p *kvProxy) DeleteRange(ctx context.Context, r *pb.DeleteRangeRequest) (*p
 
 func (p *kvProxy) txnToCache(reqs []*pb.RequestOp, resps []*pb.ResponseOp) {
 	for i := range resps {
-		switch tv := resps[i].Response.(type) {
-		case *pb.ResponseOp_ResponsePut:
+		if resps[i].ResponseOp_ResponsePut != nil {
 			p.cache.Invalidate([]byte(reqs[i].GetRequestPut().Key), nil)
-		case *pb.ResponseOp_ResponseDeleteRange:
+		}
+
+		if resps[i].ResponseOp_ResponseDeleteRange != nil {
 			rdr := reqs[i].GetRequestDeleteRange()
 			p.cache.Invalidate([]byte(rdr.Key), []byte(rdr.RangeEnd))
-		case *pb.ResponseOp_ResponseRange:
+		}
+		if resps[i].ResponseOp_ResponseRange != nil {
+			tv := resps[i].ResponseOp_ResponseRange
 			req := *(reqs[i].GetRequestRange())
 			req.Serializable = true
 			p.cache.Add(&req, tv.ResponseRange)
 		}
+
 	}
 }
 
@@ -131,24 +135,31 @@ func (p *kvProxy) Compact(ctx context.Context, r *pb.CompactionRequest) (*pb.Com
 }
 
 func requestOpToOp(union *pb.RequestOp) clientv3.Op {
-	switch tv := union.Request.(type) {
-	case *pb.RequestOp_RequestRange:
+	if union.RequestOp_RequestRange != nil {
+		tv := union.RequestOp_RequestRange
 		if tv.RequestRange != nil {
 			return RangeRequestToOp(tv.RequestRange)
 		}
-	case *pb.RequestOp_RequestPut:
+	}
+	if union.RequestOp_RequestPut != nil {
+		tv := union.RequestOp_RequestPut
 		if tv.RequestPut != nil {
 			return PutRequestToOp(tv.RequestPut)
 		}
-	case *pb.RequestOp_RequestDeleteRange:
+	}
+	if union.RequestOp_RequestDeleteRange != nil {
+		tv := union.RequestOp_RequestDeleteRange
 		if tv.RequestDeleteRange != nil {
 			return DelRequestToOp(tv.RequestDeleteRange)
 		}
-	case *pb.RequestOp_RequestTxn:
+	}
+	if union.RequestOp_RequestTxn != nil {
+		tv := union.RequestOp_RequestTxn
 		if tv.RequestTxn != nil {
 			return TxnRequestToOp(tv.RequestTxn)
 		}
 	}
+
 	panic("unknown request")
 }
 

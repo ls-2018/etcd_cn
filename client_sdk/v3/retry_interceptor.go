@@ -24,6 +24,8 @@ import (
 	"sync"
 	"time"
 
+	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
+
 	"github.com/ls-2018/etcd_cn/code_debug/conf"
 
 	"github.com/ls-2018/etcd_cn/offical/api/v3/v3rpc/rpctypes"
@@ -51,7 +53,13 @@ func (c *Client) unaryClientInterceptor(optFuncs ...retryOption) grpc.UnaryClien
 			}
 			c.GetLogger().Debug("重试调用", zap.String("target", cc.Target()), zap.Uint("attempt", attempt))
 			if !conf.Perf {
-				fmt.Println("--->:", req)    // key:"a" value:"b"
+				switch v := req.(type) {
+				case *pb.TxnRequest:
+					d, _ := v.Marshal()
+					fmt.Println("--->:", string(d)) // key:"a" value:"b"
+				default:
+					fmt.Println("--->:", req) // key:"a" value:"b"
+				}
 				fmt.Println("--->:", method) // /etcdserverpb.KV/Put
 			}
 
