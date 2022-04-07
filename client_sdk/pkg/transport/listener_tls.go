@@ -41,6 +41,8 @@ type tlsListener struct {
 
 type tlsCheckFunc func(context.Context, *tls.Conn) error
 
+var crlBytesMap sync.Map
+
 // NewTLSListener handshakes TLS connections and performs optional CRL checking.
 func NewTLSListener(l net.Listener, tlsinfo *TLSInfo) (net.Listener, error) {
 	check := func(context.Context, *tls.Conn) error { return nil }
@@ -169,11 +171,18 @@ func (l *tlsListener) acceptLoop() {
 }
 
 func checkCRL(crlPath string, cert []*x509.Certificate) error {
-	// TODO: cache
-	crlBytes, err := ioutil.ReadFile(crlPath)
-	if err != nil {
-		return err
+	var crlBytes []byte
+
+	if v, ok := crlBytesMap.Load(crlPath); ok {
+		crlBytes = v.([]byte)
+	} else {
+		crlBytes, err := ioutil.ReadFile(crlPath)
+		if err != nil {
+			return err
+		}
+		crlBytesMap.Store(crlPath, crlBytes)
 	}
+
 	certList, err := x509.ParseCRL(crlBytes)
 	if err != nil {
 		return err

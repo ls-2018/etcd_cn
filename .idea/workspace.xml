@@ -5,29 +5,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="49524360-39b2-44cd-b702-de0461fb4222" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/code_debug/init.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/compare.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/compare.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/leasing/cache.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/leasing/cache.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/leasing/util.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/leasing/util.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/namespace/kv.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/namespace/kv.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/op.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/op.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/retry_interceptor.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/retry_interceptor.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/txn.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/txn.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v2error/error.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/api/v2error/error.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v3rpc/key.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/api/v3rpc/key.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/apply_auth.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/apply_auth.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/apply_v3.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/apply_v3.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/over_v3service_lease.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/over_v3service_lease.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/v3service_kv.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/over_v3service_kv.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/mvcc/index.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/mvcc/index.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/proxy/grpcproxy/kv.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/proxy/grpcproxy/kv.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/lock_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/lock_command.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/printer_fields.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/printer_fields.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/printer_simple.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/printer_simple.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/offical/etcdserverpb/over.go" beforeDir="false" afterPath="$PROJECT_DIR$/offical/etcdserverpb/over.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/offical/etcdserverpb/raft_internal_stringer.go" beforeDir="false" afterPath="$PROJECT_DIR$/offical/etcdserverpb/raft_internal_stringer.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/offical/etcdserverpb/rpc.pb.go" beforeDir="false" afterPath="$PROJECT_DIR$/offical/etcdserverpb/rpc.pb.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client_sdk/pkg/transport/listener_tls.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/pkg/transport/listener_tls.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v2auth/auth.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v2auth/auth_requests.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v2http/capability.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v2http/client.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v2http/client_auth.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v2http/doc.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v2http/httptypes/member.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v2http/over_http.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v2http/testdata/ca.pem" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v2http/testdata/otheruser.pem" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v2http/testdata/user.pem" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -96,7 +86,7 @@
       <recent name="$PROJECT_DIR$/offical/api/v3" />
     </key>
   </component>
-  <component name="RunManager" selected="Go Build.etcdctl">
+  <component name="RunManager" selected="Go Build.local">
     <configuration name="init.sh" type="BashProRunConfiguration" temporary="true">
       <option name="scriptPath" value="$PROJECT_DIR$/code_debug/init.sh" />
       <RunnerSettings bashdbVersion="Automatic" bashPathMapper="Automatic" RunnerId="pro.bashsupport.shDebugRunner" />
@@ -218,16 +208,5 @@
   </component>
   <component name="VgoProject">
     <integration-enabled>true</integration-enabled>
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/etcd/mvcc/index.go</url>
-          <line>77</line>
-          <option name="timeStamp" value="680" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
   </component>
 </project>

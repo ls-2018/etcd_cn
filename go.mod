@@ -15,12 +15,12 @@ require (
 	github.com/alexkohler/nakedret v1.0.0
 	github.com/bgentry/speakeasy v0.1.0
 	github.com/chzchzchz/goword v0.0.0-20170907005317-a9744cb52b03
-	github.com/cockroachdb/datadriven v1.0.1
 	github.com/coreos/go-semver v0.3.0
 	github.com/coreos/go-systemd/v22 v22.3.2
 	github.com/coreos/license-bill-of-materials v0.0.0-20190913234955-13baff47494e
 	github.com/creack/pty v1.1.11
 	github.com/dustin/go-humanize v1.0.0
+	github.com/fatih/color v1.10.0 // indirect
 	github.com/form3tech-oss/jwt-go v3.2.3+incompatible
 	github.com/go-openapi/loads v0.19.5 // indirect
 	github.com/go-openapi/spec v0.19.9 // indirect
@@ -36,6 +36,7 @@ require (
 	github.com/hexfusion/schwag v0.0.0-20170606222847-b7d0fc9aadaa
 	github.com/jonboulle/clockwork v0.2.2
 	github.com/json-iterator/go v1.1.11
+	github.com/kr/pretty v0.3.0 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mdempsky/unconvert v0.0.0-20200228143138-95ecdbfc0b5f
 	github.com/mgechev/revive v1.0.2
@@ -43,6 +44,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.1
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/prometheus/client_golang v1.11.0
+	github.com/rogpeppe/go-internal v1.8.1 // indirect
 	github.com/sirupsen/logrus v1.7.0 // indirect
 	github.com/soheilhy/cmux v0.1.5
 	github.com/spf13/cobra v1.1.3
@@ -52,8 +54,6 @@ require (
 	github.com/trustmaster/go-aspell v0.0.0-20200701131845-c2b1f55bec8f // indirect
 	github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2
 	go.etcd.io/bbolt v1.3.6
-	go.etcd.io/etcd/api/v3 v3.5.2
-	go.etcd.io/etcd/client/pkg/v3 v3.5.2
 	go.etcd.io/protodoc v0.0.0-20180829002748-484ab544e116
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.20.0
 	go.opentelemetry.io/otel v0.20.0
@@ -64,6 +64,7 @@ require (
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
 	golang.org/x/net v0.0.0-20211008194852-3b03d305991f
 	golang.org/x/sys v0.0.0-20220307203707-22a9840ba4d7
+	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba
 	google.golang.org/genproto v0.0.0-20210624195500-8bfb893ecb84
 	google.golang.org/grpc v1.38.0
