@@ -1381,13 +1381,11 @@ func (s *EtcdServer) checkMembershipOperationPermission(ctx context.Context) err
 	return s.AuthStore().IsAdminPermitted(authInfo)
 }
 
-// check whether the learner catches up with leader or not.
-// Note: it will return nil if member is not found in cluster or if member is not learner.
-// These two conditions will backend checked before apply phase later.
+// 检查learner是否追上了leader
+// 注意：如果在集群中没有找到成员，或者成员不是学习者，它将返回nil。
+// 这两个条件将在后面的应用阶段之前进行后台检查。
 func (s *EtcdServer) isLearnerReady(id uint64) error {
 	rs := s.raftStatus()
-
-	// leader's raftStatus.Progress is not nil
 	if rs.Progress == nil {
 		return ErrNotLeader
 	}
@@ -1397,7 +1395,6 @@ func (s *EtcdServer) isLearnerReady(id uint64) error {
 	leaderID := rs.ID
 	for memberID, progress := range rs.Progress {
 		if id == memberID {
-			// check its status
 			learnerMatch = progress.Match
 			isFound = true
 			break
@@ -1406,17 +1403,16 @@ func (s *EtcdServer) isLearnerReady(id uint64) error {
 
 	if isFound {
 		leaderMatch := rs.Progress[leaderID].Match
-		// the learner's Match not caught up with leader yet
+		// learner的进度还没有赶上领导者
 		if float64(learnerMatch) < float64(leaderMatch)*readyPercent {
 			return ErrLearnerNotReady
 		}
 	}
-
 	return nil
 }
 
 func (s *EtcdServer) mayRemoveMember(id types.ID) error {
-	if !s.Cfg.StrictReconfigCheck {
+	if !s.Cfg.StrictReconfigCheck { // 严格配置变更检查
 		return nil
 	}
 
@@ -1473,10 +1469,8 @@ type confChangeResponse struct {
 	err   error
 }
 
-// configure sends a configuration change through consensus and
-// then waits for it to backend applied to the etcd. It
-// will block until the change is performed or there is an error.
-func (s *EtcdServer) configure(ctx context.Context, cc raftpb.ConfChangeV1) ([]*membership.Member, error) {
+// configureAndSendRaft 通过raft发送配置变更，然后等待后端应用到etcd。它将阻塞，直到更改执行或出现错误。
+func (s *EtcdServer) configureAndSendRaft(ctx context.Context, cc raftpb.ConfChangeV1) ([]*membership.Member, error) {
 	lg := s.Logger()
 	cc.ID = s.reqIDGen.Next()
 	ch := s.w.Register(cc.ID)
@@ -1490,11 +1484,11 @@ func (s *EtcdServer) configure(ctx context.Context, cc raftpb.ConfChangeV1) ([]*
 	select {
 	case x := <-ch:
 		if x == nil {
-			lg.Panic("failed to configure")
+			lg.Panic("配置失败")
 		}
 		resp := x.(*confChangeResponse)
 		lg.Info(
-			"applied a configuration change through raft",
+			"通过raft应用配置更改",
 			zap.String("local-member-id", s.ID().String()),
 			zap.String("raft-conf-change", cc.Type.String()),
 			zap.String("raft-conf-change-node-id", types.ID(cc.NodeID).String()),

@@ -48,6 +48,7 @@ func NewClusterServer(s *etcdserver.EtcdServer) *ClusterServer {
 	}
 }
 
+// MemberList OK
 func (cs *ClusterServer) MemberList(ctx context.Context, r *pb.MemberListRequest) (*pb.MemberListResponse, error) {
 	if r.Linearizable {
 		if err := cs.server.LinearizableReadNotify(ctx); err != nil {
@@ -58,6 +59,7 @@ func (cs *ClusterServer) MemberList(ctx context.Context, r *pb.MemberListRequest
 	return &pb.MemberListResponse{Header: cs.header(), Members: membs}, nil
 }
 
+// MemberAdd ok
 func (cs *ClusterServer) MemberAdd(ctx context.Context, r *pb.MemberAddRequest) (*pb.MemberAddResponse, error) {
 	urls, err := types.NewURLs(r.PeerURLs)
 	if err != nil {

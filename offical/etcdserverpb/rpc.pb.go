@@ -3700,15 +3700,10 @@ var _Watch_serviceDesc = grpc.ServiceDesc{
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type ClusterClient interface {
-	// MemberAdd adds a member into the cluster.
 	MemberAdd(ctx context.Context, in *MemberAddRequest, opts ...grpc.CallOption) (*MemberAddResponse, error)
-	// MemberRemove removes an existing member from the cluster.
 	MemberRemove(ctx context.Context, in *MemberRemoveRequest, opts ...grpc.CallOption) (*MemberRemoveResponse, error)
-	// MemberUpdate updates the member configuration.
 	MemberUpdate(ctx context.Context, in *MemberUpdateRequest, opts ...grpc.CallOption) (*MemberUpdateResponse, error)
-	// MemberList lists all the members in the cluster.
 	MemberList(ctx context.Context, in *MemberListRequest, opts ...grpc.CallOption) (*MemberListResponse, error)
-	// MemberPromote promotes a member from raft learner (non-voting) to raft voting member.
 	MemberPromote(ctx context.Context, in *MemberPromoteRequest, opts ...grpc.CallOption) (*MemberPromoteResponse, error)
 }
 
@@ -3767,39 +3762,11 @@ func (c *clusterClient) MemberPromote(ctx context.Context, in *MemberPromoteRequ
 
 // ClusterServer is the server API for Cluster service.
 type ClusterServer interface {
-	// MemberAdd adds a member into the cluster.
 	MemberAdd(context.Context, *MemberAddRequest) (*MemberAddResponse, error)
-	// MemberRemove removes an existing member from the cluster.
 	MemberRemove(context.Context, *MemberRemoveRequest) (*MemberRemoveResponse, error)
-	// MemberUpdate updates the member configuration.
 	MemberUpdate(context.Context, *MemberUpdateRequest) (*MemberUpdateResponse, error)
-	// MemberList lists all the members in the cluster.
 	MemberList(context.Context, *MemberListRequest) (*MemberListResponse, error)
-	// MemberPromote promotes a member from raft learner (non-voting) to raft voting member.
 	MemberPromote(context.Context, *MemberPromoteRequest) (*MemberPromoteResponse, error)
-}
-
-// UnimplementedClusterServer can be embedded to have forward compatible implementations.
-type UnimplementedClusterServer struct{}
-
-func (*UnimplementedClusterServer) MemberAdd(ctx context.Context, req *MemberAddRequest) (*MemberAddResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method MemberAdd not implemented")
-}
-
-func (*UnimplementedClusterServer) MemberRemove(ctx context.Context, req *MemberRemoveRequest) (*MemberRemoveResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method MemberRemove not implemented")
-}
-
-func (*UnimplementedClusterServer) MemberUpdate(ctx context.Context, req *MemberUpdateRequest) (*MemberUpdateResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method MemberUpdate not implemented")
-}
-
-func (*UnimplementedClusterServer) MemberList(ctx context.Context, req *MemberListRequest) (*MemberListResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method MemberList not implemented")
-}
-
-func (*UnimplementedClusterServer) MemberPromote(ctx context.Context, req *MemberPromoteRequest) (*MemberPromoteResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method MemberPromote not implemented")
 }
 
 func RegisterClusterServer(s *grpc.Server, srv ClusterServer) {

@@ -33,22 +33,11 @@ type (
 )
 
 type Cluster interface {
-	// MemberList lists the current cluster membership.
 	MemberList(ctx context.Context) (*MemberListResponse, error)
-
-	// MemberAdd adds a new member into the cluster.
 	MemberAdd(ctx context.Context, peerAddrs []string) (*MemberAddResponse, error)
-
-	// MemberAddAsLearner adds a new learner member into the cluster.
 	MemberAddAsLearner(ctx context.Context, peerAddrs []string) (*MemberAddResponse, error)
-
-	// MemberRemove removes an existing member from the cluster.
 	MemberRemove(ctx context.Context, id uint64) (*MemberRemoveResponse, error)
-
-	// MemberUpdate updates the peer addresses of the member.
 	MemberUpdate(ctx context.Context, id uint64, peerAddrs []string) (*MemberUpdateResponse, error)
-
-	// MemberPromote promotes a member from raft learner (non-voting) to raft voting member.
 	MemberPromote(ctx context.Context, id uint64) (*MemberPromoteResponse, error)
 }
 

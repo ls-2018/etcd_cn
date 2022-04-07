@@ -74,7 +74,7 @@ type ServerConfig struct {
 
 	WarningApplyDuration time.Duration
 
-	StrictReconfigCheck   bool
+	StrictReconfigCheck   bool // 严格配置变更检查
 	ClientCertAuthEnabled bool // 验证客户端证书是不是服务器CA签署的
 	AuthToken             string
 	BcryptCost            uint // 为散列身份验证密码指定bcrypt算法的成本/强度默认10

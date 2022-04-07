@@ -186,7 +186,7 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 		MaxTxnOps:                                cfg.MaxTxnOps,
 		MaxRequestBytes:                          cfg.MaxRequestBytes, // 服务器将接受的最大客户端请求大小(字节).
 		SocketOpts:                               cfg.SocketOpts,
-		StrictReconfigCheck:                      cfg.StrictReconfigCheck,
+		StrictReconfigCheck:                      cfg.StrictReconfigCheck, // 严格配置变更检查
 		ClientCertAuthEnabled:                    cfg.ClientTLSInfo.ClientCertAuth,
 		AuthToken:                                cfg.AuthToken,
 		BcryptCost:                               cfg.BcryptCost, // 为散列身份验证密码指定bcrypt算法的成本/强度

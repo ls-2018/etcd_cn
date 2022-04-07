@@ -216,7 +216,7 @@ type Config struct {
 	Durl                  string `json:"discovery"`             // 用于引导群集的发现URL.
 	InitialCluster        string `json:"initial-cluster"`       // 集群中所有节点的信息.  default=http://localhost:2380
 	InitialClusterToken   string `json:"initial-cluster-token"` // 此配置可使重新创建集群.即使配置和之前一样.也会再次生成新的集群和节点 uuid;否则会导致多个集群之间的冲突.造成未知的错误.
-	StrictReconfigCheck   bool   `json:"strict-reconfig-check"` // 拒绝可能导致仲裁丢失的重新配置请求
+	StrictReconfigCheck   bool   `json:"strict-reconfig-check"` // 严格配置变更检查
 
 	// AutoCompactionMode 基于时间保留模式  时间、修订版本
 	AutoCompactionMode string `json:"auto-compaction-mode"`

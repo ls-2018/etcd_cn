@@ -66,7 +66,7 @@ func NewMemberAddCommand() *cobra.Command {
 func NewMemberRemoveCommand() *cobra.Command {
 	cc := &cobra.Command{
 		Use:   "remove <memberID>",
-		Short: "Removes a member from the cluster",
+		Short: "从集群中移除成员",
 
 		Run: memberRemoveCommandFunc,
 	}

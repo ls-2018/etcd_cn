@@ -31,14 +31,13 @@ func isConnectedToQuorumSince(transport rafthttp.Transporter, since time.Time, s
 	return numConnectedSince(transport, since, self, members) >= (len(members)/2)+1 // 2.5
 }
 
-// isConnectedSince 检查是否自给定时间以后,与该节点建立连接
+// isConnectedSince 检查是否自给定时间以后,是否与该节点建立连接
 func isConnectedSince(transport rafthttp.Transporter, since time.Time, remote types.ID) bool {
 	t := transport.ActiveSince(remote)
 	return !t.IsZero() && t.Before(since)
 }
 
-// isConnectedFullySince checks whether the local member is connected to all
-// members in the cluster since the given time.
+// isConnectedFullySince 检查本机是否与所有成员都建立了链接,从给定的时间
 func isConnectedFullySince(transport rafthttp.Transporter, since time.Time, self types.ID, members []*membership.Member) bool {
 	return numConnectedSince(transport, since, self, members) == len(members)
 }

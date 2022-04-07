@@ -24,8 +24,7 @@ import (
 // NB(tbg).Progress基本上是一个状态机
 type Progress struct {
 	Match uint64 // 对应Follower节点当前己经成功复制的Entry记录的索引值.
-	// Next-Match-1 就是还在飞行中或者还在路上的日志数量(Inflights)
-	Next uint64 // 对应Follower节点下一个待复制的Entry记录的索引值
+	Next  uint64 // 对应Follower节点下一个待复制的Entry记录的索引值  就是还在飞行中或者还在路上的日志数量(Inflights)
 	// State 对应Follower节点的复制状态
 	// 当处于StateProbe状态时,leader在每个心跳间隔内最多发送一条复制消息.它也会探测follower的实际进度.
 	// 当处于StateReplicate状态时,leader在发送复制消息后,乐观地增加next 索引.这是一个优化后的的状态,用于快速复制日志条目给follower.

@@ -47,8 +47,9 @@ func NewMemberAsLearner(name string, peerURLs types.URLs, clusterName string, no
 	return newMember(name, peerURLs, memberId, true)
 }
 
+// IsReadyToAddVotingMember OK
 func (c *RaftCluster) IsReadyToAddVotingMember() bool {
-	nmembers := 1
+	nmembers := 1 // 新添加的节点 先置1
 	nstarted := 0
 
 	for _, member := range c.VotingMembers() {
@@ -59,15 +60,14 @@ func (c *RaftCluster) IsReadyToAddVotingMember() bool {
 	}
 
 	if nstarted == 1 && nmembers == 2 {
-		// a case of adding a new node to 1-member cluster for restoring cluster data
-		// https://github.com/etcd-io/website/blob/main/content/docs/v2/admin_guide.md#restoring-the-cluster
-		c.lg.Debug("number of started member is 1; can accept add member request")
+		// 在一个成员集群中添加一个新节点，用于恢复集群数据
+		c.lg.Debug("启动成员数为1;是否可以接受添加成员的请求")
 		return true
 	}
 
 	nquorum := nmembers/2 + 1
 	if nstarted < nquorum {
-		c.lg.Warn("rejecting member add; started member will be less than quorum", zap.Int("number-of-started-member", nstarted), zap.Int("quorum", nquorum), zap.String("cluster-id", c.cid.String()), zap.String("local-member-id", c.localID.String()))
+		c.lg.Warn("拒绝添加成员;启动的成员将少于法定人数", zap.Int("number-of-started-member", nstarted), zap.Int("quorum", nquorum), zap.String("cluster-id", c.cid.String()), zap.String("local-member-id", c.localID.String()))
 		return false
 	}
 
@@ -104,7 +104,7 @@ func (c *RaftCluster) IsReadyToRemoveVotingMember(id uint64) bool {
 	return true
 }
 
-// IsReadyToPromoteMember 是否准备好提升节点角色
+// IsReadyToPromoteMember 是否准备好提升节点角色, 提升以后现有成员是否可以达到大多数
 func (c *RaftCluster) IsReadyToPromoteMember(id uint64) bool {
 	nmembers := 1 // 我们为未来的法定人数计算被提拔的学习者
 	nstarted := 1

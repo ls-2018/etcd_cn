@@ -17,14 +17,6 @@ type RaftKV interface {
 	Compact(ctx context.Context, r *pb.CompactionRequest) (*pb.CompactionResponse, error)
 }
 
-func (s *EtcdServer) DeleteRange(ctx context.Context, r *pb.DeleteRangeRequest) (*pb.DeleteRangeResponse, error) {
-	resp, err := s.raftRequest(ctx, pb.InternalRaftRequest{DeleteRange: r})
-	if err != nil {
-		return nil, err
-	}
-	return resp.(*pb.DeleteRangeResponse), nil
-}
-
 func (s *EtcdServer) Txn(ctx context.Context, r *pb.TxnRequest) (*pb.TxnResponse, error) {
 	if isTxnReadonly(r) {
 		trace := traceutil.New("transaction",
@@ -60,7 +52,17 @@ func (s *EtcdServer) Txn(ctx context.Context, r *pb.TxnRequest) (*pb.TxnResponse
 	return resp.(*pb.TxnResponse), nil
 }
 
-// Compact ok
+// ---------------------------------------  OVER -------------------------------------------------------------
+
+func (s *EtcdServer) DeleteRange(ctx context.Context, r *pb.DeleteRangeRequest) (*pb.DeleteRangeResponse, error) {
+	resp, err := s.raftRequest(ctx, pb.InternalRaftRequest{DeleteRange: r})
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*pb.DeleteRangeResponse), nil
+}
+
+// Compact  压缩kv历史版本
 func (s *EtcdServer) Compact(ctx context.Context, r *pb.CompactionRequest) (*pb.CompactionResponse, error) {
 	startTime := time.Now()
 	result, err := s.processInternalRaftRequestOnce(ctx, pb.InternalRaftRequest{Compaction: r})
@@ -95,8 +97,6 @@ func (s *EtcdServer) Compact(ctx context.Context, r *pb.CompactionRequest) (*pb.
 	trace.AddField(traceutil.Field{Key: "response_revision", Value: resp.Header.Revision})
 	return resp, nil
 }
-
-// ---------------------------------------  OVER -------------------------------------------------------------
 
 // RaftRequest myself test
 func (s *EtcdServer) RaftRequest(ctx context.Context, r pb.InternalRaftRequest) {

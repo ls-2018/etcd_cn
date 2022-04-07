@@ -25,7 +25,7 @@ import (
 type Status struct {
 	BasicStatus
 	Config   tracker.Config
-	Progress map[uint64]tracker.Progress // 如果是Leader,还有其他节点的进度
+	Progress map[uint64]tracker.Progress // 如果是Leader,还有其他节点的进度 ,不是的话，就是nil
 }
 
 type BasicStatus struct {

@@ -18,6 +18,7 @@ func (s *EtcdServer) LinearizableReadNotify(ctx context.Context) error {
 	return s.linearizeReadNotify(ctx)
 }
 
+// AddMember ok
 func (s *EtcdServer) AddMember(ctx context.Context, memb membership.Member) ([]*membership.Member, error) {
 	if err := s.checkMembershipOperationPermission(ctx); err != nil {
 		return nil, err
@@ -29,21 +30,20 @@ func (s *EtcdServer) AddMember(ctx context.Context, memb membership.Member) ([]*
 	}
 
 	lg := s.Logger()
+	// 默认情况下，StrictReconfigCheck是启用的;拒绝不健康的新成员。
 	if !s.Cfg.StrictReconfigCheck {
 	} else {
-		// protect quorum when adding voting member
+		// 添加投票成员时保护法定人数
 		if !memb.IsLearner && !s.cluster.IsReadyToAddVotingMember() {
-			lg.Warn(
-				"rejecting member add request; not enough healthy members",
-				zap.String("local-member-id", s.ID().String()),
-				zap.String("requested-member-add", fmt.Sprintf("%+v", memb)),
+			lg.Warn("拒绝成员添加申请;健康成员个数不足", zap.String("local-member-id", s.ID().String()), zap.String("requested-member-add", fmt.Sprintf("%+v", memb)),
 				zap.Error(ErrNotEnoughStartedMembers),
 			)
 			return nil, ErrNotEnoughStartedMembers
 		}
+		// 一个心跳间隔之前，是否与所有节点建立了链接
 		if !isConnectedFullySince(s.r.transport, time.Now().Add(-HealthInterval), s.ID(), s.cluster.VotingMembers()) {
 			lg.Warn(
-				"rejecting member add request; local member has not been connected to all peers, reconfigure breaks active quorum",
+				"拒绝成员添加请求;本地成员尚未连接到所有对等体，请重新配置中断活动仲裁",
 				zap.String("local-member-id", s.ID().String()),
 				zap.String("requested-member-add", fmt.Sprintf("%+v", memb)),
 				zap.Error(ErrUnhealthy),
@@ -51,11 +51,6 @@ func (s *EtcdServer) AddMember(ctx context.Context, memb membership.Member) ([]*
 			return nil, ErrUnhealthy
 		}
 	}
-	// by default StrictReconfigCheck is enabled; reject new members if unhealthy.
-	if err != nil {
-		return nil, err
-	}
-
 	cc := raftpb.ConfChangeV1{
 		Type:    raftpb.ConfChangeAddNode,
 		NodeID:  uint64(memb.ID),
@@ -66,15 +61,15 @@ func (s *EtcdServer) AddMember(ctx context.Context, memb membership.Member) ([]*
 		cc.Type = raftpb.ConfChangeAddLearnerNode
 	}
 
-	return s.configure(ctx, cc)
+	return s.configureAndSendRaft(ctx, cc)
 }
 
+// RemoveMember ok
 func (s *EtcdServer) RemoveMember(ctx context.Context, id uint64) ([]*membership.Member, error) {
 	if err := s.checkMembershipOperationPermission(ctx); err != nil {
 		return nil, err
 	}
 
-	// by default StrictReconfigCheck is enabled; reject removal if leads to quorum loss
 	if err := s.mayRemoveMember(types.ID(id)); err != nil {
 		return nil, err
 	}
@@ -83,9 +78,10 @@ func (s *EtcdServer) RemoveMember(ctx context.Context, id uint64) ([]*membership
 		Type:   raftpb.ConfChangeRemoveNode,
 		NodeID: id,
 	}
-	return s.configure(ctx, cc)
+	return s.configureAndSendRaft(ctx, cc)
 }
 
+// UpdateMember ok
 func (s *EtcdServer) UpdateMember(ctx context.Context, memb membership.Member) ([]*membership.Member, error) {
 	b, merr := json.Marshal(memb)
 	if merr != nil {
@@ -100,15 +96,13 @@ func (s *EtcdServer) UpdateMember(ctx context.Context, memb membership.Member) (
 		NodeID:  uint64(memb.ID),
 		Context: string(b),
 	}
-	return s.configure(ctx, cc)
+	return s.configureAndSendRaft(ctx, cc)
 }
 
 // PromoteMember 将learner节点提升为voter
 func (s *EtcdServer) PromoteMember(ctx context.Context, id uint64) ([]*membership.Member, error) {
-	// only raft leader has information on whether the to-backend-promoted learner node is ready. If promoteMember call
-	// fails with ErrNotLeader, forward the request to leader node via HTTP. If promoteMember call fails with error
-	// other than ErrNotLeader, return the error.
-	resp, err := s.promoteMember(ctx, id)
+	// 只有raft leader有信息，知道learner是否准备好。
+	resp, err := s.promoteMember(ctx, id) // raft已经同步消息了
 	if err == nil {
 		return resp, nil
 	}
@@ -118,7 +112,7 @@ func (s *EtcdServer) PromoteMember(ctx context.Context, id uint64) ([]*membershi
 
 	cctx, cancel := context.WithTimeout(ctx, s.Cfg.ReqTimeout())
 	defer cancel()
-	// forward to leader
+	// 转发到leader
 	for cctx.Err() == nil {
 		leader, err := s.waitLeader(cctx)
 		if err != nil {
@@ -129,7 +123,6 @@ func (s *EtcdServer) PromoteMember(ctx context.Context, id uint64) ([]*membershi
 			if err == nil {
 				return resp, nil
 			}
-			// If member promotion failed, return early. Otherwise keep retry.
 			if err == ErrLearnerNotReady || err == membership.ErrIDNotFound || err == membership.ErrMemberNotLearner {
 				return nil, err
 			}
@@ -142,23 +135,16 @@ func (s *EtcdServer) PromoteMember(ctx context.Context, id uint64) ([]*membershi
 	return nil, ErrCanceled
 }
 
-// promoteMember checks whether the to-backend-promoted learner node is ready before sending the promote
-// request to raft.
-// The function returns ErrNotLeader if the local node is not raft leader (therefore does not have
-// enough information to determine if the learner node is ready), returns ErrLearnerNotReady if the
-// local node is leader (therefore has enough information) but decided the learner node is not ready
-// to backend promoted.
+// promoteMember
 func (s *EtcdServer) promoteMember(ctx context.Context, id uint64) ([]*membership.Member, error) {
 	if err := s.checkMembershipOperationPermission(ctx); err != nil {
 		return nil, err
 	}
 
-	// check if we can promote this learner.
 	if err := s.mayPromoteMember(types.ID(id)); err != nil {
 		return nil, err
 	}
 
-	// build the context for the promote confChange. mark IsLearner to false and IsPromote to true.
 	promoteChangeContext := membership.ConfigChangeContext{
 		Member: membership.Member{
 			ID: types.ID(id),
@@ -177,23 +163,22 @@ func (s *EtcdServer) promoteMember(ctx context.Context, id uint64) ([]*membershi
 		Context: string(b),
 	}
 
-	return s.configure(ctx, cc)
+	return s.configureAndSendRaft(ctx, cc)
 }
 
+// OK
 func (s *EtcdServer) mayPromoteMember(id types.ID) error {
 	lg := s.Logger()
-	err := s.isLearnerReady(uint64(id))
+	err := s.isLearnerReady(uint64(id)) // 检查learner的同步的数据有没有打到90%
 	if err != nil {
 		return err
 	}
 
-	if !s.Cfg.StrictReconfigCheck {
+	if !s.Cfg.StrictReconfigCheck { // 严格配置变更检查
 		return nil
 	}
 	if !s.cluster.IsReadyToPromoteMember(uint64(id)) {
-		lg.Warn(
-			"rejecting member promote request; not enough healthy members",
-			zap.String("local-member-id", s.ID().String()),
+		lg.Warn("拒绝成员提升申请;健康成员个数不足", zap.String("local-member-id", s.ID().String()),
 			zap.String("requested-member-remove-id", id.String()),
 			zap.Error(ErrNotEnoughStartedMembers),
 		)
