@@ -65,20 +65,20 @@ type Store interface {
 }
 
 type TTLOptionSet struct {
-	ExpireTime time.Time
+	ExpireTime time.Time // key的有效期
 	Refresh    bool
 }
 
 type store struct {
-	Root           *node
-	WatcherHub     *watcherHub
-	CurrentIndex   uint64 // 记录当前要分配出去的索引
+	Root           *node       // 根节点
+	WatcherHub     *watcherHub // 关于node的所有key的watcher
+	CurrentIndex   uint64      // 对应存储内容的index
 	Stats          *Stats
-	CurrentVersion int
-	ttlKeyHeap     *ttlKeyHeap  // 需要手动恢复     过期时间的最小堆
-	worldLock      sync.RWMutex // stop the world lock
-	clock          clockwork.Clock
-	readonlySet    types.Set // 只读路径
+	CurrentVersion int             // 最新数据的版本
+	ttlKeyHeap     *ttlKeyHeap     // 用于数据恢复的（需手动操作）     过期时间的最小堆
+	worldLock      sync.RWMutex    //  停止当前存储的world锁
+	clock          clockwork.Clock //
+	readonlySet    types.Set       // 只读操作
 }
 
 // New 创建一个存储空间,给定的命名空间将被创建为初始目录.
@@ -92,7 +92,7 @@ func New(namespaces ...string) Store {
 func newStore(namespaces ...string) *store {
 	s := new(store)
 	s.CurrentVersion = defaultVersion                       // 2
-	s.Root = newDir(s, "/", s.CurrentIndex, nil, Permanent) // 0  永久性
+	s.Root = newDir(s, "/", s.CurrentIndex, nil, Permanent) // 0  永久性  //创建其在etcd中对应的目录，第一个目录是以(/)
 	for _, namespace := range namespaces {
 		s.Root.Add(newDir(s, namespace, s.CurrentIndex, s.Root, Permanent))
 	}

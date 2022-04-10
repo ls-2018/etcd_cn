@@ -136,6 +136,7 @@ func Create(lg *zap.Logger, dirpath string, metadata []byte) (*WAL, error) {
 		)
 		return nil, err
 	}
+	// 预分配文件，大小为SegmentSizeBytes（64MB）
 	if err = fileutil.Preallocate(f.File, SegmentSizeBytes, true); err != nil {
 		lg.Warn(
 			"未能预先分配一个初始的WAL文件",
@@ -159,13 +160,16 @@ func Create(lg *zap.Logger, dirpath string, metadata []byte) (*WAL, error) {
 	if err = w.saveCrc(0); err != nil {
 		return nil, err
 	}
+	// 将metadataType类型的record记录在wal的header处
 	if err = w.encoder.encode(&walpb.Record{Type: metadataType, Data: metadata}); err != nil {
 		return nil, err
 	}
+	// 保存空的snapshot
 	if err = w.SaveSnapshot(walpb.Snapshot{}); err != nil {
 		return nil, err
 	}
 	logDirPath := w.dir
+	// 重命名，之前以.tmp结尾的文件，初始化完成之后重命名，类似原子操作
 	if w, err = w.renameWAL(tmpdirpath); err != nil {
 		lg.Warn(
 			fmt.Sprintf("重命名失败  .%s.tmp --> %s", tmpdirpath, w.dir),
@@ -215,6 +219,7 @@ func Create(lg *zap.Logger, dirpath string, metadata []byte) (*WAL, error) {
 		)
 		return nil, perr
 	}
+	// 关闭目录
 	if err = dirCloser(); err != nil {
 		return nil, err
 	}
@@ -865,7 +870,7 @@ func (w *WAL) Save(st raftpb.HardState, ents []raftpb.Entry) error {
 	if raft.IsEmptyHardState(st) && len(ents) == 0 {
 		return nil
 	}
-
+	// 是否需要同步刷新磁盘
 	mustSync := raft.MustSync(st, w.state, len(ents))
 
 	// 将日志保存到wal,更新wal写入的最新索引
@@ -874,11 +879,13 @@ func (w *WAL) Save(st raftpb.HardState, ents []raftpb.Entry) error {
 			return err
 		}
 	}
-	// 写state变化
+	// 持久化HardState, HardState表示服务器当前状态，定义在raft.pb.go，主要包含Term、Vote、Commit
+
 	if err := w.saveState(&st); err != nil {
 		return err
 	}
 	// 判断文件大小是否超过最大值
+	// 获取最后一个LockedFile的大小（已经使用的）
 	curOff, err := w.tail().Seek(0, io.SeekCurrent)
 	if err != nil {
 		return err
@@ -889,7 +896,7 @@ func (w *WAL) Save(st raftpb.HardState, ents []raftpb.Entry) error {
 		}
 		return nil
 	}
-	// 文件切分
+	// 否则执行切割（也就是说明，WAL文件是可以超过64MB的）
 	return w.cut()
 }
 

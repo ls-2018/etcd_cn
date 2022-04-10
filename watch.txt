@@ -1,0 +1,26 @@
+store中有一个全局的currentIndex，每次变更，index会加1.然后每个event都会关联到currentIndex.
+
+当客户端调用watch接口（参数中增加 wait参数）时，如果请求参数中有waitIndex，并且waitIndex 小于 currentIndex，则从 EventHistroy 表中查询index小于等于waitIndex，并且和watch key 匹配的 event，如果有数据，则直接返回。如果历史表中没有或者请求没有带 waitIndex，则放入WatchHub中，每个key会关联一个watcher列表。 当有变更操作时，变更生成的event会放入EventHistroy表中，同时通知和该key相关的watcher。
+
+这里有几个影响使用的细节问题：
+
+    1、EventHistroy 是有长度限制的，最长1000。也就是说，如果你的客户端停了许久，然后重新watch的时候，可能和该waitIndex相关的event已经被淘汰了，这种情况下会丢失变更。
+    2、如果通知watch的时候，出现了阻塞（每个watch的channel有100个缓冲空间），Etcd 会直接把watcher删除，也就是会导致wait请求的连接中断，客户端需要重新连接。
+    3、Etcd store的每个node中都保存了过期时间，通过定时机制进行清理。
+
+从而可以看出，Etcd v2 的一些限制：
+
+    1、过期时间只能设置到每个key上，如果多个key要保证生命周期一致则比较困难。
+    2、watch只能watch某一个key以及其子节点（通过参数 recursive),不能进行多个watch。
+    3、很难通过watch机制来实现完整的数据同步（有丢失变更的风险），所以当前的大多数使用方式是通过watch得知变更，然后通过get重新获取数据，并不完全依赖于watch的变更event。
+
+
+
+
+watcher存在v2和v3两个版本。两版本watch机制的不同取决于存储机制的不同：
+    v2：版本的存储是基于内存的存储，数据非实时写入磁盘，持久化时数据序列成JSON格式数据写入磁盘。同时内存中以树形结构存储。
+    v3：依赖BoltDB，支持多版本事务，内存维护B树映射原始key值于BoltDB数据存储keyIndex关系。
+
+v2和v3版本实际watcher模块的不同：
+    v2：支持监听一个目录节点及其子节点；watch本质上建立http连接，每一个watch建立一个tcp套接字连接，当watch的客户端过多时，大大消耗服务器资源；v2为跟踪key变化，使用事件机制进行跟踪，维护键的状态，但有一个滑动窗口的大小限制，如果要获取1000个时间之前的键就获取不到了。
+    v3：支持某固定key值及范围监听，支持任意历史版本记录；watch进行了连接复用，同时grpc proxy聚合key相同watch

@@ -23,7 +23,7 @@ import (
 )
 
 func Main(args []string) {
-	checkSupportArch()
+	checkSupportArch() // 检查系统是否支持
 
 	if len(args) > 1 {
 		cmd := args[1]

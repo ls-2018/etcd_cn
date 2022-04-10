@@ -25,11 +25,12 @@ import pb "github.com/ls-2018/etcd_cn/raft/raftpb"
 type unstable struct {
 	snapshot *pb.Snapshot // 快照数据,该快照数据也是未写入Storage中的.
 	entries  []pb.Entry   // 用于保存未写入Storage中的Entry记录.刚生成的日志,没确认的
-	offset   uint64       // 当前entries中第一个日志的索引,起始索引
+	offset   uint64       // entries数组中的第一条数据在raft日志中的索引
 	logger   Logger
 }
 
-// maybeFirstIndex 返回的是最近快照到现在的第一个日志索引
+// maybeFirstIndex 返回unstable数据的第一条数据索引
+// 因为只有快照数据在最前面，因此这个函数只有当快照数据存在的时候才能拿到第一条数据索引，其他的情况下已经拿不到了。
 func (u *unstable) maybeFirstIndex() (uint64, bool) {
 	if u.snapshot != nil {
 		return u.snapshot.Metadata.Index + 1, true
@@ -38,6 +39,7 @@ func (u *unstable) maybeFirstIndex() (uint64, bool) {
 }
 
 // maybeLastIndex 尝试获取unstable 的最后一条Entry记录的索引值
+// 返回最后一条数据的索引。因为是entries数据在后，而快照数据在前，所以取最后一条数据索引是从entries开始查，查不到的情况下才查快照数据。
 func (u *unstable) maybeLastIndex() (uint64, bool) {
 	// 如果日志数组中有日志条目,那就返回最后一个条目的索引.
 	if l := len(u.entries); l != 0 {

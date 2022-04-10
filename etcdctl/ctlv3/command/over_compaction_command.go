@@ -30,10 +30,10 @@ var compactPhysical bool
 func NewCompactionCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "compaction [options] <revision>",
-		Short: "在etcd中压缩 kvindex 历史事件",
+		Short: "压缩etcd中的事件历史记录",
 		Run:   compactionCommandFunc,
 	}
-	cmd.Flags().BoolVar(&compactPhysical, "physical", false, "'true' 等待压缩以实际删除所有旧修订")
+	cmd.Flags().BoolVar(&compactPhysical, "physical", false, "'true' 用于等待压缩从物理上删除所有旧修订")
 	return cmd
 }
 

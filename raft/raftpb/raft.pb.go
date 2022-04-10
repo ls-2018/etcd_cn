@@ -325,10 +325,7 @@ type Message struct {
 	Term uint64 `protobuf:"varint,4,opt,name=term" json:"term"`
 	// 该消息携带的第一条Entry记录的Term值.
 	LogTerm uint64 `protobuf:"varint,5,opt,name=logTerm" json:"logTerm"`
-	// 记录索引值,该索引值的具体含义与消息的类型相关.
-	// 例如,MsgApp消息的Index宇段保存了其携带的Entry记录(即Entries字段)中前一条记录的Index值
-	// 而MsgAppResp消息的Index字段则是Follower节点提示Leader节点下次从哪个位置开始发送Entry记录.
-	Index uint64 `protobuf:"varint,6,opt,name=index" json:"index"`
+	Index   uint64 `protobuf:"varint,6,opt,name=index" json:"index"` // 日志索引ID，用于节点向leader汇报自己已经commit的日志数据ID
 	// 如果是MsgApp类型的消息,则该字段中保存了Leader节点复制到Follower节点的Entry记录.在其他类型消息中,该字段的含义后面会详细介绍.
 	Entries []Entry `protobuf:"bytes,7,rep,name=entries" json:"entries"`
 	// 搜 ProgressTracker
@@ -338,9 +335,8 @@ type Message struct {
 	// 在传输快照时,该字段保存了快照数据
 	Snapshot Snapshot `protobuf:"bytes,9,opt,name=snapshot" json:"snapshot"`
 	// 主要用于响应类型的消息,表示是否拒绝收到的消息.
-	Reject bool `protobuf:"varint,10,opt,name=reject" json:"reject"`
-	// Follower 节点拒绝 leader 节点的消息之后,会在该字段记录 一个Entry索引值 返回Leader节点.
-	RejectHint uint64 `protobuf:"varint,11,opt,name=rejectHint" json:"rejectHint"`
+	Reject     bool   `protobuf:"varint,10,opt,name=reject" json:"reject"`
+	RejectHint uint64 `protobuf:"varint,11,opt,name=rejectHint" json:"rejectHint"` // 拒绝同步日志请求时返回的当前节点日志ID，用于被拒绝方快速定位到下一次合适的同步日志位置
 	// 携带的一些上下文的信息, 例如,campaignTransfer
 	Context []byte `protobuf:"bytes,12,opt,name=context" json:"context,omitempty"`
 }
@@ -354,9 +350,9 @@ func (*Message) Descriptor() ([]byte, []int) {
 
 // HardState 封装了raft协议中规定的需要实时持久化的状态属性：当前选举周期、投票和已提交的Index
 type HardState struct {
-	Term   uint64 `protobuf:"varint,1,opt,name=term" json:"term"`
-	Vote   uint64 `protobuf:"varint,2,opt,name=vote" json:"vote"` // 给谁投了票
-	Commit uint64 `protobuf:"varint,3,opt,name=commit" json:"commit"`
+	Term   uint64 `protobuf:"varint,1,opt,name=term" json:"term"`     // 当前任期
+	Vote   uint64 `protobuf:"varint,2,opt,name=vote" json:"vote"`     // 给谁投了票
+	Commit uint64 `protobuf:"varint,3,opt,name=commit" json:"commit"` // 已提交的位置
 }
 
 // Reset 重置集群状态

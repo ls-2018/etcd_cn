@@ -77,8 +77,9 @@ func (ms *MemoryStorage) Entries(lo, hi, maxSize uint64) ([]pb.Entry, error) {
 	if len(ms.ents) == 1 {
 		return nil, ErrUnavailable
 	}
-
+	// 获取下标的数据
 	ents := ms.ents[lo-offset : hi-offset]
+	// limitsize把超过大小的数据剔除
 	return limitSize(ents, maxSize), nil
 }
 
@@ -113,6 +114,7 @@ func (ms *MemoryStorage) ApplySnapshot(snap pb.Snapshot) error {
 }
 
 // CreateSnapshot 创建新的快照 i是新建Snapshot包含的最大的索引值,cs是当前集群的状态,data是状态机里的快照数据
+// 更新快照信息
 func (ms *MemoryStorage) CreateSnapshot(i uint64, cs *pb.ConfState, data []byte) (pb.Snapshot, error) {
 	// ents  [a,b,c,d,e,f,g,h,i,j,k]
 	//                  i

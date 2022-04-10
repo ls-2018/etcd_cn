@@ -24,22 +24,14 @@ import (
 // 快照 + storage + unstable
 //
 type raftLog struct {
-	// 这里还是一个内存存储,用于保存自从最后一次snapshot之后提交的数据
-	storage Storage // 最后存储数据
-
-	// 用于存储未写入Storage的快照数据及Entry记录
-	unstable unstable // 快照之后的数据
-
-	committed uint64 // 己提交的位置,即己提交的Entry记录中最大的索引值.
+	storage   Storage  // 最后存储数据	// 这里还是一个内存存储,用于保存自从最后一次snapshot之后提交的数据
+	unstable  unstable // 快照之后的数据	// 用于存储未写入Storage的快照数据及Entry记录
+	committed uint64   // 己提交的位置,即己提交的Entry记录中最大的索引值.
 	// 而applied保存的是传入状态机中的最高index
 	// 即一条日志首先要提交成功(即committed),才能被applied到状态机中;因此以下不等式一直成立：applied <= committed
-	applied uint64
-
-	logger Logger
-
-	// 调用 nextEnts 时,返回的日志项集合的最大的大小
-	// nextEnts 函数返回应用程序已经可以应用到状态机的日志项集合
-	maxNextEntsSize uint64
+	applied         uint64
+	logger          Logger
+	maxNextEntsSize uint64 // 调用 nextEnts 时,返回的日志项集合的最大的大小 返回应用程序已经可以应用到状态机的日志项集合
 }
 
 // 追加日志.
@@ -194,6 +186,7 @@ func (l *raftLog) zeroTermOnErrCompacted(t uint64, err error) uint64 {
 }
 
 // 构建新的日志条目
+// 刚刚创建的时候unstable里的snapshot和ents为空
 func newLogWithSize(storage Storage, logger Logger, maxNextEntsSize uint64) *raftLog {
 	if storage == nil {
 		log.Panic("存储不能为空")

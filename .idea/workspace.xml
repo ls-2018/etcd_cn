@@ -6,18 +6,25 @@
   <component name="ChangeListManager">
     <list default="true" id="49524360-39b2-44cd-b702-de0461fb4222" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/pkg/transport/listener_tls.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/pkg/transport/listener_tls.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v2auth/auth.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v2auth/auth_requests.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v2http/capability.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v2http/client.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v2http/client_auth.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v2http/doc.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v2http/httptypes/member.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v2http/over_http.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v2http/testdata/ca.pem" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v2http/testdata/otheruser.pem" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v2http/testdata/user.pem" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/a.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/embed/etcd.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/embed/etcd.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdmain/etcd.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdmain/etcd.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdmain/help.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdmain/help.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdmain/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdmain/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/rafthttp/peer.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/api/rafthttp/peer.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/rafthttp/raft_stream_api.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/api/rafthttp/raft_stream_api.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/rafthttp/stream.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/api/rafthttp/stream.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v2store/store.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/api/v2store/store.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/raft.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/raft.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/wal/over_wal.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/wal/over_wal.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/over_compaction_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/over_compaction_command.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/raft/over_log.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/over_log.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/raft/over_log_storage.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/over_log_storage.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/raft/over_log_unstable.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/over_log_unstable.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/raft/over_util.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/over_util.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/raft/raftpb/raft.pb.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/raftpb/raft.pb.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/raft/role.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/role.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -82,22 +89,15 @@
       <recent name="$PROJECT_DIR$/offical" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
       <recent name="$PROJECT_DIR$/offical/client" />
       <recent name="$PROJECT_DIR$/offical/api/v3" />
     </key>
   </component>
-  <component name="RunManager" selected="Go Build.local">
+  <component name="RunManager" selected="Python.a">
     <configuration name="init.sh" type="BashProRunConfiguration" temporary="true">
       <option name="scriptPath" value="$PROJECT_DIR$/code_debug/init.sh" />
       <RunnerSettings bashdbVersion="Automatic" bashPathMapper="Automatic" RunnerId="pro.bashsupport.shDebugRunner" />
-      <method v="2" />
-    </configuration>
-    <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
-      <module name="etcd_cn" />
-      <working_directory value="$PROJECT_DIR$" />
-      <kind value="FILE" />
-      <directory value="$PROJECT_DIR$" />
-      <filePath value="$PROJECT_DIR$" />
       <method v="2" />
     </configuration>
     <configuration name="etcdctl" type="GoApplicationRunConfiguration" factoryName="Go Application">
@@ -139,16 +139,7 @@
       <pattern value="^\QTestKeyIndexFindGeneration\E$" />
       <method v="2" />
     </configuration>
-    <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
-      <module name="etcd_cn" />
-      <working_directory value="$PROJECT_DIR$" />
-      <kind value="DIRECTORY" />
-      <directory value="$PROJECT_DIR$" />
-      <filePath value="$PROJECT_DIR$" />
-      <framework value="gotest" />
-      <method v="2" />
-    </configuration>
-    <configuration name="req" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="a" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="etcd_cn" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -160,7 +151,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/req.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/a.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -170,20 +161,20 @@
       <method v="2" />
     </configuration>
     <list>
+      <item itemvalue="BashSupport Pro.init.sh" />
       <item itemvalue="Go Build.etcdctl" />
       <item itemvalue="Go Build.local" />
       <item itemvalue="Go Build.go build main.go" />
       <item itemvalue="Go Test.TestKeyIndexFindGeneration in github.com/ls-2018/etcd_cn/etcd_backend/mvcc" />
-      <item itemvalue="Python.req" />
-      <item itemvalue="BashSupport Pro.init.sh" />
+      <item itemvalue="Python.a" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.a" />
         <item itemvalue="Go Build.local" />
         <item itemvalue="BashSupport Pro.init.sh" />
         <item itemvalue="Go Build.go build main.go" />
         <item itemvalue="Go Test.TestKeyIndexFindGeneration in github.com/ls-2018/etcd_cn/etcd_backend/mvcc" />
-        <item itemvalue="Python.req" />
       </list>
     </recent_temporary>
   </component>
@@ -208,5 +199,16 @@
   </component>
   <component name="VgoProject">
     <integration-enabled>true</integration-enabled>
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/raft/over_raft.go</url>
+          <line>620</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

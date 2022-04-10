@@ -3,7 +3,7 @@
 ![etcd Logo](logos/etcd-horizontal-color.svg)
 v3.5.2 Etcd是分布式系统中最关键的数据的可靠的分布式键值存储,其重点是:
 
-自己看源码 用
+自己看源码 用 2379:为客户端提供通讯 2380:为服务器间提供通讯
 
 ### 配置
 
@@ -160,65 +160,28 @@ MsgTimeoutNow | Candidate、Follower | 非本地： | | MsgReadIndex | Leader、
 
 ### Ref
 
-- https://blog.csdn.net/cuichongxin/article/details/118678009
-- https://blog.csdn.net/crazyj4/category_10585293.html
-- https://zhuanlan.zhihu.com/p/113149149
-- https://blog.csdn.net/lkree/article/details/99085339
-- https://blog.csdn.net/xxb249/category_8693355.html
-- https://blog.csdn.net/luo222/article/details/98849114
-- https://www.cnblogs.com/ricklz/category/2004842.html
-- https://blog.csdn.net/skh2015java/category_9284671.html
-- https://mp.weixin.qq.com/s/o_g5z77VZbImgTqjNBSktA
-- https://www.jianshu.com/p/089a4c464c95
-- https://www.coder55.com/article/10608
-- https://www.freesion.com/article/93891147362/
-- https://www.cnblogs.com/huaweiyuncce/p/10130522.html
-- https://www.cnblogs.com/myd620/p/13189604.html
-- https://blog.csdn.net/weixin_42663840/article/details/101039942
-- https://www.jianshu.com/p/ff6aaa66ea0f
-- https://www.jianshu.com/p/518f75c5bf55
-- https://www.cnblogs.com/ricklz/p/15155095.html
+- https://zhuanlan.zhihu.com/p/135891186
+- https://gohalo.me/archives.html
 - https://www.lixueduan.com/categories/
-- https://zhuanlan.zhihu.com/p/452483457
-- https://so.csdn.net/so/search?q=etcd&t=blog&u=devclouds
-- https://blog.csdn.net/weixin_42663840/article/details/100005978
-- https://www.jianshu.com/p/267e1d626c22
-- https://blog.csdn.net/qq_40504851/category_10905363.html
 - https://blog.csdn.net/cyq6239075/category_9756361.html             ☆
-  -【一文搞懂Raft算法】https://www.cnblogs.com/xybaby/p/10124083.html    
-  -【寻找一种易于理解的一致性算法(扩展版)】https://github.com/maemual/raft-zh_cn/blob/master/raft-zh_cn.md  
-  -【raft演示动画】https://raft.github.io/raftscope/index.html    
-  -【理解 raft 算法】https://sanyuesha.com/2019/04/18/raft/  
-  -【理解Raft一致性算法—一篇学术论文总结】https://mp.weixin.qq.com/s/RkMeYyUck1WQPjNiGvahKQ  
-  -【Raft协议原理详解】https://zhuanlan.zhihu.com/p/91288179  
-  -【Raft算法详解】https://zhuanlan.zhihu.com/p/32052223
-  -【etcd技术内幕】一本关于etcd不错的书籍  
-  -【高可用分布式存储 etcd 的实现原理】https://draveness.me/etcd-introduction/  
-  -【Raft 在 etcd 中的实现】https://blog.betacat.io/post/raft-implementation-in-etcd/  tickHeartbeart 会同时推进两个计数器
-  heartbeatElapsed 和 electionElapsed . -【etcd Raft库解析】https://www.codedump.info/post/20180922-etcd-raft/  
-  -【etcd raft 设计与实现《一》】https://zhuanlan.zhihu.com/p/51063866    (1) heartbeatElapsed -【raftexample
-  源码解读】https://zhuanlan.zhihu.com/p/91314329  
-  -【etcd实现-全流程分析】https://zhuanlan.zhihu.com/p/135891186    当 heartbeatElapsed 超时,发送 MsgBeat 消息给当前节点,当前节点收到消息之后会广播心跳消息(
-  bcastHeartbeat)给其他节点 MsgHeartbeat 消息. -【线性一致性和Raft】https://pingcap.com/zh/blog/linearizability-and-raft  
-  -【etcd raft 设计与实现《二》】https://zhuanlan.zhihu.com/p/51065416  当 Follower 或者 Candidate 收到 MsgHeartbeat 消息会重置
-  electionElapsed 为 0,同时会响应 MsgHeartbeatResp 消息. -【《深入浅出etcd》part 3 –
-  解析etcd的日志同步机制】https://mp.weixin.qq.com/s/o_g5z77VZbImgTqjNBSktA    
-  -【一文入门ETCD】https://juejin.cn/post/6844904031186321416   
-  -【etcd：从应用场景到实现原理的全方位解读】https://www.infoq.cn/article/etcd-interpretation-application-scenario-implement-principle   
-  -【Etcd 架构与实现解析】http://jolestar.com/etcd-architecture/   
-  -【linux单节点和集群的etcd】https://www.jianshu.com/p/07ca88b6ff67   
-  -【软负载均衡与硬负载均衡、4层与7层负载均衡】https://cloud.tencent.com/developer/article/1446391   
-  -【Etcd Lock详解】https://tangxusc.github.io/blog/2019/05/etcd-lock%E8%AF%A6%E8%A7%A3/   
-  -【etcd基础与使用】https://zhuyasen.com/post/etcd.html   
-  -【ETCD核心机制解析】https://www.cnblogs.com/FG123/p/13632095.html      
-  -【etcd watch机制】http://liangjf.top/2019/12/31/110.etcd-watch%E6%9C%BA%E5%88%B6%E5%88%86%E6%9E%90/   
-  -【ETCD 源码学习--Watch(server)】https://www.codeleading.com/article/15455457381/   
-  -【etcdV3—watcher服务端源码解析】https://blog.csdn.net/stayfoolish_yj/article/details/104497233
-- https://www.jianshu.com/p/f0a63762ac13
-- https://www.zhihu.com/question/63995014/answer/2251115833
+- https://tangxusc.github.io/blog/2019/05/etcd-lock%E8%AF%A6%E8%A7%A3/
+- https://www.freesion.com/article/1659395961/
+- https://www.cnblogs.com/FG123/p/13632095.html
+- https://blog.csdn.net/weixin_42663840/article/details/100005978
+- http://jolestar.com/etcd-architecture/
+- https://blog.csdn.net/skh2015java/category_9284671.html
+- https://www.jianshu.com/p/cca8628339a3
+- https://juejin.cn/post/6844904031186321416
+- https://www.codeleading.com/article/15455457381/
+- https://www.cnblogs.com/ricklz/p/15037925.html
 - https://blog.csdn.net/weixin_42017400/article/details/123174473
-- https://www.jianshu.com/p/1621360b0b8e
+- https://www.zhihu.com/question/63995014/answer/2251115833
 - https://blog.csdn.net/xxb249/article/details/80787817
+- https://blog.csdn.net/stayfoolish_yj/article/details/104497233
+- https://zhuanlan.zhihu.com/p/51063866
+- https://blog.csdn.net/qq_40504851/category_10905363.html
+- https://mp.weixin.qq.com/s/o_g5z77VZbImgTqjNBSktA
+- https://studygolang.com/articles/2058
 
 (2) electionElapsed
 
@@ -324,6 +287,16 @@ WAL 日志
 ----快照----------------- |----------------快照--------------------- |         | 在没有被持久化之前如果遇到了换届选举,这个日志可能会被相同索引值的新日志覆盖
 
 
+每一条日志Entry需要经过unstable、stable、committed、applied、compacted五个阶段，接下来总结一下日志的状态转换过程：
+
+刚刚收到一条日志会被存储在unstable中，日志在没有被持久化之前如果遇到了换届选举，这个日志可能会被相同索引值的新日志覆盖，这个一点可以在raftLog.maybeAppend()和unstable.truncateAndAppend()找到相关的处理逻辑。
+unstable中存储的日志会被使用者写入持久存储（文件）中，这些持久化的日志就会从unstable转移到MemoryStorage中。
+读者可能会问MemoryStorage并不是持久存储啊，其实日志是被双写了，文件和MemoryStorage各存储了一份，而raft包只能访问MemoryStorage中的内容。这样设计的目的是用内存缓冲文件中的日志，在频繁操作日志的时候性能会更高。
+此处需要注意的是，MemoryStorage中的日志仅仅代表日志是可靠的，与提交和应用没有任何关系。
+leader会搜集所有peer的接收日志状态，只要日志被超过半数以上的peer接收，那么就会提交该日志，peer接收到leader的数据包更新自己的已提交的最大索引值，这样小于等于该索引值的日志就是可以被提交的日志。
+已经被提交的日志会被使用者获得，并逐条应用，进而影响使用者的数据状态。
+已经被应用的日志意味着使用者已经把状态持久化在自己的存储中了，这条日志就可以删除了，避免日志一直追加造成存储无限增大的问题。不要忘了所有的日志都存储在MemoryStorage中，不删除已应用的日志对于内存是一种浪费，这也就是日志的compacted。
+
 每次用户提交日志,该日志会保存到 MemoryStorage 以及wal里,每当raft发送给上层程序一批已经commited日志,就会触发maybeTriggerSnapshot,当用户apply以后
 判断是否进行触发 MemoryStorage 打快照,当打了快照以后,会把当前快照点10000条以前的记录从 MemoryStorage.ents去除掉 【俗称压缩】
 
@@ -332,6 +305,19 @@ WAL 日志
 MemoryStorage并不是持久存储啊,其实日志是被双写了,文件和MemoryStorage各存储了一份,
 而raft包只能访问MemoryStorage中的内容.这样设计的目的是用内存缓冲文件中的日志,在频繁操作日志的时候性能会更高.
 此处需要注意的是,MemoryStorage中的日志仅仅代表日志是可靠的,与提交和应用没有任何关系.
+```
+
+## Compact
+
+```
+1、新建Snapshot之后,一般会调用MemoryStorage.Compact()方法将MemoryStorage.ents中指定索引之前的Entry记录全部抛弃,
+从而实现压缩MemoryStorage.ents 的目的,具体实现如下：    [GC]
+func (ms *MemoryStorage) Compact(compactIndex uint64) 
+
+2、清除kvindex的修订版本，以及bolt.db里的历史数据
+
+
+
 ```
 
 ### WAl数据日志数据
@@ -402,13 +388,6 @@ case rd := <-r.Ready(): 从raft拿到要apply的消息
 
 r.Advance()
 
-```
-
-## Compact
-
-```
-新建Snapshot之后,一般会调用MemoryStorage.Compact()方法将MemoryStorage.ents中指定索引之前的Entry记录全部抛弃,
-从而实现压缩MemoryStorage.ents 的目的,具体实现如下：    [GC]
 ```
 
 curl -H "X-Etcd-Cluster-ID:cdf818194e3a8c32" -H "X-PeerURLs:http://127.0.0.1:12345" -H "X-Min-Cluster-Version: 3.5.2"
@@ -486,10 +465,9 @@ linearizeReadNotify                    线性读,触发linearizableReadLoop,并�
 继续在本节点读取数据 
           
 ```
-				
-
 
 ### 租约检查点机制
+
 ```
 bug: 
   如果租约在到期前,Leader切换, 那么它的租约会重置
@@ -500,5 +478,36 @@ issue:
   第一发送  ttl  10s  remainingTtl  5s
   假设将该消息发送到对端,因为网络问题花了3秒, 那么当对端收到时,实际remainingTtl应该是2s,但还是变成了5s  
 - 如果时间这么长,那这个节点肯定出问题了,那么也不会成为leader
+
+```
+
+``` 
+curl -L http://127.0.0.1:2379/version
+curl -L http://192.168.59.156:2379/metrics
+etcdctl cluster-health
+etcdctl backup --data-dir /var/lib/etcd --backup-dir /tmp/etcd
+
+# no crt 
+etcdctl snap save a.db 
+etcdctl snapshot restore a.db
+# crt
+etcdctl snap save --cert=./cert/server.crt --cacert=./cert/ca.crt --key=./cert/server.key a.db 
+```
+
+### leader trans
+
+```
+Step()
+  case pb.MsgVote, pb.MsgPreVote:
+    变更leader,....等操作
+  
+  stepLeader()
+    case pb.MsgTransferLeader:
+      r.send(pb.Message{To: to, Type: pb.MsgTimeoutNow})  // 给指定的节点发消息
+  stepFollower()
+    case pb.MsgTimeoutNow:
+      r.hup(campaignTransfer)
+      # 给每一个节点发送
+      r.send(pb.Message{Term: term, To: id, Type: voteMsg, Index: r.raftLog.lastIndex(), LogTerm: r.raftLog.lastTerm(), Context: ctx})
 
 ```

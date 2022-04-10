@@ -242,9 +242,13 @@ func (p *peer) send(m raftpb.Message) {
 	if paused {
 		return
 	}
-
+	// 如果消息类型是snapshot则返回pipeline，如果是MsgApp则返回msgAppV2Writer,否则返回wirter
+	// wirtec创建是在
 	writec, name := p.pick(m)
 	select {
+	/* 将消息写入channel中
+	* 接收端的channel位于stream.go streamWriter.run msgc
+	 */
 	case writec <- m:
 	default:
 		p.r.ReportUnreachable(m.To)
@@ -296,7 +300,7 @@ func (p *peer) attachOutgoingConn(conn *outgoingConn) {
 		ok = p.writer.attach(conn)
 	default:
 		if p.lg != nil {
-			p.lg.Panic("unknown stream type", zap.String("type", conn.t.String()))
+			p.lg.Panic("未知的stream类型", zap.String("type", conn.t.String()))
 		}
 	}
 	if !ok {

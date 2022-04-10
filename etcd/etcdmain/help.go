@@ -39,10 +39,10 @@ var (
     Path to the etcd configuration file. Note that if a configuration file is provided, other command line flags and environment variables will be ignored.
 
   etcd gateway
-    Run the stateless pass-through etcd TCP connection forwarding proxy.
+    启动 L4 TCP网关代理
 
   etcd grpc-proxy
-    Run the stateless etcd v3 gRPC L7 reverse proxy.
+    L7 grpc 代理
 `
 	flagsline = `
 Member:

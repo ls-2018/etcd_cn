@@ -425,7 +425,7 @@ func identifyDataDirOrDie(lg *zap.Logger, dir string) dirType {
 	return dirEmpty
 }
 
-// OK
+// 检查系统是否支持
 func checkSupportArch() {
 	if runtime.GOARCH == "amd64" ||
 		runtime.GOARCH == "arm64" ||

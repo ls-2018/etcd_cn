@@ -16,20 +16,24 @@ func (r *raft) Step(m pb.Message) error {
 	case m.Term == 0:
 		// 本地消息 MsgHup、MsgProp、MsgReadindex
 	case m.Term > r.Term: // 投票或预投票请求
+		// 消息的Term大于节点当前的Term
 		if m.Type == pb.MsgVote || m.Type == pb.MsgPreVote {
+			// 如果收到的是投票类消息
+			// 当context为campaignTransfer时表示强制要求进行竞选
 			force := bytes.Equal(m.Context, []byte(campaignTransfer))
+			// 是否在租约期以内
 			inLease := r.checkQuorum && r.lead != None && r.electionElapsed < r.electionTimeout
 			if !force && inLease {
-				// If a etcd receives a RequestVote request within the minimum election timeout
-				// of hearing from a current leader, it does not update its term or grant its vote
-				r.logger.Infof("%x [logterm: %d, index: %d, vote: %x] ignored %s from %x [logterm: %d, index: %d] at term %d: lease is not expired (remaining ticks: %d)",
+				// 如果非强制，而且又在租约期以内，就不做任何处理
+				// 非强制又在租约期内可以忽略选举消息，见论文的4.2.3，这是为了阻止已经离开集群的节点再次发起投票请求
+				r.logger.Infof("%x [logterm: %d, index: %d, vote: %x] 忽略消息 %s from %x [logterm: %d, index: %d] at term %d: 租约没有过期 (remaining ticks: %d)",
 					r.id, r.raftLog.lastTerm(), r.raftLog.lastIndex(), r.Vote, m.Type, m.From, m.LogTerm, m.Index, r.Term, r.electionTimeout-r.electionElapsed)
 				return nil
 			}
 		}
 		switch {
 		case m.Type == pb.MsgPreVote:
-			// Never change our term in response to a PreVote
+			// 在应答一个prevote消息时不对任期term做修改
 		case m.Type == pb.MsgPreVoteResp && !m.Reject:
 			// We send pre-vote requests with a term in our future. If the
 			// pre-vote is granted, we will increment our term when we get a

@@ -494,7 +494,10 @@ func configurePeerListeners(cfg *Config) (peers []*peerListener, err error) {
 				cfg.logger.Warn("方案为HTTP;当启用 --peer-client-cert-auth;忽略钥匙和证书文件", zap.String("peer-url", u.String()))
 			}
 		}
+		// 构造peerListener对象 监听2380 作为服务端模式
 		peers[i] = &peerListener{close: func(context.Context) error { return nil }}
+		// 调用接口，创建listener对象，返回来之后，
+		// socket套接字已经完成listener监听流程
 		peers[i].Listener, err = transport.NewListenerWithOpts(u.Host, u.Scheme,
 			transport.WithTLSInfo(&cfg.PeerTLSInfo),
 			transport.WithSocketOpts(&cfg.SocketOpts),
@@ -513,6 +516,7 @@ func configurePeerListeners(cfg *Config) (peers []*peerListener, err error) {
 
 // 在rafthttp.Transport启动后配置对等处理程序
 func (e *Etcd) servePeers() (err error) {
+	// 生成http.hander 用于处理peer请求
 	httpHandler := etcdhttp.NewPeerHandler(e.GetLogger(), e.Server)
 	var peerTLScfg *tls.Config
 	if !e.cfg.PeerTLSInfo.Empty() {
@@ -536,6 +540,7 @@ func (e *Etcd) servePeers() (err error) {
 		go httpServer.Serve(m.Match(cmux.Any())) // http1
 
 		p.serve = func() error {
+			// 回调函数，激活服务，主要是Accept方法
 			e.cfg.logger.Info("cmux::serve", zap.String("address", u))
 			return m.Serve()
 		}

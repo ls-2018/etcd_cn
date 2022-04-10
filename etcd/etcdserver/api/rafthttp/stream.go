@@ -99,7 +99,7 @@ func isLinkHeartbeatMessage(m *raftpb.Message) bool {
 }
 
 type outgoingConn struct {
-	t streamType
+	t streamType //  连接类型
 	io.Writer
 	http.Flusher
 	io.Closer
@@ -197,23 +197,23 @@ func (cw *streamWriter) run() {
 			heartbeatc, msgc = nil, nil
 
 		case m := <-msgc:
-			err := enc.encode(&m)
+			err := enc.encode(&m) // 格式化消息，如选举消息
 			if err == nil {
 				unflushed += m.Size()
 
-				if len(msgc) == 0 || batched > streamBufSize/2 {
-					flusher.Flush()
+				if len(msgc) == 0 || batched > streamBufSize/2 { // batched批处理 streamBufSize全局变量 4096
+					flusher.Flush() //  刷新缓冲区，发送到对端。Flush代码为net/http模块
 					unflushed = 0
 					batched = 0
 				} else {
 					batched++
 				}
-
+				// 发送完成就返回上层 并没有结束会话
 				continue
 			}
 
 			cw.status.deactivate(failureType{source: t.String(), action: "write"}, err.Error())
-			cw.close()
+			cw.close() // 表示本次收发消息结束 即http会话结束
 			if cw.lg != nil {
 				cw.lg.Warn(
 					"lost TCP streaming connection with remote peer",
@@ -225,7 +225,7 @@ func (cw *streamWriter) run() {
 			heartbeatc, msgc = nil, nil
 			cw.r.ReportUnreachable(m.To)
 
-		case conn := <-cw.connc:
+		case conn := <-cw.connc: // 从channel读取conn对象，表示会话已经建立
 			cw.mu.Lock()
 			closed := cw.closeUnlocked()
 			t = conn.t
@@ -247,7 +247,7 @@ func (cw *streamWriter) run() {
 					zap.String("stream-type", t.String()),
 				)
 			}
-			flusher = conn.Flusher
+			flusher = conn.Flusher // 用于send消息 等待接收消息
 			unflushed = 0
 			cw.status.activate()
 			cw.closer = conn.Closer
@@ -272,7 +272,7 @@ func (cw *streamWriter) run() {
 					zap.String("remote-peer-id", cw.peerID.String()),
 				)
 			}
-			heartbeatc, msgc = tickc.C, cw.msgc
+			heartbeatc, msgc = tickc.C, cw.msgc // 保存心跳和message的通道
 
 		case <-cw.stopc:
 			if cw.close() {
@@ -472,7 +472,7 @@ func (cr *streamReader) decodeLoop(rc io.ReadCloser, t streamType) error {
 
 	// gofail: labelRaftDropHeartbeat:
 	for {
-		m, err := dec.decode()
+		m, err := dec.decode() // 阻塞等待消息
 		if err != nil {
 			cr.mu.Lock()
 			cr.close()
@@ -504,7 +504,7 @@ func (cr *streamReader) decodeLoop(rc io.ReadCloser, t streamType) error {
 		}
 
 		select {
-		case recvc <- m:
+		case recvc <- m: // 将消息写到channel中 channel另外一段是rafthttp/peer.go startPeer
 		default:
 			if cr.status.isActive() {
 				if cr.lg != nil {
