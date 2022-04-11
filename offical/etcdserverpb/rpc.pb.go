@@ -1251,9 +1251,6 @@ func (m *SnapshotResponse) GetBlob() []byte {
 }
 
 type WatchRequest struct {
-	// request_union is a request to either create a new watcher or cancel an existing watcher.
-	//
-	// Types that are valid to be assigned to RequestUnion:
 	WatchRequest_CreateRequest   *WatchRequest_CreateRequest
 	WatchRequest_CancelRequest   *WatchRequest_CancelRequest
 	WatchRequest_ProgressRequest *WatchRequest_ProgressRequest
@@ -1435,8 +1432,7 @@ func (m *WatchCancelRequest) GetWatchId() int64 {
 	return 0
 }
 
-// Requests the a watch stream progress status be sent in the watch response stream as soon as
-// possible.
+// WatchProgressRequest 获取watch的状态
 type WatchProgressRequest struct{}
 
 func (m *WatchProgressRequest) Reset()         { *m = WatchProgressRequest{} }
@@ -3619,13 +3615,9 @@ func (x *watchWatchClient) Recv() (*WatchResponse, error) {
 	return m, nil
 }
 
-// WatchServer is the server API for Watch service.
 type WatchServer interface {
-	// Watch watches for events happening or that have happened. Both input and output
-	// are streams; the input stream is for creating and canceling watchers and the output
-	// stream sends events. One watch RPC can watch on multiple key ranges, streaming events
-	// for several watches at once. The entire event history can be watched starting from the
-	// last compaction revision.
+	// Watch 观察正在发生或已经发生的事件。输入和输出都是流;输入流用于创建和取消监视和输出
+	// 流发送事件。一个watch RPC可以在多个key range上watch ，一次为几个watch stream event 。整个事件历史可以从最后的压缩修订开始观看。
 	Watch(Watch_WatchServer) error
 }
 

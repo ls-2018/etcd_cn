@@ -37,6 +37,7 @@ func NewWatcher(w clientv3.Watcher, prefix string) clientv3.Watcher {
 	return &watcherPrefix{Watcher: w, pfx: prefix, stopc: make(chan struct{})}
 }
 
+// Watch ok
 func (w *watcherPrefix) Watch(ctx context.Context, key string, opts ...clientv3.OpOption) clientv3.WatchChan {
 	// since OpOption is opaque, determine range for prefixing through an OpGet
 	op := clientv3.OpGet(key, opts...)
@@ -48,7 +49,7 @@ func (w *watcherPrefix) Watch(ctx context.Context, key string, opts ...clientv3.
 
 	wch := w.Watcher.Watch(ctx, string(pfxBegin), opts...)
 
-	// translate watch events from prefixed to unprefixed
+	// 翻译watch事件从前缀到无前缀
 	pfxWch := make(chan clientv3.WatchResponse)
 	w.wg.Add(1)
 	go func() {

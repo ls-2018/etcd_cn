@@ -68,8 +68,7 @@ type WatchStream interface {
 	// Close closes Chan and release all related resources.
 	Close()
 
-	// Rev returns the current revision of the KV the stream watches on.
-	Rev() int64
+	Rev() int64 // 返回当前watch指定的修订版本
 }
 
 type WatchResponse struct {
@@ -92,6 +91,7 @@ type WatchResponse struct {
 
 // watchStream contains a collection of watchers that share
 // one streaming chan to send out watched events and other control events.
+// watchers的一写信息
 type watchStream struct {
 	watchable watchable
 	ch        chan WatchResponse
@@ -129,9 +129,8 @@ func (ws *watchStream) Watch(id WatchID, key, end []byte, startRev int64, fcs ..
 	}
 
 	w, c := ws.watchable.watch(key, end, startRev, id, ws.ch, fcs...)
-
-	ws.cancels[id] = c
-	ws.watchers[id] = w
+	ws.cancels[id] = c  //回调函数用于删除watcher
+	ws.watchers[id] = w //记录watcher事件及其Id
 	return id, nil
 }
 

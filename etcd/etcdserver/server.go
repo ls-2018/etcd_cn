@@ -553,6 +553,7 @@ func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 		cfg.Logger.Warn("创建令牌提供程序失败", zap.Error(err))
 		return nil, err
 	}
+	// watch | kv ...
 	srv.kv = mvcc.New(srv.Logger(), srv.backend, srv.lessor, mvcc.StoreConfig{CompactionBatchLimit: cfg.CompactionBatchLimit})
 
 	kvindex := temp.CI.ConsistentIndex()

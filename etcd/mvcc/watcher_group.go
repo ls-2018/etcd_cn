@@ -150,7 +150,7 @@ type watcherGroup struct {
 	// watchers is the set of all watchers
 	watchers watcherSet
 }
-
+// 用于存储未同步完成的实例
 func newWatcherGroup() watcherGroup {
 	return watcherGroup{
 		keyWatchers: make(watcherSetByKey),
@@ -159,7 +159,7 @@ func newWatcherGroup() watcherGroup {
 	}
 }
 
-// add puts a watcher in the group.
+// 添加一个watcher
 func (wg *watcherGroup) add(wa *watcher) {
 	wg.watchers.add(wa)
 	if wa.end == "" || len(wa.end) == 0 {
@@ -167,8 +167,8 @@ func (wg *watcherGroup) add(wa *watcher) {
 		return
 	}
 
-	// interval already registered?
-	ivl := adt.NewStringAffineInterval(string(wa.key), string(wa.end))
+	// 间隔 已经注册了吗?
+	ivl := adt.NewStringAffineInterval(wa.key, wa.end)
 	if iv := wg.ranges.Find(ivl); iv != nil {
 		iv.Val.(watcherSet).add(wa)
 		return

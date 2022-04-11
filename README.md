@@ -160,28 +160,17 @@ MsgTimeoutNow | Candidate、Follower | 非本地： | | MsgReadIndex | Leader、
 
 ### Ref
 
-- https://zhuanlan.zhihu.com/p/135891186
-- https://gohalo.me/archives.html
 - https://www.lixueduan.com/categories/
-- https://blog.csdn.net/cyq6239075/category_9756361.html             ☆
-- https://tangxusc.github.io/blog/2019/05/etcd-lock%E8%AF%A6%E8%A7%A3/
-- https://www.freesion.com/article/1659395961/
-- https://www.cnblogs.com/FG123/p/13632095.html
-- https://blog.csdn.net/weixin_42663840/article/details/100005978
-- http://jolestar.com/etcd-architecture/
-- https://blog.csdn.net/skh2015java/category_9284671.html
-- https://www.jianshu.com/p/cca8628339a3
+- https://blog.csdn.net/cyq6239075/article/details/105452133
+- https://blog.csdn.net/cyq6239075/article/details/108985149
 - https://juejin.cn/post/6844904031186321416
 - https://www.codeleading.com/article/15455457381/
 - https://www.cnblogs.com/ricklz/p/15037925.html
-- https://blog.csdn.net/weixin_42017400/article/details/123174473
-- https://www.zhihu.com/question/63995014/answer/2251115833
-- https://blog.csdn.net/xxb249/article/details/80787817
 - https://blog.csdn.net/stayfoolish_yj/article/details/104497233
-- https://zhuanlan.zhihu.com/p/51063866
-- https://blog.csdn.net/qq_40504851/category_10905363.html
-- https://mp.weixin.qq.com/s/o_g5z77VZbImgTqjNBSktA
 - https://studygolang.com/articles/2058
+- https://blog.csdn.net/weixin_42017400/article/details/123206597
+- https://blog.csdn.net/weixin_42017400/article/details/123205879
+-
 
 (2) electionElapsed
 
@@ -275,6 +264,8 @@ StartEtcd
   5、e.serveMetrics
     
 ```
+
+![iShot2021-07-15 23.46.37](./images/unstable_index.png)
 
 ```
 快照 + storage + unstable 的区别

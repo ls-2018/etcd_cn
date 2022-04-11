@@ -59,17 +59,13 @@ type Op struct {
 	// "--max-request-bytes" flag value + 512-byte
 	fragment bool
 
-	// for put
 	ignoreValue bool
 	ignoreLease bool
 
-	// progressNotify is for progress updates.
-	progressNotify bool
-	// createdNotify is for created event
-	createdNotify bool
-	// filters for watchers
-	filterPut    bool
-	filterDelete bool
+	progressNotify bool // 处理更新
+	createdNotify  bool // 创建事件
+	filterPut      bool // 过滤掉put事件
+	filterDelete   bool // 过滤掉delete事件
 
 	// for put
 	val     string
@@ -299,24 +295,25 @@ func OpTxn(cmps []Cmp, thenOps []Op, elseOps []Op) Op {
 	return Op{t: tTxn, cmps: cmps, thenOps: thenOps, elseOps: elseOps}
 }
 
+// 检查watch请求
 func opWatch(key string, opts ...OpOption) Op {
 	ret := Op{t: tRange, key: key}
 	ret.applyOpts(opts)
 	switch {
 	case ret.leaseID != 0:
-		panic("unexpected lease in watch")
+		panic("unexpected watch中不能有租约")
 	case ret.limit != 0:
-		panic("unexpected limit in watch")
+		panic("unexpected watch中不能有limit")
 	case ret.sort != nil:
-		panic("unexpected sort in watch")
+		panic("unexpected watch中不能有sort")
 	case ret.serializable:
-		panic("unexpected serializable in watch")
+		panic("unexpected watch中不能有 serializable")
 	case ret.countOnly:
-		panic("unexpected countOnly in watch")
+		panic("unexpected watch中不能有countOnly")
 	case ret.minModRev != 0, ret.maxModRev != 0:
-		panic("unexpected mod revision filter in watch")
+		panic("unexpected watch中不能过滤修订版本")
 	case ret.minCreateRev != 0, ret.maxCreateRev != 0:
-		panic("unexpected create revision filter in watch")
+		panic("unexpected watch中不能过滤创建时的修订版本")
 	}
 	return ret
 }

@@ -7,24 +7,22 @@
     <list default="true" id="49524360-39b2-44cd-b702-de0461fb4222" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/a.yaml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/embed/etcd.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/embed/etcd.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdmain/etcd.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdmain/etcd.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdmain/help.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdmain/help.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdmain/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdmain/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/rafthttp/peer.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/api/rafthttp/peer.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/rafthttp/raft_stream_api.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/api/rafthttp/raft_stream_api.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/rafthttp/stream.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/api/rafthttp/stream.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v2store/store.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/api/v2store/store.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/raft.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/raft.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/wal/over_wal.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/wal/over_wal.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcdctl/ctlv3/command/over_compaction_command.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdctl/ctlv3/command/over_compaction_command.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/raft/over_log.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/over_log.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/raft/over_log_storage.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/over_log_storage.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/raft/over_log_unstable.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/over_log_unstable.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/raft/over_util.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/over_util.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/raft/raftpb/raft.pb.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/raftpb/raft.pb.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/raft/role.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/role.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client_sdk/v3/concurrency/key.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/concurrency/key.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client_sdk/v3/concurrency/mutex.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/concurrency/distribted_mutex.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client_sdk/v3/concurrency/session.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/concurrency/session.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client_sdk/v3/namespace/watch.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/namespace/watch.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client_sdk/v3/op.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/op.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client_sdk/v3/watch.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/watch.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/demo/etcdMutex/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/demo/etcdMutex/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v3election/election.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/api/v3election/election.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/api/v3rpc/watch.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/api/v3rpc/watch.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/server.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/server.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/mvcc/util.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/mvcc/watchable_store.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/mvcc/watchable_store.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/mvcc/watcher.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/mvcc/watcher.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/mvcc/watcher_group.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/mvcc/watcher_group.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/api/v3/v3rpc/rpctypes/error.go" beforeDir="false" afterPath="$PROJECT_DIR$/offical/api/v3/v3rpc/rpctypes/error.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/etcdserverpb/rpc.pb.go" beforeDir="false" afterPath="$PROJECT_DIR$/offical/etcdserverpb/rpc.pb.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -58,6 +56,7 @@
     <setting file="file://$PROJECT_DIR$/etcd/etcdserver/v3_server.go" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/pkg/schedule/schedule.go" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/etcd/etcdserver/server.go" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/client_sdk/v3/concurrency/stm.go" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/etcd/etcdserver/api/v3rpc/auth.go" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/code_debug/main.go" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/etcd/etcdserver/apply_v3.go" root0="FORCE_HIGHLIGHTING" />
@@ -94,31 +93,18 @@
       <recent name="$PROJECT_DIR$/offical/api/v3" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.a">
-    <configuration name="init.sh" type="BashProRunConfiguration" temporary="true">
-      <option name="scriptPath" value="$PROJECT_DIR$/code_debug/init.sh" />
-      <RunnerSettings bashdbVersion="Automatic" bashPathMapper="Automatic" RunnerId="pro.bashsupport.shDebugRunner" />
-      <method v="2" />
-    </configuration>
+  <component name="RunManager" selected="Go Build.etcdctl">
     <configuration name="etcdctl" type="GoApplicationRunConfiguration" factoryName="Go Application">
       <module name="etcd_cn" />
       <working_directory value="$PROJECT_DIR$" />
-      <parameters value="lock asd --ttl=10" />
+      <parameters value=" watch  a --prefix=true --prev-kv=true --progress-notify=true" />
       <kind value="FILE" />
       <package value="github.com/ls-2018/etcd_cn" />
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$/etcdctl/main.go" />
       <method v="2" />
     </configuration>
-    <configuration name="go build main.go" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
-      <module name="etcd_cn" />
-      <working_directory value="$PROJECT_DIR$" />
-      <kind value="FILE" />
-      <directory value="$PROJECT_DIR$" />
-      <filePath value="$PROJECT_DIR$/code_debug/main.go" />
-      <method v="2" />
-    </configuration>
-    <configuration name="local" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true">
+    <configuration name="local" type="GoApplicationRunConfiguration" factoryName="Go Application">
       <module name="etcd_cn" />
       <working_directory value="$PROJECT_DIR$" />
       <kind value="FILE" />
@@ -127,56 +113,10 @@
       <filePath value="$PROJECT_DIR$/etcd/main.go" />
       <method v="2" />
     </configuration>
-    <configuration name="TestKeyIndexFindGeneration in github.com/ls-2018/etcd_cn/etcd_backend/mvcc" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
-      <module name="etcd_cn" />
-      <working_directory value="$PROJECT_DIR$/etcd_backend/mvcc" />
-      <root_directory value="$PROJECT_DIR$" />
-      <kind value="PACKAGE" />
-      <package value="github.com/ls-2018/etcd_cn/etcd_backend/mvcc" />
-      <directory value="$PROJECT_DIR$" />
-      <filePath value="$PROJECT_DIR$" />
-      <framework value="gotest" />
-      <pattern value="^\QTestKeyIndexFindGeneration\E$" />
-      <method v="2" />
-    </configuration>
-    <configuration name="a" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="etcd_cn" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/a.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <list>
-      <item itemvalue="BashSupport Pro.init.sh" />
       <item itemvalue="Go Build.etcdctl" />
       <item itemvalue="Go Build.local" />
-      <item itemvalue="Go Build.go build main.go" />
-      <item itemvalue="Go Test.TestKeyIndexFindGeneration in github.com/ls-2018/etcd_cn/etcd_backend/mvcc" />
-      <item itemvalue="Python.a" />
     </list>
-    <recent_temporary>
-      <list>
-        <item itemvalue="Python.a" />
-        <item itemvalue="Go Build.local" />
-        <item itemvalue="BashSupport Pro.init.sh" />
-        <item itemvalue="Go Build.go build main.go" />
-        <item itemvalue="Go Test.TestKeyIndexFindGeneration in github.com/ls-2018/etcd_cn/etcd_backend/mvcc" />
-      </list>
-    </recent_temporary>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TypeScriptGeneratedFilesManager">
@@ -207,6 +147,76 @@
           <url>file://$PROJECT_DIR$/raft/over_raft.go</url>
           <line>620</line>
           <option name="timeStamp" value="1" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/client_sdk/v3/namespace/watch.go</url>
+          <line>42</line>
+          <option name="timeStamp" value="3" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd/mvcc/watchable_store.go</url>
+          <line>225</line>
+          <option name="timeStamp" value="9" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd/mvcc/watchable_store.go</url>
+          <line>188</line>
+          <option name="timeStamp" value="16" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd/mvcc/watcher_group.go</url>
+          <line>163</line>
+          <option name="timeStamp" value="17" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd/mvcc/watchable_store.go</url>
+          <line>110</line>
+          <option name="timeStamp" value="18" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd/mvcc/watcher.go</url>
+          <line>110</line>
+          <option name="timeStamp" value="19" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd/mvcc/watchable_store.go</url>
+          <line>206</line>
+          <option name="timeStamp" value="20" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd/etcdserver/api/v3rpc/watch.go</url>
+          <line>175</line>
+          <option name="timeStamp" value="23" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd/etcdserver/api/v3rpc/watch.go</url>
+          <line>183</line>
+          <option name="timeStamp" value="25" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd/etcdserver/api/v3rpc/watch.go</url>
+          <line>258</line>
+          <option name="timeStamp" value="26" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd/etcdserver/api/v3rpc/watch.go</url>
+          <line>278</line>
+          <option name="timeStamp" value="27" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd/etcdserver/api/v3rpc/watch.go</url>
+          <line>309</line>
+          <option name="timeStamp" value="29" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd/etcdserver/api/v3rpc/watch.go</url>
+          <line>376</line>
+          <option name="timeStamp" value="30" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd/etcdserver/api/v3rpc/watch.go</url>
+          <line>412</line>
+          <option name="timeStamp" value="31" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

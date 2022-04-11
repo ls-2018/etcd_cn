@@ -44,39 +44,9 @@ type Event mvccpb.Event
 type WatchChan <-chan WatchResponse
 
 type Watcher interface {
-	// Watch watches on a key or prefix. The watched events will be returned
-	// through the returned channel. If revisions waiting to be sent over the
-	// watch are compacted, then the watch will be canceled by the etcd, the
-	// client will post a compacted error watch response, and the channel will close.
-	// If the requested revision is 0 or unspecified, the returned channel will
-	// return watch events that happen after the etcd receives the watch request.
-	// If the context "ctx" is canceled or timed out, returned "WatchChan" is closed,
-	// and "WatchResponse" from this closed channel has zero events and nil "Err()".
-	// The context "ctx"必须是canceled, as soon as watcher is no longer being used,
-	// to release the associated resources.
-	//
-	// If the context is "context.Background/TODO", returned "WatchChan" will
-	// not be closed and block until event is triggered, except when etcd
-	// returns a non-recoverable error (e.g. ErrCompacted).
-	// For example, when context passed with "WithRequireLeader" and the
-	// connected etcd has no leader (e.g. due to network partition),
-	// error "etcdserver: no leader" (ErrNoLeader) will be returned,
-	// and then "WatchChan" is closed with non-nil "Err()".
-	// In order to prevent a watch stream being stuck in a partitioned node,
-	// make sure to wrap context with "WithRequireLeader".
-	//
-	// Otherwise, as long as the context has not been canceled or timed out,
-	// watch will retry on other recoverable errors forever until reconnected.
-	//
-	// TODO: explicitly set context error in the last "WatchResponse" message and close channel?
-	// Currently, client contexts are overwritten with "valCtx" that never closes.
-	// TODO(v3.4): configure watch retry policy, limit maximum retry number
-	// (see https://github.com/etcd-io/etcd/issues/8980)
 	Watch(ctx context.Context, key string, opts ...OpOption) WatchChan
-
 	// RequestProgress requests a progress notify response be sent in all watch channels.
 	RequestProgress(ctx context.Context) error
-
 	// Close closes the watcher and cancels all watch requests.
 	Close() error
 }
@@ -133,17 +103,12 @@ func (wr *WatchResponse) IsProgressNotify() bool {
 	return len(wr.Events) == 0 && !wr.Canceled && !wr.Created && wr.CompactRevision == 0 && wr.Header.Revision != 0
 }
 
-// watcher implements the Watcher interface
 type watcher struct {
-	remote   pb.WatchClient
-	callOpts []grpc.CallOption
-
-	// mu protects the grpc streams map
-	mu sync.Mutex
-
-	// streams holds all the active grpc streams keyed by ctx value.
-	streams map[string]*watchGrpcStream
-	lg      *zap.Logger
+	remote   pb.WatchClient              // 可以与后端通信的客户端
+	callOpts []grpc.CallOption           //
+	mu       sync.Mutex                  //
+	streams  map[string]*watchGrpcStream // 持有CTX 键值对的所有活动的GRPC流。
+	lg       *zap.Logger                 //
 }
 
 // watchGrpcStream tracks all watch resources attached to a single grpc stream.
@@ -158,10 +123,8 @@ type watchGrpcStream struct {
 	ctxKey string
 	cancel context.CancelFunc
 
-	// substreams holds all active watchers on this grpc stream
-	substreams map[int64]*watcherStream
-	// resuming holds all resuming watchers on this grpc stream
-	resuming []*watcherStream
+	substreams map[int64]*watcherStream // 所有活跃的watch grpc链接
+	resuming   []*watcherStream         //  所有正在重新开始的watch grpc链接
 
 	// reqc sends a watch request from Watch() to the main goroutine
 	reqc chan watchStreamRequest
@@ -189,28 +152,17 @@ type watchStreamRequest interface {
 	toPB() *pb.WatchRequest
 }
 
-// watchRequest is issued by the subscriber to start a new watcher
 type watchRequest struct {
-	ctx context.Context
-	key string
-	end string
-	rev int64
-
-	// send created notification event if this field is true
-	createdNotify bool
-	// progressNotify is for progress updates
-	progressNotify bool
-	// fragmentation should be disabled by default
-	// if true, split watch events when total exceeds
-	// "--max-request-bytes" flag value + 512-byte
-	fragment bool
-
-	// filters is the list of events to filter out
-	filters []pb.WatchCreateRequest_FilterType
-	// get the previous key-value pair before the event happens
-	prevKV bool
-	// retc receives a chan WatchResponse once the watcher is established
-	retc chan chan WatchResponse
+	ctx            context.Context
+	key            string
+	end            string
+	rev            int64
+	createdNotify  bool // 如果该字段为true，则发送创建的通知事件
+	progressNotify bool // 进度更新
+	fragment       bool // 是否切分响应，当数据较大时
+	filters        []pb.WatchCreateRequest_FilterType
+	prevKV         bool
+	retc           chan chan WatchResponse
 }
 
 // progressRequest is issued by the subscriber to request watch progress
@@ -240,6 +192,7 @@ func NewWatcher(c *Client) Watcher {
 	return NewWatchFromWatchClient(pb.NewWatchClient(c.conn), c)
 }
 
+// NewWatchFromWatchClient watch客户端,已经建立链接
 func NewWatchFromWatchClient(wc pb.WatchClient, c *Client) Watcher {
 	w := &watcher{
 		remote:  wc,
@@ -263,6 +216,7 @@ func (vc *valCtx) Deadline() (time.Time, bool) { return zeroTime, false }
 func (vc *valCtx) Done() <-chan struct{}       { return valCtxCh }
 func (vc *valCtx) Err() error                  { return nil }
 
+// 与后端建立流
 func (w *watcher) newWatcherGrpcStream(inctx context.Context) *watchGrpcStream {
 	ctx, cancel := context.WithCancel(&valCtx{inctx})
 	wgs := &watchGrpcStream{
@@ -285,9 +239,9 @@ func (w *watcher) newWatcherGrpcStream(inctx context.Context) *watchGrpcStream {
 	return wgs
 }
 
-// Watch posts a watch request to run() and waits for a new watcher channel
+// Watch 提交watch请求，等待返回响应
 func (w *watcher) Watch(ctx context.Context, key string, opts ...OpOption) WatchChan {
-	ow := opWatch(key, opts...)
+	ow := opWatch(key, opts...) // 检查watch请求
 
 	var filters []pb.WatchCreateRequest_FilterType
 	if ow.filterPut {
@@ -300,8 +254,8 @@ func (w *watcher) Watch(ctx context.Context, key string, opts ...OpOption) Watch
 	wr := &watchRequest{
 		ctx:            ctx,
 		createdNotify:  ow.createdNotify,
-		key:            string(ow.key),
-		end:            string(ow.end),
+		key:            ow.key,
+		end:            ow.end,
 		rev:            ow.rev,
 		progressNotify: ow.progressNotify,
 		fragment:       ow.fragment,
@@ -311,13 +265,13 @@ func (w *watcher) Watch(ctx context.Context, key string, opts ...OpOption) Watch
 	}
 
 	ok := false
-	ctxKey := streamKeyFromCtx(ctx)
+	ctxKey := streamKeyFromCtx(ctx) // map[hasleader:[true]]
 
 	var closeCh chan WatchResponse
 	for {
-		// find or allocate appropriate grpc watch stream
+		// 找到或分配适当的GRPC表流
 		w.mu.Lock()
-		if w.streams == nil {
+		if w.streams == nil { // 初始化结构体
 			// closed
 			w.mu.Unlock()
 			ch := make(chan WatchResponse)
@@ -326,7 +280,7 @@ func (w *watcher) Watch(ctx context.Context, key string, opts ...OpOption) Watch
 		}
 		wgs := w.streams[ctxKey]
 		if wgs == nil {
-			wgs = w.newWatcherGrpcStream(ctx)
+			wgs = w.newWatcherGrpcStream(ctx) // 返回watch流
 			w.streams[ctxKey] = wgs
 		}
 		donec := wgs.donec
@@ -340,7 +294,7 @@ func (w *watcher) Watch(ctx context.Context, key string, opts ...OpOption) Watch
 
 		// submit request
 		select {
-		case reqc <- wr:
+		case reqc <- wr: // 发送请求
 			ok = true
 		case <-wr.ctx.Done():
 			ok = false
@@ -492,18 +446,17 @@ func (w *watchGrpcStream) closeSubstream(ws *watcherStream) {
 	}
 }
 
-// run is the root of the goroutines for managing a watcher client
+// run 用于管理watch client
 func (w *watchGrpcStream) run() {
 	var wc pb.Watch_WatchClient
 	var closeErr error
 
-	// substreams marked to close but goroutine still running; needed for
-	// avoiding double-closing recvc on grpc stream teardown
+	// 子流标记为关闭，但goroutine仍在运行;需要避免双关闭recvc在GRPC流拆卸
 	closing := make(map[*watcherStream]struct{})
 
 	defer func() {
 		w.closeErr = closeErr
-		// shutdown substreams and resuming substreams
+		// 关闭子流并恢复子流
 		for _, ws := range w.substreams {
 			if _, ok := closing[ws]; !ok {
 				close(ws.recvc)
@@ -524,7 +477,7 @@ func (w *watchGrpcStream) run() {
 		w.owner.closeStream(w)
 	}()
 
-	// start a stream with the etcd grpc etcd
+	// 与etcd开启grpc流
 	if wc, closeErr = w.newWatchClient(); closeErr != nil {
 		return
 	}
@@ -868,7 +821,7 @@ func (w *watchGrpcStream) serveSubstream(ws *watcherStream, resumec chan struct{
 }
 
 func (w *watchGrpcStream) newWatchClient() (pb.Watch_WatchClient, error) {
-	// mark all substreams as resuming
+	// 将所有子流标记为恢复
 	close(w.resumec)
 	w.resumec = make(chan struct{})
 	w.joinSubstreams()
@@ -949,7 +902,7 @@ func (w *watchGrpcStream) waitCancelSubstreams(stopc <-chan struct{}) <-chan str
 	return donec
 }
 
-// joinSubstreams waits for all substream goroutines to complete.
+// joinSubstreams 等待所有sub stream完成
 func (w *watchGrpcStream) joinSubstreams() {
 	for _, ws := range w.substreams {
 		<-ws.donec
@@ -1020,6 +973,7 @@ func (pr *progressRequest) toPB() *pb.WatchRequest {
 	return &pb.WatchRequest{WatchRequest_ProgressRequest: cr}
 }
 
+// 将ctx转换成str
 func streamKeyFromCtx(ctx context.Context) string {
 	if md, ok := metadata.FromOutgoingContext(ctx); ok {
 		return fmt.Sprintf("%+v", md)

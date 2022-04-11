@@ -45,6 +45,7 @@ type Mutex struct {
 	hdr   *pb.ResponseHeader
 }
 
+// NewMutex 通过session和锁前缀
 func NewMutex(s *Session, pfx string) *Mutex {
 	return &Mutex{s, pfx + "/", "", -1, nil}
 }
@@ -83,16 +84,17 @@ func (m *Mutex) Lock(ctx context.Context) error {
 		return err
 	}
 	// if no key on prefix / the minimum rev is key, already hold the lock
+	// 通过对比自身的revision和最先创建的key的revision得出谁获得了锁
+	// 例如 自身revision:5,最先创建的key createRevision:3  那么不获得锁,进入waitDeletes
+	//     自身revision:5,最先创建的key createRevision:5  那么获得锁
 	ownerKey := resp.Responses[1].GetResponseRange().Kvs
 	if len(ownerKey) == 0 || ownerKey[0].CreateRevision == m.myRev {
 		m.hdr = resp.Header
 		return nil
 	}
 	client := m.s.Client()
-	// wait for deletion revisions prior to myKey
-	// waitDeletes 有效地等待,直到所有键匹配前缀且不大于
-	// 创建的version.
-	// TODO: early termination if the session key is deleted before other session keys with smaller revisions.
+	// 等待其他程序释放锁,并删除其他revisions
+	// TODO:
 	_, werr := waitDeletes(ctx, client, m.pfx, m.myRev-1)
 	// release lock key if wait failed
 	if werr != nil {
@@ -119,19 +121,18 @@ func (m *Mutex) tryAcquire(ctx context.Context) (*v3.TxnResponse, error) {
 	s := m.s
 	client := m.s.Client()
 	// s.Lease()租约
+	//生成锁的key
 	m.myKey = fmt.Sprintf("%s%x", m.pfx, s.Lease())
-	// 比较Revision, 这里构建了一个比较表达式
-	// 具体的比较逻辑在下面的client.Txn用到
-	// 如果等于0,写入当前的key,并设置租约,
-	// 否则获取这个key,重用租约中的锁(这里主要目的是在于重入)
-	// 通过第二次获取锁,判断锁是否存在来支持重入
-	// 所以只要租约一致,那么是可以重入的.
+	//使用事务机制
+	//比较key的revision为0(0标示没有key)
 	cmp := v3.Compare(v3.CreateRevision(m.myKey), "=", 0)
-	// 通过 myKey 将自己锁在waiters;最早的waiters将获得锁
+	//则put key,并设置租约
 	put := v3.OpPut(m.myKey, "", v3.WithLease(s.Lease()))
-	// 获取已经拿到锁的key的信息
+	//否则 获取这个key,重用租约中的锁(这里主要目的是在于重入)
+	//通过第二次获取锁,判断锁是否存在来支持重入
+	//所以只要租约一致,那么是可以重入的.
 	get := v3.OpGet(m.myKey)
-	// 仅使用一个 RPC 获取当前持有者以完成无竞争路径
+	//通过前缀获取最先创建的key
 	getOwner := v3.OpGet(m.pfx, v3.WithFirstCreate()...)
 	// 这里是比较的逻辑,如果等于0,写入当前的key,否则则读取这个key
 	// 大佬的代码写的就是奇妙
@@ -139,7 +140,7 @@ func (m *Mutex) tryAcquire(ctx context.Context) (*v3.TxnResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	// 根据比较操作的结果写入Revision到m.myRev中
+	//获取到自身的revision(注意,此处CreateRevision和Revision不一定相等)
 	m.myRev = resp.Header.Revision
 	if !resp.Succeeded {
 		m.myRev = resp.Responses[0].GetResponseRange().Kvs[0].CreateRevision

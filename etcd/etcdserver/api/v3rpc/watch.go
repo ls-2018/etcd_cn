@@ -34,71 +34,21 @@ import (
 const minWatchProgressInterval = 100 * time.Millisecond
 
 type watchServer struct {
-	lg *zap.Logger
-
-	clusterID int64
-	memberID  int64
-
+	lg              *zap.Logger
+	clusterID       int64
+	memberID        int64
 	maxRequestBytes int
-
-	sg        etcdserver.RaftStatusGetter
-	watchable mvcc.WatchableKV
-	ag        AuthGetter
-}
-
-// NewWatchServer returns a new watch etcd.
-func NewWatchServer(s *etcdserver.EtcdServer) pb.WatchServer {
-	srv := &watchServer{
-		lg: s.Cfg.Logger,
-
-		clusterID: int64(s.Cluster().ID()),
-		memberID:  int64(s.ID()),
-
-		maxRequestBytes: int(s.Cfg.MaxRequestBytes + grpcOverheadBytes),
-
-		sg:        s,
-		watchable: s.Watchable(),
-		ag:        s,
-	}
-	if srv.lg == nil {
-		srv.lg = zap.NewNop()
-	}
-	if s.Cfg.WatchProgressNotifyInterval > 0 {
-		if s.Cfg.WatchProgressNotifyInterval < minWatchProgressInterval {
-			srv.lg.Warn(
-				"adjusting watch progress notify interval to minimum period",
-				zap.Duration("min-watch-progress-notify-interval", minWatchProgressInterval),
-			)
-			s.Cfg.WatchProgressNotifyInterval = minWatchProgressInterval
-		}
-		SetProgressReportInterval(s.Cfg.WatchProgressNotifyInterval)
-	}
-	return srv
+	sg              etcdserver.RaftStatusGetter
+	watchable       mvcc.WatchableKV
+	ag              AuthGetter
 }
 
 var (
-	// External test can read this with GetProgressReportInterval()
-	// and change this to a small value to finish fast with
-	// SetProgressReportInterval().
 	progressReportInterval   = 10 * time.Minute
 	progressReportIntervalMu sync.RWMutex
 )
 
-// GetProgressReportInterval returns the current progress report interval (for testing).
-func GetProgressReportInterval() time.Duration {
-	progressReportIntervalMu.RLock()
-	interval := progressReportInterval
-	progressReportIntervalMu.RUnlock()
-
-	// add rand(1/10*progressReportInterval) as jitter so that etcdserver will not
-	// send progress notifications to watchers around the same time even when watchers
-	// are created around the same time (which is common when a client restarts itself).
-	jitter := time.Duration(rand.Int63n(int64(interval) / 10))
-
-	return interval + jitter
-}
-
-// SetProgressReportInterval updates the current progress report interval (for testing).
+// SetProgressReportInterval 更新进度汇报间隔
 func SetProgressReportInterval(newTimeout time.Duration) {
 	progressReportIntervalMu.Lock()
 	progressReportInterval = newTimeout
@@ -130,7 +80,7 @@ type serverWatchStream struct {
 
 	gRPCStream  pb.Watch_WatchServer
 	watchStream mvcc.WatchStream
-	ctrlStream  chan *pb.WatchResponse
+	ctrlStream  chan *pb.WatchResponse // 用来发送控制响应的Chan，比如watcher创建和取消。
 
 	// mu protects progress, prevKV, fragment
 	mu sync.RWMutex
@@ -142,13 +92,11 @@ type serverWatchStream struct {
 	// records fragmented watch IDs
 	fragment map[mvcc.WatchID]bool
 
-	// closec indicates the stream is closed.
 	closec chan struct{}
-
-	// wg waits for the send loop to complete
-	wg sync.WaitGroup
+	wg     sync.WaitGroup // 等待send loop 完成
 }
 
+// Watch 接收到watch请求
 func (ws *watchServer) Watch(stream pb.Watch_WatchServer) (err error) {
 	sws := serverWatchStream{
 		lg: ws.lg,
@@ -164,7 +112,7 @@ func (ws *watchServer) Watch(stream pb.Watch_WatchServer) (err error) {
 
 		gRPCStream:  stream,
 		watchStream: ws.watchable.NewWatchStream(),
-		// chan for sending control response like watcher created and canceled.
+		// 用来发送控制响应的Chan，比如watcher创建和取消。
 		ctrlStream: make(chan *pb.WatchResponse, ctrlStreamBufLen),
 
 		progress: make(map[mvcc.WatchID]bool),
@@ -176,15 +124,12 @@ func (ws *watchServer) Watch(stream pb.Watch_WatchServer) (err error) {
 
 	sws.wg.Add(1)
 	go func() {
-		sws.sendLoop()
+		sws.sendLoop() // 回复变更事件、阻塞
 		sws.wg.Done()
 	}()
 
 	errc := make(chan error, 1)
-	// Ideally recvLoop would also use sws.wg to signal its completion
-	// but when stream.Context().Done() is closed, the stream's recv
-	// may continue to block since it uses a different context, leading to
-	// deadlock when calling sws.close().
+	//理想情况下，recvLoop也会使用sws.wg。当stream. context (). done()被关闭时，流的recv可能会继续阻塞，因为它使用了不同的上下文，导致调用sws.close()时死锁。
 	go func() {
 		if rerr := sws.recvLoop(); rerr != nil {
 			if isClientCtxErr(stream.Context().Err(), rerr) {
@@ -195,16 +140,6 @@ func (ws *watchServer) Watch(stream pb.Watch_WatchServer) (err error) {
 			errc <- rerr
 		}
 	}()
-
-	// TODO: There's a race here. When a stream  is closed (e.g. due to a cancellation),
-	// the underlying error (e.g. a gRPC stream error) may be returned and handled
-	// through errc if the recv goroutine finishes before the send goroutine.
-	// When the recv goroutine wins, the stream error is retained. When recv loses
-	// the race, the underlying error is lost (unless the root error is propagated
-	// through Context.Err() which is not always the case (as callers have to decide
-	// to implement a custom context to do so). The stdlib context package builtins
-	// may be insufficient to carry semantically useful errors around and should be
-	// revisited.
 	select {
 	case err = <-errc:
 		if err == context.Canceled {
@@ -234,6 +169,7 @@ func (sws *serverWatchStream) isWatchPermitted(wcr *pb.WatchCreateRequest) bool 
 	return sws.ag.AuthStore().IsRangePermitted(authInfo, []byte(wcr.Key), []byte(wcr.RangeEnd)) == nil
 }
 
+// 接收watch请求，可以是创建、取消、和
 func (sws *serverWatchStream) recvLoop() error {
 	for {
 		req, err := sws.gRPCStream.Recv()
@@ -252,7 +188,7 @@ func (sws *serverWatchStream) recvLoop() error {
 			}
 
 			creq := uv.CreateRequest
-			if len(creq.Key) == 0 {
+			if len(creq.Key) == 0 { // a
 				// \x00 is the smallest key
 				creq.Key = string([]byte{0})
 			}
@@ -265,8 +201,8 @@ func (sws *serverWatchStream) recvLoop() error {
 				// support  >= key queries
 				creq.RangeEnd = string([]byte{})
 			}
-
-			if !sws.isWatchPermitted(creq) {
+			// 权限校验
+			if !sws.isWatchPermitted(creq) { // 当前请求 权限不允许
 				wr := &pb.WatchResponse{
 					Header:       sws.newResponseHeader(sws.watchStream.Rev()),
 					WatchId:      creq.WatchId,
@@ -283,7 +219,7 @@ func (sws *serverWatchStream) recvLoop() error {
 				}
 			}
 
-			filters := FiltersFromRequest(creq)
+			filters := FiltersFromRequest(creq) // server端  从watch请求中 获取一些过滤调价
 
 			wsrev := sws.watchStream.Rev()
 			rev := creq.StartRevision
@@ -318,10 +254,8 @@ func (sws *serverWatchStream) recvLoop() error {
 			case <-sws.closec:
 				return nil
 			}
-
 		}
 		if req.WatchRequest_CancelRequest != nil {
-
 			uv := &pb.WatchRequest_CancelRequest{}
 			uv = req.WatchRequest_CancelRequest
 			if uv.CancelRequest != nil {
@@ -340,7 +274,6 @@ func (sws *serverWatchStream) recvLoop() error {
 					sws.mu.Unlock()
 				}
 			}
-
 		}
 		if req.WatchRequest_ProgressRequest != nil {
 			uv := &pb.WatchRequest_ProgressRequest{}
@@ -352,22 +285,16 @@ func (sws *serverWatchStream) recvLoop() error {
 				}
 			}
 		}
-		//switch uv := req.RequestUnion.(type) {
-		//
-		//
-		//default:
-		//	// we probably should not shutdown the entire stream when
-		//	// receive an valid command.
-		//	// so just do nothing instead.
-		//	continue
-		//}
 	}
 }
 
+// 往watch stream 发送消息
 func (sws *serverWatchStream) sendLoop() {
 	// watch ids that are currently active
+	// 监视当前活动的id
 	ids := make(map[mvcc.WatchID]struct{})
 	// watch responses pending on a watch id creation message
+	// 等待在一个手表id创建消息上的手表响应
 	pending := make(map[mvcc.WatchID][]*pb.WatchResponse)
 
 	interval := GetProgressReportInterval()
@@ -379,7 +306,7 @@ func (sws *serverWatchStream) sendLoop() {
 
 	for {
 		select {
-		case wresp, ok := <-sws.watchStream.Chan():
+		case wresp, ok := <-sws.watchStream.Chan(): // //watchStream Channel中提取event发送
 			if !ok {
 				return
 			}
@@ -502,11 +429,7 @@ func IsCreateEvent(e mvccpb.Event) bool {
 	return e.Type == mvccpb.PUT && e.Kv.CreateRevision == e.Kv.ModRevision
 }
 
-func sendFragments(
-	wr *pb.WatchResponse,
-	maxRequestBytes int,
-	sendFunc func(*pb.WatchResponse) error,
-) error {
+func sendFragments(wr *pb.WatchResponse, maxRequestBytes int, sendFunc func(*pb.WatchResponse) error) error {
 	// no need to fragment if total request size is smaller
 	// than max request limit or response contains only one event
 	if wr.Size() < maxRequestBytes || len(wr.Events) < 2 {
@@ -565,7 +488,47 @@ func filterNoPut(e mvccpb.Event) bool {
 	return e.Type == mvccpb.PUT
 }
 
-// FiltersFromRequest returns "mvcc.FilterFunc" from a given watch create request.
+
+
+// ----------------------------------------------  OVER ---------------------------------------------------------------------
+
+// NewWatchServer OK
+func NewWatchServer(s *etcdserver.EtcdServer) pb.WatchServer {
+	srv := &watchServer{
+		lg:              s.Cfg.Logger,
+		clusterID:       int64(s.Cluster().ID()),
+		memberID:        int64(s.ID()),
+		maxRequestBytes: int(s.Cfg.MaxRequestBytes + grpcOverheadBytes),
+		sg:              s,
+		watchable:       s.Watchable(),
+		ag:              s,
+	}
+	if srv.lg == nil {
+		srv.lg = zap.NewNop()
+	}
+	if s.Cfg.WatchProgressNotifyInterval > 0 {
+		if s.Cfg.WatchProgressNotifyInterval < minWatchProgressInterval {
+			srv.lg.Warn("将watch 进度通知时间间隔调整为最小周期", zap.Duration("min-watch-progress-notify-interval", minWatchProgressInterval))
+			s.Cfg.WatchProgressNotifyInterval = minWatchProgressInterval
+		}
+		SetProgressReportInterval(s.Cfg.WatchProgressNotifyInterval)
+	}
+	return srv
+}
+
+// GetProgressReportInterval OK
+func GetProgressReportInterval() time.Duration {
+	progressReportIntervalMu.RLock()
+	interval := progressReportInterval
+	progressReportIntervalMu.RUnlock()
+
+	// add rand(1/10*progressReportInterval) as jitter so that etcdserver will not
+	// send progress notifications to watchers around the same time even when watchers
+	// are created around the same time (which is common when a client restarts itself).
+	jitter := time.Duration(rand.Int63n(int64(interval) / 10))
+
+	return interval + jitter
+}
 func FiltersFromRequest(creq *pb.WatchCreateRequest) []mvcc.FilterFunc {
 	filters := make([]mvcc.FilterFunc, 0, len(creq.Filters))
 	for _, ft := range creq.Filters {
