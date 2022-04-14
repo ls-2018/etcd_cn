@@ -22,15 +22,14 @@ func main() {
 
 	// m1来抢锁
 	go func() {
-
-		//创建两个竞争的Session，这里Session有效期使用默认值60s
+		// 创建两个竞争的Session，这里Session有效期使用默认值60s
 		s1, err := concurrency.NewSession(cli)
 		if err != nil {
 			log.Fatal(err)
 		}
 		defer s1.Close()
 
-		//pfx 是"/my-lock/"
+		// pfx 是"/my-lock/"
 		m1 := concurrency.NewMutex(s1, "/my-lock/")
 
 		// acquire lock for s1
@@ -50,7 +49,6 @@ func main() {
 
 	// m2来抢锁
 	go func() {
-
 		s2, err := concurrency.NewSession(cli)
 		if err != nil {
 			log.Fatal(err)

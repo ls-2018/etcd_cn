@@ -25,8 +25,8 @@ const defaultSessionTTL = 60
 
 // Session represents a lease kept alive for the lifetime of a client.
 // Fault-tolerant applications may use sessions to reason about liveness.
-//会话表示在客户端的生存期内保持活动的租约。
-//应用程序可能会使用会话来解释活动性。
+// 会话表示在客户端的生存期内保持活动的租约。
+// 应用程序可能会使用会话来解释活动性。
 type Session struct {
 	client *v3.Client
 	opts   *sessionOptions
@@ -64,11 +64,11 @@ func NewSession(client *v3.Client, opts ...SessionOption) (*Session, error) {
 	donec := make(chan struct{})
 	s := &Session{client: client, opts: ops, id: id, cancel: cancel, donec: donec}
 
-	//在客户端错误或取消上下文之前保持租约的活动状态
+	// 在客户端错误或取消上下文之前保持租约的活动状态
 	go func() {
 		defer close(donec)
 		for range keepAlive {
-			//在保持活动频道关闭前接收信息
+			// 在保持活动频道关闭前接收信息
 		}
 	}()
 

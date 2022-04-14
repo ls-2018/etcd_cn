@@ -86,7 +86,7 @@ type serverWatchStream struct {
 	mu sync.RWMutex
 	// tracks the watchID that stream might need to send progress to
 	// TODO: combine progress and prevKV into a single struct?
-	progress map[mvcc.WatchID]bool
+	progress map[mvcc.WatchID]bool // 储存watcher
 	// record watch IDs that need return previous key-value pair
 	prevKV map[mvcc.WatchID]bool
 	// records fragmented watch IDs
@@ -129,7 +129,7 @@ func (ws *watchServer) Watch(stream pb.Watch_WatchServer) (err error) {
 	}()
 
 	errc := make(chan error, 1)
-	//理想情况下，recvLoop也会使用sws.wg。当stream. context (). done()被关闭时，流的recv可能会继续阻塞，因为它使用了不同的上下文，导致调用sws.close()时死锁。
+	// 理想情况下，recvLoop也会使用sws.wg。当stream. context (). done()被关闭时，流的recv可能会继续阻塞，因为它使用了不同的上下文，导致调用sws.close()时死锁。
 	go func() {
 		if rerr := sws.recvLoop(); rerr != nil {
 			if isClientCtxErr(stream.Context().Err(), rerr) {
@@ -172,6 +172,7 @@ func (sws *serverWatchStream) isWatchPermitted(wcr *pb.WatchCreateRequest) bool 
 // 接收watch请求，可以是创建、取消、和
 func (sws *serverWatchStream) recvLoop() error {
 	for {
+		// 同一个连接，可以接收多次不同的消息
 		req, err := sws.gRPCStream.Recv()
 		if err == io.EOF {
 			return nil
@@ -221,27 +222,27 @@ func (sws *serverWatchStream) recvLoop() error {
 
 			filters := FiltersFromRequest(creq) // server端  从watch请求中 获取一些过滤调价
 
-			wsrev := sws.watchStream.Rev()
-			rev := creq.StartRevision
+			wsrev := sws.watchStream.Rev() // 获取当前kv的修订版本
+			rev := creq.StartRevision      // 监听从哪个修订版本之后的变更，没穿就是当前
 			if rev == 0 {
 				rev = wsrev + 1
 			}
 			id, err := sws.watchStream.Watch(mvcc.WatchID(creq.WatchId), []byte(creq.Key), []byte(creq.RangeEnd), rev, filters...)
 			if err == nil {
 				sws.mu.Lock()
-				if creq.ProgressNotify {
+				if creq.ProgressNotify { // 默认FALSE
 					sws.progress[id] = true
 				}
-				if creq.PrevKv {
+				if creq.PrevKv { // 默认FALSE
 					sws.prevKV[id] = true
 				}
-				if creq.Fragment {
+				if creq.Fragment { // 拆分大的事件
 					sws.fragment[id] = true
 				}
 				sws.mu.Unlock()
 			}
 			wr := &pb.WatchResponse{
-				Header:   sws.newResponseHeader(wsrev),
+				Header:   sws.newResponseHeader(wsrev), //
 				WatchId:  int64(id),
 				Created:  true,
 				Canceled: err != nil,
@@ -471,15 +472,6 @@ func (sws *serverWatchStream) close() {
 	sws.wg.Wait()
 }
 
-func (sws *serverWatchStream) newResponseHeader(rev int64) *pb.ResponseHeader {
-	return &pb.ResponseHeader{
-		ClusterId: uint64(sws.clusterID),
-		MemberId:  uint64(sws.memberID),
-		Revision:  rev,
-		RaftTerm:  sws.sg.Term(),
-	}
-}
-
 func filterNoDelete(e mvccpb.Event) bool {
 	return e.Type == mvccpb.DELETE
 }
@@ -487,8 +479,6 @@ func filterNoDelete(e mvccpb.Event) bool {
 func filterNoPut(e mvccpb.Event) bool {
 	return e.Type == mvccpb.PUT
 }
-
-
 
 // ----------------------------------------------  OVER ---------------------------------------------------------------------
 
@@ -529,6 +519,7 @@ func GetProgressReportInterval() time.Duration {
 
 	return interval + jitter
 }
+
 func FiltersFromRequest(creq *pb.WatchCreateRequest) []mvcc.FilterFunc {
 	filters := make([]mvcc.FilterFunc, 0, len(creq.Filters))
 	for _, ft := range creq.Filters {
@@ -541,4 +532,14 @@ func FiltersFromRequest(creq *pb.WatchCreateRequest) []mvcc.FilterFunc {
 		}
 	}
 	return filters
+}
+
+// 当前的修订版本
+func (sws *serverWatchStream) newResponseHeader(rev int64) *pb.ResponseHeader {
+	return &pb.ResponseHeader{
+		ClusterId: uint64(sws.clusterID),
+		MemberId:  uint64(sws.memberID),
+		Revision:  rev,
+		RaftTerm:  sws.sg.Term(),
+	}
 }

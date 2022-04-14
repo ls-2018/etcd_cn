@@ -81,6 +81,6 @@ func NewReadOnlyTxnWrite(txn TxnRead) TxnWrite { return &txnReadWrite{txn} }
 type ReadTxMode uint32
 
 const (
-	ConcurrentReadTxMode = ReadTxMode(1) // 缓冲区拷贝，提高性能
+	ConcurrentReadTxMode = ReadTxMode(1) // 缓冲区拷贝，提高性能   并发ReadTx模式
 	SharedBufReadTxMode  = ReadTxMode(2)
 )

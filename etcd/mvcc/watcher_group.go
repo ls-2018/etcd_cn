@@ -150,6 +150,7 @@ type watcherGroup struct {
 	// watchers is the set of all watchers
 	watchers watcherSet
 }
+
 // 用于存储未同步完成的实例
 func newWatcherGroup() watcherGroup {
 	return watcherGroup{

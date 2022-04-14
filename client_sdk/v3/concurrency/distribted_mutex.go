@@ -121,18 +121,18 @@ func (m *Mutex) tryAcquire(ctx context.Context) (*v3.TxnResponse, error) {
 	s := m.s
 	client := m.s.Client()
 	// s.Lease()租约
-	//生成锁的key
+	// 生成锁的key
 	m.myKey = fmt.Sprintf("%s%x", m.pfx, s.Lease())
-	//使用事务机制
-	//比较key的revision为0(0标示没有key)
+	// 使用事务机制
+	// 比较key的revision为0(0标示没有key)
 	cmp := v3.Compare(v3.CreateRevision(m.myKey), "=", 0)
-	//则put key,并设置租约
+	// 则put key,并设置租约
 	put := v3.OpPut(m.myKey, "", v3.WithLease(s.Lease()))
-	//否则 获取这个key,重用租约中的锁(这里主要目的是在于重入)
-	//通过第二次获取锁,判断锁是否存在来支持重入
-	//所以只要租约一致,那么是可以重入的.
+	// 否则 获取这个key,重用租约中的锁(这里主要目的是在于重入)
+	// 通过第二次获取锁,判断锁是否存在来支持重入
+	// 所以只要租约一致,那么是可以重入的.
 	get := v3.OpGet(m.myKey)
-	//通过前缀获取最先创建的key
+	// 通过前缀获取最先创建的key
 	getOwner := v3.OpGet(m.pfx, v3.WithFirstCreate()...)
 	// 这里是比较的逻辑,如果等于0,写入当前的key,否则则读取这个key
 	// 大佬的代码写的就是奇妙
@@ -140,7 +140,7 @@ func (m *Mutex) tryAcquire(ctx context.Context) (*v3.TxnResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	//获取到自身的revision(注意,此处CreateRevision和Revision不一定相等)
+	// 获取到自身的revision(注意,此处CreateRevision和Revision不一定相等)
 	m.myRev = resp.Header.Revision
 	if !resp.Succeeded {
 		m.myRev = resp.Responses[0].GetResponseRange().Kvs[0].CreateRevision

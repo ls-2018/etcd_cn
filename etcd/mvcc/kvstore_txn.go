@@ -30,7 +30,9 @@ type storeTxnRead struct {
 
 func (tr *storeTxnRead) FirstRev() int64 { return tr.firstRev }
 
-func (tr *storeTxnRead) Rev() int64 { return tr.rev }
+func (tr *storeTxnRead) Rev() int64 {
+	return tr.rev
+}
 
 func (tr *storeTxnRead) End() {
 	tr.tx.RUnlock() // RUnlock signals the end of concurrentReadTx.
@@ -44,7 +46,9 @@ type storeTxnWrite struct {
 	changes  []mvccpb.KeyValue // 写事务接收到的k,v 包含修订版本数据
 }
 
-func (tw *storeTxnWrite) Rev() int64 { return tw.beginRev }
+func (tw *storeTxnWrite) Rev() int64 {
+	return tw.beginRev
+}
 
 func (tw *storeTxnWrite) Changes() []mvccpb.KeyValue { return tw.changes }
 

@@ -30,7 +30,7 @@ func (rv *readView) FirstRev() int64 {
 }
 
 func (rv *readView) Rev() int64 {
-	tr := rv.kv.Read(ConcurrentReadTxMode, traceutil.TODO())
+	tr := rv.kv.Read(ConcurrentReadTxMode, traceutil.TODO()) // 并发ReadTx模式
 	defer tr.End()
 	return tr.Rev()
 }

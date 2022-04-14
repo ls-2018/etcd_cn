@@ -1327,26 +1327,20 @@ type WatchCreateRequest struct {
 	// or equal to the key argument are watched.
 	// If the range_end is one bit larger than the given key,
 	// then all keys with the prefix (the given key) will be watched.
-	RangeEnd string `protobuf:"bytes,2,opt,name=range_end,json=rangeEnd,proto3" json:"range_end,omitempty"`
-	// start_revision is an optional revision to watch from (inclusive). No start_revision is "now".
-	StartRevision int64 `protobuf:"varint,3,opt,name=start_revision,json=startRevision,proto3" json:"start_revision,omitempty"`
-	// progress_notify is set so that the etcd server will periodically send a WatchResponse with
-	// no events to the new watcher if there are no recent events. It is useful when clients
-	// wish to recover a disconnected watcher starting from a recent known revision.
-	// The etcd server may decide how often it will send notifications based on current load.
+	RangeEnd      string `protobuf:"bytes,2,opt,name=range_end,json=rangeEnd,proto3" json:"range_end,omitempty"`
+	StartRevision int64  `protobuf:"varint,3,opt,name=start_revision,json=startRevision,proto3" json:"start_revision,omitempty"`
+	// progress_notify被设置为etcd服务器将定期发送WatchResponse如果没有最近的事件，它是有用的希望恢复断开的观察者从最近的已知修订开始。
+	// etcd服务器可以根据当前的负载决定发送通知的频率。
 	ProgressNotify bool `protobuf:"varint,4,opt,name=progress_notify,json=progressNotify,proto3" json:"progress_notify,omitempty"`
 	// filters filter the events at server side before it sends back to the watcher.
 	Filters []WatchCreateRequest_FilterType `protobuf:"varint,5,rep,packed,name=filters,proto3,enum=etcdserverpb.WatchCreateRequest_FilterType" json:"filters,omitempty"`
 	// If prev_kv is set, created watcher gets the previous KV before the event happens.
 	// If the previous KV is already compacted, nothing will be returned.
 	PrevKv bool `protobuf:"varint,6,opt,name=prev_kv,json=prevKv,proto3" json:"prev_kv,omitempty"`
-	// If watch_id is provided and non-zero, it will be assigned to this watcher.
-	// Since creating a watcher in etcd is not a synchronous operation,
-	// this can be used ensure that ordering is correct when creating multiple
-	// watchers on the same stream. Creating a watcher with an ID already in
-	// use on the stream will cause an error to be returned.
+	// 如果提供了watch_id且非零，则将它分配给这个监视程序。因为在etcd中创建监视器不是同步操作，所以当在同一流中创建多个监视器时，
+	// 可以使用它来确保顺序是正确的。在流上创建ID已在使用的监视程序将导致返回错误。
 	WatchId int64 `protobuf:"varint,7,opt,name=watch_id,json=watchId,proto3" json:"watch_id,omitempty"`
-	// fragment enables splitting large revisions into multiple watch responses.
+	// 拆分大的变更 成多个watch响应。
 	Fragment bool `protobuf:"varint,8,opt,name=fragment,proto3" json:"fragment,omitempty"`
 }
 

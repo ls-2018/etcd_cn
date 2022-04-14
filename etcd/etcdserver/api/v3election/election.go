@@ -42,7 +42,7 @@ func (es *electionServer) Campaign(ctx context.Context, req *epb.CampaignRequest
 	if err != nil {
 		return nil, err
 	}
-	//创建用于选举的Session，有效时间可以根据实际情况设置
+	// 创建用于选举的Session，有效时间可以根据实际情况设置
 	e := concurrency.NewElection(s, string(req.Name))
 	if err = e.Campaign(ctx, string(req.Value)); err != nil {
 		return nil, err

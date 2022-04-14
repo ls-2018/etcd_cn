@@ -23,7 +23,7 @@ import (
 	pb "github.com/ls-2018/etcd_cn/offical/etcdserverpb"
 )
 
-//从revision开始监听删除事件,因为revision存在,所以也避免了ABA问题
+// 从revision开始监听删除事件,因为revision存在,所以也避免了ABA问题
 func waitDelete(ctx context.Context, client *v3.Client, key string, rev int64) error {
 	cctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -32,7 +32,7 @@ func waitDelete(ctx context.Context, client *v3.Client, key string, rev int64) e
 	wch := client.Watch(cctx, key, v3.WithRev(rev))
 	for wr = range wch {
 		for _, ev := range wr.Events {
-			//遇到删除事件才返回
+			// 遇到删除事件才返回
 			if ev.Type == mvccpb.DELETE {
 				return nil
 			}
@@ -50,8 +50,8 @@ func waitDelete(ctx context.Context, client *v3.Client, key string, rev int64) e
 // 等待持有锁的key删除
 // 内部实现为等其他所有比当前createRevision小的key,监听删除事件
 func waitDeletes(ctx context.Context, client *v3.Client, pfx string, maxCreateRev int64) (*pb.ResponseHeader, error) {
-	//WithLastCreate 按照CreateRevision排序,降序 例如 5 4 3 2 1
-	//WithMaxCreateRev 获取比maxCreateRev小的key
+	// WithLastCreate 按照CreateRevision排序,降序 例如 5 4 3 2 1
+	// WithMaxCreateRev 获取比maxCreateRev小的key
 	getOpts := append(v3.WithLastCreate(), v3.WithMaxCreateRev(maxCreateRev))
 	for {
 		resp, err := client.Get(ctx, pfx, getOpts...)

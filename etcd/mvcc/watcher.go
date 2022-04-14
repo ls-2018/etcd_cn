@@ -29,7 +29,7 @@ const AutoWatchID WatchID = 0
 var (
 	ErrWatcherNotExist    = errors.New("mvcc: watcher does not exist")
 	ErrEmptyWatcherRange  = errors.New("mvcc: watcher range is empty")
-	ErrWatcherDuplicateID = errors.New("mvcc: duplicate watch ID provided on the WatchStream")
+	ErrWatcherDuplicateID = errors.New("mvcc: 在WatchStream上提供的重复的watch ID")
 )
 
 type WatchID int64
@@ -38,16 +38,7 @@ type WatchID int64
 type FilterFunc func(e mvccpb.Event) bool
 
 type WatchStream interface {
-	// Watch creates a watcher. The watcher watches the events happening or
-	// happened on the given key or range [key, end) from the given startRev.
-	//
-	// The whole event history can be watched unless compacted.
-	// If "startRev" <=0, watch observes events after currentRev.
-	//
-	// The returned "id" is the ID of this watcher. It appears as WatchID
-	// in events that are sent to the created watcher through stream channel.
-	// The watch ID is used when it's not equal to AutoWatchID. Otherwise,
-	// an auto-generated watch ID is returned.
+	// Watch 创建watch id 默认为0  , 范围监听   起始的修订版本   事件过滤
 	Watch(id WatchID, key, end []byte, startRev int64, fcs ...FilterFunc) (WatchID, error)
 
 	// Chan returns a chan. All watch response will be sent to the returned chan.
@@ -67,7 +58,6 @@ type WatchStream interface {
 
 	// Close closes Chan and release all related resources.
 	Close()
-
 	Rev() int64 // 返回当前watch指定的修订版本
 }
 
@@ -96,18 +86,17 @@ type watchStream struct {
 	watchable watchable
 	ch        chan WatchResponse
 
-	mu sync.Mutex // guards fields below it
-	// nextID is the ID pre-allocated for next new watcher in this stream
-	nextID   WatchID
+	mu       sync.Mutex // guards fields below it
+	nextID   WatchID    // 预先分配给这个流中的下一个新的观察者 ,第一次是0
 	closed   bool
 	cancels  map[WatchID]cancelFunc
 	watchers map[WatchID]*watcher
 }
 
-// Watch creates a new watcher in the stream and returns its WatchID.
+// Watch 在当前stream创建watcher并返回 WatchID.
 func (ws *watchStream) Watch(id WatchID, key, end []byte, startRev int64, fcs ...FilterFunc) (WatchID, error) {
-	// prevent wrong range where key >= end lexicographically
-	// watch request with 'WithFromKey' has empty-byte range end
+	// 防止键>按字典顺序结束的错误范围
+	// 监视请求'WithFromKey'有空字节范围结束
 	if len(end) != 0 && bytes.Compare(key, end) != -1 {
 		return -1, ErrEmptyWatcherRange
 	}
@@ -119,6 +108,7 @@ func (ws *watchStream) Watch(id WatchID, key, end []byte, startRev int64, fcs ..
 	}
 
 	if id == AutoWatchID {
+		// 因为是从0开始,每次执行都是为了获取一个自增的WatchId    从1开始
 		for ws.watchers[ws.nextID] != nil {
 			ws.nextID++
 		}
@@ -129,8 +119,8 @@ func (ws *watchStream) Watch(id WatchID, key, end []byte, startRev int64, fcs ..
 	}
 
 	w, c := ws.watchable.watch(key, end, startRev, id, ws.ch, fcs...)
-	ws.cancels[id] = c  //回调函数用于删除watcher
-	ws.watchers[id] = w //记录watcher事件及其Id
+	ws.cancels[id] = c  // 回调函数用于删除watcher
+	ws.watchers[id] = w // 记录watcher事件及其Id
 	return id, nil
 }
 

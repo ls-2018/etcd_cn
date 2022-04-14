@@ -72,13 +72,13 @@ func newWatchableStore(lg *zap.Logger, b backend.Backend, le lease.Lessor, cfg S
 	}
 	s := &watchableStore{
 		store:    NewStore(lg, b, le, cfg),
-		victimc:  make(chan struct{}, 1), //如果watcher实例关联的ch通道被阻塞了，则对应的watcherBatch实例会暂时记录到该字段中
-		unsynced: newWatcherGroup(),      //用于存储未同步完成的实例
-		synced:   newWatcherGroup(),      //用于存储已经同步完成的实例
+		victimc:  make(chan struct{}, 1), // 如果watcher实例关联的ch通道被阻塞了，则对应的watcherBatch实例会暂时记录到该字段中
+		unsynced: newWatcherGroup(),      // 用于存储未同步完成的实例
+		synced:   newWatcherGroup(),      // 用于存储已经同步完成的实例
 		stopc:    make(chan struct{}),
 	}
-	s.store.ReadView = &readView{s}   //调用storage中全局view查询
-	s.store.WriteView = &writeView{s} //调用storage中全局view查询
+	s.store.ReadView = &readView{s}   // 调用storage中全局view查询
+	s.store.WriteView = &writeView{s} // 调用storage中全局view查询
 	if s.le != nil {
 		// 使用此存储作为删除器，因此撤销触发器监听事件
 		s.le.SetRangeDeleter(func() lease.TxnDelete {
@@ -199,12 +199,12 @@ func (s *watchableStore) syncWatchersLoop() {
 	for {
 		s.mu.RLock()
 		st := time.Now()
-		lastUnsyncedWatchers := s.unsynced.size() //获取当前的unsynced watcherGroup的大小
+		lastUnsyncedWatchers := s.unsynced.size() // 获取当前的unsynced watcherGroup的大小
 		s.mu.RUnlock()
 
 		unsyncedWatchers := 0
 		if lastUnsyncedWatchers > 0 {
-			unsyncedWatchers = s.syncWatchers() //存在需要进行同步的watcher实例，调用syncWatchers()方法对unsynced watcherGroup中的watcher进行批量同步
+			unsyncedWatchers = s.syncWatchers() // 存在需要进行同步的watcher实例，调用syncWatchers()方法对unsynced watcherGroup中的watcher进行批量同步
 		}
 		syncDuration := time.Since(st)
 
@@ -326,7 +326,7 @@ func (s *watchableStore) syncWatchers() int {
 	// query the backend store of key-value pairs
 	curRev := s.store.currentRev
 	compactionRev := s.store.compactMainRev
-	//根据unsynced watcherGroup中记录的watcher个数对其进行分批返回，同时获取该批watcher实例中查找最小的minRev字段，maxWatchersPerSync默认为512
+	// 根据unsynced watcherGroup中记录的watcher个数对其进行分批返回，同时获取该批watcher实例中查找最小的minRev字段，maxWatchersPerSync默认为512
 	wg, minRev := s.unsynced.choose(maxWatchersPerSync, curRev, compactionRev)
 	minBytes, maxBytes := newRevBytes(), newRevBytes()
 	revToBytes(revision{main: minRev}, minBytes)
@@ -336,8 +336,8 @@ func (s *watchableStore) syncWatchers() int {
 	// values are actual key-value pairs in backend.
 	tx := s.store.b.ReadTx()
 	tx.RLock()
-	revs, vs := tx.UnsafeRange(buckets.Key, minBytes, maxBytes, 0)//对key Bucket进行范围查找
-	evs := kvsToEvents(s.store.lg, wg, revs, vs) //负责将BoltDB中查询的键值对信息转换成相应的event实例
+	revs, vs := tx.UnsafeRange(buckets.Key, minBytes, maxBytes, 0) // 对key Bucket进行范围查找
+	evs := kvsToEvents(s.store.lg, wg, revs, vs)                   // 负责将BoltDB中查询的键值对信息转换成相应的event实例
 	// Must unlock after kvsToEvents, because vs (come from boltdb memory) is not deep copy.
 	// We can only unlock after Unmarshal, which will do deep copy.
 	// Otherwise we will trigger SIGSEGV during boltdb re-mmap.
@@ -345,7 +345,7 @@ func (s *watchableStore) syncWatchers() int {
 
 	var victims watcherBatch
 	wb := newWatcherBatch(wg, evs)
-	for w := range wg.watchers { //事件发送值每一个watcher对应的Channel中
+	for w := range wg.watchers { // 事件发送值每一个watcher对应的Channel中
 		w.minRev = curRev + 1
 
 		eb, ok := wb[w]
@@ -448,7 +448,9 @@ func (s *watchableStore) addVictim(victim watcherBatch) {
 	}
 }
 
-func (s *watchableStore) rev() int64 { return s.store.Rev() }
+func (s *watchableStore) rev() int64 {
+	return s.store.Rev()
+}
 
 func (s *watchableStore) progress(w *watcher) {
 	s.mu.RLock()
