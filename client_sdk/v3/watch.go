@@ -216,7 +216,7 @@ func (vc *valCtx) Deadline() (time.Time, bool) { return zeroTime, false }
 func (vc *valCtx) Done() <-chan struct{}       { return valCtxCh }
 func (vc *valCtx) Err() error                  { return nil }
 
-// 与后端建立流
+// 与后端建立流  gRPC调用，请求放入serverWatchStream.recvLoop()
 func (w *watcher) newWatcherGrpcStream(inctx context.Context) *watchGrpcStream {
 	ctx, cancel := context.WithCancel(&valCtx{inctx})
 	wgs := &watchGrpcStream{
@@ -280,7 +280,7 @@ func (w *watcher) Watch(ctx context.Context, key string, opts ...OpOption) Watch
 		}
 		wgs := w.streams[ctxKey]
 		if wgs == nil {
-			wgs = w.newWatcherGrpcStream(ctx) // 返回watch流
+			wgs = w.newWatcherGrpcStream(ctx) // 客户端返回watch流
 			w.streams[ctxKey] = wgs
 		}
 		donec := wgs.donec
@@ -358,7 +358,7 @@ func (w *watcher) RequestProgress(ctx context.Context) (err error) {
 	}
 	wgs := w.streams[ctxKey]
 	if wgs == nil {
-		wgs = w.newWatcherGrpcStream(ctx)
+		wgs = w.newWatcherGrpcStream(ctx) // 客户端建立watch流
 		w.streams[ctxKey] = wgs
 	}
 	donec := wgs.donec

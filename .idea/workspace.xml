@@ -6,7 +6,19 @@
   <component name="ChangeListManager">
     <list default="true" id="49524360-39b2-44cd-b702-de0461fb4222" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client_sdk/v2/auth_role.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v2/auth_role.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client_sdk/v2/auth_user.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v2/auth_user.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client_sdk/v2/curl.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v2/curl.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client_sdk/v2/discover.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/client_sdk/v2/util.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/client_sdk/v3/clientv3util/util.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/client_sdk/v3/watch.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/watch.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/raft.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/over_raft.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/etcd/mvcc/over_watchable_store.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/mvcc/over_watchable_store.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/raft/over_raft.go" beforeDir="false" afterPath="$PROJECT_DIR$/raft/over_raft.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/backup.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/backup.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/install-marker.sh" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -148,24 +160,34 @@
           <option name="timeStamp" value="3" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/etcd/mvcc/over_watcher_group.go</url>
-          <line>236</line>
-          <option name="timeStamp" value="46" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/etcd/mvcc/over_watcher_group.go</url>
-          <line>251</line>
-          <option name="timeStamp" value="74" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/etcd/mvcc/over_watcher_group.go</url>
-          <line>221</line>
-          <option name="timeStamp" value="75" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/etcd/mvcc/over_watchable_store.go</url>
           <line>440</line>
           <option name="timeStamp" value="83" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/client_sdk/v3/watch.go</url>
+          <line>221</line>
+          <option name="timeStamp" value="90" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/client_sdk/v3/watch.go</url>
+          <line>283</line>
+          <option name="timeStamp" value="91" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcdctl/ctlv3/command/watch_command.go</url>
+          <line>98</line>
+          <option name="timeStamp" value="93" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcdctl/ctlv3/command/watch_command.go</url>
+          <line>97</line>
+          <option name="timeStamp" value="94" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcdctl/ctlv3/command/watch_command.go</url>
+          <line>69</line>
+          <option name="timeStamp" value="95" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

@@ -165,11 +165,9 @@ MsgTimeoutNow | Candidate、Follower | 非本地： | | MsgReadIndex | Leader、
 - https://juejin.cn/post/6844904031186321416
 - https://www.codeleading.com/article/15455457381/
 - https://www.cnblogs.com/ricklz/p/15037925.html
-- https://blog.csdn.net/stayfoolish_yj/article/details/104497233
 - https://studygolang.com/articles/2058
 - https://blog.csdn.net/weixin_42017400/article/details/123206597
 - https://blog.csdn.net/weixin_42017400/article/details/123205879
--
 
 (2) electionElapsed
 
@@ -475,7 +473,7 @@ issue:
 curl -L http://127.0.0.1:2379/version
 curl -L http://192.168.59.156:2379/metrics
 etcdctl cluster-health
-etcdctl backup --data-dir /var/lib/etcd --backup-dir /tmp/etcd
+etcdutl backup --data-dir /var/lib/etcd --backup-dir /tmp/etcd
 
 # no crt 
 etcdctl snap save a.db 

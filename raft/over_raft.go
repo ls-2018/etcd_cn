@@ -320,7 +320,7 @@ func newRaft(c *Config) *raft {
 		logger:                    c.Logger,
 		checkQuorum:               c.CheckQuorum,                 // 检查需要维持的选票数,一旦小于,就会丢失leader
 		preVote:                   c.PreVote,                     // PreVote 是否启用PreVote
-		readOnly:                  newReadOnly(c.ReadOnlyOption), // etcd/etcdserver/raft.go:469    默认值0 ReadOnlySafe
+		readOnly:                  newReadOnly(c.ReadOnlyOption), // etcd/etcdserver/over_raft.go:469    默认值0 ReadOnlySafe
 		disableProposalForwarding: c.DisableProposalForwarding,   // 禁止将请求转发到leader,默认FALSE
 	}
 	// todo 没看懂

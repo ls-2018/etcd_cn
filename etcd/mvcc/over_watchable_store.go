@@ -258,7 +258,7 @@ func (s *watchableStore) moveVictims() (moved int) {
 	var newVictim watcherBatch
 	for _, wb := range victims {
 		// try to send responses again
-		//尝试发送受损的响应【因通道阻塞导致的】
+		// 尝试发送受损的响应【因通道阻塞导致的】
 		for w, eb := range wb {
 			rev := w.minRev - 1
 			if w.send(WatchResponse{WatchID: w.id, Events: eb.evs, Revision: rev}) {
@@ -404,7 +404,7 @@ func kvsToEvents(lg *zap.Logger, wg *watcherGroup, revs, vals [][]byte) (evs []m
 func (s *watchableStore) notify(rev int64, evs []mvccpb.Event) {
 	var victim watcherBatch
 	// type watcherBatch map[*watcher]*eventBatch
-	//找到所有的watch，synced使用了map和红黑树来快速找到监听的key
+	// 找到所有的watch，synced使用了map和红黑树来快速找到监听的key
 	for watcher, eb := range newWatcherBatch(&s.synced, evs) {
 		if eb.revs != 1 {
 			s.store.lg.Panic("在watch通知中出现多次修订", zap.Int("number-of-revisions", eb.revs))
@@ -421,7 +421,7 @@ func (s *watchableStore) notify(rev int64, evs []mvccpb.Event) {
 			s.synced.delete(watcher)
 		}
 	}
-	s.addVictim(victim)  //将因为chan满没发出的消息缓存，然后使用unsynced再将消息发送出去
+	s.addVictim(victim) // 将因为chan满没发出的消息缓存，然后使用unsynced再将消息发送出去
 }
 
 // 添加不健康的事件          watcher:待发送的消息

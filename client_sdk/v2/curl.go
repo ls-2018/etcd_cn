@@ -24,14 +24,6 @@ import (
 
 var cURLDebug = false
 
-func EnablecURLDebug() {
-	cURLDebug = true
-}
-
-func DisablecURLDebug() {
-	cURLDebug = false
-}
-
 // printcURL prints the cURL equivalent request to stderr.
 // It returns an error if the body of the request cannot
 // be read.

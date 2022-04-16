@@ -1,7 +1,6 @@
-#!/bin/bash
 
-# shellcheck disable=SC2006
 date_time=`date +%Y%m%d`
-etcdctl backup --data-dir /usr/local/etcd/niub3.etcd/ --backup-dir /niub/etcd_backup/"${date_time}"
+rm -rf ./etcd_backup/
+etcdutl backup --data-dir ../default.etcd --backup-dir ./etcd_backup/"${date_time}"
 
-find /niub/etcd_backup/ -ctime +7 -exec rm -r {} \;
+find ./etcd_backup/ -ctime +7 -exec rm -r {} \;
