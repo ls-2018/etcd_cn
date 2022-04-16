@@ -162,7 +162,6 @@ MsgTimeoutNow | Candidate、Follower | 非本地： | | MsgReadIndex | Leader、
 
 - https://www.lixueduan.com/categories/
 - https://blog.csdn.net/cyq6239075/article/details/105452133
-- https://blog.csdn.net/cyq6239075/article/details/108985149
 - https://juejin.cn/post/6844904031186321416
 - https://www.codeleading.com/article/15455457381/
 - https://www.cnblogs.com/ricklz/p/15037925.html
