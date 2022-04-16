@@ -27,7 +27,6 @@ import (
 	"go.uber.org/zap"
 )
 
-// non-const so modifiable by tests
 var (
 	// chanBufLen is the length of the buffered chan
 	// for sending out watched events.
@@ -46,14 +45,11 @@ type watchable interface {
 
 type watchableStore struct {
 	*store
-	// mu protects watcher groups and batches. It should never be locked
-	// before locking store.mu to avoid deadlock.
-	mu sync.RWMutex
-	// victims are watcher batches that were blocked on the watch channel
-	victims  []watcherBatch
-	victimc  chan struct{} // 如果watcher实例关联的ch通道被阻塞了，则对应的watcherBatch实例会暂时记录到该字段中
-	unsynced watcherGroup  // 用于存储未同步完成的实例
-	synced   watcherGroup  // 用于存储同步完成的实例
+	mu       sync.RWMutex
+	victims  []watcherBatch // 因为channel阻塞而暂存的
+	victimc  chan struct{}  // 如果watcher实例关联的ch通道被阻塞了，则对应的watcherBatch实例会暂时记录到该字段中
+	unsynced watcherGroup   // 用于存储未同步完成的实例
+	synced   watcherGroup   // 用于存储同步完成的实例
 	stopc    chan struct{}
 	wg       sync.WaitGroup
 }
@@ -83,12 +79,11 @@ func newWatchableStore(lg *zap.Logger, b backend.Backend, le lease.Lessor, cfg S
 		// 使用此存储作为删除器，因此撤销触发器监听事件
 		s.le.SetRangeDeleter(func() lease.TxnDelete {
 			return s.Write(traceutil.TODO())
-		},
-		)
+		})
 	}
 	s.wg.Add(2)
 	go s.syncWatchersLoop()
-	go s.syncVictimsLoop() // 接收事件失败的 watchers
+	go s.syncVictimsLoop() // 发送事件失败的 watchers
 	return s
 }
 
@@ -107,27 +102,29 @@ func (s *watchableStore) NewWatchStream() WatchStream {
 	}
 }
 
+// watcher 初始化
 func (s *watchableStore) watch(key, end []byte, startRev int64, id WatchID, ch chan<- WatchResponse, fcs ...FilterFunc) (*watcher, cancelFunc) {
 	wa := &watcher{
-		key:    string(key),
-		end:    string(end),
-		minRev: startRev,
-		id:     id,
-		ch:     ch,
-		fcs:    fcs,
+		key:         string(key),
+		end:         string(end),
+		minRev:      startRev,
+		id:          id,
+		ch:          ch, // 将变更事件塞进去,可能会与其他watcher 共享
+		filterFuncs: fcs,
 	}
 
 	s.mu.Lock()
 	s.revMu.RLock()
+	// 为0 或者是超过最新的修订版本 , 都设置为下一个修订版本
 	synced := startRev > s.store.currentRev || startRev == 0
 	if synced {
 		wa.minRev = s.store.currentRev + 1
 		if startRev > wa.minRev {
 			wa.minRev = startRev
 		}
-		s.synced.add(wa)
+		s.synced.add(wa) // 把当前watcher 定义为已经同步完的
 	} else {
-		s.unsynced.add(wa)
+		s.unsynced.add(wa) // 把当前watcher 定义为 没有同步完的
 	}
 	s.revMu.RUnlock()
 	s.mu.Unlock()
@@ -135,7 +132,7 @@ func (s *watchableStore) watch(key, end []byte, startRev int64, id WatchID, ch c
 	return wa, func() { s.cancelWatcher(wa) }
 }
 
-// cancelWatcher removes references of the watcher from the watchableStore
+// 移除watcher
 func (s *watchableStore) cancelWatcher(wa *watcher) {
 	for {
 		s.mu.Lock()
@@ -143,16 +140,16 @@ func (s *watchableStore) cancelWatcher(wa *watcher) {
 			break
 		} else if s.synced.delete(wa) {
 			break
-		} else if wa.compacted {
+		} else if wa.compacted { // 因日志压缩,该watcher已被移除
 			break
-		} else if wa.ch == nil {
+		} else if wa.ch == nil { // 判断是否还能发送数据
 			// already canceled (e.g., cancel/close race)
 			break
 		}
 
 		if !wa.victim {
 			s.mu.Unlock()
-			panic("watcher not victim but not in watch groups")
+			panic("观察者不是受害者，但不在观察组中")
 		}
 
 		var victimBatch watcherBatch
@@ -321,9 +318,6 @@ func (s *watchableStore) syncWatchers() int {
 	s.store.revMu.RLock()
 	defer s.store.revMu.RUnlock()
 
-	// in order to find key-value pairs from unsynced watchers, we need to
-	// find min revision index, and these revisions can be used to
-	// query the backend store of key-value pairs
 	curRev := s.store.currentRev
 	compactionRev := s.store.compactMainRev
 	// 根据unsynced watcherGroup中记录的watcher个数对其进行分批返回，同时获取该批watcher实例中查找最小的minRev字段，maxWatchersPerSync默认为512
@@ -332,15 +326,10 @@ func (s *watchableStore) syncWatchers() int {
 	revToBytes(revision{main: minRev}, minBytes)
 	revToBytes(revision{main: curRev + 1}, maxBytes)
 
-	// UnsafeRange returns keys and values. And in boltdb, keys are revisions.
-	// values are actual key-value pairs in backend.
 	tx := s.store.b.ReadTx()
 	tx.RLock()
 	revs, vs := tx.UnsafeRange(buckets.Key, minBytes, maxBytes, 0) // 对key Bucket进行范围查找
 	evs := kvsToEvents(s.store.lg, wg, revs, vs)                   // 负责将BoltDB中查询的键值对信息转换成相应的event实例
-	// Must unlock after kvsToEvents, because vs (come from boltdb memory) is not deep copy.
-	// We can only unlock after Unmarshal, which will do deep copy.
-	// Otherwise we will trigger SIGSEGV during boltdb re-mmap.
 	tx.RUnlock()
 
 	var victims watcherBatch
@@ -361,7 +350,10 @@ func (s *watchableStore) syncWatchers() int {
 		}
 
 		if w.send(WatchResponse{WatchID: w.id, Events: eb.evs, Revision: curRev}) {
+			// 往通道里发送的消息
 		} else {
+			// case 1 确实是发送失败
+			// case 2 通道阻塞了，暂时标记位victim
 			if victims == nil {
 				victims = make(watcherBatch)
 			}
@@ -372,7 +364,6 @@ func (s *watchableStore) syncWatchers() int {
 			victims[w] = eb
 		} else {
 			if eb.moreRev != 0 {
-				// stay unsynced; more to read
 				continue
 			}
 			s.synced.add(w)
@@ -381,10 +372,6 @@ func (s *watchableStore) syncWatchers() int {
 	}
 	s.addVictim(victims)
 
-	vsz := 0
-	for _, v := range s.victims {
-		vsz += len(v)
-	}
 	return s.unsynced.size()
 }
 
@@ -411,32 +398,30 @@ func kvsToEvents(lg *zap.Logger, wg *watcherGroup, revs, vals [][]byte) (evs []m
 	return evs
 }
 
-// notify notifies the fact that given event at the given rev just happened to
-// watchers that watch on the key of the event.
+// notify 当前的修订版本,当前的变更事件   用于通知对应的watcher
 func (s *watchableStore) notify(rev int64, evs []mvccpb.Event) {
 	var victim watcherBatch
-	for w, eb := range newWatcherBatch(&s.synced, evs) {
+	// type watcherBatch map[*watcher]*eventBatch
+	for watcher, eb := range newWatcherBatch(&s.synced, evs) {
 		if eb.revs != 1 {
-			s.store.lg.Panic(
-				"unexpected multiple revisions in watch notification",
-				zap.Int("number-of-revisions", eb.revs),
-			)
+			s.store.lg.Panic("在watch通知中出现多次修订", zap.Int("number-of-revisions", eb.revs))
 		}
-		if w.send(WatchResponse{WatchID: w.id, Events: eb.evs, Revision: rev}) {
+		if watcher.send(WatchResponse{WatchID: watcher.id, Events: eb.evs, Revision: rev}) {
 		} else {
-			// move slow watcher to victims
-			w.minRev = rev + 1
+			// 移动缓慢的观察者到victim
+			watcher.minRev = rev + 1
 			if victim == nil {
 				victim = make(watcherBatch)
 			}
-			w.victim = true
-			victim[w] = eb
-			s.synced.delete(w)
+			watcher.victim = true
+			victim[watcher] = eb
+			s.synced.delete(watcher)
 		}
 	}
 	s.addVictim(victim)
 }
 
+// 添加不健康的事件          watcher:待发送的消息
 func (s *watchableStore) addVictim(victim watcherBatch) {
 	if victim == nil {
 		return
@@ -464,44 +449,32 @@ func (s *watchableStore) progress(w *watcher) {
 }
 
 type watcher struct {
-	// the watcher key
-	key string
-	// end indicates the end of the range to watch.
-	// If end is set, the watcher is on a range.
-	end string
-
-	// victim is set when ch is blocked and undergoing victim processing
-	victim bool
-
-	// compacted is set when the watcher is removed because of compaction
-	compacted bool
-
+	key       string
+	end       string
+	victim    bool // 当ch被阻塞时，并正在进行受害者处理时被设置。
+	compacted bool // 当 watcher 因为压缩而被移除时，compacted被设置
 	// restore is true when the watcher is being restored from leader snapshot
 	// which means that this watcher has just been moved from "synced" to "unsynced"
 	// watcher group, possibly with a future revision when it was first added
 	// to the synced watcher
 	// "unsynced" watcher revision must always be <= current revision,
 	// except when the watcher were to be moved from "synced" watcher group
-	restore bool
-
-	// minRev is the minimum revision update the watcher will accept
-	minRev int64
-	id     WatchID
-
-	fcs []FilterFunc
-	// a chan to send out the watch response.
-	// The chan might be shared with other watchers.
-	ch chan<- WatchResponse
+	restore     bool
+	minRev      int64                // 开始监听的修订版本
+	id          WatchID              // watcher id
+	filterFuncs []FilterFunc         // 事件过滤
+	ch          chan<- WatchResponse // 将变更事件塞进去,可能会与其他watcher 共享
 }
 
+// 向客户端发送事件
 func (w *watcher) send(wr WatchResponse) bool {
 	progressEvent := len(wr.Events) == 0
 
-	if len(w.fcs) != 0 {
+	if len(w.filterFuncs) != 0 {
 		ne := make([]mvccpb.Event, 0, len(wr.Events))
 		for i := range wr.Events {
 			filtered := false
-			for _, filter := range w.fcs {
+			for _, filter := range w.filterFuncs {
 				if filter(wr.Events[i]) {
 					filtered = true
 					break
@@ -514,12 +487,12 @@ func (w *watcher) send(wr WatchResponse) bool {
 		wr.Events = ne
 	}
 
-	// if all events are filtered out, we should send nothing.
+	// 所有的事件都被过滤掉了
 	if !progressEvent && len(wr.Events) == 0 {
 		return true
 	}
 	select {
-	case w.ch <- wr:
+	case w.ch <- wr: // 正常的事件
 		return true
 	default:
 		return false

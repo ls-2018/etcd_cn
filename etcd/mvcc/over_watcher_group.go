@@ -36,6 +36,7 @@ type eventBatch struct {
 	moreRev int64
 }
 
+// OK
 func (eb *eventBatch) add(ev mvccpb.Event) {
 	if eb.revs > watchBatchMaxRevs {
 		// maxed out batch size
@@ -63,8 +64,9 @@ func (eb *eventBatch) add(ev mvccpb.Event) {
 	eb.evs = append(eb.evs, ev)
 }
 
-type watcherBatch map[*watcher]*eventBatch
+type watcherBatch map[*watcher]*eventBatch // 记录了每个watcher 待返回的事件[批]
 
+// 给watcher发送一批事件,存储响应
 func (wb watcherBatch) add(w *watcher, ev mvccpb.Event) {
 	eb := wb[w]
 	if eb == nil {
@@ -74,18 +76,16 @@ func (wb watcherBatch) add(w *watcher, ev mvccpb.Event) {
 	eb.add(ev)
 }
 
-// newWatcherBatch maps watchers to their matched events. It enables quick
-// events look up by watcher.
+// newWatcherBatch 当收到一批事件后，去watchGroup组找匹配的watcher ，然后发送出去
 func newWatcherBatch(wg *watcherGroup, evs []mvccpb.Event) watcherBatch {
-	if len(wg.watchers) == 0 {
+	if len(wg.watchers) == 0 { // 没有watcher
 		return nil
 	}
-
-	wb := make(watcherBatch)
+	wb := make(watcherBatch) // 给watcher发送一批事件
 	for _, ev := range evs {
-		for w := range wg.watcherSetByKey(string(ev.Kv.Key)) {
+		for w := range wg.watcherSetByKey(ev.Kv.Key) {
 			if ev.Kv.ModRevision >= w.minRev {
-				// don't double notify
+				// 不要重复通知
 				wb.add(w, ev)
 			}
 		}
@@ -97,11 +97,12 @@ type watcherSet map[*watcher]struct{}
 
 func (w watcherSet) add(wa *watcher) {
 	if _, ok := w[wa]; ok {
-		panic("add watcher twice!")
+		panic("添加同一个watcher两次!")
 	}
 	w[wa] = struct{}{}
 }
 
+// 合并watcher
 func (w watcherSet) union(ws watcherSet) {
 	for wa := range ws {
 		w.add(wa)
@@ -110,24 +111,24 @@ func (w watcherSet) union(ws watcherSet) {
 
 func (w watcherSet) delete(wa *watcher) {
 	if _, ok := w[wa]; !ok {
-		panic("removing missing watcher!")
+		panic("要移除的watcher 已丢失!")
 	}
 	delete(w, wa)
 }
 
-type watcherSetByKey map[string]watcherSet
+type watcherSetByKey map[string]watcherSet // 监听的key
 
 func (w watcherSetByKey) add(wa *watcher) {
-	set := w[string(wa.key)]
+	set := w[wa.key]
 	if set == nil {
 		set = make(watcherSet)
-		w[string(wa.key)] = set
+		w[wa.key] = set
 	}
 	set.add(wa)
 }
 
 func (w watcherSetByKey) delete(wa *watcher) bool {
-	k := string(wa.key)
+	k := wa.key
 	if v, ok := w[k]; ok {
 		if _, ok := v[wa]; ok {
 			delete(v, wa)
@@ -141,22 +142,19 @@ func (w watcherSetByKey) delete(wa *watcher) bool {
 	return false
 }
 
-// watcherGroup is a collection of watchers organized by their ranges
+// watcher的集合
 type watcherGroup struct {
-	// keyWatchers has the watchers that watch on a single key
-	keyWatchers watcherSetByKey
-	// ranges has the watchers that watch a range; it is sorted by interval
-	ranges adt.IntervalTree
-	// watchers is the set of all watchers
-	watchers watcherSet
+	keyWatchers watcherSetByKey  // 监听单个key的watcher
+	ranges      adt.IntervalTree // 红黑树    按照间隔排序
+	watchers    watcherSet
 }
 
-// 用于存储未同步完成的实例
+// 用于存储同步完成、未同步完成的实例
 func newWatcherGroup() watcherGroup {
 	return watcherGroup{
 		keyWatchers: make(watcherSetByKey),
 		ranges:      adt.NewIntervalTree(),
-		watchers:    make(watcherSet),
+		watchers:    make(watcherSet), // 元素集
 	}
 }
 
@@ -167,30 +165,30 @@ func (wg *watcherGroup) add(wa *watcher) {
 		wg.keyWatchers.add(wa)
 		return
 	}
-
-	// 间隔 已经注册了吗?
+	// 范围监听
+	// 已经注册了interval ?
+	// 红黑树里存储了范围key
 	ivl := adt.NewStringAffineInterval(wa.key, wa.end)
 	if iv := wg.ranges.Find(ivl); iv != nil {
 		iv.Val.(watcherSet).add(wa)
 		return
 	}
 
-	// not registered, put in interval tree
 	ws := make(watcherSet)
 	ws.add(wa)
 	wg.ranges.Insert(ivl, ws)
 }
 
-// contains is whether the given key has a watcher in the group.
+// 监听的key在watcherGroup中是否有一个watcher
 func (wg *watcherGroup) contains(key string) bool {
 	_, ok := wg.keyWatchers[key]
-	return ok || wg.ranges.Intersects(adt.NewStringAffinePoint(key))
+	return ok || wg.ranges.Intersects(adt.NewStringAffinePoint(key)) // 是否有元素与key重叠
 }
 
-// size gives the number of unique watchers in the group.
+// size 返回当前group里有多少元素
 func (wg *watcherGroup) size() int { return len(wg.watchers) }
 
-// delete removes a watcher from the group.
+// 删除watcher
 func (wg *watcherGroup) delete(wa *watcher) bool {
 	if _, ok := wg.watchers[wa]; !ok {
 		return false
@@ -201,7 +199,7 @@ func (wg *watcherGroup) delete(wa *watcher) bool {
 		return true
 	}
 
-	ivl := adt.NewStringAffineInterval(string(wa.key), string(wa.end))
+	ivl := adt.NewStringAffineInterval(wa.key, wa.end)
 	iv := wg.ranges.Find(ivl)
 	if iv == nil {
 		return false

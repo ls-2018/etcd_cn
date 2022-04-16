@@ -38,10 +38,9 @@ func (tw *watchableStoreTxnWrite) End() {
 		}
 	}
 
-	// end write txn under watchable store lock so the updates are visible
-	// when asynchronous event posting checks the current store revision
+	// 当异步事件post检查当前存储版本时，在可观察存储锁下写入TXN，因此更新是可见的
 	tw.s.mu.Lock()
-	tw.s.notify(rev, evs)
+	tw.s.notify(rev, evs) // 事务结束时, 通知watcher
 	tw.TxnWrite.End()
 	tw.s.mu.Unlock()
 }

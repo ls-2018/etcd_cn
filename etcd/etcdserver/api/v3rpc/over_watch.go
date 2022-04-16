@@ -67,30 +67,24 @@ const ctrlStreamBufLen = 16
 // and creates responses that forwarded to gRPC stream.
 // It also forwards control message like watch created and canceled.
 type serverWatchStream struct {
-	lg *zap.Logger
-
-	clusterID int64
-	memberID  int64
-
+	lg              *zap.Logger
+	clusterID       int64
+	memberID        int64
 	maxRequestBytes int
-
-	sg        etcdserver.RaftStatusGetter
-	watchable mvcc.WatchableKV
-	ag        AuthGetter
-
-	gRPCStream  pb.Watch_WatchServer
-	watchStream mvcc.WatchStream
-	ctrlStream  chan *pb.WatchResponse // 用来发送控制响应的Chan，比如watcher创建和取消。
+	sg              etcdserver.RaftStatusGetter
+	watchable       mvcc.WatchableKV
+	ag              AuthGetter
+	gRPCStream      pb.Watch_WatchServer
+	watchStream     mvcc.WatchStream
+	ctrlStream      chan *pb.WatchResponse // 用来发送控制响应的Chan，比如watcher创建和取消。
 
 	// mu protects progress, prevKV, fragment
 	mu sync.RWMutex
 	// tracks the watchID that stream might need to send progress to
 	// TODO: combine progress and prevKV into a single struct?
 	progress map[mvcc.WatchID]bool // 储存watcher
-	// record watch IDs that need return previous key-value pair
-	prevKV map[mvcc.WatchID]bool
-	// records fragmented watch IDs
-	fragment map[mvcc.WatchID]bool
+	prevKV   map[mvcc.WatchID]bool // 记录是否存储了 watcher之前的kv
+	fragment map[mvcc.WatchID]bool // 记录碎片化的watcherID     , client设置了 大数据量时拆分发送
 
 	closec chan struct{}
 	wg     sync.WaitGroup // 等待send loop 完成
@@ -99,27 +93,20 @@ type serverWatchStream struct {
 // Watch 接收到watch请求
 func (ws *watchServer) Watch(stream pb.Watch_WatchServer) (err error) {
 	sws := serverWatchStream{
-		lg: ws.lg,
-
-		clusterID: ws.clusterID,
-		memberID:  ws.memberID,
-
+		lg:              ws.lg,
+		clusterID:       ws.clusterID,
+		memberID:        ws.memberID,
 		maxRequestBytes: ws.maxRequestBytes,
-
-		sg:        ws.sg,
-		watchable: ws.watchable,
-		ag:        ws.ag,
-
-		gRPCStream:  stream,
-		watchStream: ws.watchable.NewWatchStream(),
-		// 用来发送控制响应的Chan，比如watcher创建和取消。
-		ctrlStream: make(chan *pb.WatchResponse, ctrlStreamBufLen),
-
-		progress: make(map[mvcc.WatchID]bool),
-		prevKV:   make(map[mvcc.WatchID]bool),
-		fragment: make(map[mvcc.WatchID]bool),
-
-		closec: make(chan struct{}),
+		sg:              ws.sg, // 获取状态
+		watchable:       ws.watchable,
+		ag:              ws.ag,  // 认证服务
+		gRPCStream:      stream, //
+		watchStream:     ws.watchable.NewWatchStream(),
+		ctrlStream:      make(chan *pb.WatchResponse, ctrlStreamBufLen), // 用来发送控制响应的Chan，比如watcher创建和取消。
+		progress:        make(map[mvcc.WatchID]bool),
+		prevKV:          make(map[mvcc.WatchID]bool),
+		fragment:        make(map[mvcc.WatchID]bool),
+		closec:          make(chan struct{}),
 	}
 
 	sws.wg.Add(1)
@@ -181,7 +168,7 @@ func (sws *serverWatchStream) recvLoop() error {
 			return err
 		}
 
-		if req.WatchRequest_CreateRequest != nil {
+		if req.WatchRequest_CreateRequest != nil { // 创建watcher ✅
 			uv := &pb.WatchRequest_CreateRequest{}
 			uv = req.WatchRequest_CreateRequest
 			if uv.CreateRequest == nil {
@@ -251,12 +238,12 @@ func (sws *serverWatchStream) recvLoop() error {
 				wr.CancelReason = err.Error()
 			}
 			select {
-			case sws.ctrlStream <- wr:
+			case sws.ctrlStream <- wr: // 客户端创建watch的响应
 			case <-sws.closec:
 				return nil
 			}
 		}
-		if req.WatchRequest_CancelRequest != nil {
+		if req.WatchRequest_CancelRequest != nil { // 删除watcher ✅
 			uv := &pb.WatchRequest_CancelRequest{}
 			uv = req.WatchRequest_CancelRequest
 			if uv.CancelRequest != nil {
@@ -282,7 +269,7 @@ func (sws *serverWatchStream) recvLoop() error {
 			if uv.ProgressRequest != nil {
 				sws.ctrlStream <- &pb.WatchResponse{
 					Header:  sws.newResponseHeader(sws.watchStream.Rev()),
-					WatchId: -1, // response is not associated with any WatchId and will be broadcast to all watch channels
+					WatchId: -1, // 如果发送了密钥更新，则忽略下一次进度更新
 				}
 			}
 		}
@@ -291,14 +278,12 @@ func (sws *serverWatchStream) recvLoop() error {
 
 // 往watch stream 发送消息
 func (sws *serverWatchStream) sendLoop() {
-	// watch ids that are currently active
-	// 监视当前活动的id
+	// 当前活动的watcher
 	ids := make(map[mvcc.WatchID]struct{})
-	// watch responses pending on a watch id creation message
-	// 等待在一个手表id创建消息上的手表响应
+	// TODO 同一个流,可能会有不同的watcher？
 	pending := make(map[mvcc.WatchID][]*pb.WatchResponse)
 
-	interval := GetProgressReportInterval()
+	interval := GetProgressReportInterval() // interval   10m44s
 	progressTicker := time.NewTicker(interval)
 
 	defer func() {
@@ -307,14 +292,10 @@ func (sws *serverWatchStream) sendLoop() {
 
 	for {
 		select {
-		case wresp, ok := <-sws.watchStream.Chan(): // //watchStream Channel中提取event发送
+		case wresp, ok := <-sws.watchStream.Chan(): // watchStream Channel中提取event发送
 			if !ok {
 				return
 			}
-
-			// TODO: evs is []mvccpb.Event type
-			// either return []*mvccpb.Event from the mvcc package
-			// or define protocol buffer with []mvccpb.Event.
 			evs := wresp.Events
 			events := make([]*mvccpb.Event, len(evs))
 			sws.mu.RLock()
@@ -339,16 +320,16 @@ func (sws *serverWatchStream) sendLoop() {
 				CompactRevision: wresp.CompactRevision,
 				Canceled:        canceled,
 			}
-
-			if _, okID := ids[wresp.WatchID]; !okID {
-				// buffer if id not yet announced
+			_, okID := ids[wresp.WatchID]
+			if !okID { // 当前id 不活跃
+				// 缓冲，如果ID尚未公布
 				wrs := append(pending[wresp.WatchID], wr)
 				pending[wresp.WatchID] = wrs
 				continue
 			}
 
 			sws.mu.RLock()
-			fragmented, ok := sws.fragment[wresp.WatchID]
+			fragmented, ok := sws.fragment[wresp.WatchID] // 是否 拆分大的数据
 			sws.mu.RUnlock()
 
 			var serr error
@@ -360,49 +341,49 @@ func (sws *serverWatchStream) sendLoop() {
 
 			if serr != nil {
 				if isClientCtxErr(sws.gRPCStream.Context().Err(), serr) {
-					sws.lg.Debug("failed to send watch response to gRPC stream", zap.Error(serr))
+					sws.lg.Debug("未能向gRPC流发送watch响应", zap.Error(serr))
 				} else {
-					sws.lg.Warn("failed to send watch response to gRPC stream", zap.Error(serr))
+					sws.lg.Warn("向gRPC流发送watch响应失败", zap.Error(serr))
 				}
 				return
 			}
 
 			sws.mu.Lock()
 			if len(evs) > 0 && sws.progress[wresp.WatchID] {
-				// elide next progress update if sent a key update
+				// 如果发送了密钥更新，则忽略下一次进度更新
 				sws.progress[wresp.WatchID] = false
 			}
 			sws.mu.Unlock()
 
-		case c, ok := <-sws.ctrlStream:
+		case c, ok := <-sws.ctrlStream: // 流控制信号  ✅
+			// 给client回复的响应
 			if !ok {
-				return
+				return // channel关闭了
 			}
 
 			if err := sws.gRPCStream.Send(c); err != nil {
 				if isClientCtxErr(sws.gRPCStream.Context().Err(), err) {
-					sws.lg.Debug("failed to send watch control response to gRPC stream", zap.Error(err))
+					sws.lg.Debug("未能向gRPC流发送watch控制响应", zap.Error(err))
 				} else {
-					sws.lg.Warn("failed to send watch control response to gRPC stream", zap.Error(err))
+					sws.lg.Warn("向gRPC流发送watch控制响应失败", zap.Error(err))
 				}
 				return
 			}
 
-			// track id creation
-			wid := mvcc.WatchID(c.WatchId)
+			// 创建 追踪id
+			wid := mvcc.WatchID(c.WatchId) // 第一次创建watcher  ，id 是0
 			if c.Canceled {
 				delete(ids, wid)
 				continue
 			}
 			if c.Created {
-				// flush buffered events
 				ids[wid] = struct{}{}
 				for _, v := range pending[wid] {
 					if err := sws.gRPCStream.Send(v); err != nil {
 						if isClientCtxErr(sws.gRPCStream.Context().Err(), err) {
-							sws.lg.Debug("failed to send pending watch response to gRPC stream", zap.Error(err))
+							sws.lg.Debug("未能向gRPC流发送待处理的watch响应", zap.Error(err))
 						} else {
-							sws.lg.Warn("failed to send pending watch response to gRPC stream", zap.Error(err))
+							sws.lg.Warn("未能向gRPC流发送待处理的watch响应", zap.Error(err))
 						}
 						return
 					}
@@ -424,10 +405,6 @@ func (sws *serverWatchStream) sendLoop() {
 			return
 		}
 	}
-}
-
-func IsCreateEvent(e mvccpb.Event) bool {
-	return e.Type == mvccpb.PUT && e.Kv.CreateRevision == e.Kv.ModRevision
 }
 
 func sendFragments(wr *pb.WatchResponse, maxRequestBytes int, sendFunc func(*pb.WatchResponse) error) error {
@@ -466,22 +443,6 @@ func sendFragments(wr *pb.WatchResponse, maxRequestBytes int, sendFunc func(*pb.
 	return nil
 }
 
-func (sws *serverWatchStream) close() {
-	sws.watchStream.Close()
-	close(sws.closec)
-	sws.wg.Wait()
-}
-
-func filterNoDelete(e mvccpb.Event) bool {
-	return e.Type == mvccpb.DELETE
-}
-
-func filterNoPut(e mvccpb.Event) bool {
-	return e.Type == mvccpb.PUT
-}
-
-// ----------------------------------------------  OVER ---------------------------------------------------------------------
-
 // NewWatchServer OK
 func NewWatchServer(s *etcdserver.EtcdServer) pb.WatchServer {
 	srv := &watchServer{
@@ -506,7 +467,6 @@ func NewWatchServer(s *etcdserver.EtcdServer) pb.WatchServer {
 	return srv
 }
 
-// GetProgressReportInterval OK
 func GetProgressReportInterval() time.Duration {
 	progressReportIntervalMu.RLock()
 	interval := progressReportInterval
@@ -542,4 +502,22 @@ func (sws *serverWatchStream) newResponseHeader(rev int64) *pb.ResponseHeader {
 		Revision:  rev,
 		RaftTerm:  sws.sg.Term(),
 	}
+}
+
+func IsCreateEvent(e mvccpb.Event) bool {
+	return e.Type == mvccpb.PUT && e.Kv.CreateRevision == e.Kv.ModRevision
+}
+
+func (sws *serverWatchStream) close() {
+	sws.watchStream.Close()
+	close(sws.closec)
+	sws.wg.Wait()
+}
+
+func filterNoDelete(e mvccpb.Event) bool {
+	return e.Type == mvccpb.DELETE
+}
+
+func filterNoPut(e mvccpb.Event) bool {
+	return e.Type == mvccpb.PUT
 }

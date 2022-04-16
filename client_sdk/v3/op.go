@@ -500,7 +500,7 @@ func WithPrevKV() OpOption {
 // when the total size of watch events exceed etcd-side request limit.
 // The default etcd-side request limit is 1.5 MiB, which can be configured
 // as "--max-request-bytes" flag value + gRPC-overhead 512 bytes.
-// See "etcdserver/api/v3rpc/watch.go" for more details.
+// See "etcdserver/api/v3rpc/over_watch.go" for more details.
 func WithFragment() OpOption {
 	return func(op *Op) { op.fragment = true }
 }

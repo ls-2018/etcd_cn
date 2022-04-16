@@ -41,8 +41,7 @@ type WatchStream interface {
 	// Watch 创建watch id 默认为0  , 范围监听   起始的修订版本   事件过滤
 	Watch(id WatchID, key, end []byte, startRev int64, fcs ...FilterFunc) (WatchID, error)
 
-	// Chan returns a chan. All watch response will be sent to the returned chan.
-	Chan() <-chan WatchResponse
+	Chan() <-chan WatchResponse // 所有watch的响应会会被塞入返回的channel
 
 	// RequestProgress requests the progress of the watcher with given ID. The response
 	// will only be sent if the watcher is currently synced.
@@ -84,13 +83,12 @@ type WatchResponse struct {
 // watchers的一写信息
 type watchStream struct {
 	watchable watchable
-	ch        chan WatchResponse
-
-	mu       sync.Mutex // guards fields below it
-	nextID   WatchID    // 预先分配给这个流中的下一个新的观察者 ,第一次是0
-	closed   bool
-	cancels  map[WatchID]cancelFunc
-	watchers map[WatchID]*watcher
+	ch        chan WatchResponse // 用于传递watch 响应的通道
+	mu        sync.Mutex         // guards fields below it
+	nextID    WatchID            // 预先分配给这个流中的下一个新的观察者 ,第一次是0
+	closed    bool
+	cancels   map[WatchID]cancelFunc // 用于取消特定的watcher
+	watchers  map[WatchID]*watcher   // 记录watcher事件及其Id
 }
 
 // Watch 在当前stream创建watcher并返回 WatchID.
