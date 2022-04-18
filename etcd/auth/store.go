@@ -116,7 +116,7 @@ type AuthStore interface {
 	IsRangePermitted(authInfo *AuthInfo, key, rangeEnd []byte) error       // 检查用户的范围权限
 	IsDeleteRangePermitted(authInfo *AuthInfo, key, rangeEnd []byte) error //
 	IsAdminPermitted(authInfo *AuthInfo) error                             //
-	GenTokenPrefix() (string, error)                                       // 在简单令牌的情况下生成一个随机字符串，在JWT的情况下，它生成一个空字符串
+	GenTokenPrefix() (string, error)                                       // 在简单令牌的情况下生成一个随机字符串,在JWT的情况下,它生成一个空字符串
 	Revision() uint64                                                      //
 	CheckPassword(username, password string) (uint64, error)               // 检查给定的一对用户名和密码是否正确
 	Close() error                                                          // 清理AuthStore
@@ -270,7 +270,7 @@ func (as *authStore) authInfoFromToken(ctx context.Context, token string) (*Auth
 }
 
 func (as *authStore) isOpPermitted(userName string, revision uint64, key, rangeEnd []byte, permTyp authpb.Permission_Type) error {
-	// 这个函数的开销很大，所以我们需要一个缓存机制
+	// 这个函数的开销很大,所以我们需要一个缓存机制
 	if !as.IsAuthEnabled() {
 		return nil
 	}
@@ -673,7 +673,7 @@ func (as *authStore) RoleGrantPermission(r *pb.AuthRoleGrantPermissionRequest) (
 	if role == nil {
 		return nil, ErrRoleNotFound
 	}
-	// 在已有的权限中, 寻找第一个与key相等的，没找到的话 idx =len(role.KeyPermission)
+	// 在已有的权限中, 寻找第一个与key相等的,没找到的话 idx =len(role.KeyPermission)
 	idx := sort.Search(len(role.KeyPermission), func(i int) bool {
 		// a,a 0
 		// a b -1
@@ -701,7 +701,7 @@ func (as *authStore) RoleGrantPermission(r *pb.AuthRoleGrantPermissionRequest) (
 	}
 
 	putRole(as.lg, tx, role)
-	// 目前，单个角色更新会使每个缓存失效，应该进行优化。
+	// 目前,单个角色更新会使每个缓存失效,应该进行优化.
 	as.clearCachedPerm()
 
 	as.commitRevision(tx)

@@ -69,7 +69,7 @@ func (s *Stats) copy() Stats {
 	return ss
 }
 
-// Report  处理结果流直到它被关闭，然后生成一个包含有关所使用的结果数据的信息的字符串。
+// Report  处理结果流直到它被关闭,然后生成一个包含有关所使用的结果数据的信息的字符串.
 type Report interface {
 	Results() chan<- Result
 	Run() <-chan string

@@ -74,20 +74,19 @@ type serverWatchStream struct {
 	sg              etcdserver.RaftStatusGetter
 	watchable       mvcc.WatchableKV
 	ag              AuthGetter
-	gRPCStream      pb.Watch_WatchServer
-	watchStream     mvcc.WatchStream
-	ctrlStream      chan *pb.WatchResponse // 用来发送控制响应的Chan，比如watcher创建和取消。
+	gRPCStream      pb.Watch_WatchServer   // 与客户端进行连接的 Stream
+	watchStream     mvcc.WatchStream       // key 变动的消息管道
+	ctrlStream      chan *pb.WatchResponse // 用来发送控制响应的Chan,比如watcher创建和取消.
 
 	// mu protects progress, prevKV, fragment
 	mu sync.RWMutex
 	// tracks the watchID that stream might need to send progress to
 	// TODO: combine progress and prevKV into a single struct?
-	progress map[mvcc.WatchID]bool // 储存watcher
-	prevKV   map[mvcc.WatchID]bool // 记录是否存储了 watcher之前的kv
-	fragment map[mvcc.WatchID]bool // 记录碎片化的watcherID     , client设置了 大数据量时拆分发送
-
-	closec chan struct{}
-	wg     sync.WaitGroup // 等待send loop 完成
+	progress map[mvcc.WatchID]bool // 该类型的 watch,服务端会定时发送类似心跳消息
+	prevKV   map[mvcc.WatchID]bool // 该类型表明,对于/a/b 这样的监听范围, 如果 b 变化了, 前缀/a也需要通知
+	fragment map[mvcc.WatchID]bool // 该类型表明,传输数据量大于阈值,需要拆分发送
+	closec   chan struct{}
+	wg       sync.WaitGroup // 等待send loop 完成
 }
 
 // Watch 接收到watch请求
@@ -102,7 +101,7 @@ func (ws *watchServer) Watch(stream pb.Watch_WatchServer) (err error) {
 		ag:              ws.ag,  // 认证服务
 		gRPCStream:      stream, //
 		watchStream:     ws.watchable.NewWatchStream(),
-		ctrlStream:      make(chan *pb.WatchResponse, ctrlStreamBufLen), // 用来发送控制响应的Chan，比如watcher创建和取消。
+		ctrlStream:      make(chan *pb.WatchResponse, ctrlStreamBufLen), // 用来发送控制响应的Chan,比如watcher创建和取消.
 		progress:        make(map[mvcc.WatchID]bool),
 		prevKV:          make(map[mvcc.WatchID]bool),
 		fragment:        make(map[mvcc.WatchID]bool),
@@ -116,7 +115,7 @@ func (ws *watchServer) Watch(stream pb.Watch_WatchServer) (err error) {
 	}()
 
 	errc := make(chan error, 1)
-	// 理想情况下，recvLoop也会使用sws.wg。当stream. context (). done()被关闭时，流的recv可能会继续阻塞，因为它使用了不同的上下文，导致调用sws.close()时死锁。
+	// 理想情况下,recvLoop也会使用sws.wg.当stream. context (). done()被关闭时,流的recv可能会继续阻塞,因为它使用了不同的上下文,导致调用sws.close()时死锁.
 	go func() {
 		if rerr := sws.recvLoop(); rerr != nil {
 			if isClientCtxErr(stream.Context().Err(), rerr) {
@@ -156,10 +155,10 @@ func (sws *serverWatchStream) isWatchPermitted(wcr *pb.WatchCreateRequest) bool 
 	return sws.ag.AuthStore().IsRangePermitted(authInfo, []byte(wcr.Key), []byte(wcr.RangeEnd)) == nil
 }
 
-// 接收watch请求，可以是创建、取消、和
+// 接收watch请求,可以是创建、取消、和
 func (sws *serverWatchStream) recvLoop() error {
 	for {
-		// 同一个连接，可以接收多次不同的消息
+		// 同一个连接,可以接收多次不同的消息
 		req, err := sws.gRPCStream.Recv()
 		if err == io.EOF {
 			return nil
@@ -210,7 +209,7 @@ func (sws *serverWatchStream) recvLoop() error {
 			filters := FiltersFromRequest(creq) // server端  从watch请求中 获取一些过滤调价
 
 			wsrev := sws.watchStream.Rev() // 获取当前kv的修订版本
-			rev := creq.StartRevision      // 监听从哪个修订版本之后的变更，没穿就是当前
+			rev := creq.StartRevision      // 监听从哪个修订版本之后的变更,没穿就是当前
 			if rev == 0 {
 				rev = wsrev + 1
 			}
@@ -269,7 +268,7 @@ func (sws *serverWatchStream) recvLoop() error {
 			if uv.ProgressRequest != nil {
 				sws.ctrlStream <- &pb.WatchResponse{
 					Header:  sws.newResponseHeader(sws.watchStream.Rev()),
-					WatchId: -1, // 如果发送了密钥更新，则忽略下一次进度更新
+					WatchId: -1, // 如果发送了密钥更新,则忽略下一次进度更新
 				}
 			}
 		}
@@ -322,7 +321,7 @@ func (sws *serverWatchStream) sendLoop() {
 			}
 			_, okID := ids[wresp.WatchID]
 			if !okID { // 当前id 不活跃
-				// 缓冲，如果ID尚未公布
+				// 缓冲,如果ID尚未公布
 				wrs := append(pending[wresp.WatchID], wr)
 				pending[wresp.WatchID] = wrs
 				continue
@@ -350,7 +349,7 @@ func (sws *serverWatchStream) sendLoop() {
 
 			sws.mu.Lock()
 			if len(evs) > 0 && sws.progress[wresp.WatchID] {
-				// 如果发送了密钥更新，则忽略下一次进度更新
+				// 如果发送了密钥更新,则忽略下一次进度更新
 				sws.progress[wresp.WatchID] = false
 			}
 			sws.mu.Unlock()
@@ -371,7 +370,7 @@ func (sws *serverWatchStream) sendLoop() {
 			}
 
 			// 创建 追踪id
-			wid := mvcc.WatchID(c.WatchId) // 第一次创建watcher  ，id 是0
+			wid := mvcc.WatchID(c.WatchId) // 第一次创建watcher  ,id 是0
 			if c.Canceled {
 				delete(ids, wid)
 				continue

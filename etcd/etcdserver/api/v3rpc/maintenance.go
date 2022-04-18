@@ -242,9 +242,9 @@ func (ms *maintenanceServer) Snapshot(sr *pb.SnapshotRequest, srv pb.Maintenance
 	start := time.Now()
 	ms.lg.Info("往客户端发送一个快照", zap.Int64("total-bytes", total), zap.String("size", size))
 	for total-sent > 0 {
-		// buffer只保存从流中读取的字节，响应大小是OS页面大小的倍数，从boltdb中获取
+		// buffer只保存从流中读取的字节,响应大小是OS页面大小的倍数,从boltdb中获取
 		// 例如4 * 1024
-		// Send并不等待消息被客户端接收。因此，在Send操作之间不能安全地重用缓冲区
+		// Send并不等待消息被客户端接收.因此,在Send操作之间不能安全地重用缓冲区
 
 		buf := make([]byte, snapshotSendBufferSize)
 
@@ -254,9 +254,9 @@ func (ms *maintenanceServer) Snapshot(sr *pb.SnapshotRequest, srv pb.Maintenance
 		}
 		sent += int64(n)
 
-		// 如果total是x * snapshotSendBufferSize。这种反应是有可能的。RemainingBytes = = 0
-		// 分别地。这是否使etcd响应发送到客户端nil在原型和客户端停止接收从快照流之前etcd发送快照SHA?
-		// 不，客户端仍然会收到非nil响应，直到etcd用EOF关闭流
+		// 如果total是x * snapshotSendBufferSize.这种反应是有可能的.RemainingBytes = = 0
+		// 分别地.这是否使etcd响应发送到客户端nil在原型和客户端停止接收从快照流之前etcd发送快照SHA?
+		// 不,客户端仍然会收到非nil响应,直到etcd用EOF关闭流
 		resp := &pb.SnapshotResponse{
 			RemainingBytes: uint64(total - sent),
 			Blob:           buf[:n],

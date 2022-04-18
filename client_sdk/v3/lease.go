@@ -261,7 +261,7 @@ func (l *lessor) KeepAlive(ctx context.Context, id LeaseID) (<-chan *LeaseKeepAl
 
 	go l.keepAliveCtxCloser(ctx, id, ka.donec)
 	l.firstKeepAliveOnce.Do(func() {
-		// 500毫秒一次，不断的发送保持活动请求
+		// 500毫秒一次,不断的发送保持活动请求
 		go l.recvKeepAliveLoop()
 		// 删除等待太久没反馈的租约
 		go l.deadlineLoop()
@@ -411,7 +411,7 @@ func (l *lessor) recvKeepAliveLoop() (gerr error) {
 			}
 		} else {
 			for {
-				// 打开一个新的lease stream并开始发送保持活动请求。
+				// 打开一个新的lease stream并开始发送保持活动请求.
 				resp, err := stream.Recv()
 				if err != nil {
 					if canceledByCaller(l.stopCtx, err) {
@@ -438,7 +438,7 @@ func (l *lessor) recvKeepAliveLoop() (gerr error) {
 }
 
 // resetRecv opens a new lease stream and starts sending keep alive requests.
-// 打开一个新的lease stream并开始发送保持活动请求。
+// 打开一个新的lease stream并开始发送保持活动请求.
 func (l *lessor) resetRecv() (pb.Lease_LeaseKeepAliveClient, error) {
 	sctx, cancel := context.WithCancel(l.stopCtx)
 	// 建立服务端和客户端连接的lease stream

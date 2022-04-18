@@ -127,9 +127,9 @@ func NewStore(lg *zap.Logger, b backend.Backend, le lease.Lessor, cfg StoreConfi
 func (s *store) Read(mode ReadTxMode, trace *traceutil.Trace) TxnRead {
 	s.mu.RLock()
 	s.revMu.RLock()
-	// 对于只读的工作负载，我们通过复制事务读缓冲区来使用共享缓冲区提高并发性
-	// 对于写/写/读事务，我们使用共享缓冲区
-	// 而不是复制事务读缓冲区，以避免事务开销。
+	// 对于只读的工作负载,我们通过复制事务读缓冲区来使用共享缓冲区提高并发性
+	// 对于写/写/读事务,我们使用共享缓冲区
+	// 而不是复制事务读缓冲区,以避免事务开销.
 	var tx backend.ReadTx
 	if mode == ConcurrentReadTxMode {
 		tx = s.b.ConcurrentReadTx()
@@ -177,14 +177,14 @@ func (s *store) compactBarrier(ctx context.Context, ch chan struct{}) {
 
 // Hash OK
 func (s *store) Hash() (hash uint32, revision int64, err error) {
-	// TODO: hash和revision可能不一致，一个可能的解决方案是在函数的开头添加s.revMu.RLock()，这是昂贵的
+	// TODO: hash和revision可能不一致,一个可能的解决方案是在函数的开头添加s.revMu.RLock(),这是昂贵的
 	s.b.ForceCommit()
 	h, err := s.b.Hash(buckets.DefaultIgnores)
 
 	return h, s.currentRev, err
 }
 
-// HashByRev 计算所有MVCC修订到给定修订的哈希值。
+// HashByRev 计算所有MVCC修订到给定修订的哈希值.
 func (s *store) HashByRev(rev int64) (hash uint32, currentRev int64, compactRev int64, err error) {
 	s.mu.RLock()
 	s.revMu.RLock()

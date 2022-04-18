@@ -59,7 +59,7 @@ func newUserAddCommand() *cobra.Command {
 		Run:   userAddCommandFunc,
 	}
 
-	cmd.Flags().BoolVar(&passwordInteractive, "interactive", true, "从stdin读取密码，而不是交互终端")
+	cmd.Flags().BoolVar(&passwordInteractive, "interactive", true, "从stdin读取密码,而不是交互终端")
 	cmd.Flags().StringVar(&passwordFromFlag, "new-user-password", "", "从命令行标志提供密码")
 	cmd.Flags().BoolVar(&noPassword, "no-password", false, "创建一个没有密码的用户(仅基于CN的身份验证)")
 
@@ -101,7 +101,7 @@ func newUserChangePasswordCommand() *cobra.Command {
 		Run:   userChangePasswordCommandFunc,
 	}
 
-	cmd.Flags().BoolVar(&passwordInteractive, "interactive", true, "如果为true，从stdin读取密码，而不是交互终端")
+	cmd.Flags().BoolVar(&passwordInteractive, "interactive", true, "如果为true,从stdin读取密码,而不是交互终端")
 
 	return &cmd
 }

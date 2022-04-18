@@ -22,7 +22,7 @@ func main() {
 
 	// m1来抢锁
 	go func() {
-		// 创建两个竞争的Session，这里Session有效期使用默认值60s
+		// 创建两个竞争的Session,这里Session有效期使用默认值60s
 		s1, err := concurrency.NewSession(cli)
 		if err != nil {
 			log.Fatal(err)

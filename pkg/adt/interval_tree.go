@@ -199,7 +199,7 @@ type IntervalTree interface {
 	Visit(ivl Interval, ivv IntervalVisitor)
 	// Find gets the IntervalValue for the node matching the given interval
 	Find(ivl Interval) *IntervalValue
-	Intersects(iv Interval) bool // 如果有一些树节点与给定的区间相交，则返回true。
+	Intersects(iv Interval) bool // 如果有一些树节点与给定的区间相交,则返回true.
 	// Contains returns true if the interval tree's keys cover the entire given interval.
 	Contains(ivl Interval) bool
 	// Stab returns a slice with all elements in the tree intersecting the interval.

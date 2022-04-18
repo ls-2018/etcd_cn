@@ -27,21 +27,21 @@ var ErrRevisionNotFound = errors.New("mvcc: 修订版本没有找到")
 
 // keyIndex
 // key的删除操作将在末尾追加删除版本
-// 当前代，并创建一个新的空代。
+// 当前代,并创建一个新的空代.
 type keyIndex struct {
 	key         string       // key
 	modified    revision     // 一个key 最新修改的revision .
 	generations []generation // 每次新建都会创建一个,删除然后新建也会生成一个
 }
 
-// generation  包含一个key的多个版本。
+// generation  包含一个key的多个版本.
 type generation struct {
 	versionCount int64      // 记录对当前key 有几个版本
 	created      revision   // 第一次创建时的索引信息
 	revs         []revision // 当值存在以后,对该值的修改记录
 }
 type revision struct {
-	main int64 // 主修订版本     key 不是连续的,可能会差很多， 因为多个key发生了写   ,全局层面上看,是自增的
+	main int64 // 主修订版本     key 不是连续的,可能会差很多, 因为多个key发生了写   ,全局层面上看,是自增的
 	sub  int64 // 子修订版本
 }
 
@@ -190,7 +190,7 @@ func (ki *keyIndex) doCompact(atRev int64, available map[revision]struct{}) (gen
 
 // --------------------------------------------- OVER ---------------------------------------------------------------
 
-// get 获取满足给定atRev的键的修改、创建的revision和版本。Rev必须大于或等于给定的atRev。
+// get 获取满足给定atRev的键的修改、创建的revision和版本.Rev必须大于或等于给定的atRev.
 func (ki *keyIndex) get(lg *zap.Logger, atRev int64) (modified, created revision, ver int64, err error) {
 	if ki.isEmpty() { // 判断有没有修订版本
 		lg.Panic("'get'得到一个意外的空keyIndex", zap.String("key", ki.key))
@@ -280,8 +280,8 @@ func (ki *keyIndex) isEmpty() bool {
 	return len(ki.generations) == 1 && ki.generations[0].isEmpty()
 }
 
-// findGeneration 找到给定rev所属的keyIndex的生成。如果给定的rev在两代之间，这意味着在给定的rev上键不存在，它将返回nil。
-// 如果修订版本是接下来要写的，就返回当前代
+// findGeneration 找到给定rev所属的keyIndex的生成.如果给定的rev在两代之间,这意味着在给定的rev上键不存在,它将返回nil.
+// 如果修订版本是接下来要写的,就返回当前代
 func (ki *keyIndex) findGeneration(rev int64) *generation {
 	lastg := len(ki.generations) - 1
 	cg := lastg
@@ -294,7 +294,7 @@ func (ki *keyIndex) findGeneration(rev int64) *generation {
 		g := ki.generations[cg]
 		if cg != lastg {
 			// 每次生成的key的最新修订版本
-			// 不是最新的一组，但最大的都比 rev
+			// 不是最新的一组,但最大的都比 rev
 			if tomb := g.revs[len(g.revs)-1].main; tomb <= rev {
 				// tomb应该是删除的代数
 				return nil
@@ -310,7 +310,7 @@ func (ki *keyIndex) findGeneration(rev int64) *generation {
 	return nil
 }
 
-// put 将一个修订放到keyIndex中。
+// put 将一个修订放到keyIndex中.
 func (ki *keyIndex) put(lg *zap.Logger, main int64, sub int64) {
 	rev := revision{main: main, sub: sub}
 	if !rev.GreaterThan(ki.modified) {

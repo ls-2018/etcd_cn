@@ -76,7 +76,7 @@ func (wb watcherBatch) add(w *watcher, ev mvccpb.Event) {
 	eb.add(ev)
 }
 
-// newWatcherBatch 当收到一批事件后，去watchGroup组找匹配的watcher ，然后发送出去
+// newWatcherBatch 当收到一批事件后,去watchGroup组找匹配的watcher ,然后发送出去
 func newWatcherBatch(wg *watcherGroup, evs []mvccpb.Event) watcherBatch {
 	if len(wg.watchers) == 0 { // 没有watcher
 		return nil

@@ -325,7 +325,7 @@ type Message struct {
 	Term uint64 `protobuf:"varint,4,opt,name=term" json:"term"`
 	// 该消息携带的第一条Entry记录的Term值.
 	LogTerm uint64 `protobuf:"varint,5,opt,name=logTerm" json:"logTerm"`
-	Index   uint64 `protobuf:"varint,6,opt,name=index" json:"index"` // 日志索引ID，用于节点向leader汇报自己已经commit的日志数据ID
+	Index   uint64 `protobuf:"varint,6,opt,name=index" json:"index"` // 日志索引ID,用于节点向leader汇报自己已经commit的日志数据ID
 	// 如果是MsgApp类型的消息,则该字段中保存了Leader节点复制到Follower节点的Entry记录.在其他类型消息中,该字段的含义后面会详细介绍.
 	Entries []Entry `protobuf:"bytes,7,rep,name=entries" json:"entries"`
 	// 搜 ProgressTracker
@@ -336,7 +336,7 @@ type Message struct {
 	Snapshot Snapshot `protobuf:"bytes,9,opt,name=snapshot" json:"snapshot"`
 	// 主要用于响应类型的消息,表示是否拒绝收到的消息.
 	Reject     bool   `protobuf:"varint,10,opt,name=reject" json:"reject"`
-	RejectHint uint64 `protobuf:"varint,11,opt,name=rejectHint" json:"rejectHint"` // 拒绝同步日志请求时返回的当前节点日志ID，用于被拒绝方快速定位到下一次合适的同步日志位置
+	RejectHint uint64 `protobuf:"varint,11,opt,name=rejectHint" json:"rejectHint"` // 拒绝同步日志请求时返回的当前节点日志ID,用于被拒绝方快速定位到下一次合适的同步日志位置
 	// 携带的一些上下文的信息, 例如,campaignTransfer
 	Context []byte `protobuf:"bytes,12,opt,name=context" json:"context,omitempty"`
 }

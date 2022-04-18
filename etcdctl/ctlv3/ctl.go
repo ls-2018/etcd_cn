@@ -51,19 +51,19 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&globalFlags.IsHex, "hex", false, "以十六进制编码的字符串输出字节串")
 
 	rootCmd.PersistentFlags().DurationVar(&globalFlags.DialTimeout, "dial-timeout", defaultDialTimeout, "拨号客户端连接超时")
-	rootCmd.PersistentFlags().DurationVar(&globalFlags.CommandTimeOut, "command-timeout", defaultCommandTimeOut, "运行命令的超时（不包括拨号超时）。")
+	rootCmd.PersistentFlags().DurationVar(&globalFlags.CommandTimeOut, "command-timeout", defaultCommandTimeOut, "运行命令的超时（不包括拨号超时）.")
 	rootCmd.PersistentFlags().DurationVar(&globalFlags.KeepAliveTime, "keepalive-time", defaultKeepAliveTime, "客户端连接的存活时间")
 	rootCmd.PersistentFlags().DurationVar(&globalFlags.KeepAliveTimeout, "keepalive-timeout", defaultKeepAliveTimeOut, "客户端连接的Keepalive超时")
 
 	// TODO: secure by default when etcd enables secure gRPC by default.
 	rootCmd.PersistentFlags().BoolVar(&globalFlags.Insecure, "insecure-transport", true, "为客户端连接禁用传输安全性")
 	rootCmd.PersistentFlags().BoolVar(&globalFlags.InsecureDiscovery, "insecure-discovery", true, "接受描述集群端点的不安全的SRV记录")
-	rootCmd.PersistentFlags().BoolVar(&globalFlags.InsecureSkipVerify, "insecure-skip-tls-verify", false, "跳过 etcd 证书验证 (注意：该选项仅用于测试目的。）")
+	rootCmd.PersistentFlags().BoolVar(&globalFlags.InsecureSkipVerify, "insecure-skip-tls-verify", false, "跳过 etcd 证书验证 (注意：该选项仅用于测试目的.）")
 	rootCmd.PersistentFlags().StringVar(&globalFlags.TLS.CertFile, "cert", "", "识别使用该TLS证书文件的安全客户端")
 	rootCmd.PersistentFlags().StringVar(&globalFlags.TLS.KeyFile, "key", "", "识别使用该TLS密钥文件的安全客户端")
 	rootCmd.PersistentFlags().StringVar(&globalFlags.TLS.TrustedCAFile, "cacert", "", "使用此CA包验证启用tls的安全服务器的证书")
-	rootCmd.PersistentFlags().StringVar(&globalFlags.User, "user", "", "username[:password]  (如果没有提供密码，则提示)")
-	rootCmd.PersistentFlags().StringVar(&globalFlags.Password, "password", "", "身份验证的密码(如果使用了这个选项，——user选项不应该包含密码)")
+	rootCmd.PersistentFlags().StringVar(&globalFlags.User, "user", "", "username[:password]  (如果没有提供密码,则提示)")
+	rootCmd.PersistentFlags().StringVar(&globalFlags.Password, "password", "", "身份验证的密码(如果使用了这个选项,——user选项不应该包含密码)")
 	rootCmd.PersistentFlags().StringVarP(&globalFlags.TLS.ServerName, "discovery-srv", "d", "", "查询描述集群端点的SRV记录的域名")
 	rootCmd.PersistentFlags().StringVarP(&globalFlags.DNSClusterServiceName, "discovery-srv-name", "", "", "使用DNS发现时需要查询的服务名称")
 

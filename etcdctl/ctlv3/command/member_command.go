@@ -56,7 +56,7 @@ func NewMemberAddCommand() *cobra.Command {
 		Run: memberAddCommandFunc,
 	}
 
-	cc.Flags().StringVar(&memberPeerURLs, "peer-urls", "", "用逗号分隔新成员的对等url。")
+	cc.Flags().StringVar(&memberPeerURLs, "peer-urls", "", "用逗号分隔新成员的对等url.")
 	cc.Flags().BoolVar(&isLearner, "learner", false, "表示新成员是否为learner")
 
 	return cc

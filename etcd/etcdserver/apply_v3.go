@@ -113,7 +113,7 @@ func (a *applierV3backend) Put(ctx context.Context, txn mvcc.TxnWrite, p *pb.Put
 	resp = &pb.PutResponse{}
 	resp.Header = &pb.ResponseHeader{}
 	trace = traceutil.Get(ctx)
-	// 如果上下文中的trace为空，则创建put跟踪
+	// 如果上下文中的trace为空,则创建put跟踪
 	if trace.IsEmpty() {
 		trace = traceutil.New("put",
 			a.s.Logger(),
@@ -462,7 +462,7 @@ func (a *applierV3backend) Compaction(compaction *pb.CompactionRequest) (*pb.Com
 	if err != nil {
 		return nil, ch, nil, err
 	}
-	// 获得当前版本。拿哪把key并不重要。
+	// 获得当前版本.拿哪把key并不重要.
 	rr, _ := a.s.KV().Range(context.TODO(), []byte("compaction"), nil, mvcc.RangeOptions{})
 	resp.Header.Revision = rr.Rev
 	return resp, ch, trace, err
@@ -682,7 +682,7 @@ func (a *applierV3backend) Range(ctx context.Context, txn mvcc.TxnRead, r *pb.Ra
 	sortOrder := r.SortOrder // 默认不排序
 	// 默认是请求的key
 	if r.SortTarget != pb.RangeRequest_KEY && sortOrder == pb.RangeRequest_NONE {
-		// 因为当前mvcc。Range实现返回按字序升序排序的结果，默认情况下，只有当target不是'KEY'时，排序才会升序。
+		// 因为当前mvcc.Range实现返回按字序升序排序的结果,默认情况下,只有当target不是'KEY'时,排序才会升序.
 		sortOrder = pb.RangeRequest_ASCEND
 	}
 	if sortOrder != pb.RangeRequest_NONE {
@@ -732,7 +732,7 @@ func mkGteRange(rangeEnd []byte) []byte {
 	return rangeEnd
 }
 
-// 根据不同字段进行比较时，使用不同字段
+// 根据不同字段进行比较时,使用不同字段
 type kvSort struct{ kvs []mvccpb.KeyValue }
 
 func (s *kvSort) Swap(i, j int) {

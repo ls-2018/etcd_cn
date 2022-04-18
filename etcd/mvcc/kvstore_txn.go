@@ -42,7 +42,7 @@ func (tr *storeTxnRead) End() {
 type storeTxnWrite struct {
 	storeTxnRead
 	tx       backend.BatchTx
-	beginRev int64             // 是TXN开始时的修订版本;它将写到下次修订。
+	beginRev int64             // 是TXN开始时的修订版本;它将写到下次修订.
 	changes  []mvccpb.KeyValue // 写事务接收到的k,v 包含修订版本数据
 }
 
@@ -54,9 +54,9 @@ func (tw *storeTxnWrite) Changes() []mvccpb.KeyValue { return tw.changes }
 
 // End 主要是用来解锁
 func (tw *storeTxnWrite) End() {
-	// 只有在Txn修改了Mvcc状态时才会更新索引。
+	// 只有在Txn修改了Mvcc状态时才会更新索引.
 	if len(tw.changes) != 0 {
-		// 保持revMu锁，以防止新的读Txns打开，直到写回。
+		// 保持revMu锁,以防止新的读Txns打开,直到写回.
 		tw.s.revMu.Lock()
 		tw.s.currentRev++
 	}

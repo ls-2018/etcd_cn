@@ -104,8 +104,8 @@ func (ls *LeaseServer) leaseKeepAlive(stream pb.Lease_LeaseKeepAliveServer) erro
 			return err
 		}
 
-		// 在发送更新请求之前创建报头。这可以确保修订严格小于或等于本地etcd(当本地etcd是leader时)或远端leader发生keepalive。
-		// 如果没有这个，租约可能在rev 3被撤销，但客户端可以看到在rev 4成功的keepalive。
+		// 在发送更新请求之前创建报头.这可以确保修订严格小于或等于本地etcd(当本地etcd是leader时)或远端leader发生keepalive.
+		// 如果没有这个,租约可能在rev 3被撤销,但客户端可以看到在rev 4成功的keepalive.
 		resp := &pb.LeaseKeepAliveResponse{ID: req.ID, Header: &pb.ResponseHeader{}}
 		ls.hdr.fill(resp.Header)
 
@@ -139,7 +139,7 @@ type quotaLeaseServer struct {
 
 // LeaseGrant 创建租约
 func (s *quotaLeaseServer) LeaseGrant(ctx context.Context, cr *pb.LeaseGrantRequest) (*pb.LeaseGrantResponse, error) {
-	if err := s.qa.check(ctx, cr); err != nil { // 检查存储空间是否还有空余，以及抛出警报
+	if err := s.qa.check(ctx, cr); err != nil { // 检查存储空间是否还有空余,以及抛出警报
 		return nil, err
 	}
 	return s.LeaseServer.LeaseGrant(ctx, cr)

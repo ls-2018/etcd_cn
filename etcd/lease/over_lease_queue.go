@@ -57,7 +57,7 @@ func (pq *LeaseQueue) Pop() interface{} {
 
 var _ heap.Interface = &LeaseQueue{}
 
-// ExpiredNotifier  一个租约只能保存一个key，`Register`将更新相应的租约时间。
+// ExpiredNotifier  一个租约只能保存一个key,`Register`将更新相应的租约时间.
 // 用于通知lessor移除过期租约的队列
 type ExpiredNotifier struct {
 	m     map[LeaseID]*LeaseWithTime

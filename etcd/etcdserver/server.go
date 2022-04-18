@@ -535,7 +535,7 @@ func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 	srv.beHooks = temp.BeHooks
 	minTTL := time.Duration((3*cfg.ElectionTicks)/2) * heartbeat
 
-	// 始终在KV之前恢复出租人。当我们恢复mvcc.KV时，它将把钥匙重新连接到它的租约上。如果我们先恢复mvcc.KV，它将在恢复前把钥匙附加到错误的出租人上。
+	// 始终在KV之前恢复出租人.当我们恢复mvcc.KV时,它将把钥匙重新连接到它的租约上.如果我们先恢复mvcc.KV,它将在恢复前把钥匙附加到错误的出租人上.
 	srv.lessor = lease.NewLessor(srv.Logger(), srv.backend, srv.cluster, lease.LessorConfig{
 		MinLeaseTTL:                int64(math.Ceil(minTTL.Seconds())),
 		CheckpointInterval:         cfg.LeaseCheckpointInterval,
@@ -598,10 +598,10 @@ func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 	}
 
 	if srv.Cfg.EnableLeaseCheckpoint {
-		// 通过设置checkpointer使能租期检查点功能。
+		// 通过设置checkpointer使能租期检查点功能.
 		srv.lessor.SetCheckpointer(func(ctx context.Context, cp *pb.LeaseCheckpointRequest) {
-			// 定期批量地将 Lease 剩余的 TTL 基于 Raft Log 同步给 Follower 节点，Follower 节点收到 CheckPoint 请求后，
-			// 更新内存数据结构 LeaseMap 的剩余 TTL 信息。
+			// 定期批量地将 Lease 剩余的 TTL 基于 Raft Log 同步给 Follower 节点,Follower 节点收到 CheckPoint 请求后,
+			// 更新内存数据结构 LeaseMap 的剩余 TTL 信息.
 			srv.raftRequestOnce(ctx, pb.InternalRaftRequest{LeaseCheckpoint: cp})
 		})
 	}
@@ -1377,8 +1377,8 @@ func (s *EtcdServer) checkMembershipOperationPermission(ctx context.Context) err
 }
 
 // 检查learner是否追上了leader
-// 注意：如果在集群中没有找到成员，或者成员不是学习者，它将返回nil。
-// 这两个条件将在后面的应用阶段之前进行后台检查。
+// 注意：如果在集群中没有找到成员,或者成员不是学习者,它将返回nil.
+// 这两个条件将在后面的应用阶段之前进行后台检查.
 func (s *EtcdServer) isLearnerReady(id uint64) error {
 	rs := s.raftStatus()
 	if rs.Progress == nil {
@@ -1451,8 +1451,8 @@ func (s *EtcdServer) mayRemoveMember(id types.ID) error {
 }
 
 // FirstCommitInTermNotify
-// 任期内第一次commit会往这个channel发个信号，这是新leader回答只读请求所必需的
-// Leader不能响应任何只读请求，只要线性语义是必需的
+// 任期内第一次commit会往这个channel发个信号,这是新leader回答只读请求所必需的
+// Leader不能响应任何只读请求,只要线性语义是必需的
 func (s *EtcdServer) FirstCommitInTermNotify() <-chan struct{} {
 	s.firstCommitInTermMu.RLock()
 	defer s.firstCommitInTermMu.RUnlock()
@@ -1464,7 +1464,7 @@ type confChangeResponse struct {
 	err   error
 }
 
-// configureAndSendRaft 通过raft发送配置变更，然后等待后端应用到etcd。它将阻塞，直到更改执行或出现错误。
+// configureAndSendRaft 通过raft发送配置变更,然后等待后端应用到etcd.它将阻塞,直到更改执行或出现错误.
 func (s *EtcdServer) configureAndSendRaft(ctx context.Context, cc raftpb.ConfChangeV1) ([]*membership.Member, error) {
 	lg := s.Logger()
 	cc.ID = s.reqIDGen.Next()
@@ -1974,7 +1974,7 @@ func (s *EtcdServer) applyEntryNormal(e *raftpb.Entry) {
 		s.notifyAboutFirstCommitInTerm() // 被任期内 第一次commit更新channel
 		// 当本地成员是leader 并完成了上一任期的所有条目时促进follower.
 		if s.isLeader() {
-			// 成为leader时，初始化租约管理器
+			// 成为leader时,初始化租约管理器
 			s.lessor.Promote(s.Cfg.ElectionTimeout())
 		}
 		return

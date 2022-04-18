@@ -273,11 +273,7 @@ type ResponseHeader struct {
 	// cluster_id is the ID of the cluster which sent the response.
 	ClusterId uint64 `protobuf:"varint,1,opt,name=cluster_id,json=clusterId,proto3" json:"cluster_id,omitempty"`
 	MemberId  uint64 `protobuf:"varint,2,opt,name=member_id,json=memberId,proto3" json:"member_id,omitempty"`
-	// revision is the key-value store revision when the request was applied.
-	// For watch progress responses, the header.revision indicates progress. All future events
-	// recieved in this stream are guaranteed to have a higher revision number than the
-	// header.revision number.
-	Revision int64 `protobuf:"varint,3,opt,name=revision,proto3" json:"revision,omitempty"`
+	Revision  int64  // 当前 watchResponse 实例创建时对应的 revision 值
 	// raft_term is the raft term when the request was applied.
 	RaftTerm uint64 `protobuf:"varint,4,opt,name=raft_term,json=raftTerm,proto3" json:"raft_term,omitempty"`
 }
@@ -596,7 +592,7 @@ type DeleteRangeRequest struct {
 	// [key,RangeEnd]
 	Key      string `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 	RangeEnd string `protobuf:"bytes,2,opt,name=range_end,json=rangeEnd,proto3" json:"range_end,omitempty"`
-	// 如果设置了prev_kv，etcd在删除前会获取之前的键值对。先前的键值对将在删除响应中返回。
+	// 如果设置了prev_kv,etcd在删除前会获取之前的键值对.先前的键值对将在删除响应中返回.
 	PrevKv bool `protobuf:"varint,3,opt,name=prev_kv,json=prevKv,proto3" json:"prev_kv,omitempty"`
 }
 
@@ -1065,7 +1061,7 @@ func (m *TxnResponse) GetResponses() []*ResponseOp {
 }
 
 type CompactionRequest struct {
-	//  Revision是用于压缩操作的键-值存储修订。
+	//  Revision是用于压缩操作的键-值存储修订.
 	Revision int64 `protobuf:"varint,1,opt,name=revision,proto3" json:"revision,omitempty"`
 	//
 	Physical bool `protobuf:"varint,2,opt,name=physical,proto3" json:"physical,omitempty"`
@@ -1329,18 +1325,18 @@ type WatchCreateRequest struct {
 	// then all keys with the prefix (the given key) will be watched.
 	RangeEnd      string `protobuf:"bytes,2,opt,name=range_end,json=rangeEnd,proto3" json:"range_end,omitempty"`
 	StartRevision int64  `protobuf:"varint,3,opt,name=start_revision,json=startRevision,proto3" json:"start_revision,omitempty"`
-	// progress_notify被设置为etcd服务器将定期发送WatchResponse如果没有最近的事件，它是有用的希望恢复断开的观察者从最近的已知修订开始。
-	// etcd服务器可以根据当前的负载决定发送通知的频率。
+	// progress_notify被设置为etcd服务器将定期发送WatchResponse如果没有最近的事件,它是有用的希望恢复断开的观察者从最近的已知修订开始.
+	// etcd服务器可以根据当前的负载决定发送通知的频率.
 	ProgressNotify bool `protobuf:"varint,4,opt,name=progress_notify,json=progressNotify,proto3" json:"progress_notify,omitempty"`
 	// filters filter the events at server side before it sends back to the watcher.
 	Filters []WatchCreateRequest_FilterType `protobuf:"varint,5,rep,packed,name=filters,proto3,enum=etcdserverpb.WatchCreateRequest_FilterType" json:"filters,omitempty"`
 	// If prev_kv is set, created watcher gets the previous KV before the event happens.
 	// If the previous KV is already compacted, nothing will be returned.
 	PrevKv bool `protobuf:"varint,6,opt,name=prev_kv,json=prevKv,proto3" json:"prev_kv,omitempty"`
-	// 如果提供了watch_id且非零，则将它分配给这个监视程序。因为在etcd中创建监视器不是同步操作，所以当在同一流中创建多个监视器时，
-	// 可以使用它来确保顺序是正确的。在流上创建ID已在使用的监视程序将导致返回错误。
+	// 如果提供了watch_id且非零,则将它分配给这个监视程序.因为在etcd中创建监视器不是同步操作,所以当在同一流中创建多个监视器时,
+	// 可以使用它来确保顺序是正确的.在流上创建ID已在使用的监视程序将导致返回错误.
 	WatchId int64 `protobuf:"varint,7,opt,name=watch_id,json=watchId,proto3" json:"watch_id,omitempty"`
-	// 拆分大的变更 成多个watch响应。
+	// 拆分大的变更 成多个watch响应.
 	Fragment bool `protobuf:"varint,8,opt,name=fragment,proto3" json:"fragment,omitempty"`
 }
 
@@ -1437,11 +1433,11 @@ func (*WatchProgressRequest) Descriptor() ([]byte, []int) {
 }
 
 type WatchResponse struct {
+	CompactRevision int64           // 压缩操作对应的 revison
 	Header          *ResponseHeader `protobuf:"bytes,1,opt,name=header,proto3" json:"header,omitempty"`
 	WatchId         int64           `protobuf:"varint,2,opt,name=watch_id,json=watchId,proto3" json:"watch_id,omitempty"`
 	Created         bool            `protobuf:"varint,3,opt,name=created,proto3" json:"created,omitempty"`
 	Canceled        bool            `protobuf:"varint,4,opt,name=canceled,proto3" json:"canceled,omitempty"`
-	CompactRevision int64           `protobuf:"varint,5,opt,name=compact_revision,json=compactRevision,proto3" json:"compact_revision,omitempty"`
 	CancelReason    string          `protobuf:"bytes,6,opt,name=cancel_reason,json=cancelReason,proto3" json:"cancel_reason,omitempty"`
 	// framgment is true if large watch response was split over multiple responses.
 	Fragment             bool            `protobuf:"varint,7,opt,name=fragment,proto3" json:"fragment,omitempty"`
@@ -3594,8 +3590,8 @@ func (x *watchWatchClient) Recv() (*WatchResponse, error) {
 }
 
 type WatchServer interface {
-	// Watch 观察正在发生或已经发生的事件。输入和输出都是流;输入流用于创建和取消监视和输出
-	// 流发送事件。一个watch RPC可以在多个key range上watch ，一次为几个watch stream event 。整个事件历史可以从最后的压缩修订开始观看。
+	// Watch 观察正在发生或已经发生的事件.输入和输出都是流;输入流用于创建和取消监视和输出
+	// 流发送事件.一个watch RPC可以在多个key range上watch ,一次为几个watch stream event .整个事件历史可以从最后的压缩修订开始观看.
 	Watch(Watch_WatchServer) error
 }
 
@@ -3970,7 +3966,7 @@ type MaintenanceServer interface {
 	Status(context.Context, *StatusRequest) (*StatusResponse, error)
 	Defragment(context.Context, *DefragmentRequest) (*DefragmentResponse, error) // 碎片整理
 	Hash(context.Context, *HashRequest) (*HashResponse, error)
-	HashKV(context.Context, *HashKVRequest) (*HashKVResponse, error) // 计算所有MVCC键的哈希值直到一个给定的修订。只遍历key桶
+	HashKV(context.Context, *HashKVRequest) (*HashKVResponse, error) // 计算所有MVCC键的哈希值直到一个给定的修订.只遍历key桶
 	Snapshot(*SnapshotRequest, Maintenance_SnapshotServer) error
 	MoveLeader(context.Context, *MoveLeaderRequest) (*MoveLeaderResponse, error)
 	Downgrade(context.Context, *DowngradeRequest) (*DowngradeResponse, error)

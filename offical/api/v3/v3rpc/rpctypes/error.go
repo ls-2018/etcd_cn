@@ -73,7 +73,7 @@ var (
 	ErrGRPCNotCapable                 = status.New(codes.Unavailable, "etcdserver: 没有容量了").Err()
 	ErrGRPCStopped                    = status.New(codes.Unavailable, "etcdserver: 服务已停止").Err()
 	ErrGRPCTimeout                    = status.New(codes.Unavailable, "etcdserver: 请求超时").Err()
-	ErrGRPCTimeoutDueToLeaderFail     = status.New(codes.Unavailable, "etcdserver: 请求超时，可能是之前的leader导致的").Err()
+	ErrGRPCTimeoutDueToLeaderFail     = status.New(codes.Unavailable, "etcdserver: 请求超时,可能是之前的leader导致的").Err()
 	ErrGRPCTimeoutDueToConnectionLost = status.New(codes.Unavailable, "etcdserver: 请求超时,可能是链接丢失").Err()
 	ErrGRPCUnhealthy                  = status.New(codes.Unavailable, "etcdserver: 不健康的集群").Err()
 	ErrGRPCCorrupt                    = status.New(codes.DataLoss, "etcdserver: 集群损坏").Err()

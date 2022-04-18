@@ -44,7 +44,7 @@ func (aa *authApplierV3) Apply(r *pb.InternalRaftRequest, shouldApplyV3 membersh
 	aa.mu.Lock()
 	defer aa.mu.Unlock()
 	if r.Header != nil {
-		// 当internalRaftRequest没有header时，向后兼容3.0之前的版本
+		// 当internalRaftRequest没有header时,向后兼容3.0之前的版本
 		aa.authInfo.Username = r.Header.Username
 		aa.authInfo.Revision = r.Header.AuthRevision
 	}

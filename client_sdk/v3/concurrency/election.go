@@ -38,7 +38,7 @@ type Election struct {
 	hdr           *pb.ResponseHeader
 }
 
-// NewElection 返回给定关键字前缀上的新选举结果。
+// NewElection 返回给定关键字前缀上的新选举结果.
 func NewElection(s *Session, pfx string) *Election {
 	return &Election{session: s, keyPrefix: pfx + "/"}
 }
@@ -54,10 +54,10 @@ func ResumeElection(s *Session, pfx string, leaderKey string, leaderRev int64) *
 	}
 }
 
-// Campaign 在前缀键上放置一个符合选举条件的值。
-// 对于同一个前缀，多个会议可以参与选举，但一次只能有一个领导人。
-// 如果context是'context. todo ()/context. background ()'， Campaign将继续被阻塞，以便其他key被删除，除非etcd返回一个不可恢复的错误(例如ErrCompacted)。
-// 否则，直到上下文没有被取消或超时，Campaign将继续被阻塞，直到它成为leader。
+// Campaign 在前缀键上放置一个符合选举条件的值.
+// 对于同一个前缀,多个会议可以参与选举,但一次只能有一个领导人.
+// 如果context是'context. todo ()/context. background ()', Campaign将继续被阻塞,以便其他key被删除,除非etcd返回一个不可恢复的错误(例如ErrCompacted).
+// 否则,直到上下文没有被取消或超时,Campaign将继续被阻塞,直到它成为leader.
 func (e *Election) Campaign(ctx context.Context, val string) error {
 	s := e.session
 	client := e.session.Client()
@@ -98,7 +98,7 @@ func (e *Election) Campaign(ctx context.Context, val string) error {
 	return nil
 }
 
-// Proclaim  让leader宣布一个新的值，而不需要一次选举。
+// Proclaim  让leader宣布一个新的值,而不需要一次选举.
 func (e *Election) Proclaim(ctx context.Context, val string) error {
 	if e.leaderSession == nil {
 		return ErrElectionNotLeader
@@ -149,7 +149,7 @@ func (e *Election) Leader(ctx context.Context) (*v3.GetResponse, error) {
 	return resp, nil
 }
 
-// Observe 返回一个通道，该通道可靠地观察有序的leader proposal 作为响应
+// Observe 返回一个通道,该通道可靠地观察有序的leader proposal 作为响应
 func (e *Election) Observe(ctx context.Context) <-chan v3.GetResponse {
 	retc := make(chan v3.GetResponse)
 	go e.observe(ctx, retc)

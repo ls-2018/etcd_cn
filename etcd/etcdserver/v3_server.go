@@ -209,7 +209,7 @@ func (s *EtcdServer) AuthInfoFromCtx(ctx context.Context) (*auth.AuthInfo, error
 	return authInfo, nil
 }
 
-// doSerialize 为序列化的请求“get”处理认证逻辑，并由“chk”检查权限。身份验证失败时返回一个非空错误。
+// doSerialize 为序列化的请求“get"处理认证逻辑,并由“chk"检查权限.身份验证失败时返回一个非空错误.
 func (s *EtcdServer) doSerialize(ctx context.Context, chk func(*auth.AuthInfo) error, get func()) error {
 	trace := traceutil.Get(ctx) // 从上下文获取trace
 	ai, err := s.AuthInfoFromCtx(ctx)
@@ -227,7 +227,7 @@ func (s *EtcdServer) doSerialize(ctx context.Context, chk func(*auth.AuthInfo) e
 	trace.Step("获取认证元数据")
 	// 获取序列化请求的响应
 	get()
-	// 如果在处理请求时更新了身份验证存储，请检查过时的令牌修订情况。
+	// 如果在处理请求时更新了身份验证存储,请检查过时的令牌修订情况.
 	if ai.Revision != 0 && ai.Revision != s.authStore.Revision() {
 		return auth.ErrAuthOldRevision
 	}

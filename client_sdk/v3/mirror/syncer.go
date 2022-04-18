@@ -26,8 +26,8 @@ const (
 )
 
 type Syncer interface {
-	SyncBase(ctx context.Context) (<-chan clientv3.GetResponse, chan error) // 同步k-v 状态。通过返回的chan发送。
-	SyncUpdates(ctx context.Context) clientv3.WatchChan                     // 在同步base数据后，同步增量数据
+	SyncBase(ctx context.Context) (<-chan clientv3.GetResponse, chan error) // 同步k-v 状态.通过返回的chan发送.
+	SyncUpdates(ctx context.Context) clientv3.WatchChan                     // 在同步base数据后,同步增量数据
 }
 
 // NewSyncer 同步器
@@ -45,7 +45,7 @@ func (s *syncer) SyncBase(ctx context.Context) (<-chan clientv3.GetResponse, cha
 	respchan := make(chan clientv3.GetResponse, 1024)
 	errchan := make(chan error, 1)
 
-	// 如果没有指定rev，我们将选择最近的修订。
+	// 如果没有指定rev,我们将选择最近的修订.
 	if s.rev == 0 {
 		resp, err := s.c.Get(ctx, "foo")
 		if err != nil {

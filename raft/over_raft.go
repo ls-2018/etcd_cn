@@ -654,7 +654,7 @@ func (r *raft) campaign(t CampaignType) { // CampaignTransfer
 	// vote	直接给自己投票
 	//		单机 : 那么此时给自己投一票,res是VoteWon
 	// 		多机:此时是VotePending
-	//  如果是leader转移的话，不会发送vote消息
+	//  如果是leader转移的话,不会发送vote消息
 	_, _, res := r.poll(r.id, voteRespMsgType(voteMsg), true) // 获取自己的竞选结果
 	if res == quorum.VoteWon {
 		// 我们在为自己投票后赢得了选举(这肯定意味着 这是一个单一的本地节点集群).推进到下一个状态.
@@ -689,7 +689,7 @@ func (r *raft) campaign(t CampaignType) { // CampaignTransfer
 		if t == campaignTransfer { // leader开始转移
 			ctx = []byte(t)
 		}
-		// leader转移 follower 发送申请投票消息，但是任期不会增加， context 是CampaignTransfer
+		// leader转移 follower 发送申请投票消息,但是任期不会增加, context 是CampaignTransfer
 		// 给所有节点发消息
 		r.send(pb.Message{Term: term, To: id, Type: voteMsg, Index: r.raftLog.lastIndex(), LogTerm: r.raftLog.lastTerm(), Context: ctx})
 		_ = r.Step

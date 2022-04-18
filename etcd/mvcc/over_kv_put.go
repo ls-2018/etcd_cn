@@ -9,11 +9,11 @@ import (
 
 // OK
 func (tw *storeTxnWrite) put(key, value []byte, leaseID lease.LeaseID) {
-	rev := tw.beginRev + 1 // 事务开始时有一个ID，写这个操作，对应的ID应+1
+	rev := tw.beginRev + 1 // 事务开始时有一个ID,写这个操作,对应的ID应+1
 	c := rev
 	oldLease := lease.NoLease
 
-	// 如果该键之前存在，使用它之前创建的并获取它之前的leaseID
+	// 如果该键之前存在,使用它之前创建的并获取它之前的leaseID
 	_, created, beforeVersion, err := tw.s.kvindex.Get(key, rev) // 0,0,nil  <= rev的最新修改
 	if err == nil {
 		c = created.main
@@ -27,9 +27,9 @@ func (tw *storeTxnWrite) put(key, value []byte, leaseID lease.LeaseID) {
 	kv := mvccpb.KeyValue{
 		Key:            string(key),
 		Value:          string(value),
-		CreateRevision: c,                 // 当前代，创建时的修订版本
+		CreateRevision: c,                 // 当前代,创建时的修订版本
 		ModRevision:    rev,               // 修订版本
-		Version:        beforeVersion + 1, // Version是key的版本。删除键会将该键的版本重置为0，对键的任何修改都会增加它的版本。
+		Version:        beforeVersion + 1, // Version是key的版本.删除键会将该键的版本重置为0,对键的任何修改都会增加它的版本.
 		Lease:          int64(leaseID),    // 租约ID
 	}
 

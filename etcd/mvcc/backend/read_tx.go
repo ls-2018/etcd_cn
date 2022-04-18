@@ -105,8 +105,8 @@ func (baseReadTx *baseReadTx) UnsafeRange(bucketType Bucket, key, endKey []byte,
 		baseReadTx.buckets[bn] = bucket
 	}
 
-	// 忽略丢失的桶，因为可能已在此批处理中创建
-	if bucket == nil { // 在等锁的时候，另外一个调用创建了该桶,低概率事件
+	// 忽略丢失的桶,因为可能已在此批处理中创建
+	if bucket == nil { // 在等锁的时候,另外一个调用创建了该桶,低概率事件
 		if lockHeld {
 			baseReadTx.txMu.Unlock()
 		}
@@ -118,7 +118,7 @@ func (baseReadTx *baseReadTx) UnsafeRange(bucketType Bucket, key, endKey []byte,
 	c := bucket.Cursor()
 	baseReadTx.txMu.Unlock()
 	// 将查询缓存的结采与查询 BlotDB 的结果合并 然后返回
-	k2, v2 := unsafeRange(c, key, endKey, limit-int64(len(keys))) // 刨除在缓存中找到的，剩余的从bolt.db中查找
+	k2, v2 := unsafeRange(c, key, endKey, limit-int64(len(keys))) // 刨除在缓存中找到的,剩余的从bolt.db中查找
 	return append(k2, keys...), append(v2, vals...)
 }
 

@@ -92,7 +92,7 @@ func New(namespaces ...string) Store {
 func newStore(namespaces ...string) *store {
 	s := new(store)
 	s.CurrentVersion = defaultVersion                       // 2
-	s.Root = newDir(s, "/", s.CurrentIndex, nil, Permanent) // 0  永久性  //创建其在etcd中对应的目录，第一个目录是以(/)
+	s.Root = newDir(s, "/", s.CurrentIndex, nil, Permanent) // 0  永久性  //创建其在etcd中对应的目录,第一个目录是以(/)
 	for _, namespace := range namespaces {
 		s.Root.Add(newDir(s, namespace, s.CurrentIndex, s.Root, Permanent))
 	}

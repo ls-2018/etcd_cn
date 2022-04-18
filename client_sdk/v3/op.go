@@ -332,7 +332,7 @@ func WithLease(leaseID LeaseID) OpOption {
 	return func(op *Op) { op.leaseID = leaseID }
 }
 
-// WithLimit 限制从'Get'请求返回的结果的数量。如果给WithLimit一个0限制，则它被视为没有限制。
+// WithLimit 限制从'Get'请求返回的结果的数量.如果给WithLimit一个0限制,则它被视为没有限制.
 func WithLimit(n int64) OpOption { return func(op *Op) { op.limit = n } }
 
 // WithRev specifies the store revision for 'Get' request.
@@ -357,7 +357,7 @@ func WithSort(target SortTarget, order SortOrder) OpOption {
 	}
 }
 
-// GetPrefixRangeEnd 得到前缀的范围端。
+// GetPrefixRangeEnd 得到前缀的范围端.
 // 例如  1  --->  [1,2)
 func GetPrefixRangeEnd(prefix string) string {
 	return getPrefix(prefix)

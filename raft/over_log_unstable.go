@@ -30,7 +30,7 @@ type unstable struct {
 }
 
 // maybeFirstIndex 返回unstable数据的第一条数据索引
-// 因为只有快照数据在最前面，因此这个函数只有当快照数据存在的时候才能拿到第一条数据索引，其他的情况下已经拿不到了。
+// 因为只有快照数据在最前面,因此这个函数只有当快照数据存在的时候才能拿到第一条数据索引,其他的情况下已经拿不到了.
 func (u *unstable) maybeFirstIndex() (uint64, bool) {
 	if u.snapshot != nil {
 		return u.snapshot.Metadata.Index + 1, true
@@ -39,7 +39,7 @@ func (u *unstable) maybeFirstIndex() (uint64, bool) {
 }
 
 // maybeLastIndex 尝试获取unstable 的最后一条Entry记录的索引值
-// 返回最后一条数据的索引。因为是entries数据在后，而快照数据在前，所以取最后一条数据索引是从entries开始查，查不到的情况下才查快照数据。
+// 返回最后一条数据的索引.因为是entries数据在后,而快照数据在前,所以取最后一条数据索引是从entries开始查,查不到的情况下才查快照数据.
 func (u *unstable) maybeLastIndex() (uint64, bool) {
 	// 如果日志数组中有日志条目,那就返回最后一个条目的索引.
 	if l := len(u.entries); l != 0 {

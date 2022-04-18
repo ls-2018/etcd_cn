@@ -30,7 +30,7 @@ func (nc *notifier) notify(err error) {
 	close(nc.c)
 }
 
-// 线性一致性读，保证强一致性  , 阻塞，直到applyid >= 当前生成的ID
+// 线性一致性读,保证强一致性  , 阻塞,直到applyid >= 当前生成的ID
 func (s *EtcdServer) linearizableReadLoop() {
 	for {
 		requestId := s.reqIDGen.Next()
@@ -39,7 +39,7 @@ func (s *EtcdServer) linearizableReadLoop() {
 		case <-leaderChangedNotifier:
 			continue
 		case <-s.readwaitc:
-			// 在client发起一次Linearizable Read的时候，会向readwaitc写入一个空的结构体作为信号
+			// 在client发起一次Linearizable Read的时候,会向readwaitc写入一个空的结构体作为信号
 			fmt.Println("开始一次linearizableRead")
 		case <-s.stopping:
 			return
@@ -53,7 +53,7 @@ func (s *EtcdServer) linearizableReadLoop() {
 		s.readNotifier = newNotifier()
 		s.readMu.Unlock()
 		// 处理不同的消息
-		// 这里会监听 readwaitc，发送MsgReadIndex 并等待 MsgReadIndexRsp
+		// 这里会监听 readwaitc,发送MsgReadIndex 并等待 MsgReadIndexRsp
 		// 同时获取当前已提交的日志索引
 		// 串行执行的
 		confirmedIndex, err := s.requestCurrentIndex(leaderChangedNotifier, requestId) // MsgReadIndex 携带requestId经过raft走一圈
@@ -104,9 +104,9 @@ func (s *EtcdServer) requestCurrentIndex(leaderChangedNotifier <-chan struct{}, 
 			requestIdBytes := uint64ToBigEndianBytes(requestId)
 			gotOwnResponse := bytes.Equal(rs.RequestCtx, requestIdBytes)
 			// rs.RequestCtx<requestIdBytes 可能是前一次请求的响应刚到这里
-			// rs.RequestCtx>requestIdBytes 可能是高并发情景下，下一次get请求导致的
+			// rs.RequestCtx>requestIdBytes 可能是高并发情景下,下一次get请求导致的
 			if !gotOwnResponse {
-				// 前一个请求可能超时。现在我们应该忽略它的响应，继续等待当前请求的响应。
+				// 前一个请求可能超时.现在我们应该忽略它的响应,继续等待当前请求的响应.
 				responseId := uint64(0)
 				if len(rs.RequestCtx) == 8 {
 					responseId = binary.BigEndian.Uint64(rs.RequestCtx)
@@ -131,7 +131,7 @@ func (s *EtcdServer) requestCurrentIndex(leaderChangedNotifier <-chan struct{}, 
 			retryTimer.Reset(readIndexRetryTime)
 			continue
 		case <-retryTimer.C:
-			lg.Warn("等待ReadIndex响应时间过长，需要重新尝试", zap.Uint64("sent-request-id", requestId), zap.Duration("retry-timeout", readIndexRetryTime))
+			lg.Warn("等待ReadIndex响应时间过长,需要重新尝试", zap.Uint64("sent-request-id", requestId), zap.Duration("retry-timeout", readIndexRetryTime))
 			err := s.sendReadIndex(requestId)
 			if err != nil {
 				return 0, err

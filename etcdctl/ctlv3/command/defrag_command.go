@@ -32,7 +32,7 @@ func NewDefragCommand() *cobra.Command {
 		Run:   defragCommandFunc,
 	}
 	cmd.PersistentFlags().BoolVar(&epClusterEndpoints, "cluster", false, "使用集群成员列表中的所有端点")
-	cmd.Flags().StringVar(&defragDataDir, "data-dir", "", "可选的。如果存在，对etcd不使用的数据目录进行碎片整理。")
+	cmd.Flags().StringVar(&defragDataDir, "data-dir", "", "可选的.如果存在,对etcd不使用的数据目录进行碎片整理.")
 	return cmd
 }
 

@@ -122,7 +122,7 @@ func (h *streamHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "to field mismatch", http.StatusPreconditionFailed)
 		return
 	}
-	/* 这个地方需要注意一下，此处并没有包把应答报文发出去，但是具体处理逻辑需要参考net/http中Flush */
+	/* 这个地方需要注意一下,此处并没有包把应答报文发出去,但是具体处理逻辑需要参考net/http中Flush */
 	w.WriteHeader(http.StatusOK)
 	w.(http.Flusher).Flush()
 
@@ -136,5 +136,5 @@ func (h *streamHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		peerID:  from,
 	}
 	p.attachOutgoingConn(conn) // 会发streamWriter run中connc操作 用于
-	<-c.closeNotify()          // 等待close channel，若一直没数据可读则阻塞
+	<-c.closeNotify()          // 等待close channel,若一直没数据可读则阻塞
 }

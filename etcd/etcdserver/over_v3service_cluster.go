@@ -30,7 +30,7 @@ func (s *EtcdServer) AddMember(ctx context.Context, memb membership.Member) ([]*
 	}
 
 	lg := s.Logger()
-	// 默认情况下，StrictReconfigCheck是启用的;拒绝不健康的新成员。
+	// 默认情况下,StrictReconfigCheck是启用的;拒绝不健康的新成员.
 	if !s.Cfg.StrictReconfigCheck {
 	} else {
 		// 添加投票成员时保护法定人数
@@ -40,10 +40,10 @@ func (s *EtcdServer) AddMember(ctx context.Context, memb membership.Member) ([]*
 			)
 			return nil, ErrNotEnoughStartedMembers
 		}
-		// 一个心跳间隔之前，是否与所有节点建立了链接
+		// 一个心跳间隔之前,是否与所有节点建立了链接
 		if !isConnectedFullySince(s.r.transport, time.Now().Add(-HealthInterval), s.ID(), s.cluster.VotingMembers()) {
 			lg.Warn(
-				"拒绝成员添加请求;本地成员尚未连接到所有对等体，请重新配置中断活动仲裁",
+				"拒绝成员添加请求;本地成员尚未连接到所有对等体,请重新配置中断活动仲裁",
 				zap.String("local-member-id", s.ID().String()),
 				zap.String("requested-member-add", fmt.Sprintf("%+v", memb)),
 				zap.Error(ErrUnhealthy),
@@ -101,7 +101,7 @@ func (s *EtcdServer) UpdateMember(ctx context.Context, memb membership.Member) (
 
 // PromoteMember 将learner节点提升为voter
 func (s *EtcdServer) PromoteMember(ctx context.Context, id uint64) ([]*membership.Member, error) {
-	// 只有raft leader有信息，知道learner是否准备好。
+	// 只有raft leader有信息,知道learner是否准备好.
 	resp, err := s.promoteMember(ctx, id) // raft已经同步消息了
 	if err == nil {
 		return resp, nil

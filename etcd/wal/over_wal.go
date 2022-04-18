@@ -136,7 +136,7 @@ func Create(lg *zap.Logger, dirpath string, metadata []byte) (*WAL, error) {
 		)
 		return nil, err
 	}
-	// 预分配文件，大小为SegmentSizeBytes（64MB）
+	// 预分配文件,大小为SegmentSizeBytes（64MB）
 	if err = fileutil.Preallocate(f.File, SegmentSizeBytes, true); err != nil {
 		lg.Warn(
 			"未能预先分配一个初始的WAL文件",
@@ -169,7 +169,7 @@ func Create(lg *zap.Logger, dirpath string, metadata []byte) (*WAL, error) {
 		return nil, err
 	}
 	logDirPath := w.dir
-	// 重命名，之前以.tmp结尾的文件，初始化完成之后重命名，类似原子操作
+	// 重命名,之前以.tmp结尾的文件,初始化完成之后重命名,类似原子操作
 	if w, err = w.renameWAL(tmpdirpath); err != nil {
 		lg.Warn(
 			fmt.Sprintf("重命名失败  .%s.tmp --> %s", tmpdirpath, w.dir),
@@ -879,7 +879,7 @@ func (w *WAL) Save(st raftpb.HardState, ents []raftpb.Entry) error {
 			return err
 		}
 	}
-	// 持久化HardState, HardState表示服务器当前状态，定义在raft.pb.go，主要包含Term、Vote、Commit
+	// 持久化HardState, HardState表示服务器当前状态,定义在raft.pb.go,主要包含Term、Vote、Commit
 
 	if err := w.saveState(&st); err != nil {
 		return err
@@ -896,7 +896,7 @@ func (w *WAL) Save(st raftpb.HardState, ents []raftpb.Entry) error {
 		}
 		return nil
 	}
-	// 否则执行切割（也就是说明，WAL文件是可以超过64MB的）
+	// 否则执行切割（也就是说明,WAL文件是可以超过64MB的）
 	return w.cut()
 }
 

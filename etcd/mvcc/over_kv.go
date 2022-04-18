@@ -40,8 +40,8 @@ type ReadView interface {
 	//     before    			   cur
 	//             compact
 	//           rev       rev   		rev
-	FirstRev() int64                                                                         // 在打开txn时返回第一个KV修订。在压实之后，第一个修订增加到压实修订。
-	Rev() int64                                                                              // 在打开txn时返回KV的修订。
+	FirstRev() int64                                                                         // 在打开txn时返回第一个KV修订.在压实之后,第一个修订增加到压实修订.
+	Rev() int64                                                                              // 在打开txn时返回KV的修订.
 	Range(ctx context.Context, key, end []byte, ro RangeOptions) (r *RangeResult, err error) // 读取数据
 }
 
@@ -53,19 +53,19 @@ type TxnRead interface {
 
 type WriteView interface {
 	DeleteRange(key, end []byte) (n, rev int64) // 删除指定范围的数据
-	// Put 将给定的k v放入存储区。Put还接受额外的参数lease，将lease作为元数据附加到键值对上。KV实现 不验证租约id。
-	// put还会增加存储的修订版本，并在事件历史中生成一个事件。返回的修订版本是执行操作时KV的当前修订版本。
+	// Put 将给定的k v放入存储区.Put还接受额外的参数lease,将lease作为元数据附加到键值对上.KV实现 不验证租约id.
+	// put还会增加存储的修订版本,并在事件历史中生成一个事件.返回的修订版本是执行操作时KV的当前修订版本.
 	Put(key, value []byte, lease lease.LeaseID) (rev int64)
 }
 
 type TxnWrite interface {
 	TxnRead
 	WriteView
-	// Changes 获取打开write txn后所做的更改。
+	// Changes 获取打开write txn后所做的更改.
 	Changes() []mvccpb.KeyValue
 }
 
-// txnReadWrite 读事务-->写事务，对任何写操作都感到恐慌。
+// txnReadWrite 读事务-->写事务,对任何写操作都感到恐慌.
 type txnReadWrite struct {
 	TxnRead
 }
@@ -81,6 +81,6 @@ func NewReadOnlyTxnWrite(txn TxnRead) TxnWrite { return &txnReadWrite{txn} }
 type ReadTxMode uint32
 
 const (
-	ConcurrentReadTxMode = ReadTxMode(1) // 缓冲区拷贝，提高性能   并发ReadTx模式
+	ConcurrentReadTxMode = ReadTxMode(1) // 缓冲区拷贝,提高性能   并发ReadTx模式
 	SharedBufReadTxMode  = ReadTxMode(2)
 )

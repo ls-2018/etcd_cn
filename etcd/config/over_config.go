@@ -95,7 +95,7 @@ type ServerConfig struct {
 
 	ForceNewCluster bool
 
-	EnableLeaseCheckpoint bool // 允许leader定期向其他成员发送检查点，以防止leader变化时剩余TTL重置。
+	EnableLeaseCheckpoint bool // 允许leader定期向其他成员发送检查点,以防止leader变化时剩余TTL重置.
 	// LeaseCheckpointInterval time.Duration is the wait duration between lease checkpoints.
 	LeaseCheckpointInterval time.Duration
 	// LeaseCheckpointPersist enables persisting remainingTTL to prevent indefinite auto-renewal of long lived leases. Always enabled in v3.6. Should be used to ensure smooth upgrade from v3.5 clusters with this feature enabled.

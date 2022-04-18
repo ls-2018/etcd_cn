@@ -128,9 +128,9 @@ func NewCheckPerfCommand() *cobra.Command {
 		Run:   newCheckPerfCommand,
 	}
 
-	cmd.Flags().StringVar(&checkPerfLoad, "load", "s", "性能检查的工作负载模型。接受工作负载: s(small), m(medium), l(large), xl(xLarge)")
-	cmd.Flags().StringVar(&checkPerfPrefix, "prefix", "/etcdctl-check-perf/", "写性能检查键的前缀。")
-	cmd.Flags().BoolVar(&autoCompact, "auto-compact", false, "测试完成后，压缩修订版本")
+	cmd.Flags().StringVar(&checkPerfLoad, "load", "s", "性能检查的工作负载模型.接受工作负载: s(small), m(medium), l(large), xl(xLarge)")
+	cmd.Flags().StringVar(&checkPerfPrefix, "prefix", "/etcdctl-check-perf/", "写性能检查键的前缀.")
+	cmd.Flags().BoolVar(&autoCompact, "auto-compact", false, "测试完成后,压缩修订版本")
 	cmd.Flags().BoolVar(&autoDefrag, "auto-defrag", false, "测试完成后 碎片整理")
 
 	return cmd
@@ -304,13 +304,13 @@ func interruptableContext(ctx context.Context, attemptCleanup func()) (context.C
 func NewCheckDatascaleCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "datascale [options]",
-		Short: "检查给定etcd端点上保存不同工作负载的数据的内存使用情况。",
-		Long:  "如果没有提供端点，则将使用localhost。如果提供了多个端点，则将使用第一个端点。",
+		Short: "检查给定etcd端点上保存不同工作负载的数据的内存使用情况.",
+		Long:  "如果没有提供端点,则将使用localhost.如果提供了多个端点,则将使用第一个端点.",
 		Run:   newCheckDatascaleCommand,
 	}
 
-	cmd.Flags().StringVar(&checkDatascaleLoad, "load", "s", "数据刻度检查的工作负载模型。接受工作负载: s(small), m(medium), l(large), xl(xLarge)")
-	cmd.Flags().StringVar(&checkDatascalePrefix, "prefix", "/etcdctl-check-datascale/", "用于写入数据刻度校验键的前缀。")
+	cmd.Flags().StringVar(&checkDatascaleLoad, "load", "s", "数据刻度检查的工作负载模型.接受工作负载: s(small), m(medium), l(large), xl(xLarge)")
+	cmd.Flags().StringVar(&checkDatascalePrefix, "prefix", "/etcdctl-check-datascale/", "用于写入数据刻度校验键的前缀.")
 	cmd.Flags().BoolVar(&autoCompact, "auto-compact", false, "测试完成后压缩修订版本")
 	cmd.Flags().BoolVar(&autoDefrag, "auto-defrag", false, "测试完成后碎片整理")
 
@@ -368,7 +368,7 @@ func newCheckDatascaleCommand(cmd *cobra.Command, args []string) {
 	// get the process_resident_memory_bytes and process_virtual_memory_bytes before the put operations
 	bytesBefore := endpointMemoryMetrics(eps[0], sec)
 	if bytesBefore == 0 {
-		fmt.Println("FAIL: 在put操作之前无法读取process_resident_memory_bytes。")
+		fmt.Println("FAIL: 在put操作之前无法读取process_resident_memory_bytes.")
 		os.Exit(cobrautl.ExitError)
 	}
 

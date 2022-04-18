@@ -140,7 +140,7 @@ func makeMirror(ctx context.Context, c *clientv3.Client, dc *clientv3.Client) er
 
 	rc, errc := s.SyncBase(ctx)
 
-	// 如果指定并删除目的前缀，则返回错误
+	// 如果指定并删除目的前缀,则返回错误
 	if mmnodestprefix && len(mmdestprefix) > 0 {
 		cobrautl.ExitWithError(cobrautl.ExitBadArgs, fmt.Errorf("`--dest-prefix` and `--no-dest-prefix` cannot be set at the same time, choose one"))
 	}

@@ -37,16 +37,16 @@ func hasChecksum(n int64) bool {
 	return (n % 512) == sha256.Size
 }
 
-// Save 从远程etcd获取快照并将数据保存到目标路径。如果上下文 "ctx "被取消或超时，
-// 快照保存流将出错（例如，context.Canceled，context.DeadlineExceeded）。
-// 请确保在客户端配置中只指定一个端点。必须向选定的节点请求快照API，而保存的快照是选定节点的时间点状态。
+// Save 从远程etcd获取快照并将数据保存到目标路径.如果上下文 "ctx "被取消或超时,
+// 快照保存流将出错（例如,context.Canceled,context.DeadlineExceeded）.
+// 请确保在客户端配置中只指定一个端点.必须向选定的节点请求快照API,而保存的快照是选定节点的时间点状态.
 func Save(ctx context.Context, lg *zap.Logger, cfg clientv3.Config, dbPath string) error {
 	if lg == nil {
 		lg = zap.NewExample()
 	}
 	cfg.Logger = lg.Named("client")
 	if len(cfg.Endpoints) != 1 {
-		return fmt.Errorf("保存快照时，必须指定一个endpoint %v", cfg.Endpoints)
+		return fmt.Errorf("保存快照时,必须指定一个endpoint %v", cfg.Endpoints)
 	}
 	cli, err := clientv3.New(cfg)
 	if err != nil {

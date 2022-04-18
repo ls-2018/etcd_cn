@@ -30,7 +30,7 @@ type Bucket interface {
 	ID() BucketID // ID返回一个水桶的唯一标识符.该ID必须不被持久化并且可以在内存地图中作为轻量级的标识符使用.
 	Name() []byte
 	String() string
-	// IsSafeRangeBucket 是一种避免无意中读取重复key的方法;bucket上的覆盖应该只取limit=1，但已知safeerangebucket永远不会覆盖任何键，所以range是安全的。
+	// IsSafeRangeBucket 是一种避免无意中读取重复key的方法;bucket上的覆盖应该只取limit=1,但已知safeerangebucket永远不会覆盖任何键,所以range是安全的.
 	IsSafeRangeBucket() bool // 不要在非键桶上使用unsafeRange
 }
 
@@ -96,9 +96,9 @@ func (t *batchTx) unsafePut(bucketType Bucket, key []byte, value []byte, seq boo
 		t.backend.lg.Fatal("找不到bolt.db里的桶", zap.Stringer("bucket-name", bucketType), zap.Stack("stack"))
 	}
 	if seq {
-		// 当工作负载大多为仅附加时，增加填充百分比是很有用的。这可以延迟页面分割和减少空间使用。
-		// 告诉bolt 当页面已满时，它应该告诉它做一个 90-10 拆分，而不是 50-50 拆分，这更适合于顺序插入。这样可以让其体积稍小。
-		// 一个例子：使用 FillPercent = 0.9 之前是 103MB，使用之后是64MB，实际数据是22MB。
+		// 当工作负载大多为仅附加时,增加填充百分比是很有用的.这可以延迟页面分割和减少空间使用.
+		// 告诉bolt 当页面已满时,它应该告诉它做一个 90-10 拆分,而不是 50-50 拆分,这更适合于顺序插入.这样可以让其体积稍小.
+		// 一个例子：使用 FillPercent = 0.9 之前是 103MB,使用之后是64MB,实际数据是22MB.
 		bucket.FillPercent = 0.9
 	}
 	if err := bucket.Put(key, value); err != nil {

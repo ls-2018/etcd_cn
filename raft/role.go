@@ -24,8 +24,8 @@ func (r *raft) Step(m pb.Message) error {
 			// 是否在租约期以内
 			inLease := r.checkQuorum && r.lead != None && r.electionElapsed < r.electionTimeout
 			if !force && inLease {
-				// 如果非强制，而且又在租约期以内，就不做任何处理
-				// 非强制又在租约期内可以忽略选举消息，见论文的4.2.3，这是为了阻止已经离开集群的节点再次发起投票请求
+				// 如果非强制,而且又在租约期以内,就不做任何处理
+				// 非强制又在租约期内可以忽略选举消息,见论文的4.2.3,这是为了阻止已经离开集群的节点再次发起投票请求
 				r.logger.Infof("%x [logterm: %d, index: %d, vote: %x] 忽略消息 %s from %x [logterm: %d, index: %d] at term %d: 租约没有过期 (remaining ticks: %d)",
 					r.id, r.raftLog.lastTerm(), r.raftLog.lastIndex(), r.Vote, m.Type, m.From, m.LogTerm, m.Index, r.Term, r.electionTimeout-r.electionElapsed)
 				return nil
@@ -104,7 +104,7 @@ func (r *raft) Step(m pb.Message) error {
 		// 3. 预投票并且term大
 
 		// case  leader 转移 ---> raft Timeout -> follower --->  all
-		// 如果转移m.From会默认填充leader id，  --->  r.Vote == m.From =true   ； r.Vote == None =false   ; m.Type == pb.MsgPreVote=false   canVote是False
+		// 如果转移m.From会默认填充leader id,  --->  r.Vote == m.From =true   ； r.Vote == None =false   ; m.Type == pb.MsgPreVote=false   canVote是False
 		canVote := r.Vote == m.From || (r.Vote == None && r.lead == None) || (m.Type == pb.MsgPreVote && m.Term > r.Term)
 		if canVote && r.raftLog.isUpToDate(m.Index, m.LogTerm) {
 
@@ -112,7 +112,7 @@ func (r *raft) Step(m pb.Message) error {
 				r.id, r.raftLog.lastTerm(), r.raftLog.lastIndex(), r.Vote, m.Type, m.From, m.LogTerm, m.Index, r.Term)
 			r.send(pb.Message{To: m.From, Term: m.Term, Type: voteRespMsgType(m.Type)})
 			if m.Type == pb.MsgVote {
-				// 只记录真实的投票。
+				// 只记录真实的投票.
 				r.electionElapsed = 0
 				r.Vote = m.From // 当前节点的选票投给了谁做我Leader
 			}
@@ -223,9 +223,9 @@ func stepLeader(r *raft, m pb.Message) error {
 		r.bcastAppend()
 		return nil
 	case pb.MsgReadIndex:
-		// 表示当前集群只有一个节点，当前节点就是leader
+		// 表示当前集群只有一个节点,当前节点就是leader
 		if r.prstrack.IsSingleton() {
-			// 记录当前的commit index，称为ReadIndex；
+			// 记录当前的commit index,称为ReadIndex；
 			resp := r.responseToReadIndexReq(m, r.raftLog.committed)
 			if resp.To != None {
 				r.send(resp)
@@ -233,8 +233,8 @@ func stepLeader(r *raft, m pb.Message) error {
 			return nil
 		}
 
-		// 当leader在其任期内没有提交任何日志记录时，推迟只读请求。
-		if !r.committedEntryInCurrentTerm() { // 任期变更时，有数据没有committed
+		// 当leader在其任期内没有提交任何日志记录时,推迟只读请求.
+		if !r.committedEntryInCurrentTerm() { // 任期变更时,有数据没有committed
 			r.pendingReadIndexMessages = append(r.pendingReadIndexMessages, m)
 			return nil
 		}
@@ -344,13 +344,13 @@ func stepLeader(r *raft, m pb.Message) error {
 			return nil
 		}
 		// 判断leader有没有收到大多数节点的确认
-		// 也就是ReadIndex算法中，leader节点得到follower的确认，证明自己目前还是Leader
+		// 也就是ReadIndex算法中,leader节点得到follower的确认,证明自己目前还是Leader
 		readIndexStates := r.readOnly.recvAck(m.From, m.Context) // 记录了每个节点对  m.Context  的响应
 		xxx := r.prstrack.Voters.VoteResult(readIndexStates)
 		if xxx != quorum.VoteWon {
 			return nil
 		}
-		// 收到了响应节点超过半数，会清空readOnly中指定消息ID及之前的所有记录
+		// 收到了响应节点超过半数,会清空readOnly中指定消息ID及之前的所有记录
 		rss := r.readOnly.advance(m) // 响应的ReadIndex
 		// 返回follower的心跳回执
 		for _, rs := range rss {
@@ -386,23 +386,23 @@ func stepLeader(r *raft, m pb.Message) error {
 		if pr.State == tracker.StateReplicate {
 			pr.BecomeProbe()
 		}
-		r.logger.Debugf("%x 发送消息到 %x  失败 ，因为不可达[%s]", r.id, m.From, pr)
+		r.logger.Debugf("%x 发送消息到 %x  失败 ,因为不可达[%s]", r.id, m.From, pr)
 	case pb.MsgTransferLeader:
 		// pr 当前leader对该节点状态的记录
 		// client ---> raft --- > leader
 		// client ---> raft --- > follower --- > leader
 		if pr.IsLearner {
-			r.logger.Debugf("%x 是learner。忽视转移领导", r.id)
+			r.logger.Debugf("%x 是learner.忽视转移领导", r.id)
 			return nil
 		}
 		leadTransferee := m.From
 		lastLeadTransferee := r.leadTransferee
 		if lastLeadTransferee != None {
 			if lastLeadTransferee == leadTransferee {
-				r.logger.Infof("%x [term %d] 正在转移leader给%x，忽略对同一个localNode的请求%x", r.id, r.Term, leadTransferee, leadTransferee)
+				r.logger.Infof("%x [term %d] 正在转移leader给%x,忽略对同一个localNode的请求%x", r.id, r.Term, leadTransferee, leadTransferee)
 				return nil
 			}
-			r.abortLeaderTransfer() // 上一个leader转移没完成，又进行下一个
+			r.abortLeaderTransfer() // 上一个leader转移没完成,又进行下一个
 			r.logger.Infof("%x [term %d] 取消先前的领导权移交 %x", r.id, r.Term, lastLeadTransferee)
 		}
 		if leadTransferee == r.id {
@@ -410,13 +410,13 @@ func stepLeader(r *raft, m pb.Message) error {
 			return nil
 		}
 		r.logger.Infof("%x [term %d] 开始进行leader转移to %x", r.id, r.Term, leadTransferee)
-		// 转移领导权应该在一个electionTimeout中完成，因此重置r.e tionelapsed。
+		// 转移领导权应该在一个electionTimeout中完成,因此重置r.e tionelapsed.
 		r.electionElapsed = 0
 		r.leadTransferee = leadTransferee
 		if pr.Match == r.raftLog.lastIndex() {
-			// leader转移 follower 发送申请投票消息，但是任期不会增加， context 是CampaignTransfer
+			// leader转移 follower 发送申请投票消息,但是任期不会增加, context 是CampaignTransfer
 			r.sendTimeoutNow(leadTransferee) // 发送方,指定为了下任leader
-			r.logger.Infof("%x 立即发送MsgTimeoutNow到%x，因为%x已经有最新的日志", r.id, leadTransferee, leadTransferee)
+			r.logger.Infof("%x 立即发送MsgTimeoutNow到%x,因为%x已经有最新的日志", r.id, leadTransferee, leadTransferee)
 		} else {
 			r.sendAppend(leadTransferee) // 发送转移到哪个节点,用于加快该节点的日志进度
 		}
@@ -510,8 +510,8 @@ func stepFollower(r *raft, m pb.Message) error {
 		m.To = r.lead
 		r.send(m)
 	case pb.MsgTimeoutNow:
-		r.logger.Infof("%x [term %d] 收到来自 %x(下任leader) 的MsgTimeoutNow，并开始选举获得领导。", r.id, r.Term, m.From)
-		// 即使r.preVote为真，领导层转移也不会使用pre-vote;我们知道我们不是在从一个分区恢复，所以不需要额外的往返。
+		r.logger.Infof("%x [term %d] 收到来自 %x(下任leader) 的MsgTimeoutNow,并开始选举获得领导.", r.id, r.Term, m.From)
+		// 即使r.preVote为真,领导层转移也不会使用pre-vote;我们知道我们不是在从一个分区恢复,所以不需要额外的往返.
 		r.hup(campaignTransfer)
 
 	case pb.MsgReadIndex: // ✅

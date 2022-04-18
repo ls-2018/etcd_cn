@@ -170,7 +170,7 @@ RPC: DeleteRange
 
 - prev-kv -- 返回删除的k,v 键值对
 
-- from-key -- 使用字节比较法删除大于或等于给定键的键。
+- from-key -- 使用字节比较法删除大于或等于给定键的键.
 
 #### Output
 

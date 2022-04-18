@@ -38,7 +38,7 @@ func (tw *watchableStoreTxnWrite) End() {
 		}
 	}
 
-	// 当异步事件post检查当前存储版本时，在可观察存储锁下写入TXN，因此更新是可见的
+	// 当异步事件post检查当前存储版本时,在可观察存储锁下写入TXN,因此更新是可见的
 	tw.s.mu.Lock()
 	tw.s.notify(rev, evs) // 事务结束时, 通知watcher
 	tw.TxnWrite.End()

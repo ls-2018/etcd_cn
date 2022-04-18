@@ -72,7 +72,7 @@ func (ti *treeIndex) visit(key, end []byte, f func(ki *keyIndex) bool) {
 
 	ti.RLock()
 	defer ti.RUnlock()
-	// 对树中[pivot, last]范围内的每个值调用迭代器，直到迭代器返回false。
+	// 对树中[pivot, last]范围内的每个值调用迭代器,直到迭代器返回false.
 	// 假如获取前缀为b   那么结束就是c   , 因为是自增的
 
 	ti.tree.AscendGreaterOrEqual(keyi, func(item btree.Item) bool {
@@ -195,7 +195,7 @@ func (ti *treeIndex) Compact(rev int64) map[revision]struct{} {
 	return available
 }
 
-// Keep 查找在给定版本之后的所有修订。
+// Keep 查找在给定版本之后的所有修订.
 func (ti *treeIndex) Keep(rev int64) map[revision]struct{} {
 	available := make(map[revision]struct{})
 	ti.RLock()

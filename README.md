@@ -19,19 +19,19 @@ peer-cert-allowed-cn    允许的客户端证书CommonName    your name or your 
 etcd --quota-backend-bytes=$((16*1024*1024))
 
 写爆磁盘
-while [ 1 ]; do dd if=/dev/urandom bs=1024 count=1024 | ETCDCTL_API=3 etcdctl put key || break;done
+while [ 1 ]; do dd if=/dev/urandom bs=1024 count=1024 | etcdctl put key || break;done
 
 查看endpoint状态
-ETCDCTL_API=3 etcdctl --write-out=table endpoint status
+etcdctl --write-out=table endpoint status
 
 查看alarm
-ETCDCTL_API=3 etcdctl alarm list
+etcdctl alarm list
 
 清理碎片
-ETCDCTL_API=3 etcdctl defrag
+etcdctl defrag
 
 清理alarm
-ETCDCTL_API=3 etcdctl alarm disarm
+etcdctl alarm disarm
 ```
 
 ```
@@ -162,13 +162,6 @@ MsgTimeoutNow | Candidate、Follower | 非本地： | | MsgReadIndex | Leader、
 ### Ref
 
 - https://www.lixueduan.com/categories/
-- https://blog.csdn.net/cyq6239075/article/details/105452133
-- https://juejin.cn/post/6844904031186321416
-- https://www.codeleading.com/article/15455457381/
-- https://www.cnblogs.com/ricklz/p/15037925.html
-- https://studygolang.com/articles/2058
-- https://blog.csdn.net/weixin_42017400/article/details/123206597
-- https://blog.csdn.net/weixin_42017400/article/details/123205879
 
 (2) electionElapsed
 
@@ -276,15 +269,15 @@ WAL 日志
 ----快照----------------- |----------------快照--------------------- |         | 在没有被持久化之前如果遇到了换届选举,这个日志可能会被相同索引值的新日志覆盖
 
 
-每一条日志Entry需要经过unstable、stable、committed、applied、compacted五个阶段，接下来总结一下日志的状态转换过程：
+每一条日志Entry需要经过unstable、stable、committed、applied、compacted五个阶段,接下来总结一下日志的状态转换过程：
 
-刚刚收到一条日志会被存储在unstable中，日志在没有被持久化之前如果遇到了换届选举，这个日志可能会被相同索引值的新日志覆盖，这个一点可以在raftLog.maybeAppend()和unstable.truncateAndAppend()找到相关的处理逻辑。
-unstable中存储的日志会被使用者写入持久存储（文件）中，这些持久化的日志就会从unstable转移到MemoryStorage中。
-读者可能会问MemoryStorage并不是持久存储啊，其实日志是被双写了，文件和MemoryStorage各存储了一份，而raft包只能访问MemoryStorage中的内容。这样设计的目的是用内存缓冲文件中的日志，在频繁操作日志的时候性能会更高。
-此处需要注意的是，MemoryStorage中的日志仅仅代表日志是可靠的，与提交和应用没有任何关系。
-leader会搜集所有peer的接收日志状态，只要日志被超过半数以上的peer接收，那么就会提交该日志，peer接收到leader的数据包更新自己的已提交的最大索引值，这样小于等于该索引值的日志就是可以被提交的日志。
-已经被提交的日志会被使用者获得，并逐条应用，进而影响使用者的数据状态。
-已经被应用的日志意味着使用者已经把状态持久化在自己的存储中了，这条日志就可以删除了，避免日志一直追加造成存储无限增大的问题。不要忘了所有的日志都存储在MemoryStorage中，不删除已应用的日志对于内存是一种浪费，这也就是日志的compacted。
+刚刚收到一条日志会被存储在unstable中,日志在没有被持久化之前如果遇到了换届选举,这个日志可能会被相同索引值的新日志覆盖,这个一点可以在raftLog.maybeAppend()和unstable.truncateAndAppend()找到相关的处理逻辑.
+unstable中存储的日志会被使用者写入持久存储（文件）中,这些持久化的日志就会从unstable转移到MemoryStorage中.
+读者可能会问MemoryStorage并不是持久存储啊,其实日志是被双写了,文件和MemoryStorage各存储了一份,而raft包只能访问MemoryStorage中的内容.这样设计的目的是用内存缓冲文件中的日志,在频繁操作日志的时候性能会更高.
+此处需要注意的是,MemoryStorage中的日志仅仅代表日志是可靠的,与提交和应用没有任何关系.
+leader会搜集所有peer的接收日志状态,只要日志被超过半数以上的peer接收,那么就会提交该日志,peer接收到leader的数据包更新自己的已提交的最大索引值,这样小于等于该索引值的日志就是可以被提交的日志.
+已经被提交的日志会被使用者获得,并逐条应用,进而影响使用者的数据状态.
+已经被应用的日志意味着使用者已经把状态持久化在自己的存储中了,这条日志就可以删除了,避免日志一直追加造成存储无限增大的问题.不要忘了所有的日志都存储在MemoryStorage中,不删除已应用的日志对于内存是一种浪费,这也就是日志的compacted.
 
 每次用户提交日志,该日志会保存到 MemoryStorage 以及wal里,每当raft发送给上层程序一批已经commited日志,就会触发maybeTriggerSnapshot,当用户apply以后
 判断是否进行触发 MemoryStorage 打快照,当打了快照以后,会把当前快照点10000条以前的记录从 MemoryStorage.ents去除掉 【俗称压缩】
@@ -303,7 +296,7 @@ MemoryStorage并不是持久存储啊,其实日志是被双写了,文件和Memor
 从而实现压缩MemoryStorage.ents 的目的,具体实现如下：    [GC]
 func (ms *MemoryStorage) Compact(compactIndex uint64) 
 
-2、清除kvindex的修订版本，以及bolt.db里的历史数据
+2、清除kvindex的修订版本,以及bolt.db里的历史数据
 
 
 
@@ -411,7 +404,7 @@ etcd中每新建一个key ,会为其分配一个主版本,同时还有一个sub�
 
 ```
 localNode.run() 一直死循环
-  判断是否有ready的数据，其中 r.readStates就是一项指标
+  判断是否有ready的数据,其中 r.readStates就是一项指标
   n.readyc <- ready 
   
 ---------------------------------
@@ -498,5 +491,20 @@ Step()
       r.hup(campaignTransfer)
       # 给每一个节点发送
       r.send(pb.Message{Term: term, To: id, Type: voteMsg, Index: r.raftLog.lastIndex(), LogTerm: r.raftLog.lastTerm(), Context: ctx})
+
+```
+
+```
+获取当前etcd数据的修订版本(revision)
+rev=$(etcdctl -w json endpoint status | egrep -o -i '"revision":[0-9]*' | egrep -o '[0-9]*')
+整合压缩旧版本数据
+etcdctl compact $rev
+执行碎片整理
+etcdctl defrag
+解除告警
+etcdctl alarm disarm
+备份以及查看备份数据信息
+etcdctl snapshot save backup.db
+etcdctl snapshot status backup.db
 
 ```

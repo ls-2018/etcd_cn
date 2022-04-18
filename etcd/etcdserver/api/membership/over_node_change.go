@@ -60,7 +60,7 @@ func (c *RaftCluster) IsReadyToAddVotingMember() bool {
 	}
 
 	if nstarted == 1 && nmembers == 2 {
-		// 在一个成员集群中添加一个新节点，用于恢复集群数据
+		// 在一个成员集群中添加一个新节点,用于恢复集群数据
 		c.lg.Debug("启动成员数为1;是否可以接受添加成员的请求")
 		return true
 	}

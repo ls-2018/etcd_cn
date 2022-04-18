@@ -214,7 +214,7 @@ func restartNode(cfg config.ServerConfig, snapshot *raftpb.Snapshot) (types.ID, 
 	cl.SetID(id, cid)
 	s := raft.NewMemoryStorage()
 	if snapshot != nil {
-		s.ApplySnapshot(*snapshot) // 来还原服务宕机前的状态。
+		s.ApplySnapshot(*snapshot) // 来还原服务宕机前的状态.
 	}
 	s.SetHardState(st) // 从持久化的内存存储中恢复出状态
 	s.Append(ents)     // 从持久化的内存存储中恢复出日志
@@ -288,7 +288,7 @@ func restartAsStandaloneNode(cfg config.ServerConfig, snapshot *raftpb.Snapshot)
 	cl.SetID(id, cid)
 	s := raft.NewMemoryStorage()
 	if snapshot != nil {
-		s.ApplySnapshot(*snapshot) // 来还原服务宕机前的状态。
+		s.ApplySnapshot(*snapshot) // 来还原服务宕机前的状态.
 	}
 	s.SetHardState(st) // 从持久化的内存存储中恢复出状态
 	s.Append(ents)     // 从持久化的内存存储中恢复出日志

@@ -99,7 +99,7 @@ func epHealthCommandFunc(cmd *cobra.Command, args []string) {
 	ka := keepAliveTimeFromCmd(cmd)
 	kat := keepAliveTimeoutFromCmd(cmd)
 	auth := authCfgFromCmd(cmd)
-	cfgs := []*v3.Config{}
+	var cfgs []*v3.Config
 	for _, ep := range endpointsFromCluster(cmd) {
 		cfg, err := newClientCfg([]string{ep}, dt, ka, kat, sec, auth)
 		if err != nil {
@@ -122,11 +122,11 @@ func epHealthCommandFunc(cmd *cobra.Command, args []string) {
 				return
 			}
 			st := time.Now()
-			// 得到一个随机的key。只要我们能够获得响应而没有错误，端点就是健康状态。
+			// 得到一个随机的key.只要我们能够获得响应而没有错误,端点就是健康状态.
 			ctx, cancel := commandCtx(cmd)
 			_, err = cli.Get(ctx, "health")
 			eh := epHealth{Ep: ep, Health: false, Took: time.Since(st).String()}
-			// 权限拒绝是可以的，因为提案通过协商一致得到它
+			// 权限拒绝是可以的,因为提案通过协商一致得到它
 			if err == nil || err == rpctypes.ErrPermissionDenied {
 				eh.Health = true
 			} else {
@@ -272,7 +272,7 @@ func endpointsFromCluster(cmd *cobra.Command) []string {
 		cobrautl.ExitWithError(cobrautl.ExitError, err)
 	}
 
-	ret := []string{}
+	var ret []string
 	for _, m := range membs.Members {
 		ret = append(ret, m.ClientURLs...)
 	}

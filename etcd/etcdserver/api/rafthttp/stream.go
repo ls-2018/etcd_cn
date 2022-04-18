@@ -152,12 +152,12 @@ func startStreamWriter(lg *zap.Logger, local, id types.ID, status *peerStatus, f
 
 func (cw *streamWriter) run() {
 	var (
-		msgc       chan raftpb.Message
-		heartbeatc <-chan time.Time
-		t          streamType
-		enc        encoder
-		flusher    http.Flusher
-		batched    int
+		msgc       chan raftpb.Message // 指向当前streamWriter. msgc字段
+		heartbeatc <-chan time.Time    // 定时器会定时向该通道发送信号, 触发心跳消息的发送,该心跳消息与后面介绍的Raft的心跳消息有所不同,该心跳消息的主要目的是为了防止连接长时间不用断升的
+		t          streamType          // 用来记录消息的版本信息
+		enc        encoder             // 编码器,负责将消息序列化并写入连接的缓冲区
+		flusher    http.Flusher        // 负责刷新底层连接,将数据真正发送出去
+		batched    int                 // 当前未Flush的消息个数
 	)
 	tickc := time.NewTicker(ConnReadTimeout / 3)
 	defer tickc.Stop()
@@ -174,6 +174,7 @@ func (cw *streamWriter) run() {
 	for {
 		select {
 		case <-heartbeatc:
+			// 不是raft心跳消息,是为了防止链接超时
 			err := enc.encode(&linkHeartbeatMessage)
 			unflushed += linkHeartbeatMessage.Size()
 			if err == nil {
@@ -197,12 +198,12 @@ func (cw *streamWriter) run() {
 			heartbeatc, msgc = nil, nil
 
 		case m := <-msgc:
-			err := enc.encode(&m) // 格式化消息，如选举消息
+			err := enc.encode(&m) // 格式化消息,如选举消息
 			if err == nil {
 				unflushed += m.Size()
-
+				// msgc通道中的消息全部发送完成或是未Flush的消息较多,则触发Flush,否则只是递增batched变量
 				if len(msgc) == 0 || batched > streamBufSize/2 { // batched批处理 streamBufSize全局变量 4096
-					flusher.Flush() //  刷新缓冲区，发送到对端。Flush代码为net/http模块
+					flusher.Flush() //  刷新缓冲区,发送到对端.Flush代码为net/http模块
 					unflushed = 0
 					batched = 0
 				} else {
@@ -225,7 +226,7 @@ func (cw *streamWriter) run() {
 			heartbeatc, msgc = nil, nil
 			cw.r.ReportUnreachable(m.To)
 
-		case conn := <-cw.connc: // 从channel读取conn对象，表示会话已经建立
+		case conn := <-cw.connc: // 从channel读取conn对象,表示会话已经建立
 			cw.mu.Lock()
 			closed := cw.closeUnlocked()
 			t = conn.t
@@ -247,11 +248,11 @@ func (cw *streamWriter) run() {
 					zap.String("stream-type", t.String()),
 				)
 			}
-			flusher = conn.Flusher // 用于send消息 等待接收消息
+			flusher = conn.Flusher // 记录底层连接对应的Flusher
 			unflushed = 0
-			cw.status.activate()
-			cw.closer = conn.Closer
-			cw.working = true
+			cw.status.activate()    // peerStatus.activeit直为true
+			cw.closer = conn.Closer // 记录底层连接对应的Flusher
+			cw.working = true       // 标识当前streamWriter正在运行
 			cw.mu.Unlock()
 
 			if closed {

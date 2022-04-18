@@ -22,7 +22,7 @@ import (
 
 const bucketBufferInitialSize = 512
 
-// txBuffer 处理txWriteBuffer和txReadBuffer之间共享的功能。
+// txBuffer 处理txWriteBuffer和txReadBuffer之间共享的功能.
 type txBuffer struct {
 	buckets map[BucketID]*bucketBuffer
 }
@@ -101,7 +101,7 @@ type kv struct {
 // bucketBuffer 缓存了等待提交的k-v键值对
 type bucketBuffer struct {
 	buf  []kv
-	used int // 跟踪使用中的元素数量，这样buf可以重用而不需要重新分配。
+	used int // 跟踪使用中的元素数量,这样buf可以重用而不需要重新分配.
 }
 
 func (bb *bucketBuffer) ForEach(visitor func(k, v []byte) error) error {

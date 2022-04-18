@@ -75,7 +75,7 @@ func newStreamInterceptor(s *etcdserver.EtcdServer) grpc.StreamServerInterceptor
 			return rpctypes.ErrGRPCNotCapable
 		}
 
-		if s.IsMemberExist(s.ID()) && s.IsLearner() && info.FullMethod != snapshotMethod { // 除了快照，学习者不支持流RPC
+		if s.IsMemberExist(s.ID()) && s.IsLearner() && info.FullMethod != snapshotMethod { // 除了快照,学习者不支持流RPC
 			return rpctypes.ErrGPRCNotSupportedForLearner
 		}
 

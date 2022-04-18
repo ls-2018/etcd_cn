@@ -28,7 +28,7 @@ var (
 	ErrTimeoutDueToConnectionLost    = errors.New("etcdserver: 请求超时,可能是由于连接丢失")
 	ErrTimeoutLeaderTransfer         = errors.New("etcdserver: 请求超时,领导者转移时间过长")
 	ErrLeaderChanged                 = errors.New("etcdserver: 领导者转移了")
-	ErrNotEnoughStartedMembers       = errors.New("etcdserver: 由于启动的成员不足，重新配置失败")
+	ErrNotEnoughStartedMembers       = errors.New("etcdserver: 由于启动的成员不足,重新配置失败")
 	ErrLearnerNotReady               = errors.New("etcdserver: 只能提拔与leader同步的learner成员")
 	ErrNoLeader                      = errors.New("etcdserver: 没有leader")
 	ErrNotLeader                     = errors.New("etcdserver: 不是leader")

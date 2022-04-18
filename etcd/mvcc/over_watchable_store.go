@@ -47,7 +47,7 @@ type watchableStore struct {
 	*store
 	mu       sync.RWMutex
 	victims  []watcherBatch // 因为channel阻塞而暂存的
-	victimc  chan struct{}  // 如果watcher实例关联的ch通道被阻塞了，则对应的watcherBatch实例会暂时记录到该字段中
+	victimc  chan struct{}  // 如果watcher实例关联的ch通道被阻塞了,则对应的watcherBatch实例会暂时记录到该字段中
 	unsynced watcherGroup   // 用于存储未同步完成的实例
 	synced   watcherGroup   // 用于存储同步完成的实例
 	stopc    chan struct{}
@@ -68,7 +68,7 @@ func newWatchableStore(lg *zap.Logger, b backend.Backend, le lease.Lessor, cfg S
 	}
 	s := &watchableStore{
 		store:    NewStore(lg, b, le, cfg),
-		victimc:  make(chan struct{}, 1), // 如果watcher实例关联的ch通道被阻塞了，则对应的watcherBatch实例会暂时记录到该字段中
+		victimc:  make(chan struct{}, 1), // 如果watcher实例关联的ch通道被阻塞了,则对应的watcherBatch实例会暂时记录到该字段中
 		unsynced: newWatcherGroup(),      // 用于存储未同步完成的实例
 		synced:   newWatcherGroup(),      // 用于存储已经同步完成的实例
 		stopc:    make(chan struct{}),
@@ -76,7 +76,7 @@ func newWatchableStore(lg *zap.Logger, b backend.Backend, le lease.Lessor, cfg S
 	s.store.ReadView = &readView{s}   // 调用storage中全局view查询
 	s.store.WriteView = &writeView{s} // 调用storage中全局view查询
 	if s.le != nil {
-		// 使用此存储作为删除器，因此撤销触发器监听事件
+		// 使用此存储作为删除器,因此撤销触发器监听事件
 		s.le.SetRangeDeleter(func() lease.TxnDelete {
 			return s.Write(traceutil.TODO())
 		})
@@ -149,7 +149,7 @@ func (s *watchableStore) cancelWatcher(wa *watcher) {
 
 		if !wa.victim {
 			s.mu.Unlock()
-			panic("观察者不是受害者，但不在观察组中")
+			panic("观察者不是受害者,但不在观察组中")
 		}
 
 		var victimBatch watcherBatch
@@ -189,7 +189,7 @@ func (s *watchableStore) Restore(b backend.Backend) error {
 	return nil
 }
 
-// syncWatchersLoop 每隔100ms ，将所有未通知的事件通知给所有的监听者。
+// syncWatchersLoop 每隔100ms ,将所有未通知的事件通知给所有的监听者.
 func (s *watchableStore) syncWatchersLoop() {
 	defer s.wg.Done()
 
@@ -201,7 +201,7 @@ func (s *watchableStore) syncWatchersLoop() {
 
 		unsyncedWatchers := 0
 		if lastUnsyncedWatchers > 0 {
-			// 存在需要进行同步的watcher实例，调用syncWatchers()方法对unsynced watcherGroup中的watcher进行批量同步
+			// 存在需要进行同步的watcher实例,调用syncWatchers()方法对unsynced watcherGroup中的watcher进行批量同步
 			// 会尝试发送
 			unsyncedWatchers = s.syncWatchers()
 		}
@@ -221,8 +221,8 @@ func (s *watchableStore) syncWatchersLoop() {
 	}
 }
 
-// syncVictimsLoop 尝试将因通道阻塞的数据 重新发送，如失败，可将watcher重新放入unsyncedGroup，
-// 如果发送成功，则根据相应的watcher的同步情况，将watcher实例迁移到(un)synced watcherGroup中。
+// syncVictimsLoop 尝试将因通道阻塞的数据 重新发送,如失败,可将watcher重新放入unsyncedGroup,
+// 如果发送成功,则根据相应的watcher的同步情况,将watcher实例迁移到(un)synced watcherGroup中.
 func (s *watchableStore) syncVictimsLoop() {
 	defer s.wg.Done()
 
@@ -241,7 +241,7 @@ func (s *watchableStore) syncVictimsLoop() {
 
 		select {
 		case <-tickc:
-		case <-s.victimc: // 读数据，表示不再受损
+		case <-s.victimc: // 读数据,表示不再受损
 		case <-s.stopc:
 			return
 		}
@@ -277,14 +277,14 @@ func (s *watchableStore) moveVictims() (moved int) {
 		curRev := s.store.currentRev
 		for w, eb := range wb {
 			if newVictim != nil && newVictim[w] != nil {
-				// 不能发送响应数据的，继续保持受损状态
+				// 不能发送响应数据的,继续保持受损状态
 				continue
 			}
 			w.victim = false
 			if eb.moreRev != 0 {
 				w.minRev = eb.moreRev
 			}
-			// 当该watcher不再受损 ，通过watcher的修订版本与全局的修订版本，判断该watcher是存入synced还是unsynced
+			// 当该watcher不再受损 ,通过watcher的修订版本与全局的修订版本,判断该watcher是存入synced还是unsynced
 			if w.minRev <= curRev {
 				s.unsynced.add(w)
 			} else {
@@ -322,7 +322,7 @@ func (s *watchableStore) syncWatchers() int {
 
 	curRev := s.store.currentRev
 	compactionRev := s.store.compactMainRev
-	// 根据unsynced watcherGroup中记录的watcher个数对其进行分批返回，同时获取该批watcher实例中查找最小的minRev字段，maxWatchersPerSync默认为512
+	// 根据unsynced watcherGroup中记录的watcher个数对其进行分批返回,同时获取该批watcher实例中查找最小的minRev字段,maxWatchersPerSync默认为512
 	wg, minRev := s.unsynced.choose(maxWatchersPerSync, curRev, compactionRev)
 	minBytes, maxBytes := newRevBytes(), newRevBytes()
 	revToBytes(revision{main: minRev}, minBytes)
@@ -355,7 +355,7 @@ func (s *watchableStore) syncWatchers() int {
 			// 往通道里发送的消息
 		} else {
 			// case 1 确实是发送失败
-			// case 2 通道阻塞了，暂时标记位victim
+			// case 2 通道阻塞了,暂时标记位victim
 			if victims == nil {
 				victims = make(watcherBatch)
 			}
@@ -377,7 +377,7 @@ func (s *watchableStore) syncWatchers() int {
 	return s.unsynced.size()
 }
 
-// 将BoltDB中查询的键值对信息转换成相应的Event实例，通过判断BoltDB查询的键值对是否存在于watcherGroup的key中，记录mvccpb.PUT or mvccpb.DELETE
+// 将BoltDB中查询的键值对信息转换成相应的Event实例,通过判断BoltDB查询的键值对是否存在于watcherGroup的key中,记录mvccpb.PUT or mvccpb.DELETE
 func kvsToEvents(lg *zap.Logger, wg *watcherGroup, revs, vals [][]byte) (evs []mvccpb.Event) {
 	for i, v := range vals {
 		var kv mvccpb.KeyValue
@@ -404,7 +404,7 @@ func kvsToEvents(lg *zap.Logger, wg *watcherGroup, revs, vals [][]byte) (evs []m
 func (s *watchableStore) notify(rev int64, evs []mvccpb.Event) {
 	var victim watcherBatch
 	// type watcherBatch map[*watcher]*eventBatch
-	// 找到所有的watch，synced使用了map和红黑树来快速找到监听的key
+	// 找到所有的watch,synced使用了map和红黑树来快速找到监听的key
 	for watcher, eb := range newWatcherBatch(&s.synced, evs) {
 		if eb.revs != 1 {
 			s.store.lg.Panic("在watch通知中出现多次修订", zap.Int("number-of-revisions", eb.revs))
@@ -421,7 +421,7 @@ func (s *watchableStore) notify(rev int64, evs []mvccpb.Event) {
 			s.synced.delete(watcher)
 		}
 	}
-	s.addVictim(victim) // 将因为chan满没发出的消息缓存，然后使用unsynced再将消息发送出去
+	s.addVictim(victim) // 将因为chan满没发出的消息缓存,然后使用unsynced再将消息发送出去
 }
 
 // 添加不健康的事件          watcher:待发送的消息
@@ -454,8 +454,8 @@ func (s *watchableStore) progress(w *watcher) {
 type watcher struct {
 	key       string
 	end       string
-	victim    bool // 当ch被阻塞时，并正在进行受害者处理时被设置。
-	compacted bool // 当 watcher 因为压缩而被移除时，compacted被设置
+	victim    bool // 当ch被阻塞时,并正在进行受害者处理时被设置.
+	compacted bool // 当 watcher 因为压缩而被移除时,compacted被设置
 	// restore is true when the watcher is being restored from leader snapshot
 	// which means that this watcher has just been moved from "synced" to "unsynced"
 	// watcher group, possibly with a future revision when it was first added

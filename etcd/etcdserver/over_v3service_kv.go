@@ -23,7 +23,7 @@ func (s *EtcdServer) Txn(ctx context.Context, r *pb.TxnRequest) (*pb.TxnResponse
 		ctx = context.WithValue(ctx, traceutil.TraceKey, trace)
 		if !isTxnSerializable(r) {
 			err := s.linearizeReadNotify(ctx)
-			trace.Step("在线性读之前，保持raft节点间的一致性")
+			trace.Step("在线性读之前,保持raft节点间的一致性")
 			if err != nil {
 				return nil, err
 			}
@@ -70,8 +70,8 @@ func (s *EtcdServer) Compact(ctx context.Context, r *pb.CompactionRequest) (*pb.
 	}
 	if r.Physical && result != nil && result.physc != nil {
 		<-result.physc
-		// 压实工作已经完成，删除了键；现在哈希已经解决了，但数据不一定被提交。如果出现崩溃，
-		// 如果压实工作恢复，哈希值可能会恢复到压实完成前的哈希值。强制完成的压实到 提交，这样它就不会在崩溃后恢复。
+		// 压实工作已经完成,删除了键；现在哈希已经解决了,但数据不一定被提交.如果出现崩溃,
+		// 如果压实工作恢复,哈希值可能会恢复到压实完成前的哈希值.强制完成的压实到 提交,这样它就不会在崩溃后恢复.
 		s.backend.ForceCommit()
 		trace.Step("物理压实")
 	}
@@ -111,16 +111,16 @@ func (s *EtcdServer) Range(ctx context.Context, r *pb.RangeRequest) (*pb.RangeRe
 			)
 		}
 	}(time.Now())
-	// 如果需要线性一致性读，执行 linearizableReadNotify
+	// 如果需要线性一致性读,执行 linearizableReadNotify
 	// 此处将会一直阻塞直到 apply index >= read index
 	if !r.Serializable {
 		err = s.linearizeReadNotify(ctx) // 发准备信号,并等待结果
-		trace.Step("在线性化读数之前，raft节点之间的一致。")
+		trace.Step("在线性化读数之前,raft节点之间的一致.")
 		if err != nil {
 			return nil, err
 		}
 	}
-	// serializable read 会直接读取当前节点的数据返回给客户端，它并不能保证返回给客户端的数据是最新的
+	// serializable read 会直接读取当前节点的数据返回给客户端,它并不能保证返回给客户端的数据是最新的
 	chk := func(ai *auth.AuthInfo) error {
 		return s.authStore.IsRangePermitted(ai, []byte(r.Key), []byte(r.RangeEnd)) // health,nil
 	}

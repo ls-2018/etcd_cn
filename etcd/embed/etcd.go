@@ -201,7 +201,7 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 		EnableGRPCGateway:                        cfg.EnableGRPCGateway,                    // 启用grpc网关,将 http 转换成 grpc / true
 		ExperimentalEnableDistributedTracing:     cfg.ExperimentalEnableDistributedTracing, // 默认false
 		UnsafeNoFsync:                            cfg.UnsafeNoFsync,
-		EnableLeaseCheckpoint:                    cfg.ExperimentalEnableLeaseCheckpoint, // 允许leader定期向其他成员发送检查点，以防止leader变化时剩余TTL重置。
+		EnableLeaseCheckpoint:                    cfg.ExperimentalEnableLeaseCheckpoint, // 允许leader定期向其他成员发送检查点,以防止leader变化时剩余TTL重置.
 		LeaseCheckpointPersist:                   cfg.ExperimentalEnableLeaseCheckpointPersist,
 		CompactionBatchLimit:                     cfg.ExperimentalCompactionBatchLimit,
 		WatchProgressNotifyInterval:              cfg.ExperimentalWatchProgressNotifyInterval,
@@ -496,7 +496,7 @@ func configurePeerListeners(cfg *Config) (peers []*peerListener, err error) {
 		}
 		// 构造peerListener对象 监听2380 作为服务端模式
 		peers[i] = &peerListener{close: func(context.Context) error { return nil }}
-		// 调用接口，创建listener对象，返回来之后，
+		// 调用接口,创建listener对象,返回来之后,
 		// socket套接字已经完成listener监听流程
 		peers[i].Listener, err = transport.NewListenerWithOpts(u.Host, u.Scheme,
 			transport.WithTLSInfo(&cfg.PeerTLSInfo),
@@ -540,7 +540,7 @@ func (e *Etcd) servePeers() (err error) {
 		go httpServer.Serve(m.Match(cmux.Any())) // http1
 
 		p.serve = func() error {
-			// 回调函数，激活服务，主要是Accept方法
+			// 回调函数,激活服务,主要是Accept方法
 			e.cfg.logger.Info("cmux::serve", zap.String("address", u))
 			return m.Serve()
 		}

@@ -53,7 +53,7 @@ func NewGetCommand() *cobra.Command {
 	cmd.Flags().Int64Var(&getRev, "rev", 0, "指定修订版本")
 	cmd.Flags().BoolVar(&getKeysOnly, "keys-only", false, "只获取keys")
 	cmd.Flags().BoolVar(&getCountOnly, "count-only", false, "只获取匹配的数量")
-	cmd.Flags().BoolVar(&printValueOnly, "print-value-only", false, `仅在使用“simple”输出格式时写入值`)
+	cmd.Flags().BoolVar(&printValueOnly, "print-value-only", false, `仅在使用“simple"输出格式时写入值`)
 	return cmd
 }
 

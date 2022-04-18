@@ -242,7 +242,7 @@ func (p *peer) send(m raftpb.Message) {
 	if paused {
 		return
 	}
-	// 如果消息类型是snapshot则返回pipeline，如果是MsgApp则返回msgAppV2Writer,否则返回wirter
+	// 如果消息类型是snapshot则返回pipeline,如果是MsgApp则返回msgAppV2Writer,否则返回wirter
 	// wirtec创建是在
 	writec, name := p.pick(m)
 	select {
@@ -350,8 +350,7 @@ func (p *peer) stop() {
 	p.msgAppReader.stop()
 }
 
-// pick picks a chan for sending the given message. The picked chan and the picked chan
-// string name are returned.
+// 根据消息的类型选择合适的消息通道,
 func (p *peer) pick(m raftpb.Message) (writec chan<- raftpb.Message, picked string) {
 	var ok bool
 	// Considering MsgSnap may have a big size, e.g., 1G, and will block

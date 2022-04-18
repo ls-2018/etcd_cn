@@ -214,18 +214,18 @@ func (b *backend) ConcurrentReadTx() ReadTx {
 	var buf *txReadBuffer
 	switch {
 	case isEmptyCache: // 缓冲为空
-		// 当持有b.txReadBufferCache.mu.Lock时执行安全的缓冲区拷贝这只应该运行一次，所以不会有太多的开销
+		// 当持有b.txReadBufferCache.mu.Lock时执行安全的缓冲区拷贝这只应该运行一次,所以不会有太多的开销
 		curBuf := b.readTx.buf.unsafeCopy()
 		buf = &curBuf
 	case isStaleCache:
-		// 最大化并发，尝试不安全的缓冲区拷贝在复制buffer时释放锁——cache可能会再次失效
-		// 被其他人覆盖。因此，我们需要再次检查readTx缓冲区版本
+		// 最大化并发,尝试不安全的缓冲区拷贝在复制buffer时释放锁——cache可能会再次失效
+		// 被其他人覆盖.因此,我们需要再次检查readTx缓冲区版本
 		b.txReadBufferCache.mu.Unlock()
 		curBuf := b.readTx.buf.unsafeCopy()
 		b.txReadBufferCache.mu.Lock()
 		buf = &curBuf
 	default:
-		// 既不为空也不过时的缓存，只使用当前缓冲区
+		// 既不为空也不过时的缓存,只使用当前缓冲区
 		buf = curCache
 	}
 	if isEmptyCache || curCacheVer == b.txReadBufferCache.bufVersion {
@@ -263,10 +263,10 @@ func (b *backend) Snapshot() Snapshot {
 	}
 
 	stopc, donec := make(chan struct{}), make(chan struct{})
-	dbBytes := tx.Size() // 返回该事务所看到的当前数据库大小(以字节为单位)。
+	dbBytes := tx.Size() // 返回该事务所看到的当前数据库大小(以字节为单位).
 	go func() {
 		defer close(donec)
-		// sendRateBytes基于1千兆/秒的连接传输快照数据，假设tcp最小吞吐量为100MB/s。
+		// sendRateBytes基于1千兆/秒的连接传输快照数据,假设tcp最小吞吐量为100MB/s.
 		var sendRateBytes int64 = 100 * 1024 * 1024
 		warningTimeout := time.Duration(int64((float64(dbBytes) / float64(sendRateBytes)) * float64(time.Second)))
 		if warningTimeout < minSnapshotWarningTimeout {

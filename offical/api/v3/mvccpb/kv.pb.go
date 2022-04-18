@@ -52,7 +52,7 @@ type KeyValue struct {
 	Key            string `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 	CreateRevision int64  `protobuf:"varint,2,opt,name=create_revision,json=createRevision,proto3" json:"create_revision,omitempty"`
 	ModRevision    int64  `protobuf:"varint,3,opt,name=mod_revision,json=modRevision,proto3" json:"mod_revision,omitempty"`
-	// Version是key的版本。删除键会将该键的版本重置为0，对键的任何修改都会增加它的版本。
+	// Version是key的版本.删除键会将该键的版本重置为0,对键的任何修改都会增加它的版本.
 	Version int64  `protobuf:"varint,4,opt,name=version,proto3" json:"version,omitempty"`
 	Value   string `protobuf:"bytes,5,opt,name=value,proto3" json:"value,omitempty"`
 	Lease   int64  `protobuf:"varint,6,opt,name=lease,proto3" json:"lease,omitempty"`

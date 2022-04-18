@@ -52,12 +52,12 @@ func electCommandFunc(cmd *cobra.Command, args []string) {
 	var err error
 	if len(args) == 1 {
 		if !electListen {
-			cobrautl.ExitWithError(cobrautl.ExitBadArgs, errors.New("没有proposal参数，并且-l没有设置"))
+			cobrautl.ExitWithError(cobrautl.ExitBadArgs, errors.New("没有proposal参数,并且-l没有设置"))
 		}
 		err = observe(c, args[0])
 	} else {
 		if electListen {
-			cobrautl.ExitWithError(cobrautl.ExitBadArgs, errors.New("有proposal参数，但是-l设置了"))
+			cobrautl.ExitWithError(cobrautl.ExitBadArgs, errors.New("有proposal参数,但是-l设置了"))
 		}
 		err = campaign(c, args[0], args[1])
 	}

@@ -283,7 +283,7 @@ func (n *localNode) TransferLeadership(ctx context.Context, lead, transferee uin
 	}
 }
 
-// ReadIndex etcdctl get 会走这里，rctx 是一个生成的索引
+// ReadIndex etcdctl get 会走这里,rctx 是一个生成的索引
 func (n *localNode) ReadIndex(ctx context.Context, rctx []byte) error {
 	// rctx 后随着响应返回来
 	return n.step(ctx, pb.Message{Type: pb.MsgReadIndex, Entries: []pb.Entry{{Data: rctx}}}) // ok  data是requestIndex[生成的]

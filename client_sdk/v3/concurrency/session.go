@@ -25,8 +25,8 @@ const defaultSessionTTL = 60
 
 // Session represents a lease kept alive for the lifetime of a client.
 // Fault-tolerant applications may use sessions to reason about liveness.
-// 会话表示在客户端的生存期内保持活动的租约。
-// 应用程序可能会使用会话来解释活动性。
+// 会话表示在客户端的生存期内保持活动的租约.
+// 应用程序可能会使用会话来解释活动性.
 type Session struct {
 	client *v3.Client
 	opts   *sessionOptions
