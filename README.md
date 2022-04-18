@@ -32,6 +32,18 @@ etcdctl defrag
 
 清理alarm
 etcdctl alarm disarm
+
+获取当前etcd数据的修订版本(revision)
+rev=$(etcdctl -w json endpoint status | egrep -o -i '"revision":[0-9]*' | egrep -o '[0-9]*')
+整合压缩旧版本数据
+etcdctl compact $rev
+执行碎片整理
+etcdctl defrag
+解除告警
+etcdctl alarm disarm
+备份以及查看备份数据信息
+etcdctl snapshot save backup.db
+etcdctl snapshot status backup.db
 ```
 
 ```
@@ -493,18 +505,4 @@ Step()
       r.send(pb.Message{Term: term, To: id, Type: voteMsg, Index: r.raftLog.lastIndex(), LogTerm: r.raftLog.lastTerm(), Context: ctx})
 
 ```
-
-```
-获取当前etcd数据的修订版本(revision)
-rev=$(etcdctl -w json endpoint status | egrep -o -i '"revision":[0-9]*' | egrep -o '[0-9]*')
-整合压缩旧版本数据
-etcdctl compact $rev
-执行碎片整理
-etcdctl defrag
-解除告警
-etcdctl alarm disarm
-备份以及查看备份数据信息
-etcdctl snapshot save backup.db
-etcdctl snapshot status backup.db
-
-```
+ 
