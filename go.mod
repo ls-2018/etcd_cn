@@ -9,7 +9,7 @@ replace github.com/etcd-io/etcd/api/v3 v3.5.2 => ./offical/api/v3
 replace go.etcd.io/etcd/client/v3 v3.5.2 => github.com/etcd-io/etcd/client/v3 v3.5.2
 
 replace github.com/etcd-io/client/api/v3 v3.5.2 => ./offical/client/v3
-
+replace github.com/ls-2018/etcd_cn/official => ./offical
 require (
 	github.com/akhenakh/hunspellgo v0.0.0-20160221122622-9db38fa26e19 // indirect
 	github.com/alexkohler/nakedret v1.0.0

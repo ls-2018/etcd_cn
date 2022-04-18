@@ -1,9 +1,10 @@
 # etcd
 
-![etcd Logo](logos/etcd-horizontal-color.svg)
+ 
 v3.5.2 Etcd是分布式系统中最关键的数据的可靠的分布式键值存储,其重点是:
 
 自己看源码 用 2379:为客户端提供通讯 2380:为服务器间提供通讯
+![etcd ](./images/raft.png)
 
 ### 配置
 
