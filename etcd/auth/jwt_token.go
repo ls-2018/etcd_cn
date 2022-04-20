@@ -38,6 +38,7 @@ func (t *tokenJWT) disable()                        {}
 func (t *tokenJWT) invalidateUser(string)           {}
 func (t *tokenJWT) genTokenPrefix() (string, error) { return "", nil }
 
+// 从ctx中的token获取用户信息
 func (t *tokenJWT) info(ctx context.Context, token string, rev uint64) (*AuthInfo, bool) {
 	// rev isn't used in JWT, it is only used in simple token
 	var (

@@ -42,7 +42,7 @@ var knownOptions = map[string]bool{
 var DefaultTTL = 5 * time.Minute
 
 type jwtOptions struct {
-	SignMethod jwt.SigningMethod
+	SignMethod jwt.SigningMethod // jwt header里存储的签名方法
 	PublicKey  []byte
 	PrivateKey []byte
 	TTL        time.Duration
@@ -92,13 +92,14 @@ func (opts *jwtOptions) Parse(optMap map[string]string) error {
 }
 
 // Key will parse and return the appropriately typed key for the selected signature method
+// --auth-token jwt,ttl=30s,sign-method=HS256
 func (opts *jwtOptions) Key() (interface{}, error) {
 	switch opts.SignMethod.(type) {
 	case *jwt.SigningMethodRSA, *jwt.SigningMethodRSAPSS:
 		return opts.rsaKey()
-	case *jwt.SigningMethodECDSA:
+	case *jwt.SigningMethodECDSA: // ES256、ES384、ES512 公钥、私钥至少一个
 		return opts.ecKey()
-	case *jwt.SigningMethodHMAC:
+	case *jwt.SigningMethodHMAC: // HS256、 HS384、HS512 需要私钥
 		return opts.hmacKey()
 	default:
 		return nil, fmt.Errorf("unsupported signing method: %T", opts.SignMethod)

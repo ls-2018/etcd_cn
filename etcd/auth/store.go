@@ -232,9 +232,7 @@ func (as *authStore) Authenticate(ctx context.Context, username, password string
 		return nil, ErrAuthFailed
 	}
 
-	// Password checking is already performed in the API layer, so we don't need to check for now.
-	// Staleness of password can be detected with OCC in the API layer, too.
-
+	// 密码在API已经校验了，因此在这不用再校验
 	token, err := as.tokenProvider.assign(ctx, username, as.Revision())
 	if err != nil {
 		return nil, err
@@ -347,6 +345,7 @@ func (as *authStore) IsAdminPermitted(authInfo *AuthInfo) error {
 	return nil
 }
 
+// IsAuthEnabled 是否启用认证
 func (as *authStore) IsAuthEnabled() bool {
 	as.enabledMu.RLock()
 	defer as.enabledMu.RUnlock()
@@ -361,7 +360,7 @@ func NewAuthStore(lg *zap.Logger, be backend.Backend, tp TokenProvider, bcryptCo
 
 	if bcryptCost < bcrypt.MinCost || bcryptCost > bcrypt.MaxCost {
 		lg.Warn(
-			"use default bcrypt cost instead of the invalid given cost",
+			"使用默认的加密强度替换提供的加密强度",
 			zap.Int("min-cost", bcrypt.MinCost),
 			zap.Int("max-cost", bcrypt.MaxCost),
 			zap.Int("default-cost", bcrypt.DefaultCost),
@@ -547,9 +546,8 @@ func decomposeOpts(lg *zap.Logger, optstr string) (string, map[string]string, er
 	return tokenType, typeSpecificOpts, nil
 }
 
-// NewTokenProvider creates a new token provider.
-func NewTokenProvider(lg *zap.Logger, tokenOpts string, indexWaiter func(uint64) <-chan struct{}, TokenTTL time.Duration) (TokenProvider, error) {
-	tokenType, typeSpecificOpts, err := decomposeOpts(lg, tokenOpts)
+func NewTokenProvider(lg *zap.Logger, tokenOpts string, indexWaiter func(uint64) <-chan struct{}, TokenTTL time.Duration) (TokenProvider, error) { // token提供商
+	tokenType, typeSpecificOpts, err := decomposeOpts(lg, tokenOpts) // 认证格式  simple、jwt
 	if err != nil {
 		return nil, ErrInvalidAuthOpts
 	}
@@ -557,7 +555,7 @@ func NewTokenProvider(lg *zap.Logger, tokenOpts string, indexWaiter func(uint64)
 	switch tokenType {
 	case tokenTypeSimple:
 		if lg != nil {
-			lg.Warn("simple token is not cryptographically signed")
+			lg.Warn("简单令牌没有经过加密签名")
 		}
 		return newTokenProviderSimple(lg, indexWaiter, TokenTTL), nil
 
@@ -706,7 +704,7 @@ func (as *authStore) RoleGrantPermission(r *pb.AuthRoleGrantPermissionRequest) (
 
 	as.commitRevision(tx)
 
-	as.lg.Info("授予/更新用户权限", zap.String("user-name", r.Name), zap.String("permission-name", authpb.Permission_Type_name[int32(r.Perm.PermType)]))
+	as.lg.Info("授予/更新用户权限", zap.String("user-name", r.Name), zap.String("permission-name", authpb.PermissionTypeName[int32(r.Perm.PermType)]))
 	return &pb.AuthRoleGrantPermissionResponse{}, nil
 }
 

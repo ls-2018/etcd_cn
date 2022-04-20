@@ -1,6 +1,5 @@
 # etcd
 
- 
 v3.5.2 Etcd是分布式系统中最关键的数据的可靠的分布式键值存储,其重点是:
 
 自己看源码 用 2379:为客户端提供通讯 2380:为服务器间提供通讯
@@ -170,10 +169,23 @@ MsgTimeoutNow | Candidate、Follower | 非本地： | | MsgReadIndex | Leader、
   发送follower , follower reject ,但是此时wal已经没有对应的wal 又会发送新的快照, 这就会陷入死循环.....how? 看完源码再说吧
   ![](./images/MsgReadIndex.png)
 - JointConfig 为什么是两个
-
-### Ref
-
-- https://www.lixueduan.com/categories/
+- 哪些场景会出现 Follower 日志与 Leader 冲突？
+  ```
+  leader崩溃的情况下可能(如老的leader可能还没有完全复制所有的日志条目)，如果leader和follower出现持续崩溃会加剧这个现象。
+  follower可能会丢失一些在新的leader中有的日志条目，他也可能拥有一些leader没有的日志条目，或者两者都发生。
+  ```
+- follower如何删除无效日志？
+  ```
+  leader处理不一致是通过强制follower直接复制自己的日志来解决了。因此在follower中的冲突的日志条目会被leader的日志覆盖。
+  leader会记录follower的日志复制进度nextIndex，如果follower在追加日志时一致性检查失败，就会拒绝请求，此时leader就会减小 nextIndex 值并进行重试，最终在某个位置让follower跟leader一致。
+  ```
+- 为什么WAL日志模块只通过追加，也能删除已持久化冲突的日志条目呢？ 
+  ```
+  其实这里 etcd 在实现上采用了一些比较有技巧的方法，在 WAL 日志中的确没删除废弃的日志条目，你可以在其中搜索到冲突的日志条目。
+  只是 etcd 加载 WAL 日志时，发现一个 raft log index 位置上有多个日志条目的时候，会通过覆盖的方式，将最后写入的日志条目追加到 raft log 中，
+  实现了删除冲突日志条目效果
+  https://github.com/etcd-io/etcd/issues/12589
+  ```
 
 (2) electionElapsed
 
@@ -505,4 +517,17 @@ Step()
       r.send(pb.Message{Term: term, To: id, Type: voteMsg, Index: r.raftLog.lastIndex(), LogTerm: r.raftLog.lastTerm(), Context: ctx})
 
 ```
- 
+
+
+证书解析认证性能极低
+
+
+```
+
+#创建一个admin role 
+etcdctl role add admin  --user root:root
+#分配一个可读写[hello，helly)范围数据的权限给admin role
+etcdctl role grant-permission admin readwrite hello helly --user root:root
+# 将用户alice和admin role关联起来，赋予admin权限给user
+etcdctl user grant-role alice admin --user root:root
+```

@@ -198,7 +198,7 @@ func (s *EtcdServer) downgradeCancel(ctx context.Context) (*pb.DowngradeResponse
 
 // AuthInfoFromCtx 获取认证信息
 func (s *EtcdServer) AuthInfoFromCtx(ctx context.Context) (*auth.AuthInfo, error) {
-	authInfo, err := s.AuthStore().AuthInfoFromCtx(ctx)
+	authInfo, err := s.AuthStore().AuthInfoFromCtx(ctx) // 用户认证
 	if authInfo != nil || err != nil {
 		return authInfo, err
 	}

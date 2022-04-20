@@ -31,20 +31,20 @@ const (
 	READWRITE Permission_Type = 2
 )
 
-var Permission_Type_name = map[int32]string{
+var PermissionTypeName = map[int32]string{
 	0: "READ",
 	1: "WRITE",
 	2: "READWRITE",
 }
 
-var Permission_Type_value = map[string]int32{
+var PermissionTypeValue = map[string]int32{
 	"READ":      0,
 	"WRITE":     1,
 	"READWRITE": 2,
 }
 
 func (x Permission_Type) String() string {
-	return proto.EnumName(Permission_Type_name, int32(x))
+	return proto.EnumName(PermissionTypeName, int32(x))
 }
 
 func (Permission_Type) EnumDescriptor() ([]byte, []int) {
@@ -116,7 +116,7 @@ func (*Role) Descriptor() ([]byte, []int) {
 }
 
 func init() {
-	proto.RegisterEnum("authpb.Permission_Type", Permission_Type_name, Permission_Type_value)
+	proto.RegisterEnum("authpb.Permission_Type", PermissionTypeName, PermissionTypeValue)
 	proto.RegisterType((*UserAddOptions)(nil), "authpb.UserAddOptions")
 	proto.RegisterType((*User)(nil), "authpb.User")
 	proto.RegisterType((*Permission)(nil), "authpb.Permission")

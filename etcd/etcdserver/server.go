@@ -543,7 +543,7 @@ func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 		ExpiredLeasesRetryInterval: srv.Cfg.ReqTimeout(),
 	})
 
-	tp, err := auth.NewTokenProvider(cfg.Logger, cfg.AuthToken,
+	tp, err := auth.NewTokenProvider(cfg.Logger, cfg.AuthToken, // 认证格式  simple、jwt
 		func(index uint64) <-chan struct{} {
 			return srv.applyWait.Wait(index)
 		},

@@ -259,7 +259,7 @@ type Config struct {
 	//	embed.StartEtcd(cfg)
 	ServiceRegister func(*grpc.Server) `json:"-"`
 
-	AuthToken  string `json:"auth-token"`  // 认证相关标识
+	AuthToken  string `json:"auth-token"`  // 认证格式  simple、jwt
 	BcryptCost uint   `json:"bcrypt-cost"` // 为散列身份验证密码指定bcrypt算法的成本/强度.有效值介于4和31之间.默认值：10
 
 	AuthTokenTTL uint `json:"auth-token-ttl"` // token 有效期
@@ -424,7 +424,7 @@ func NewConfig() *Config {
 		CORS:          map[string]struct{}{"*": {}}, // 跨域请求
 		HostWhitelist: map[string]struct{}{"*": {}}, // 主机白名单
 
-		AuthToken:    "simple",                 // 指定验证令牌的具体选项
+		AuthToken:    "simple",                 // 认证格式  simple、jwt
 		BcryptCost:   uint(bcrypt.DefaultCost), // 为散列身份验证密码指定bcrypt算法的成本/强度
 		AuthTokenTTL: 300,                      // token 有效期
 

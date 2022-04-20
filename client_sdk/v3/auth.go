@@ -197,7 +197,7 @@ func (auth *authClient) RoleDelete(ctx context.Context, role string) (*AuthRoleD
 }
 
 func StrToPermissionType(s string) (PermissionType, error) {
-	val, ok := authpb.Permission_Type_value[strings.ToUpper(s)]
+	val, ok := authpb.PermissionTypeValue[strings.ToUpper(s)]
 	if ok {
 		return PermissionType(val), nil
 	}

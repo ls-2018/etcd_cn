@@ -188,7 +188,7 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 		SocketOpts:                               cfg.SocketOpts,
 		StrictReconfigCheck:                      cfg.StrictReconfigCheck, // 严格配置变更检查
 		ClientCertAuthEnabled:                    cfg.ClientTLSInfo.ClientCertAuth,
-		AuthToken:                                cfg.AuthToken,
+		AuthToken:                                cfg.AuthToken,  // 认证格式  simple、jwt
 		BcryptCost:                               cfg.BcryptCost, // 为散列身份验证密码指定bcrypt算法的成本/强度
 		TokenTTL:                                 cfg.AuthTokenTTL,
 		CORS:                                     cfg.CORS,

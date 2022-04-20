@@ -74,7 +74,7 @@ func (tm *simpleTokenTTLKeeper) deleteSimpleToken(token string) {
 }
 
 func (tm *simpleTokenTTLKeeper) run() {
-	tokenTicker := time.NewTicker(simpleTokenTTLResolution)
+	tokenTicker := time.NewTicker(simpleTokenTTLResolution) // 1s
 	defer func() {
 		tokenTicker.Stop()
 		close(tm.donec)
@@ -88,6 +88,7 @@ func (tm *simpleTokenTTLKeeper) run() {
 				if nowtime.After(tokenendtime) {
 					tm.deleteTokenFunc(t)
 					delete(tm.tokens, t)
+					//	 不过你要注意的是，Simple Token 字符串本身并未含任何有价值信息，因此 client 无法及时、准确获取到 Token 过期时间。所以 client 不容易提前去规避因 Token 失效导致的请求报错。
 				}
 			}
 			tm.mu.Unlock()
@@ -178,7 +179,7 @@ func (t *tokenSimple) enable() {
 		mu:              &t.simpleTokensMu,
 		simpleTokenTTL:  t.simpleTokenTTL,
 	}
-	go t.simpleTokenKeeper.run()
+	go t.simpleTokenKeeper.run() // 定时检查你的 Token 是否过期，若过期则从 map 数据结构中删除此 Token。
 }
 
 func (t *tokenSimple) disable() {
