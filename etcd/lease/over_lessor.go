@@ -376,7 +376,7 @@ func (le *lessor) findExpiredLeases(limit int) []*Lease {
 	return leases
 }
 
-// revokeExpiredLeases 查找所有过期的租约,并将其发送到过期的通道中等待撤销.
+// 查找所有过期的租约,并将其发送到过期的通道中等待撤销.
 func (le *lessor) revokeExpiredLeases() {
 	var ls []*Lease
 
@@ -425,7 +425,7 @@ func (le *lessor) Revoke(id LeaseID) error {
 	txn := le.rd()
 
 	// 对键进行排序,以便在所有成员中以相同的顺序删除,否则后台的哈希值将是不同的.
-	keys := l.Keys()
+	keys := l.Keys() // 返回当前组约绑定到了哪些key
 	sort.StringSlice(keys).Sort()
 	for _, key := range keys { // 该租约附加到了哪些key上
 		fmt.Printf("租约:%d到期  删除key:%s  \n", id, key)
@@ -757,7 +757,7 @@ func (le *lessor) runLoop() {
 		// 查找所有过期的租约,并将其发送到过期的通道中等待撤销.
 		le.revokeExpiredLeases()
 		// 查找所有到期的预定租约检查点将它们提交给检查点以将它们持久化到共识日志中.
-		le.checkpointScheduledLeases()
+		le.checkpointScheduledLeases() // 定时触发更新 Lease 的剩余到期时间的操作.
 
 		select {
 		case <-time.After(500 * time.Millisecond):
@@ -767,7 +767,7 @@ func (le *lessor) runLoop() {
 	}
 }
 
-// checkpointScheduledLeases 查找所有到期的预定租约检查点将它们提交给检查点以将它们持久化到共识日志中.
+// 查找所有到期的预定租约检查点将它们提交给检查点以将它们持久化到共识日志中.
 func (le *lessor) checkpointScheduledLeases() {
 	var cps []*pb.LeaseCheckpoint
 
@@ -782,6 +782,8 @@ func (le *lessor) checkpointScheduledLeases() {
 		if len(cps) != 0 {
 			// 定期批量地将 Lease 剩余的 TTL 基于 Raft Log 同步给 Follower 节点,Follower 节点收到 CheckPoint 请求后,
 			// 更新内存数据结构 LeaseMap 的剩余 TTL 信息.
+			// 	srv.raftRequestOnce(ctx, pb.InternalRaftRequest{LeaseCheckpoint: cp})
+			// case r.LeaseCheckpoint != nil:
 			le.cp(context.Background(), &pb.LeaseCheckpointRequest{Checkpoints: cps})
 		}
 		if len(cps) < maxLeaseCheckpointBatchSize {

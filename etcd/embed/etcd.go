@@ -180,9 +180,9 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 		AutoCompactionRetention:                  autoCompactionRetention,        // 自动压缩值
 		AutoCompactionMode:                       cfg.AutoCompactionMode,         // 自动压缩模式
 		QuotaBackendBytes:                        cfg.QuotaBackendBytes,          // 资源存储阈值
-		BackendBatchLimit:                        cfg.BackendBatchLimit,          // BackendBatchLimit是提交后端事务前的最大操作数
+		BackendBatchLimit:                        cfg.BoltBackendBatchLimit,      // BackendBatchLimit是提交后端事务前的最大操作数
 		BackendFreelistType:                      backendFreelistType,            // 返回boltdb存储的数据类型
-		BackendBatchInterval:                     cfg.BackendBatchInterval,       // BackendBatchInterval是提交后端事务前的最长时间.
+		BackendBatchInterval:                     cfg.BoltBackendBatchInterval,   // BackendBatchInterval是提交后端事务前的最长时间.
 		MaxTxnOps:                                cfg.MaxTxnOps,
 		MaxRequestBytes:                          cfg.MaxRequestBytes, // 服务器将接受的最大客户端请求大小(字节).
 		SocketOpts:                               cfg.SocketOpts,

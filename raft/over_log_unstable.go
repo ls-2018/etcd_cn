@@ -95,7 +95,7 @@ func (u *unstable) restore(s pb.Snapshot) {
 // 截断和追加
 // 本节点存在一些无效的数据,比leader多
 // 存储不可靠日志,这个函数是leader发来追加日志消息的时候触发调用的,raft先把这些日志存储在
-// unstable中等待使用者持久化.为什么是追加？因为日志是有序的,leader发来的日志一般是该节点
+// unstable中等待使用者持久化.为什么是追加?因为日志是有序的,leader发来的日志一般是该节点
 // 紧随其后的日志亦或是有些重叠的日志,看似像是一直追加一样.
 func (u *unstable) truncateAndAppend(ents []pb.Entry) {
 	after := ents[0].Index

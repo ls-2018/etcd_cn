@@ -533,7 +533,9 @@ func NewServer(cfg config.ServerConfig) (srv *EtcdServer, err error) {
 
 	srv.backend = temp.BE
 	srv.beHooks = temp.BeHooks
+	// 可能为了确保发生leader选举时,lease不会过期,最小ttl应该比选举时间长,看代码
 	minTTL := time.Duration((3*cfg.ElectionTicks)/2) * heartbeat
+	// 默认的情况下应该是2s,
 
 	// 始终在KV之前恢复出租人.当我们恢复mvcc.KV时,它将把钥匙重新连接到它的租约上.如果我们先恢复mvcc.KV,它将在恢复前把钥匙附加到错误的出租人上.
 	srv.lessor = lease.NewLessor(srv.Logger(), srv.backend, srv.cluster, lease.LessorConfig{

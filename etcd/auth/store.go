@@ -232,7 +232,7 @@ func (as *authStore) Authenticate(ctx context.Context, username, password string
 		return nil, ErrAuthFailed
 	}
 
-	// 密码在API已经校验了，因此在这不用再校验
+	// 密码在API已经校验了,因此在这不用再校验
 	token, err := as.tokenProvider.assign(ctx, username, as.Revision())
 	if err != nil {
 		return nil, err

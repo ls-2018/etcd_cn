@@ -279,7 +279,7 @@ func (sws *serverWatchStream) recvLoop() error {
 func (sws *serverWatchStream) sendLoop() {
 	// 当前活动的watcher
 	ids := make(map[mvcc.WatchID]struct{})
-	// TODO 同一个流,可能会有不同的watcher？
+	// TODO 同一个流,可能会有不同的watcher?
 	pending := make(map[mvcc.WatchID][]*pb.WatchResponse)
 
 	interval := GetProgressReportInterval() // interval   10m44s

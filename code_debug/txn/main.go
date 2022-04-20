@@ -3,8 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 	"log"
+
+	clientv3 "github.com/ls-2018/etcd_cn/client_sdk/v3"
 )
 
 func main() {
@@ -15,10 +16,10 @@ func main() {
 	}
 	defer cli.Close()
 
-	//创建租约
+	// 创建租约
 	lease := clientv3.NewLease(cli)
 
-	//设置租约时间
+	// 设置租约时间
 	leaseResp, err := lease.Grant(context.TODO(), 10) // 秒
 	if err != nil {
 		fmt.Printf("设置租约时间失败:%s\n", err.Error())

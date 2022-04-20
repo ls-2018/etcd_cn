@@ -330,6 +330,7 @@ func (b *backend) SizeInUse() int64 {
 	return atomic.LoadInt64(&b.sizeInUse)
 }
 
+// 提交bolt事务
 func (b *backend) run() {
 	defer close(b.donec)
 	t := time.NewTimer(b.batchInterval) // 100ms 定时提交事务
@@ -553,7 +554,7 @@ func (b *backend) begin(write bool) *bolt.Tx {
 	return tx
 }
 
-// 开启写事务？
+// 开启写事务?
 func (b *backend) unsafeBegin(write bool) *bolt.Tx {
 	tx, err := b.db.Begin(write)
 	if err != nil {

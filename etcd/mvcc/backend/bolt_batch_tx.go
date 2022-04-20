@@ -189,7 +189,7 @@ func (t *batchTx) commit(stop bool) {
 		if t.pending == 0 && !stop {
 			return
 		}
-		err := t.tx.Commit()
+		err := t.tx.Commit() // bolt.Commit
 		atomic.AddInt64(&t.backend.commits, 1)
 
 		t.pending = 0

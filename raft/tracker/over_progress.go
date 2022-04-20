@@ -43,15 +43,15 @@ func (pr *Progress) MaybeUpdate(n uint64) bool {
 	if pr.Match < n {
 		pr.Match = n // 对应Follower节点当前己经成功复制的Entry记录的索引值
 		updated = true
-		// 这个函数就是把ProbeSent设置为false,试问为什么在这个条件下才算是确认收到探测包？
+		// 这个函数就是把ProbeSent设置为false,试问为什么在这个条件下才算是确认收到探测包?
 		// 这就要从探测消息说起了,raft可以把日志消息、心跳消息当做探测消息,此处是把日志消息
 		// 当做探测消息的处理逻辑.新的日志肯定会让Match更新,只有收到了比Match更大的回复才
 		// 能算是这个节点收到了新日志消息,其他的反馈都可以视为过时消息.比如Match=9,新的日志
 		// 索引是10,只有收到了>=10的反馈才能确定节点收到了当做探测消息的日志.
 		pr.ProbeAcked()
 	}
-	// 这会发生在什么时候？Next是Leader认为发送给Peer最大的日志索引了,Peer怎么可能会回复一个
-	// 比Next更大的日志索引呢？这个其实是在系统初始化的时候亦或是每轮选举完成后,新的Leader
+	// 这会发生在什么时候?Next是Leader认为发送给Peer最大的日志索引了,Peer怎么可能会回复一个
+	// 比Next更大的日志索引呢?这个其实是在系统初始化的时候亦或是每轮选举完成后,新的Leader
 	// 还不知道Leer的接收的最大日志索引,所以此时的Next还是个初识值.
 	pr.Next = max(pr.Next, n+1) // 对应Follower节点下一个待复制的Entry记录的索引值
 	return updated
@@ -87,7 +87,7 @@ func (pr *Progress) MaybeDecrTo(rejected, matchHint uint64) bool {
 	// 会带有10条日志.上面Match+1,Match+2,Match+3,Match+4的例子是为了理解方便假设每个
 	// 日志消息一条日志.真实的情况是Message[Match,Match+9],Message[Match+10,Match+15],
 	// 一个日志消息如果带有多条日志,Peer拒绝的是其中一条日志.此时用什么判断拒绝索引日志就在刚刚
-	// 发送的探测消息中呢？所以探测消息一次只发送一条日志就能做到了,因为这个日志的索引肯定是Next-1.
+	// 发送的探测消息中呢?所以探测消息一次只发送一条日志就能做到了,因为这个日志的索引肯定是Next-1.
 
 	// 出现过时的MsgAppResp消息直接忽略
 	// 只有拒绝比当前大,才会重新      一般都是当前记录了A给follower发送了A+1,[leader会将Next设为A+2]被拒绝了   此时 rejected=A+1
@@ -171,7 +171,7 @@ func (pr *Progress) BecomeProbe() {
 }
 
 func (pr *Progress) BecomeReplicate() {
-	// 除了复位一下状态就是调整Next,为什么Next也是Match+1？进入复制状态肯定是收到了探测消息的
+	// 除了复位一下状态就是调整Next,为什么Next也是Match+1?进入复制状态肯定是收到了探测消息的
 	// 反馈,此时Match会被更新,那从Match+1也就理所当然了
 	pr.ResetState(StateReplicate)
 	pr.Next = pr.Match + 1
@@ -179,7 +179,7 @@ func (pr *Progress) BecomeReplicate() {
 
 // BecomeSnapshot 正在发送快照snapshoti 为快照的最新日志索引
 func (pr *Progress) BecomeSnapshot(snapshoti uint64) {
-	// 除了复位一下状态就是设置快照的索引,此处为什么不需要调整Next？因为这个状态无需在发日志给
+	// 除了复位一下状态就是设置快照的索引,此处为什么不需要调整Next?因为这个状态无需在发日志给
 	// peer,直到快照完成后才能继续
 	pr.ResetState(StateSnapshot)
 	pr.PendingSnapshot = snapshoti

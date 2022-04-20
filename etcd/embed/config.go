@@ -180,15 +180,12 @@ type Config struct {
 	// todo 是否在开机时快进初始选举点.以加快选举速度.
 	InitialElectionTickAdvance bool `json:"initial-election-tick-advance"` // 是否提前初始化选举时钟启动,以便更快的选举
 
-	// BackendBatchInterval BackendBatchInterval是提交后端事务前的最长时间.
-	BackendBatchInterval time.Duration `json:"backend-batch-interval"`
-	// BackendBatchLimit BackendBatchLimit是提交后端事务前的最大操作数.
-	BackendBatchLimit int `json:"backend-batch-limit"`
-
-	BackendFreelistType string `json:"backend-bbolt-freelist-type"` // BackendFreelistType指定boltdb后端使用的freelist的类型(array and map是支持的类型).
-	QuotaBackendBytes   int64  `json:"quota-backend-bytes"`         // 当后端大小超过给定配额时(0默认为低空间配额).引发警报.
-	MaxTxnOps           uint   `json:"max-txn-ops"`                 // 事务中允许的最大操作数.
-	MaxRequestBytes     uint   `json:"max-request-bytes"`           // 服务器将接受的最大客户端请求大小(字节).
+	BoltBackendBatchInterval time.Duration `json:"backend-batch-interval"`      // BackendBatchInterval是提交后端事务前的最长时间
+	BoltBackendBatchLimit    int           `json:"backend-batch-limit"`         // BackendBatchLimit是提交后端事务前的最大操作数
+	BackendFreelistType      string        `json:"backend-bbolt-freelist-type"` // BackendFreelistType指定boltdb后端使用的freelist的类型(array and map是支持的类型).
+	QuotaBackendBytes        int64         `json:"quota-backend-bytes"`         // 当后端大小超过给定配额时(0默认为低空间配额).引发警报.
+	MaxTxnOps                uint          `json:"max-txn-ops"`                 // 事务中允许的最大操作数.
+	MaxRequestBytes          uint          `json:"max-request-bytes"`           // 服务器将接受的最大客户端请求大小(字节).
 
 	LPUrls []url.URL // 和etcd  server 成员之间通信的地址.用于监听其他etcd member的url
 	LCUrls []url.URL // 这个参数是etcd服务器自己监听时用的,也就是说,监听本机上的哪个网卡,哪个端口

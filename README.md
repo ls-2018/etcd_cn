@@ -161,28 +161,28 @@ MsgTimeoutNow | Candidate、Follower | 非本地： | | MsgReadIndex | Leader、
   WAL全称是Write Ahead Log,是数据库中常用的持久化数据的方法.比如我们更新数据库的一条数据,如果直接找到这条数据并更新,
   可能会耗费比较长的时间.更快更安全的方式是先写一条Log数据到文件中,然后由后台线程来完成最终数据的更新,这条log中通常包含的是一条指令.
   ```
-- 发送心跳消息的时候leader是怎么设置各个follower的commit？
+- 发送心跳消息的时候leader是怎么设置各个follower的commit?
 
-- leader收到follower的心跳响应之后会怎么去修改对应的follower元数据呢？
+- leader收到follower的心跳响应之后会怎么去修改对应的follower元数据呢?
 
 - 快照 follower 当数据远落后于leader , leader会将快照发送过来 但由于网络原因,这一过程很慢 ,但是leader又生成了新的快照,wal没有旧的数据, 这时follower同步完,leader将最新新消息
   发送follower , follower reject ,但是此时wal已经没有对应的wal 又会发送新的快照, 这就会陷入死循环.....how? 看完源码再说吧
   ![](./images/MsgReadIndex.png)
 - JointConfig 为什么是两个
-- 哪些场景会出现 Follower 日志与 Leader 冲突？
+- 哪些场景会出现 Follower 日志与 Leader 冲突?
   ```
-  leader崩溃的情况下可能(如老的leader可能还没有完全复制所有的日志条目)，如果leader和follower出现持续崩溃会加剧这个现象。
-  follower可能会丢失一些在新的leader中有的日志条目，他也可能拥有一些leader没有的日志条目，或者两者都发生。
+  leader崩溃的情况下可能(如老的leader可能还没有完全复制所有的日志条目),如果leader和follower出现持续崩溃会加剧这个现象.
+  follower可能会丢失一些在新的leader中有的日志条目,他也可能拥有一些leader没有的日志条目,或者两者都发生.
   ```
-- follower如何删除无效日志？
+- follower如何删除无效日志?
   ```
-  leader处理不一致是通过强制follower直接复制自己的日志来解决了。因此在follower中的冲突的日志条目会被leader的日志覆盖。
-  leader会记录follower的日志复制进度nextIndex，如果follower在追加日志时一致性检查失败，就会拒绝请求，此时leader就会减小 nextIndex 值并进行重试，最终在某个位置让follower跟leader一致。
+  leader处理不一致是通过强制follower直接复制自己的日志来解决了.因此在follower中的冲突的日志条目会被leader的日志覆盖.
+  leader会记录follower的日志复制进度nextIndex,如果follower在追加日志时一致性检查失败,就会拒绝请求,此时leader就会减小 nextIndex 值并进行重试,最终在某个位置让follower跟leader一致.
   ```
-- 为什么WAL日志模块只通过追加，也能删除已持久化冲突的日志条目呢？ 
+- 为什么WAL日志模块只通过追加,也能删除已持久化冲突的日志条目呢? 
   ```
-  其实这里 etcd 在实现上采用了一些比较有技巧的方法，在 WAL 日志中的确没删除废弃的日志条目，你可以在其中搜索到冲突的日志条目。
-  只是 etcd 加载 WAL 日志时，发现一个 raft log index 位置上有多个日志条目的时候，会通过覆盖的方式，将最后写入的日志条目追加到 raft log 中，
+  其实这里 etcd 在实现上采用了一些比较有技巧的方法,在 WAL 日志中的确没删除废弃的日志条目,你可以在其中搜索到冲突的日志条目.
+  只是 etcd 加载 WAL 日志时,发现一个 raft log index 位置上有多个日志条目的时候,会通过覆盖的方式,将最后写入的日志条目追加到 raft log 中,
   实现了删除冲突日志条目效果
   https://github.com/etcd-io/etcd/issues/12589
   ```
@@ -485,6 +485,11 @@ issue:
   假设将该消息发送到对端,因为网络问题花了3秒, 那么当对端收到时,实际remainingTtl应该是2s,但还是变成了5s  
 - 如果时间这么长,那这个节点肯定出问题了,那么也不会成为leader
 
+
+作者回复: 
+从原理上我们知道lease是leader在内存中维护过期最小堆的,因此续期操作client是必须要直接发送给leader的,
+如果follower节点收到了keepalive请求,会转发给leader节点.续期操作不经过raft协议处理同步,
+而leaseGrant/Revoke请求会经过raft协议同步给各个节点,因此任意节点都可以处理它.
 ```
 
 ``` 
@@ -526,8 +531,29 @@ Step()
 
 #创建一个admin role 
 etcdctl role add admin  --user root:root
-#分配一个可读写[hello，helly)范围数据的权限给admin role
+#分配一个可读写[hello,helly)范围数据的权限给admin role
 etcdctl role grant-permission admin readwrite hello helly --user root:root
-# 将用户alice和admin role关联起来，赋予admin权限给user
+# 将用户alice和admin role关联起来,赋予admin权限给user
 etcdctl user grant-role alice admin --user root:root
+```
+
+
+etcd 保存用户 key 与版本号映射关系的数据结构 B-tree,为什么 etcd 使用它而不使用哈希表、平衡二叉树?
+```
+从 etcd 的功能特性上分析, 因 etcd 支持范围查询,因此保存索引的数据结构也必须支持范围查询才行.所以哈希表不适合,而 B-tree 支持范围查询.
+从性能上分析,平横二叉树每个节点只能容纳一个数据、导致树的高度较高,而 B-tree 每个节点可以容纳多个数据,
+树的高度更低,更扁平,涉及的查找次数更少,具有优越的增、删、改、查性能.
+```
+你认为 etcd 为什么删除使用 lazy delete 方式呢？ 相比同步 delete, 各有什么优缺点？
+```
+采用延迟删除
+1、为了保证key对应的watcher能够获取到key的所有状态信息，留给watcher时间做相应的处理。
+2、实时从boltdb删除key，会可能触发树的不平衡，影响其他读写请求的性能。
+
+etcd要保存key的历史版本，直接删除就不能支持revision查询了；
+lazy方式性能更高，空闲空间可以再利用；
+```
+当你突然删除大量 key 后，db 大小是立刻增加还是减少呢？
+```
+应该会增大，etcd不会立即把空间返回系统而是维护起来后续使用，维护空闲页面应该需要一些内存；
 ```

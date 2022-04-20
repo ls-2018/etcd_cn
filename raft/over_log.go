@@ -330,7 +330,7 @@ func (l *raftLog) matchTerm(i, term uint64) bool {
 func (l *raftLog) commitTo(tocommit uint64) {
 	if l.committed < tocommit {
 		if l.lastIndex() < tocommit {
-			l.logger.Panicf("tocommit(%d)超过了 [lastIndex(%d)] raft log是否被损坏、截断或丢失？.?", tocommit, l.lastIndex())
+			l.logger.Panicf("tocommit(%d)超过了 [lastIndex(%d)] raft log是否被损坏、截断或丢失?.?", tocommit, l.lastIndex())
 		}
 		l.committed = tocommit
 	}
