@@ -89,7 +89,7 @@ type serverWatchStream struct {
 	wg       sync.WaitGroup // 等待send loop 完成
 }
 
-// Watch 接收到watch请求
+// Watch 创建一个watcher stream
 func (ws *watchServer) Watch(stream pb.Watch_WatchServer) (err error) {
 	sws := serverWatchStream{
 		lg:              ws.lg,
