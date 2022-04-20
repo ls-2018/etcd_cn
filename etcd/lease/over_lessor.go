@@ -19,6 +19,7 @@ import (
 	"context"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"math"
 	"sort"
 	"sync"
@@ -427,6 +428,7 @@ func (le *lessor) Revoke(id LeaseID) error {
 	keys := l.Keys()
 	sort.StringSlice(keys).Sort()
 	for _, key := range keys { // 该租约附加到了哪些key上
+		fmt.Printf("租约:%d到期  删除key:%s  \n", id, key)
 		txn.DeleteRange([]byte(key), nil) // 从内存 kvindex 中 删除
 	}
 

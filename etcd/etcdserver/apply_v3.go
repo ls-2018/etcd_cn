@@ -160,7 +160,7 @@ func (a *applierV3backend) Put(ctx context.Context, txn mvcc.TxnWrite, p *pb.Put
 			resp.PrevKv = &rr.KVs[0]
 		}
 	}
-
+	fmt.Printf("---> applierV3backend.put  key:%s value:%s  leaseID:%d", p.Key, p.Value, leaseID)
 	resp.Header.Revision = txn.Put([]byte(p.Key), []byte(val), leaseID)
 	trace.AddField(traceutil.Field{Key: "response_revision", Value: resp.Header.Revision})
 	return resp, trace, nil
@@ -980,6 +980,7 @@ func (a *applierV3backend) LeaseGrant(lc *pb.LeaseGrantRequest) (*pb.LeaseGrantR
 
 // LeaseRevoke ok
 func (a *applierV3backend) LeaseRevoke(lc *pb.LeaseRevokeRequest) (*pb.LeaseRevokeResponse, error) {
+	fmt.Println("LeaseRevoke", lc)
 	err := a.s.lessor.Revoke(lease.LeaseID(lc.ID))
 	return &pb.LeaseRevokeResponse{Header: newHeader(a.s)}, err
 }

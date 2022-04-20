@@ -6,18 +6,9 @@
   <component name="ChangeListManager">
     <list default="true" id="49524360-39b2-44cd-b702-de0461fb4222" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_sdk/v3/auth.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_sdk/v3/auth.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/auth/jwt.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/auth/jwt_token.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/auth/options.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/auth/options.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/auth/simple_token.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/auth/simple_token.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/auth/store.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/auth/store.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/config/over_config.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/config/over_config.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/embed/config.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/embed/config.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/embed/etcd.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/embed/etcd.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/server.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/server.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/v3_server.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/v3_server.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/offical/api/v3/authpb/auth.pb.go" beforeDir="false" afterPath="$PROJECT_DIR$/offical/api/v3/authpb/auth.pb.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/apply_v3.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/apply_v3.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/lease/over_lessor.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/lease/over_lessor.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/mvcc/backend/tx_buffer.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/mvcc/backend/tx_buffer.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -27,8 +18,8 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="Go File" />
         <option value="BashSupport Pro Bash" />
+        <option value="Go File" />
       </list>
     </option>
   </component>
@@ -110,7 +101,7 @@
       <recent name="$PROJECT_DIR$/offical/api/v3" />
     </key>
   </component>
-  <component name="RunManager" selected="Go Build.local">
+  <component name="RunManager" selected="Go Build.go build github.com/ls-2018/etcd_cn/code_debug/txn">
     <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
       <module name="etcd_cn" />
       <working_directory value="$PROJECT_DIR$" />
@@ -128,6 +119,15 @@
       <package value="github.com/ls-2018/etcd_cn" />
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$/etcdctl/main.go" />
+      <method v="2" />
+    </configuration>
+    <configuration name="go build github.com/ls-2018/etcd_cn/code_debug/txn" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
+      <module name="etcd_cn" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="github.com/ls-2018/etcd_cn/code_debug/txn" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$/code_debug/txn/main.go" />
       <method v="2" />
     </configuration>
     <configuration name="local" type="GoApplicationRunConfiguration" factoryName="Go Application">
@@ -152,7 +152,13 @@
     <list>
       <item itemvalue="Go Build.etcdctl" />
       <item itemvalue="Go Build.local" />
+      <item itemvalue="Go Build.go build github.com/ls-2018/etcd_cn/code_debug/txn" />
     </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Go Build.go build github.com/ls-2018/etcd_cn/code_debug/txn" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TypeScriptGeneratedFilesManager">
@@ -213,11 +219,6 @@
           <url>file://$PROJECT_DIR$/client_sdk/v3/retry_interceptor.go</url>
           <line>156</line>
           <option name="timeStamp" value="111" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/etcd/etcdserver/apply_auth.go</url>
-          <line>64</line>
-          <option name="timeStamp" value="112" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

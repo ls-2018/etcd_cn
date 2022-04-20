@@ -190,7 +190,7 @@ func (bb *bucketBuffer) Range(key, endKey []byte, limit int64) (keys [][]byte, v
 			keys = append(keys, bb.buf[idx].key)
 			vals = append(vals, []byte(bb.buf[idx].val))
 		}
-		fmt.Println(fmt.Sprintf("get %s:%s", string(bb.buf[idx].key), bb.buf[idx].val))
+		fmt.Println(fmt.Sprintf("---->get %s:%s", string(bb.buf[idx].key), bb.buf[idx].val))
 		return keys, vals
 	}
 	// 缓存中没有对应的key
