@@ -11,11 +11,9 @@ import (
 	"go.uber.org/zap"
 )
 
-// CheckInitialHashKV compares initial hash values with its peers
-// before serving any peer/client traffic. Only mismatch when hashes
-// are different at requested revision, with same compact revision.
+// CheckInitialHashKV 在提供任何对等/客户流量之前，将初始哈希值与peer进行比较。只有当哈希值在要求的修订版上不一样时，才会出现不匹配，而压缩的修订版是相同的。
 func (s *EtcdServer) CheckInitialHashKV() error {
-	if !s.Cfg.InitialCorruptCheck {
+	if !s.Cfg.InitialCorruptCheck { // 没有开启数据毁坏检测功能
 		return nil
 	}
 

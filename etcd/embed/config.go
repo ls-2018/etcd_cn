@@ -261,8 +261,8 @@ type Config struct {
 
 	AuthTokenTTL uint `json:"auth-token-ttl"` // token 有效期
 
-	ExperimentalInitialCorruptCheck bool          `json:"experimental-initial-corrupt-check"`
-	ExperimentalCorruptCheckTime    time.Duration `json:"experimental-corrupt-check-time"`
+	ExperimentalInitialCorruptCheck bool          `json:"experimental-initial-corrupt-check"` // 数据毁坏检测功能
+	ExperimentalCorruptCheckTime    time.Duration `json:"experimental-corrupt-check-time"`// 数据毁坏检测功能
 	// ExperimentalEnableV2V3 configures URLs that expose deprecated V2 API working on V3 store.
 	// Deprecated in v3.5.
 	// TODO: Delete in v3.6 (https://github.com/etcd-io/etcd/issues/12913)

@@ -80,9 +80,7 @@ type ServerConfig struct {
 	BcryptCost            uint   // 为散列身份验证密码指定bcrypt算法的成本/强度默认10
 	TokenTTL              uint
 
-	// InitialCorruptCheck is true to check data corruption on boot
-	// before serving any peer/client traffic.
-	InitialCorruptCheck bool
+	InitialCorruptCheck bool // 数据毁坏检测功能,运行之后，在开始服务之前
 	CorruptCheckTime    time.Duration
 
 	PreVote bool // PreVote 是否启用PreVote

@@ -193,7 +193,7 @@ func StartEtcd(inCfg *Config) (e *Etcd, err error) {
 		TokenTTL:                                 cfg.AuthTokenTTL,
 		CORS:                                     cfg.CORS,
 		HostWhitelist:                            cfg.HostWhitelist,
-		InitialCorruptCheck:                      cfg.ExperimentalInitialCorruptCheck,
+		InitialCorruptCheck:                      cfg.ExperimentalInitialCorruptCheck, // 数据毁坏检测功能
 		CorruptCheckTime:                         cfg.ExperimentalCorruptCheckTime,
 		PreVote:                                  cfg.PreVote, // PreVote 是否启用PreVote
 		Logger:                                   cfg.logger,
