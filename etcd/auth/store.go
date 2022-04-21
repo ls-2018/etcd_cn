@@ -44,7 +44,7 @@ var (
 	authEnabled   = []byte{1}
 	authDisabled  = []byte{0}
 
-	revisionKey = []byte("authRevision")
+	revisionKey = []byte("authRevision") // 鉴权版本号
 
 	ErrRootUserNotExist     = errors.New("auth: root用户不存在")
 	ErrRootRoleNotExist     = errors.New("auth: root用户没有root角色")
@@ -61,7 +61,7 @@ var (
 	ErrRoleNotGranted       = errors.New("auth: role is not granted to the user")
 	ErrPermissionNotGranted = errors.New("auth: 角色没有权限")
 	ErrAuthNotEnabled       = errors.New("auth: authentication is not enabled")
-	ErrAuthOldRevision      = errors.New("auth: revision in header is old")
+	ErrAuthOldRevision      = errors.New("auth: 请求头里的修订版本是旧的")
 	ErrInvalidAuthToken     = errors.New("auth: invalid auth token")
 	ErrInvalidAuthOpts      = errors.New("auth: invalid auth options")
 	ErrInvalidAuthMgmt      = errors.New("auth: invalid auth management")
@@ -137,7 +137,7 @@ type TokenProvider interface {
 }
 
 type authStore struct {
-	revision       uint64                              // 修订版本
+	revision       uint64                              // 鉴权版本号
 	lg             *zap.Logger                         //
 	be             backend.Backend                     //
 	enabled        bool                                // 是否开启认证
@@ -279,7 +279,7 @@ func (as *authStore) isOpPermitted(userName string, revision uint64, key, rangeE
 	}
 	rev := as.Revision()
 	if revision < rev {
-		as.lg.Warn("request auth revision is less than current node auth revision",
+		as.lg.Warn("请求认证的版本小于当前节点认证的版本",
 			zap.Uint64("current node auth revision", rev),
 			zap.Uint64("request auth revision", revision),
 			zap.ByteString("request key", key),
@@ -414,7 +414,7 @@ func hasRootRole(u *authpb.User) bool {
 	return idx != len(u.Roles) && u.Roles[idx] == rootRole
 }
 
-// ok
+// ok 持久化，鉴权版本号
 func (as *authStore) commitRevision(tx backend.BatchTx) {
 	atomic.AddUint64(&as.revision, 1)
 	revBytes := make([]byte, revBytesLen)
@@ -437,7 +437,7 @@ func (as *authStore) setRevision(rev uint64) {
 	atomic.StoreUint64(&as.revision, rev)
 }
 
-// Revision ok
+// Revision 返回鉴权版本号
 func (as *authStore) Revision() uint64 {
 	return atomic.LoadUint64(&as.revision)
 }
@@ -681,9 +681,7 @@ func (as *authStore) RoleGrantPermission(r *pb.AuthRoleGrantPermissionRequest) (
 		return strings.Compare(role.KeyPermission[i].Key, r.Perm.Key) >= 0
 	})
 
-	if idx < len(role.KeyPermission) &&
-		strings.EqualFold(role.KeyPermission[idx].Key, r.Perm.Key) &&
-		strings.EqualFold(role.KeyPermission[idx].RangeEnd, r.Perm.RangeEnd) {
+	if idx < len(role.KeyPermission) && strings.EqualFold(role.KeyPermission[idx].Key, r.Perm.Key) && strings.EqualFold(role.KeyPermission[idx].RangeEnd, r.Perm.RangeEnd) {
 		// 更新存在的权限
 		role.KeyPermission[idx].PermType = r.Perm.PermType
 	} else {

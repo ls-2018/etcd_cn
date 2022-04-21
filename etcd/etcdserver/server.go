@@ -1991,6 +1991,7 @@ func (s *EtcdServer) applyEntryNormal(e *raftpb.Entry) {
 		rp := &r
 		pbutil.MustUnmarshal(rp, e.Data)
 		s.w.Trigger(r.ID, s.applyV2Request((*RequestV2)(rp), shouldApplyV3))
+		fmt.Println("pbutil.MustUnmarshal return")
 		return
 	}
 	// 如果能

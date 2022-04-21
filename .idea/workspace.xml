@@ -6,18 +6,11 @@
   <component name="ChangeListManager">
     <list default="true" id="49524360-39b2-44cd-b702-de0461fb4222" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/apply_v3.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/apply_v3.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/over_raft.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/over_raft.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/mvcc/backend/backend_bolt.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/mvcc/backend/backend_bolt.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/mvcc/index.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/mvcc/index.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/mvcc/key_index.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/mvcc/key_index.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/mvcc/kvstore.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/mvcc/kvstore.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/mvcc/kvstore_compaction.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/mvcc/kvstore_compaction.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcd/wal/over_wal.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/wal/over_wal.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/etcdutl/snapshot/util.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdutl/snapshot/util.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/images/raft.monopic" beforeDir="false" afterPath="$PROJECT_DIR$/images/raft.monopic" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/etcd-dump-db/backend.go" beforeDir="false" afterPath="$PROJECT_DIR$/tools/etcd-dump-db/backend.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/auth/store.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/auth/store.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/server.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/server.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/v3_server.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/v3_server.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/api/v3/authpb/auth.pb.go" beforeDir="false" afterPath="$PROJECT_DIR$/offical/api/v3/authpb/auth.pb.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/offical/etcdserverpb/rpc.pb.go" beforeDir="false" afterPath="$PROJECT_DIR$/offical/etcdserverpb/rpc.pb.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -216,7 +209,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/etcd/auth/store.go</url>
-          <line>942</line>
+          <line>940</line>
           <option name="timeStamp" value="109" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
