@@ -174,6 +174,7 @@ func (ti *treeIndex) Compact(rev int64) map[revision]struct{} {
 	available := make(map[revision]struct{})
 	ti.lg.Info("compact tree index", zap.Int64("revision", rev))
 	ti.Lock()
+	// 为了避免压缩工作影响读写性能，
 	clone := ti.tree.Clone()
 	ti.Unlock()
 

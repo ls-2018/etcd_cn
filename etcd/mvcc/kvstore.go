@@ -274,7 +274,7 @@ func (s *store) compact(trace *traceutil.Trace, rev int64) (<-chan struct{}, err
 			return
 		}
 		keep := s.kvindex.Compact(rev)
-		if !s.scheduleCompaction(rev, keep) {
+		if !s.scheduleCompaction(rev, keep) { // 删除bolt.db中旧版本
 			s.compactBarrier(context.TODO(), ch)
 			return
 		}
@@ -306,7 +306,7 @@ func (s *store) Compact(trace *traceutil.Trace, rev int64) (<-chan struct{}, err
 	}
 	s.mu.Unlock()
 
-	return s.compact(trace, rev)
+	return s.compact(trace, rev) //  Compact
 }
 
 func (s *store) Commit() {

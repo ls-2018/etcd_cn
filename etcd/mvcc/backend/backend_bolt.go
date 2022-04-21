@@ -79,7 +79,7 @@ type (
 		commits       int64            // 已提交事务数
 		openReadTxN   int64            // 当前开启的读事务数
 		mlock         bool             // mlock prevents backend database file to be swapped
-		mu            sync.RWMutex     // // 这里的锁也是隔离下面的db对象；正常的创建bolt.DB事务只需要读锁；但是做 defrag 时候需要写锁隔离
+		boltdbMu      sync.RWMutex     // 这里的锁也是隔离下面的db对象；正常的创建bolt.DB事务只需要读锁；但是做 defrag 时候需要写锁隔离
 		db            *bolt.DB         // 底层存储为boltDB
 		batchInterval time.Duration    // 批量写提交间隔   默认100ms
 		batchLimit    int              // 批量写最大事务数  10000
@@ -214,7 +214,7 @@ func (b *backend) ConcurrentReadTx() ReadTx {
 	var buf *txReadBuffer
 	switch {
 	case isEmptyCache: // 缓冲为空
-		// 当持有b.txReadBufferCache.mu.Lock时执行安全的缓冲区拷贝这只应该运行一次,所以不会有太多的开销
+		// 当持有b.txReadBufferCache.boltdbMu.Lock时执行安全的缓冲区拷贝这只应该运行一次,所以不会有太多的开销
 		curBuf := b.readTx.buf.unsafeCopy()
 		buf = &curBuf
 	case isStaleCache:
@@ -255,8 +255,8 @@ func (b *backend) ForceCommit() {
 func (b *backend) Snapshot() Snapshot {
 	b.batchTx.Commit()
 
-	b.mu.RLock()
-	defer b.mu.RUnlock()
+	b.boltdbMu.RLock()
+	defer b.boltdbMu.RUnlock()
 	tx, err := b.db.Begin(false) // 读事务
 	if err != nil {
 		b.lg.Fatal("开启读事务失败", zap.Error(err))
@@ -294,8 +294,8 @@ func (b *backend) Snapshot() Snapshot {
 func (b *backend) Hash(ignores func(bucketName, keyName []byte) bool) (uint32, error) {
 	h := crc32.New(crc32.MakeTable(crc32.Castagnoli))
 
-	b.mu.RLock()
-	defer b.mu.RUnlock()
+	b.boltdbMu.RLock()
+	defer b.boltdbMu.RUnlock()
 	err := b.db.View(func(tx *bolt.Tx) error {
 		c := tx.Cursor()
 		for next, _ := c.First(); next != nil; next, _ = c.Next() {
@@ -374,8 +374,8 @@ func (b *backend) defrag() error {
 	defer b.batchTx.Unlock()
 
 	// 锁定数据库后锁定tx以避免死锁.
-	b.mu.Lock()
-	defer b.mu.Unlock()
+	b.boltdbMu.Lock()
+	defer b.boltdbMu.Unlock()
 
 	// 阻止并发的读请求同时重置TX.
 	b.readTx.Lock()
@@ -540,9 +540,9 @@ func defragdb(odb, tmpdb *bolt.DB, limit int) error {
 }
 
 func (b *backend) begin(write bool) *bolt.Tx {
-	b.mu.RLock()
+	b.boltdbMu.RLock()
 	tx := b.unsafeBegin(write)
-	b.mu.RUnlock()
+	b.boltdbMu.RUnlock()
 
 	size := tx.Size() // 返回该事务所看到的当前数据库大小(字节).   24576
 	db := tx.DB()

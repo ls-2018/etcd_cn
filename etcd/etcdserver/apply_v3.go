@@ -160,7 +160,6 @@ func (a *applierV3backend) Put(ctx context.Context, txn mvcc.TxnWrite, p *pb.Put
 			resp.PrevKv = &rr.KVs[0]
 		}
 	}
-	fmt.Printf("---> applierV3backend.put  key:%s value:%s  leaseID:%d", p.Key, p.Value, leaseID)
 	resp.Header.Revision = txn.Put([]byte(p.Key), []byte(val), leaseID)
 	trace.AddField(traceutil.Field{Key: "response_revision", Value: resp.Header.Revision})
 	return resp, trace, nil

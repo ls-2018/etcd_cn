@@ -4,7 +4,21 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="49524360-39b2-44cd-b702-de0461fb4222" name="Changes" comment="" />
+    <list default="true" id="49524360-39b2-44cd-b702-de0461fb4222" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/apply_v3.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/apply_v3.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/etcdserver/over_raft.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/etcdserver/over_raft.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/mvcc/backend/backend_bolt.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/mvcc/backend/backend_bolt.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/mvcc/index.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/mvcc/index.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/mvcc/key_index.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/mvcc/key_index.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/mvcc/kvstore.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/mvcc/kvstore.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/mvcc/kvstore_compaction.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/mvcc/kvstore_compaction.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcd/wal/over_wal.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcd/wal/over_wal.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/etcdutl/snapshot/util.go" beforeDir="false" afterPath="$PROJECT_DIR$/etcdutl/snapshot/util.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/images/raft.monopic" beforeDir="false" afterPath="$PROJECT_DIR$/images/raft.monopic" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/etcd-dump-db/backend.go" beforeDir="false" afterPath="$PROJECT_DIR$/tools/etcd-dump-db/backend.go" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -83,7 +97,7 @@
     <property name="go.sdk.automatically.set" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/offical" />
     <property name="restartRequiresConfirmation" value="false" />
-    <property name="settings.editor.selected.configurable" value="preferences.editor" />
+    <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
     <property name="vue.rearranger.settings.migration" value="true" />
   </component>
   <component name="RecentsManager">
@@ -237,11 +251,6 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/client_sdk/v3/watch.go</url>
-          <line>173</line>
-          <option name="timeStamp" value="171" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/client_sdk/v3/watch.go</url>
           <line>198</line>
           <option name="timeStamp" value="172" />
         </line-breakpoint>
@@ -259,6 +268,31 @@
           <url>file://$PROJECT_DIR$/client_sdk/v3/watch.go</url>
           <line>360</line>
           <option name="timeStamp" value="175" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd/etcdserver/api/v3rpc/over_watch.go</url>
+          <line>162</line>
+          <option name="timeStamp" value="178" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd/etcdserver/api/v3rpc/over_watch.go</url>
+          <line>161</line>
+          <option name="timeStamp" value="179" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/offical/etcdserverpb/rpc.pb.go</url>
+          <line>3628</line>
+          <option name="timeStamp" value="180" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd/mvcc/over_kv_view.go</url>
+          <line>46</line>
+          <option name="timeStamp" value="186" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/etcd/wal/over_wal.go</url>
+          <line>672</line>
+          <option name="timeStamp" value="206" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

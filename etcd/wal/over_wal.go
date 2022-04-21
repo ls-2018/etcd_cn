@@ -745,6 +745,7 @@ func (w *WAL) sync() error {
 			return err
 		}
 	}
+	fmt.Println("wal flush")
 
 	if w.unsafeNoSync { //  非安全存储 默认是 false
 		return nil
@@ -875,12 +876,12 @@ func (w *WAL) Save(st raftpb.HardState, ents []raftpb.Entry) error {
 
 	// 将日志保存到wal,更新wal写入的最新索引
 	for i := range ents {
+		fmt.Printf("待刷盘---> wal.Save %s\n", string(ents[i].Data))
 		if err := w.saveEntry(&ents[i]); err != nil {
 			return err
 		}
 	}
 	// 持久化HardState, HardState表示服务器当前状态,定义在raft.pb.go,主要包含Term、Vote、Commit
-
 	if err := w.saveState(&st); err != nil {
 		return err
 	}

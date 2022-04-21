@@ -34,7 +34,10 @@ etcdctl alarm disarm
 
 获取当前etcd数据的修订版本(revision)
 rev=$(etcdctl -w json endpoint status | egrep -o -i '"revision":[0-9]*' | egrep -o '[0-9]*')
-整合压缩旧版本数据
+
+# 获取etcd当前版本号
+$ rev=$(etcdctl endpoint status --write-out="json" | egrep -o -i '"revision":[0-9]*' | egrep -o '[0-9].*')
+整合压缩旧版本数据 执行压缩操作，指定压缩的版本号为当前版本号
 etcdctl compact $rev
 执行碎片整理
 etcdctl defrag
@@ -179,7 +182,7 @@ MsgTimeoutNow | Candidate、Follower | 非本地： | | MsgReadIndex | Leader、
   leader处理不一致是通过强制follower直接复制自己的日志来解决了.因此在follower中的冲突的日志条目会被leader的日志覆盖.
   leader会记录follower的日志复制进度nextIndex,如果follower在追加日志时一致性检查失败,就会拒绝请求,此时leader就会减小 nextIndex 值并进行重试,最终在某个位置让follower跟leader一致.
   ```
-- 为什么WAL日志模块只通过追加,也能删除已持久化冲突的日志条目呢? 
+- 为什么WAL日志模块只通过追加,也能删除已持久化冲突的日志条目呢?
   ```
   其实这里 etcd 在实现上采用了一些比较有技巧的方法,在 WAL 日志中的确没删除废弃的日志条目,你可以在其中搜索到冲突的日志条目.
   只是 etcd 加载 WAL 日志时,发现一个 raft log index 位置上有多个日志条目的时候,会通过覆盖的方式,将最后写入的日志条目追加到 raft log 中,
@@ -523,9 +526,7 @@ Step()
 
 ```
 
-
 证书解析认证性能极低
-
 
 ```
 
@@ -537,23 +538,49 @@ etcdctl role grant-permission admin readwrite hello helly --user root:root
 etcdctl user grant-role alice admin --user root:root
 ```
 
-
 etcd 保存用户 key 与版本号映射关系的数据结构 B-tree,为什么 etcd 使用它而不使用哈希表、平衡二叉树?
+
 ```
 从 etcd 的功能特性上分析, 因 etcd 支持范围查询,因此保存索引的数据结构也必须支持范围查询才行.所以哈希表不适合,而 B-tree 支持范围查询.
 从性能上分析,平横二叉树每个节点只能容纳一个数据、导致树的高度较高,而 B-tree 每个节点可以容纳多个数据,
 树的高度更低,更扁平,涉及的查找次数更少,具有优越的增、删、改、查性能.
 ```
+
 你认为 etcd 为什么删除使用 lazy delete 方式呢？ 相比同步 delete, 各有什么优缺点？
+
 ```
 采用延迟删除
-1、为了保证key对应的watcher能够获取到key的所有状态信息，留给watcher时间做相应的处理。
-2、实时从boltdb删除key，会可能触发树的不平衡，影响其他读写请求的性能。
+1、为了保证key对应的watcher能够获取到key的所有状态信息,留给watcher时间做相应的处理。
+2、实时从boltdb删除key,会可能触发树的不平衡,影响其他读写请求的性能。
 
-etcd要保存key的历史版本，直接删除就不能支持revision查询了；
-lazy方式性能更高，空闲空间可以再利用；
+etcd要保存key的历史版本,直接删除就不能支持revision查询了；
+lazy方式性能更高,空闲空间可以再利用；
 ```
-当你突然删除大量 key 后，db 大小是立刻增加还是减少呢？
+
+当你突然删除大量 key 后,db 大小是立刻增加还是减少呢？
+
 ```
-应该会增大，etcd不会立即把空间返回系统而是维护起来后续使用，维护空闲页面应该需要一些内存；
+应该会增大,etcd不会立即把空间返回系统而是维护起来后续使用,维护空闲页面应该需要一些内存；
+```
+
+```
+
+$ etcdctl txn -i
+compares:
+mod("Alice") = "2"
+mod("Bob") = "3"
+
+success requests (get, put, del):
+put Alice 100
+put Bob 300
+ 
+success requests (get, put, del): //对应Then语句
+put Alice 100 //Alice账号初始资金200减100
+put Bob 300 //Bob账号初始资金200加100
+
+failure requests (get, put, del): //对应Else语句
+get Alice  
+get Bob
+
+
 ```

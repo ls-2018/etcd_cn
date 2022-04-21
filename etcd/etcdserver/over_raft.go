@@ -499,7 +499,7 @@ func (r *raftNode) start(rh *raftReadyHandler) {
 					// old data from the WAL. Otherwise could get an error like:
 					// panic: tocommit(107) is out of range [lastIndex(84)]. Was the raft log corrupted, truncated, or lost?
 					// See https://github.com/etcd-io/etcd/issues/10219 for more details.
-					if err := r.storage.Sync(); err != nil {
+					if err := r.storage.Sync(); err != nil { // 强制wal日志落盘
 						r.lg.Fatal("failed to sync Raft snapshot", zap.Error(err))
 					}
 

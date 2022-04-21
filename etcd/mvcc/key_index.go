@@ -42,8 +42,8 @@ type generation struct {
 }
 
 type revision struct {
-	main int64 // 一个全局递增的主版本号，随put/txn/delete事务递增，一个事务内的key main版本号是一致的
-	sub  int64 // 一个事务内的子版本号，从0开始随事务内put/delete操作递增
+	main int64 // 一个全局递增的主版本号,随put/txn/delete事务递增,一个事务内的key main版本号是一致的
+	sub  int64 // 一个事务内的子版本号,从0开始随事务内put/delete操作递增
 }
 
 func (ki *keyIndex) restore(lg *zap.Logger, created, modified revision, ver int64) {
@@ -62,6 +62,7 @@ func (ki *keyIndex) restore(lg *zap.Logger, created, modified revision, ver int6
 // It also creates a new empty generation in the keyIndex.
 // It returns ErrRevisionNotFound when tombstone on an empty generation.
 func (ki *keyIndex) tombstone(lg *zap.Logger, main int64, sub int64) error {
+	// 当然如果 keyIndex 中的最大版本号被打了删除标记 (tombstone)， 就会从 treeIndex 中删除这个 keyIndex，否则会出现内存泄露。
 	if ki.isEmpty() {
 		lg.Panic(
 			"'tombstone' got an unexpected empty keyIndex",
