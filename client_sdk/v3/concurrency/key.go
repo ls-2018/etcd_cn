@@ -61,7 +61,8 @@ func waitDeletes(ctx context.Context, client *v3.Client, pfx string, maxCreateRe
 		if len(resp.Kvs) == 0 {
 			return resp.Header, nil
 		}
-		lastKey := string(resp.Kvs[0].Key)
+		lastKey := resp.Kvs[0].Key
+		// 等待该目录前缀下的所有k都被删掉
 		if err = waitDelete(ctx, client, lastKey, resp.Header.Revision); err != nil {
 			return nil, err
 		}

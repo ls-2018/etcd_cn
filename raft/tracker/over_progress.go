@@ -71,7 +71,7 @@ func (pr *Progress) MaybeDecrTo(rejected, matchHint uint64) bool {
 		// 消息的同时会直接调用Progress.optimisticUpdate()方法增加Next,这就使得Next可能会
 		// 比Match大很多,这里回退Next至Match位置,并在后面重新发送MsgApp消息进行尝试
 
-		// 在复制状态下Leader会发送多个日志信息给Peer再等待Peer的回复,例如：Match+1,Match+2,Match+3,Match+4,
+		// 在复制状态下Leader会发送多个日志信息给Peer再等待Peer的回复,例如:Match+1,Match+2,Match+3,Match+4,
 		// 此时如果Match+3丢了,那么Match+4肯定好会被拒绝,此时match应该是Match+2,Next=last+1
 		// 应该更合理.但是从peer的角度看,如果收到了Match+2的日志就会给leader一次回复,这个
 		// 回复理论上是早于当前这个拒绝消息的,所以当Leader收到Match+4拒绝消息,此时的Match
@@ -81,7 +81,7 @@ func (pr *Progress) MaybeDecrTo(rejected, matchHint uint64) bool {
 		pr.Next = pr.Match + 1
 		return true
 	}
-	// 源码注释翻译：如果拒绝日志索引不是Next-1,肯定是陈旧消息这是因为非复制状态探测消息一次只
+	// 源码注释翻译:如果拒绝日志索引不是Next-1,肯定是陈旧消息这是因为非复制状态探测消息一次只
 	// 发送一条日志.这句话是什么意思呢,读者需要注意,代码执行到这里说明Progress不是复制状态,
 	// 应该是探测状态.为了效率考虑,Leader向Peer发送日志消息一次会带多条日志,比如一个日志消息
 	// 会带有10条日志.上面Match+1,Match+2,Match+3,Match+4的例子是为了理解方便假设每个

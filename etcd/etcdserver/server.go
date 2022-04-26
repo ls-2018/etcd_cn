@@ -1367,7 +1367,7 @@ func (s *EtcdServer) checkMembershipOperationPermission(ctx context.Context) err
 		return nil
 	}
 
-	// 请注意,这个权限检查是在API层完成的,所以TOCTOU问题可能会在这样的时间表中引起：
+	// 请注意,这个权限检查是在API层完成的,所以TOCTOU问题可能会在这样的时间表中引起:
 	// 更新用户A的会员资格------撤销A的根角色------在状态机层应用会员资格的改变
 	// 然而,会员资格的改变和角色管理都需要根权限.所以管理员的谨慎操作可以防止这个问题.
 	authInfo, err := s.AuthInfoFromCtx(ctx)
@@ -1379,7 +1379,7 @@ func (s *EtcdServer) checkMembershipOperationPermission(ctx context.Context) err
 }
 
 // 检查learner是否追上了leader
-// 注意：如果在集群中没有找到成员,或者成员不是学习者,它将返回nil.
+// 注意:如果在集群中没有找到成员,或者成员不是学习者,它将返回nil.
 // 这两个条件将在后面的应用阶段之前进行后台检查.
 func (s *EtcdServer) isLearnerReady(id uint64) error {
 	rs := s.raftStatus()
@@ -1724,7 +1724,7 @@ func (s *EtcdServer) snapshot(snapi uint64, confState raftpb.ConfState) {
 		// keep some in memory log entries for slow followers.
 		compacti := uint64(1)
 		if snapi > s.Cfg.SnapshotCatchUpEntries {
-			compacti = snapi - s.Cfg.SnapshotCatchUpEntries
+			compacti = snapi - s.Cfg.SnapshotCatchUpEntries // 保留一定数量的日志,为了follower可以追赶
 		}
 
 		err = s.r.raftStorage.Compact(compacti)

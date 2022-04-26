@@ -540,7 +540,7 @@ func newLessor(lg *zap.Logger, b backend.Backend, cluster cluster, cfg LessorCon
 // isPrimary 表示该出租人是否为主要出租人.主出租人负责管理租约的到期和更新.
 // 在etcd中,raft leader是主要的.因此,在同一时间可能有两个主要的领导者（raft允许同时存在的领导者,但任期不同）,最多是一个领导者选举超时.
 // 旧的主要领导者不能影响正确性,因为它的提议有一个较小的期限,不会被提交.
-// TODO：raft的跟随者不转发租约管理提案.可能会有一个非常小的窗口（通常在一秒钟之内,这取决于调度）,在raft领导者降级和lessor降级之间
+// TODO:raft的跟随者不转发租约管理提案.可能会有一个非常小的窗口（通常在一秒钟之内,这取决于调度）,在raft领导者降级和lessor降级之间
 // 通常情况下,这不应该是一个问题.租约对时间不应该那么敏感.
 func (le *lessor) isPrimary() bool {
 	return le.demotec != nil

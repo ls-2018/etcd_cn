@@ -37,7 +37,7 @@ rev=$(etcdctl -w json endpoint status | egrep -o -i '"revision":[0-9]*' | egrep 
 
 # 获取etcd当前版本号
 $ rev=$(etcdctl endpoint status --write-out="json" | egrep -o -i '"revision":[0-9]*' | egrep -o '[0-9].*')
-整合压缩旧版本数据 执行压缩操作，指定压缩的版本号为当前版本号
+整合压缩旧版本数据 执行压缩操作,指定压缩的版本号为当前版本号
 etcdctl compact $rev
 执行碎片整理
 etcdctl defrag
@@ -67,16 +67,16 @@ http://127.0.0.1:2379/members
 
 ### msgType
 
-| 消息类型 | 处理方 | 描述 | | :--- | :--- | :--: | | MsgHup | 节点支持 | 本地：开启选举,---->会触发vote或pre-vote | | MsgBeat | Leader |
-本地：心跳,---->给peers发送Msghearbeat | | MsgProp | Leader、Candidate、Follower | 本地：Propose -----> MsgApp | | MsgApp |
-Candidate、Follower | 非本地：操作日志【复制、配置变更 req】 | | MsgAppResp | Leader | 非本地：操作日志【复制 res】 | | MsgVote | 节点支持 | 非本地：投票请求 | |
-MsgVoteResp | Candidate | 非本地：投票相应 | | MsgPreVote | 节点支持 | 非本地：预投票请求 | | MsgPreVoteResp | Candidate | 非本地：预投票相应 | |
-MsgSnap | Candidate、Follower | 非本地：leader向follower拷贝快照,响应是MsgAppResp,告诉leader继续复制之后的值 | | MsgHeartbeat |
+| 消息类型 | 处理方 | 描述 | | :--- | :--- | :--: | | MsgHup | 节点支持 | 本地:开启选举,---->会触发vote或pre-vote | | MsgBeat | Leader |
+本地:心跳,---->给peers发送Msghearbeat | | MsgProp | Leader、Candidate、Follower | 本地:Propose -----> MsgApp | | MsgApp |
+Candidate、Follower | 非本地:操作日志【复制、配置变更 req】 | | MsgAppResp | Leader | 非本地:操作日志【复制 res】 | | MsgVote | 节点支持 | 非本地:投票请求 | |
+MsgVoteResp | Candidate | 非本地:投票相应 | | MsgPreVote | 节点支持 | 非本地:预投票请求 | | MsgPreVoteResp | Candidate | 非本地:预投票相应 | |
+MsgSnap | Candidate、Follower | 非本地:leader向follower拷贝快照,响应是MsgAppResp,告诉leader继续复制之后的值 | | MsgHeartbeat |
 Candidate、Follower | | | MsgHeartbeatResp | Leader | | | MsgUnreachable | Leader |
-非本地：etcdserver通过这个消息告诉raft状态机某个follower不可达,让其发送消息的方式由pipeline切成ping-pong模式 | | MsgSnapStatus | Leader |
-非本地：etcdserver通过这个消息告诉raft状态机快照发送成功还是失败 | | MsgCheckQuorum | Leader | | | MsgTransferLeader | Leader、Follower | 非本地： | |
-MsgTimeoutNow | Candidate、Follower | 非本地： | | MsgReadIndex | Leader、Follower | 非本地： | | MsgReadIndexResp | Follower |
-非本地： |
+非本地:etcdserver通过这个消息告诉raft状态机某个follower不可达,让其发送消息的方式由pipeline切成ping-pong模式 | | MsgSnapStatus | Leader |
+非本地:etcdserver通过这个消息告诉raft状态机快照发送成功还是失败 | | MsgCheckQuorum | Leader | | | MsgTransferLeader | Leader、Follower | 非本地: | |
+MsgTimeoutNow | Candidate、Follower | 非本地: | | MsgReadIndex | Leader、Follower | 非本地: | | MsgReadIndexResp | Follower |
+非本地: |
 
 ### issue
 
@@ -111,7 +111,7 @@ MsgTimeoutNow | Candidate、Follower | 非本地： | | MsgReadIndex | Leader、
   
   
     请求流程:
-    etcdctl endpoints=http://192.168.1.100：2379 --debug ls
+    etcdctl endpoints=http://192.168.1.100:2379 --debug ls
     首先与endpoints建立链接, 获取配置在advertise-client-urls的参数
     然后依次与每一个地址建立链接,直到操作成功
   
@@ -147,7 +147,7 @@ MsgTimeoutNow | Candidate、Follower | 非本地： | | MsgReadIndex | Leader、
   ```
 
 
-- checkquorum 过半机制：
+- checkquorum 过半机制:
   ```
   每隔一段时间,leader节点会尝试连接集群中的节点(发送心跳),如果发现自己可以连接到的节点个数没有超过半数,则主动切换成follower状态.
   这样在网络分区的情况下,旧的leader节点可以很快的知道自己已经过期了.
@@ -296,7 +296,7 @@ WAL 日志
 ----快照----------------- |----------------快照--------------------- |         | 在没有被持久化之前如果遇到了换届选举,这个日志可能会被相同索引值的新日志覆盖
 
 
-每一条日志Entry需要经过unstable、stable、committed、applied、compacted五个阶段,接下来总结一下日志的状态转换过程：
+每一条日志Entry需要经过unstable、stable、committed、applied、compacted五个阶段,接下来总结一下日志的状态转换过程:
 
 刚刚收到一条日志会被存储在unstable中,日志在没有被持久化之前如果遇到了换届选举,这个日志可能会被相同索引值的新日志覆盖,这个一点可以在raftLog.maybeAppend()和unstable.truncateAndAppend()找到相关的处理逻辑.
 unstable中存储的日志会被使用者写入持久存储（文件）中,这些持久化的日志就会从unstable转移到MemoryStorage中.
@@ -320,7 +320,7 @@ MemoryStorage并不是持久存储啊,其实日志是被双写了,文件和Memor
 
 ```
 1、新建Snapshot之后,一般会调用MemoryStorage.Compact()方法将MemoryStorage.ents中指定索引之前的Entry记录全部抛弃,
-从而实现压缩MemoryStorage.ents 的目的,具体实现如下：    [GC]
+从而实现压缩MemoryStorage.ents 的目的,具体实现如下:    [GC]
 func (ms *MemoryStorage) Compact(compactIndex uint64) 
 
 2、清除kvindex的修订版本,以及bolt.db里的历史数据
@@ -424,7 +424,7 @@ HTTP/2.0 多路复用机制,减少了大量 watcher 等场景下的连接数； 
 
 pb.Message.Entries =  [ pb.InternalRaftRequest ]
 
-etcd中每新建一个key ,会为其分配一个主版本,同时还有一个sub版本,长度17byte 格式： 8byte_8byte 例如[00000002_00000000]---> 转换成bolt.db的键值就是
+etcd中每新建一个key ,会为其分配一个主版本,同时还有一个sub版本,长度17byte 格式: 8byte_8byte 例如[00000002_00000000]---> 转换成bolt.db的键值就是
 00000000000000025f0000000000000000
 
 ### 线性一致性读流程
@@ -550,8 +550,8 @@ etcd 保存用户 key 与版本号映射关系的数据结构 B-tree,为什么 e
 
 ```
 采用延迟删除
-1、为了保证key对应的watcher能够获取到key的所有状态信息,留给watcher时间做相应的处理。
-2、实时从boltdb删除key,会可能触发树的不平衡,影响其他读写请求的性能。
+1、为了保证key对应的watcher能够获取到key的所有状态信息,留给watcher时间做相应的处理.
+2、实时从boltdb删除key,会可能触发树的不平衡,影响其他读写请求的性能.
 
 etcd要保存key的历史版本,直接删除就不能支持revision查询了；
 lazy方式性能更高,空闲空间可以再利用；
@@ -583,4 +583,82 @@ get Alice
 get Bob
 
 
+```
+
+
+```
+若 etcd 节点内存不足,可能会导致 db 文件对应的内存页被换出.
+当读请求命中的页未在内存中时,就会产生缺页异常,导致读过程中产生磁盘 IO.
+这样虽然避免了 etcd 进程 OOM,但是此过程会产生较大的延时.
+```
+
+
+./benchmark --conns=100 --clients=1000 range hello --consistency=l --total=500000
+./benchmark --conns=100 --clients=1000 range hello --consistency=s --total=500000
+
+# 256byte
+./benchmark --conns=100 --clients=1000 put --key-size=8 --sequential-keys --total=10000000 --val-size=256
+# 1m
+./benchmark --conns=100 --clients=1000 put --key-size=8 --sequential-keys --total=500      --val-size=1024000 
+
+
+
+
+
+```
+{
+    "Key":"a",
+    "Modified":{
+        "Main":8,
+        "Sub":0
+    },
+    "Generations":[
+        {
+            "VersionCount":4,
+            "Created":{
+                "Main":2,
+                "Sub":0
+            },
+            "Revs":[
+                {
+                    "Main":2,
+                    "Sub":0
+                },
+                {
+                    "Main":3,
+                    "Sub":0
+                },
+                {
+                    "Main":4,
+                    "Sub":0
+                },
+                {
+                    "Main":5,
+                    "Sub":0
+                }
+            ]
+        },
+        {
+            "VersionCount":3,
+            "Created":{
+                "Main":6,
+                "Sub":0
+            },
+            "Revs":[
+                {
+                    "Main":6,
+                    "Sub":0
+                },
+                {
+                    "Main":7,
+                    "Sub":0
+                },
+                {
+                    "Main":8,
+                    "Sub":0
+                }
+            ]
+        }
+    ]
+}
 ```

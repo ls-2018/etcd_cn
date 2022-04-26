@@ -138,14 +138,14 @@ func newConfig() *config {
 
 	// member
 	fs.StringVar(&cfg.ec.Dir, "data-dir", cfg.ec.Dir, "服务运行数据保存的路径. ${name}.etcd")
-	fs.StringVar(&cfg.ec.WalDir, "wal-dir", cfg.ec.WalDir, "专用wal目录的路径.默认值：--data-dir的路径下")
+	fs.StringVar(&cfg.ec.WalDir, "wal-dir", cfg.ec.WalDir, "专用wal目录的路径.默认值:--data-dir的路径下")
 	fs.Var(flags.NewUniqueURLsWithExceptions(embed.DefaultListenPeerURLs, ""), "listen-peer-urls", "和成员之间通信的地址.用于监听其他etcd member的url")
 	fs.Var(flags.NewUniqueURLsWithExceptions(embed.DefaultListenClientURLs, ""), "listen-client-urls", "对外提供服务的地址")
 	fs.Var(flags.NewUniqueURLsWithExceptions("", ""), "listen-metrics-urls", "要监听指标和运行状况端点的url列表.")
 	fs.UintVar(&cfg.ec.MaxSnapFiles, "max-snapshots", cfg.ec.MaxSnapFiles, "要保留的最大快照文件数(0表示不受限制).5")
 	fs.UintVar(&cfg.ec.MaxWalFiles, "max-wals", cfg.ec.MaxWalFiles, "要保留的最大wal文件数(0表示不受限制). 5")
 	fs.StringVar(&cfg.ec.Name, "name", cfg.ec.Name, "本节点.人类可读的名字")
-	// 作用：此配置值作为此节点在--initial-cluster标志中列出的条目(例如.default=http://localhost:2380)引用.若使用静态引导.则需要匹配标志中使用的密钥.使用发现时.每个成员必须具有唯一的名称.建议使用Hostname或者machine-id.
+	// 作用:此配置值作为此节点在--initial-cluster标志中列出的条目(例如.default=http://localhost:2380)引用.若使用静态引导.则需要匹配标志中使用的密钥.使用发现时.每个成员必须具有唯一的名称.建议使用Hostname或者machine-id.
 	fs.Uint64Var(&cfg.ec.SnapshotCount, "snapshot-count", cfg.ec.SnapshotCount, "// 触发一次磁盘快照的提交事务的次数.")
 	fs.UintVar(&cfg.ec.TickMs, "heartbeat-interval", cfg.ec.TickMs, "心跳间隔 100ms")
 	fs.UintVar(&cfg.ec.ElectionMs, "election-timeout", cfg.ec.ElectionMs, "选举超时")
@@ -238,7 +238,7 @@ func newConfig() *config {
 	//--auto-compaction-mode=revision --auto-compaction-retention=1000 每5分钟自动压缩"latest revision" - 1000;
 	//--auto-compaction-mode=periodic --auto-compaction-retention=12h 每1小时自动压缩并保留12小时窗口.
 	fs.StringVar(&cfg.ec.AutoCompactionRetention, "auto-compaction-retention", "0", "在一个小时内为mvcc键值存储的自动压缩.0表示禁用自动压缩.")
-	fs.StringVar(&cfg.ec.AutoCompactionMode, "auto-compaction-mode", "periodic", "基于时间保留的三种模式：periodic, revision")
+	fs.StringVar(&cfg.ec.AutoCompactionMode, "auto-compaction-mode", "periodic", "基于时间保留的三种模式:periodic, revision")
 
 	// 性能分析器 通过 HTTP
 	fs.BoolVar(&cfg.ec.EnablePprof, "enable-pprof", false, `通过HTTP服务器启用运行时分析数据.地址位于客户端URL +/debug/pprof/`)

@@ -24,11 +24,12 @@ import (
 // 快照 + storage + unstable
 //
 type raftLog struct {
+	// storage 存储已经持久化到 WAL 中的日志条目,unstable 存储未持久化的条目和快照,一旦持久化会及时删除日志条目,因此不存在过多内存占用的问题.
 	storage   Storage  // 最后存储数据	// 这里还是一个内存存储,用于保存自从最后一次snapshot之后提交的数据
 	unstable  unstable // 快照之后的数据	// 用于存储未写入Storage的快照数据及Entry记录
 	committed uint64   // 己提交的位置,即己提交的Entry记录中最大的索引值.
 	// 而applied保存的是传入状态机中的最高index
-	// 即一条日志首先要提交成功(即committed),才能被applied到状态机中;因此以下不等式一直成立：applied <= committed
+	// 即一条日志首先要提交成功(即committed),才能被applied到状态机中;因此以下不等式一直成立:applied <= committed
 	applied         uint64
 	logger          Logger
 	maxNextEntsSize uint64 // 调用 nextEnts 时,返回的日志项集合的最大的大小 返回应用程序已经可以应用到状态机的日志项集合

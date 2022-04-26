@@ -399,7 +399,7 @@ func (b *backend) defrag() error {
 	options.OpenFile = func(_ string, _ int, _ os.FileMode) (file *os.File, err error) {
 		return temp, nil
 	}
-	// 不管打开选项是什么，都不要加载tmp db到内存中
+	// 不管打开选项是什么,都不要加载tmp db到内存中
 	options.Mlock = false
 	tdbp := temp.Name()
 	tmpdb, err := bolt.Open(tdbp, 0o600, &options)

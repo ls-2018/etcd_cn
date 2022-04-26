@@ -51,7 +51,7 @@ Member:
   --data-dir '${name}.etcd'
     服务运行数据保存的路径. ${name}.etcd
   --wal-dir ''
-    专用wal目录的路径.默认值：--data-dir的路径下
+    专用wal目录的路径.默认值:--data-dir的路径下
   --snapshot-count '100000'
     触发快照到磁盘的已提交事务数.
   --heartbeat-interval '100'

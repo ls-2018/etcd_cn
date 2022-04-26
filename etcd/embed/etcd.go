@@ -29,6 +29,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ls-2018/etcd_cn/etcd/etcdserver/api/v2http"
+	"github.com/ls-2018/etcd_cn/etcd/etcdserver/api/v2v3"
+	"github.com/ls-2018/etcd_cn/etcd/etcdserver/api/v3client"
+
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/transport"
 	"github.com/ls-2018/etcd_cn/client_sdk/pkg/types"
 	"github.com/ls-2018/etcd_cn/etcd/config"
@@ -673,7 +677,26 @@ func (e *Etcd) serveClients() (err error) {
 		)
 	}
 
+	// Start a client server goroutine for each listen address
 	var h http.Handler
+	if e.Config().EnableV2 {
+		if e.Config().V2DeprecationEffective().IsAtLeast(config.V2_DEPR_1_WRITE_ONLY) {
+			return fmt.Errorf("--enable-v2 and --v2-deprecation=%s are mutually exclusive", e.Config().V2DeprecationEffective())
+		}
+		e.cfg.logger.Warn("Flag `enable-v2` is deprecated and will get removed in etcd 3.6.")
+		if len(e.Config().ExperimentalEnableV2V3) > 0 {
+			e.cfg.logger.Warn("Flag `experimental-enable-v2v3` is deprecated and will get removed in etcd 3.6.")
+			srv := v2v3.NewServer(e.cfg.logger, v3client.New(e.Server), e.cfg.ExperimentalEnableV2V3)
+			h = v2http.NewClientHandler(e.GetLogger(), srv, e.Server.Cfg.ReqTimeout())
+		} else {
+			h = v2http.NewClientHandler(e.GetLogger(), e.Server, e.Server.Cfg.ReqTimeout())
+		}
+	} else {
+		mux := http.NewServeMux()
+		etcdhttp.HandleBasic(e.cfg.logger, mux, e.Server)
+		etcdhttp.HandleMetricsHealthForV3(e.cfg.logger, mux, e.Server)
+		h = mux
+	}
 
 	mux := http.NewServeMux()                         // ✅
 	etcdhttp.HandleBasic(e.cfg.logger, mux, e.Server) // ✅

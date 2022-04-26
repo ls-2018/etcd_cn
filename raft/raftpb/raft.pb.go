@@ -267,12 +267,12 @@ func (ConfChangeType) EnumDescriptor() ([]byte, []int) {
 }
 
 type Entry struct {
-	// Term：表示该Entry所在的任期.
+	// Term:表示该Entry所在的任期.
 	Term uint64 `protobuf:"varint,2,opt,name=Term" json:"Term"`
 	// Index:当前这个entry在整个raft日志中的位置索引,有了Term和Index之后,一个`log entry`就能被唯一标识.
 	Index uint64 `protobuf:"varint,3,opt,name=Index" json:"Index"`
 	// 当前entry的类型
-	// 目前etcd支持两种类型：EntryNormal和EntryConfChange
+	// 目前etcd支持两种类型:EntryNormal和EntryConfChange
 	// EntryNormaln表示普通的数据操作
 	// EntryConfChange表示集群的变更操作
 	Type EntryType `protobuf:"varint,1,opt,name=Type,enum=raftpb.EntryType" json:"Type"`
@@ -348,7 +348,7 @@ func (*Message) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b042552c306ae59b, []int{3}
 }
 
-// HardState 封装了raft协议中规定的需要实时持久化的状态属性：当前选举周期、投票和已提交的Index
+// HardState 封装了raft协议中规定的需要实时持久化的状态属性:当前选举周期、投票和已提交的Index
 type HardState struct {
 	Term   uint64 `protobuf:"varint,1,opt,name=term" json:"term"`     // 当前任期
 	Vote   uint64 `protobuf:"varint,2,opt,name=vote" json:"vote"`     // 给谁投了票

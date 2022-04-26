@@ -16,12 +16,12 @@ func (tw *storeTxnWrite) put(key, value []byte, leaseID lease.LeaseID) {
 	// 如果该键之前存在,使用它之前创建的并获取它之前的leaseID
 	_, created, beforeVersion, err := tw.s.kvindex.Get(key, rev) // 0,0,nil  <= rev的最新修改
 	if err == nil {
-		c = created.main
+		c = created.Main
 		oldLease = tw.s.le.GetLease(lease.LeaseItem{Key: string(key)})
 		tw.trace.Step("获取键先前的created_revision和leaseID")
 	}
 	indexBytes := newRevBytes()
-	idxRev := revision{main: rev, sub: int64(len(tw.changes))} // 当前请求的修订版本
+	idxRev := revision{Main: rev, Sub: int64(len(tw.changes))} // 当前请求的修订版本
 	revToBytes(idxRev, indexBytes)
 
 	kv := mvccpb.KeyValue{

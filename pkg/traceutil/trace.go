@@ -25,13 +25,13 @@ import (
 
 const (
 	TraceKey     = "trace"
-	StartTimeKey = "startTime"
+	StartTimeKey = "StartTime"
 )
 
 // Field is a kv pair to record additional details of the trace.
 type Field struct {
-	Key   string
-	Value interface{}
+	Key   string      `json:"key,omitempty"`
+	Value interface{} `json:"value,omitempty"`
 }
 
 func (f *Field) format() string {
@@ -39,30 +39,30 @@ func (f *Field) format() string {
 }
 
 type Trace struct {
-	operation    string
-	lg           *zap.Logger
-	fields       []Field
-	startTime    time.Time
-	steps        []step
-	stepDisabled bool
-	isEmpty      bool
+	Operation    string      `json:"operation,omitempty"`
+	lg           *zap.Logger `json:"lg,omitempty"`
+	Fields       []Field     `json:"fields,omitempty"`
+	StartTime    time.Time   `json:"start_time"`
+	Steps        []Step      `json:"steps,omitempty"`
+	StepDisabled bool        `json:"step_disabled,omitempty"`
+	IsEmpty      bool        `json:"is_empty,omitempty"`
 }
 
-type step struct {
-	time            time.Time
-	msg             string
-	fields          []Field
-	isSubTraceStart bool
-	isSubTraceEnd   bool
+type Step struct {
+	Time            time.Time `json:"time"`
+	Msg             string    `json:"msg,omitempty"`
+	Fields          []Field   `json:"fields,omitempty"`
+	IsSubTraceStart bool      `json:"is_sub_trace_start,omitempty"`
+	IsSubTraceEnd   bool      `json:"is_sub_trace_end,omitempty"`
 }
 
 func New(op string, lg *zap.Logger, fields ...Field) *Trace {
-	return &Trace{operation: op, lg: lg, startTime: time.Now(), fields: fields}
+	return &Trace{Operation: op, lg: lg, StartTime: time.Now(), Fields: fields}
 }
 
 // TODO returns a non-nil, empty Trace
 func TODO() *Trace {
-	return &Trace{isEmpty: true}
+	return &Trace{IsEmpty: true}
 }
 
 func Get(ctx context.Context) *Trace {
@@ -73,39 +73,39 @@ func Get(ctx context.Context) *Trace {
 }
 
 func (t *Trace) GetStartTime() time.Time {
-	return t.startTime
+	return t.StartTime
 }
 
 func (t *Trace) SetStartTime(time time.Time) {
-	t.startTime = time
+	t.StartTime = time
 }
 
 func (t *Trace) InsertStep(at int, time time.Time, msg string, fields ...Field) {
-	newStep := step{time: time, msg: msg, fields: fields}
-	if at < len(t.steps) {
-		t.steps = append(t.steps[:at+1], t.steps[at:]...)
-		t.steps[at] = newStep
+	newStep := Step{Time: time, Msg: msg, Fields: fields}
+	if at < len(t.Steps) {
+		t.Steps = append(t.Steps[:at+1], t.Steps[at:]...)
+		t.Steps[at] = newStep
 	} else {
-		t.steps = append(t.steps, newStep)
+		t.Steps = append(t.Steps, newStep)
 	}
 }
 
-// StartSubTrace adds step to trace as a start sign of sublevel trace
-// All steps in the subtrace will log out the input fields of this function
+// StartSubTrace adds Step to trace as a start sign of sublevel trace
+// All Steps in the subtrace will log out the input Fields of this function
 func (t *Trace) StartSubTrace(fields ...Field) {
-	t.steps = append(t.steps, step{fields: fields, isSubTraceStart: true})
+	t.Steps = append(t.Steps, Step{Fields: fields, IsSubTraceStart: true})
 }
 
-// StopSubTrace adds step to trace as a end sign of sublevel trace
-// All steps in the subtrace will log out the input fields of this function
+// StopSubTrace adds Step to trace as a end sign of sublevel trace
+// All Steps in the subtrace will log out the input Fields of this function
 func (t *Trace) StopSubTrace(fields ...Field) {
-	t.steps = append(t.steps, step{fields: fields, isSubTraceEnd: true})
+	t.Steps = append(t.Steps, Step{Fields: fields, IsSubTraceEnd: true})
 }
 
-// Step adds step to trace
+// Step adds Step to trace
 func (t *Trace) Step(msg string, fields ...Field) {
-	if !t.stepDisabled {
-		t.steps = append(t.steps, step{time: time.Now(), msg: msg, fields: fields})
+	if !t.StepDisabled {
+		t.Steps = append(t.Steps, Step{Time: time.Now(), Msg: msg, Fields: fields})
 	}
 }
 
@@ -120,31 +120,27 @@ func (t *Trace) StepWithFunction(f func(), msg string, fields ...Field) {
 func (t *Trace) AddField(fields ...Field) {
 	for _, f := range fields {
 		if !t.updateFieldIfExist(f) {
-			t.fields = append(t.fields, f)
+			t.Fields = append(t.Fields, f)
 		}
 	}
 }
 
-func (t *Trace) IsEmpty() bool {
-	return t.isEmpty
-}
-
 func (t *Trace) updateFieldIfExist(f Field) bool {
-	for i, v := range t.fields {
+	for i, v := range t.Fields {
 		if v.Key == f.Key {
-			t.fields[i].Value = f.Value
+			t.Fields[i].Value = f.Value
 			return true
 		}
 	}
 	return false
 }
 
-// disableStep sets the flag to prevent the trace from adding steps
+// disableStep sets the flag to prevent the trace from adding Steps
 func (t *Trace) disableStep() {
-	t.stepDisabled = true
+	t.StepDisabled = true
 }
 
-// enableStep re-enable the trace to add steps
+// enableStep re-enable the trace to add Steps
 func (t *Trace) enableStep() {
-	t.stepDisabled = false
+	t.StepDisabled = false
 }

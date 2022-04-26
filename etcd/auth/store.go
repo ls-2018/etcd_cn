@@ -414,7 +414,7 @@ func hasRootRole(u *authpb.User) bool {
 	return idx != len(u.Roles) && u.Roles[idx] == rootRole
 }
 
-// ok 持久化，鉴权版本号
+// ok 持久化,鉴权版本号
 func (as *authStore) commitRevision(tx backend.BatchTx) {
 	atomic.AddUint64(&as.revision, 1)
 	revBytes := make([]byte, revBytesLen)

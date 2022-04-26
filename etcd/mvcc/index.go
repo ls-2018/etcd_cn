@@ -15,6 +15,7 @@
 package mvcc
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 	"sync"
@@ -52,23 +53,25 @@ func newTreeIndex(lg *zap.Logger) index {
 }
 
 func (ti *treeIndex) Put(key []byte, rev revision) {
-	keyi := &keyIndex{key: string(key)}
+	keyi := &keyIndex{Key: string(key)}
 
 	ti.Lock()
 	defer ti.Unlock()
 	item := ti.tree.Get(keyi)
 	if item == nil {
-		keyi.put(ti.lg, rev.main, rev.sub)
+		keyi.put(ti.lg, rev.Main, rev.Sub)
 		ti.tree.ReplaceOrInsert(keyi)
 		return
 	}
 	okeyi := item.(*keyIndex)
-	okeyi.put(ti.lg, rev.main, rev.sub)
+	okeyi.put(ti.lg, rev.Main, rev.Sub)
+	marshal, _ := json.Marshal(okeyi)
+	fmt.Println(string(marshal))
 }
 
 // 遍历
 func (ti *treeIndex) visit(key, end []byte, f func(ki *keyIndex) bool) {
-	keyi, endi := &keyIndex{key: string(key)}, &keyIndex{key: string(end)}
+	keyi, endi := &keyIndex{Key: string(key)}, &keyIndex{Key: string(end)}
 
 	ti.RLock()
 	defer ti.RUnlock()
@@ -76,10 +79,10 @@ func (ti *treeIndex) visit(key, end []byte, f func(ki *keyIndex) bool) {
 	// 假如获取前缀为b   那么结束就是c   , 因为是自增的
 
 	ti.tree.AscendGreaterOrEqual(keyi, func(item btree.Item) bool {
-		if len(endi.key) > 0 && !item.Less(endi) {
+		if len(endi.Key) > 0 && !item.Less(endi) {
 			return false
 		}
-		fmt.Println("keyIndex ---->:", item.(*keyIndex).key)
+		fmt.Println("keyIndex ---->:", item.(*keyIndex).Key)
 		if !f(item.(*keyIndex)) {
 			return false
 		}
@@ -116,7 +119,7 @@ func (ti *treeIndex) Range(key, end []byte, atRev int64) (keys [][]byte, revs []
 	ti.visit(key, end, func(ki *keyIndex) bool {
 		if rev, _, _, err := ki.get(ti.lg, atRev); err == nil {
 			revs = append(revs, rev)
-			keys = append(keys, []byte(ki.key))
+			keys = append(keys, []byte(ki.Key))
 		}
 		return true
 	})
@@ -124,7 +127,7 @@ func (ti *treeIndex) Range(key, end []byte, atRev int64) (keys [][]byte, revs []
 }
 
 func (ti *treeIndex) Tombstone(key []byte, rev revision) error {
-	keyi := &keyIndex{key: string(key)}
+	keyi := &keyIndex{Key: string(key)}
 
 	ti.Lock()
 	defer ti.Unlock()
@@ -134,14 +137,14 @@ func (ti *treeIndex) Tombstone(key []byte, rev revision) error {
 	}
 
 	ki := item.(*keyIndex)
-	return ki.tombstone(ti.lg, rev.main, rev.sub)
+	return ki.tombstone(ti.lg, rev.Main, rev.Sub)
 }
 
-// RangeSince returns all revisions from key(including) to end(excluding)
+// RangeSince returns all revisions from Key(including) to end(excluding)
 // at or after the given rev. The returned slice is sorted in the order
 // of revision.
 func (ti *treeIndex) RangeSince(key, end []byte, rev int64) []revision {
-	keyi := &keyIndex{key: string(key)}
+	keyi := &keyIndex{Key: string(key)}
 
 	ti.RLock()
 	defer ti.RUnlock()
@@ -155,10 +158,10 @@ func (ti *treeIndex) RangeSince(key, end []byte, rev int64) []revision {
 		return keyi.since(ti.lg, rev)
 	}
 
-	endi := &keyIndex{key: string(end)}
+	endi := &keyIndex{Key: string(end)}
 	var revs []revision
 	ti.tree.AscendGreaterOrEqual(keyi, func(item btree.Item) bool {
-		if len(endi.key) > 0 && !item.Less(endi) {
+		if len(endi.Key) > 0 && !item.Less(endi) {
 			return false
 		}
 		curKeyi := item.(*keyIndex)
@@ -174,7 +177,7 @@ func (ti *treeIndex) Compact(rev int64) map[revision]struct{} {
 	available := make(map[revision]struct{})
 	ti.lg.Info("compact tree index", zap.Int64("revision", rev))
 	ti.Lock()
-	// 为了避免压缩工作影响读写性能，
+	// 为了避免压缩工作影响读写性能,
 	clone := ti.tree.Clone()
 	ti.Unlock()
 
@@ -235,7 +238,7 @@ func (ti *treeIndex) Equal(bi index) bool {
 
 // Get 获取某个key的某个版本的索引号 ,
 func (ti *treeIndex) Get(key []byte, atRev int64) (modified, created revision, ver int64, err error) {
-	keyi := &keyIndex{key: string(key)}
+	keyi := &keyIndex{Key: string(key)}
 	ti.RLock()
 	defer ti.RUnlock()
 	// 判断key 在不在btree里

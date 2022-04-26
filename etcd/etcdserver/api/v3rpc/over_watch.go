@@ -390,7 +390,7 @@ func (sws *serverWatchStream) sendLoop() {
 				delete(pending, wid)
 			}
 
-		case <-progressTicker.C:
+		case <-progressTicker.C: // 定时同步状态
 			sws.mu.Lock()
 			for id, ok := range sws.progress {
 				if ok {
@@ -442,7 +442,7 @@ func sendFragments(wr *pb.WatchResponse, maxRequestBytes int, sendFunc func(*pb.
 	return nil
 }
 
-// NewWatchServer OK
+// NewWatchServer 运行初 运行一次
 func NewWatchServer(s *etcdserver.EtcdServer) pb.WatchServer {
 	srv := &watchServer{
 		lg:              s.Cfg.Logger,

@@ -98,7 +98,7 @@ func (t *batchTx) unsafePut(bucketType Bucket, key []byte, value []byte, seq boo
 	if seq {
 		// 当工作负载大多为仅附加时,增加填充百分比是很有用的.这可以延迟页面分割和减少空间使用.
 		// 告诉bolt 当页面已满时,它应该告诉它做一个 90-10 拆分,而不是 50-50 拆分,这更适合于顺序插入.这样可以让其体积稍小.
-		// 一个例子：使用 FillPercent = 0.9 之前是 103MB,使用之后是64MB,实际数据是22MB.
+		// 一个例子:使用 FillPercent = 0.9 之前是 103MB,使用之后是64MB,实际数据是22MB.
 		bucket.FillPercent = 0.9
 	}
 	if err := bucket.Put(key, value); err != nil {

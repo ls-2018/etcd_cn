@@ -546,8 +546,8 @@ func clusterVersionFromStore(lg *zap.Logger, st v2store.Store) *semver.Version {
 }
 
 // IsValidVersionChange 检查两种情况下的版本变更是否有效.
-// 1.降级：集群版本比本地版本高一个小版本.集群版本应该改变.
-// 2.集群启动：当不是所有成员的版本都可用时,集群版本被设置为MinVersion(3.0),当所有成员都在较高版本时,集群版本低于本地版本时,簇的版本应该改变.
+// 1.降级:集群版本比本地版本高一个小版本.集群版本应该改变.
+// 2.集群启动:当不是所有成员的版本都可用时,集群版本被设置为MinVersion(3.0),当所有成员都在较高版本时,集群版本低于本地版本时,簇的版本应该改变.
 func IsValidVersionChange(cv *semver.Version, lv *semver.Version) bool {
 	// 集群版本
 	cv = &semver.Version{Major: cv.Major, Minor: cv.Minor}

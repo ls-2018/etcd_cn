@@ -2471,7 +2471,7 @@ func (m *AuthRoleDeleteRequest) GetRole() string {
 type AuthRoleGrantPermissionRequest struct {
 	// name is the name of the role which will be granted the permission.
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	// Perm是赋予角色的权限。
+	// Perm是赋予角色的权限.
 	Perm                 *authpb.Permission `protobuf:"bytes,2,opt,name=perm,proto3" json:"perm,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}           `json:"-"`
 	XXX_unrecognized     []byte             `json:"-"`

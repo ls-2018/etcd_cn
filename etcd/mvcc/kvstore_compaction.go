@@ -22,8 +22,8 @@ import (
 	"go.uber.org/zap"
 )
 
-// scheduleCompaction 任务遍历、删除 key 的过程可能会对 boltdb 造成压力，为了不影响正常读写请求，它在执行过程中会通过参数控制每次遍历、
-// 删除的 key 数（默认为 100，每批间隔 10ms），分批完成 boltdb key 的删除操作。
+// scheduleCompaction 任务遍历、删除 Key 的过程可能会对 boltdb 造成压力,为了不影响正常读写请求,它在执行过程中会通过参数控制每次遍历、
+// 删除的 Key 数（默认为 100,每批间隔 10ms）,分批完成 boltdb Key 的删除操作.
 func (s *store) scheduleCompaction(compactMainRev int64, keep map[revision]struct{}) bool {
 	totalStart := time.Now()
 	keyCompactions := 0
@@ -48,7 +48,7 @@ func (s *store) scheduleCompaction(compactMainRev int64, keep map[revision]struc
 
 		if len(keys) < s.cfg.CompactionBatchLimit {
 			rbytes := make([]byte, 8+1+8)
-			revToBytes(revision{main: compactMainRev}, rbytes)
+			revToBytes(revision{Main: compactMainRev}, rbytes)
 			tx.UnsafePut(buckets.Meta, finishedCompactKeyName, rbytes)
 			tx.Unlock()
 			s.lg.Info(
@@ -60,7 +60,7 @@ func (s *store) scheduleCompaction(compactMainRev int64, keep map[revision]struc
 		}
 
 		// update last
-		revToBytes(revision{main: rev.main, sub: rev.sub + 1}, last)
+		revToBytes(revision{Main: rev.Main, Sub: rev.Sub + 1}, last)
 		tx.Unlock()
 		// Immediately commit the compaction deletes instead of letting them accumulate in the write buffer
 		s.b.ForceCommit()
@@ -73,5 +73,5 @@ func (s *store) scheduleCompaction(compactMainRev int64, keep map[revision]struc
 	}
 }
 
-// 当我们通过 boltdb 删除大量的 key，在事务提交后 B+ tree 经过分裂、平衡，会释放出若干 branch/leaf page 页面，然而 boltdb 并不会将其释放给磁盘，
-// 调整 db 大小操作是昂贵的，会对性能有较大的损害。
+// 当我们通过 boltdb 删除大量的 Key,在事务提交后 B+ tree 经过分裂、平衡,会释放出若干 branch/leaf page 页面,然而 boltdb 并不会将其释放给磁盘,
+// 调整 db 大小操作是昂贵的,会对性能有较大的损害.

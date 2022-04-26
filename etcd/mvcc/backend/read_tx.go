@@ -150,4 +150,6 @@ func (rt *concurrentReadTx) Unlock() {}
 func (rt *concurrentReadTx) RLock() {}
 
 // RUnlock signals the end of concurrentReadTx.
-func (rt *concurrentReadTx) RUnlock() { rt.txWg.Done() }
+func (rt *concurrentReadTx) RUnlock() {
+	rt.txWg.Done()
+}

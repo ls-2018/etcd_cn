@@ -414,7 +414,7 @@ func (w *WAL) ReadAll() (metadata []byte, state raftpb.HardState, ents []raftpb.
 			e := mustUnmarshalEntry(rec.Data)
 			// 0 <= e.Index-w.start.Index - 1 < len(ents)
 			if e.Index > w.start.Index {
-				// 防止 "panic：运行时错误：切片边界超出范围[：13038096702221461992],容量为0"
+				// 防止 "panic:运行时错误:切片边界超出范围[:13038096702221461992],容量为0"
 				up := e.Index - w.start.Index - 1 //
 				if up > uint64(len(ents)) {
 					// 在调用append前返回错误导致运行时恐慌
@@ -666,7 +666,7 @@ func (w *WAL) cut() error {
 		return err
 	}
 
-	if err := w.sync(); err != nil {
+	if err := w.sync(); err != nil { // 日志截断？
 		return err
 	}
 
@@ -699,7 +699,7 @@ func (w *WAL) cut() error {
 	}
 
 	// atomically move temp wal file to wal file
-	if err = w.sync(); err != nil {
+	if err = w.sync(); err != nil { // 移动临时wal文件到wal文件
 		return err
 	}
 
@@ -764,7 +764,7 @@ func (w *WAL) sync() error {
 
 // Sync 强制wal日志刷盘
 func (w *WAL) Sync() error {
-	return w.sync()
+	return w.sync() // 强制刷盘
 }
 
 // ReleaseLockTo 释放锁,这些锁的索引比给定的索引小,但其中最大的一个除外.
@@ -823,7 +823,7 @@ func (w *WAL) Close() error {
 	}
 
 	if w.tail() != nil {
-		if err := w.sync(); err != nil {
+		if err := w.sync(); err != nil { // 文件关闭时
 			return err
 		}
 	}
@@ -893,7 +893,7 @@ func (w *WAL) Save(st raftpb.HardState, ents []raftpb.Entry) error {
 	}
 	if curOff < SegmentSizeBytes {
 		if mustSync {
-			return w.sync()
+			return w.sync() // 写日志时,判断是否刷盘
 		}
 		return nil
 	}
@@ -916,7 +916,7 @@ func (w *WAL) SaveSnapshot(e walpb.Snapshot) error {
 	if w.enti < e.Index {
 		w.enti = e.Index
 	}
-	return w.sync()
+	return w.sync() // 保存快照时,刷盘
 }
 
 // 保存

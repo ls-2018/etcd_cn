@@ -58,9 +58,9 @@ const (
 )
 
 const (
-	campaignPreElection CampaignType = "CampaignPreElection" // 竞选类型： pre-vote模式
-	campaignElection    CampaignType = "CampaignElection"    // 竞选类型：vote模式
-	campaignTransfer    CampaignType = "CampaignTransfer"    // 竞选类型：leader开始转移
+	campaignPreElection CampaignType = "CampaignPreElection" // 竞选类型: pre-vote模式
+	campaignElection    CampaignType = "CampaignElection"    // 竞选类型:vote模式
+	campaignTransfer    CampaignType = "CampaignTransfer"    // 竞选类型:leader开始转移
 )
 
 // ErrProposalDropped 在某些情况下提案被忽略时返回,以便提案者可以得到通知并快速失败.
@@ -171,11 +171,11 @@ func numOfPendingConf(ents []pb.Entry) int {
 
 // 判断本节点是不是重新选举,因为丢失了leader
 func (r *raft) pastElectionTimeout() bool {
-	// 选举过期计数(electionElapsed)：主要用于follower来判断leader是不是正常工作,
+	// 选举过期计数(electionElapsed):主要用于follower来判断leader是不是正常工作,
 	// 当follower接受到leader的心跳的时候会把electionElapsed的时候就会置为0,electionElapsed的相加是通过外部调用实现的,
 	// node对外提供一个tick的接口,需要外部定时去调用,调用的周期由外部决定,每次调用就++,
 	// 然后检查是否会超时,上方的tickElection就是为follower状态的定时调用函数,leader状态的定时调用函数就是向follower发送心跳.
-	// 计时次数 超过了 限定的 选举次数,   规定：在randomizedElectionTimeout次数内必须收到来自leader的消息
+	// 计时次数 超过了 限定的 选举次数,   规定:在randomizedElectionTimeout次数内必须收到来自leader的消息
 	return r.electionElapsed >= r.randomizedElectionTimeout
 }
 

@@ -36,7 +36,7 @@ var (
 // 如果它包含一个以上的变更或明确要求使用联合共识,则属于这种情况.
 // 第一个bool只有在第二个bool为真时才会出现,它表示联合状态是否会被自动留下.
 func (c ConfChangeV2) EnterJoint() (autoLeave bool, ok bool) {
-	// 注：理论上,更多的配置变化可以符合 "simple "协议的要求,但这取决于这些变化所基于的配置.
+	// 注:理论上,更多的配置变化可以符合 "simple "协议的要求,但这取决于这些变化所基于的配置.
 	// 例如,如果两个节点都是基本配置的一部分,增加两个learner是不可以的(也就是说,在应用配置变化的过程中,
 	// 两个voter变成了learner).在实践中,这些区别应该是不重要的,所以我们保持简单,随意使用联合共识.
 	if c.Transition != ConfChangeTransitionAuto || len(c.Changes) > 1 {

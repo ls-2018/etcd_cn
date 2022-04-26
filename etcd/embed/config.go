@@ -145,7 +145,7 @@ type Config struct {
 	MaxWalFiles  uint `json:"max-wals"`      // 要保留的最大wal文件数(0表示不受限制). 5
 
 	// TickMs是心脏跳动间隔的毫秒数.
-	// TODO：将tickMs和心跳tick解耦(目前的心跳tick=1)
+	// TODO:将tickMs和心跳tick解耦(目前的心跳tick=1)
 	// 使tick成为集群范围内的配置.
 	TickMs     uint `json:"heartbeat-interval"` // 定时器触发间隔  100ms
 	ElectionMs uint `json:"election-timeout"`   // 选举权检查周期   1s
@@ -215,6 +215,7 @@ type Config struct {
 	InitialClusterToken   string `json:"initial-cluster-token"` // 此配置可使重新创建集群.即使配置和之前一样.也会再次生成新的集群和节点 uuid;否则会导致多个集群之间的冲突.造成未知的错误.
 	StrictReconfigCheck   bool   `json:"strict-reconfig-check"` // 严格配置变更检查
 
+	EnableV2 bool `json:"enable-v2"`
 	// AutoCompactionMode 基于时间保留模式  时间、修订版本
 	AutoCompactionMode string `json:"auto-compaction-mode"`
 
@@ -257,12 +258,12 @@ type Config struct {
 	ServiceRegister func(*grpc.Server) `json:"-"`
 
 	AuthToken  string `json:"auth-token"`  // 认证格式  simple、jwt
-	BcryptCost uint   `json:"bcrypt-cost"` // 为散列身份验证密码指定bcrypt算法的成本/强度.有效值介于4和31之间.默认值：10
+	BcryptCost uint   `json:"bcrypt-cost"` // 为散列身份验证密码指定bcrypt算法的成本/强度.有效值介于4和31之间.默认值:10
 
 	AuthTokenTTL uint `json:"auth-token-ttl"` // token 有效期
 
 	ExperimentalInitialCorruptCheck bool          `json:"experimental-initial-corrupt-check"` // 数据毁坏检测功能
-	ExperimentalCorruptCheckTime    time.Duration `json:"experimental-corrupt-check-time"`// 数据毁坏检测功能
+	ExperimentalCorruptCheckTime    time.Duration `json:"experimental-corrupt-check-time"`    // 数据毁坏检测功能
 	// ExperimentalEnableV2V3 configures URLs that expose deprecated V2 API working on V3 store.
 	// Deprecated in v3.5.
 	// TODO: Delete in v3.6 (https://github.com/etcd-io/etcd/issues/12913)

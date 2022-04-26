@@ -22,15 +22,15 @@ func main() {
 
 	// m1来抢锁
 	go func() {
-		// 创建两个竞争的Session,这里Session有效期使用默认值60s
-		s1, err := concurrency.NewSession(cli)
+		// 创建两个竞争的Session,这里Session有效期使用10s
+		s1, err := concurrency.NewSession(cli, concurrency.WithTTL(10))
 		if err != nil {
 			log.Fatal(err)
 		}
 		defer s1.Close()
 
-		// pfx 是"/my-lock/"
-		m1 := concurrency.NewMutex(s1, "/my-lock/")
+		// pfx 是"/my-lock"
+		m1 := concurrency.NewMutex(s1, "/my-lock") // 创建结构体
 
 		// acquire lock for s1
 		if err := m1.Lock(context.TODO()); err != nil {
@@ -49,12 +49,12 @@ func main() {
 
 	// m2来抢锁
 	go func() {
-		s2, err := concurrency.NewSession(cli)
+		s2, err := concurrency.NewSession(cli, concurrency.WithTTL(10))
 		if err != nil {
 			log.Fatal(err)
 		}
 		defer s2.Close()
-		m2 := concurrency.NewMutex(s2, "/my-lock/")
+		m2 := concurrency.NewMutex(s2, "/my-lock")
 		if err := m2.Lock(context.TODO()); err != nil {
 			log.Fatal(err)
 		}

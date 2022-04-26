@@ -43,7 +43,7 @@ func (tw *storeTxnWrite) deleteRange(key, end []byte) int64 {
 // bolt.db 删除数据
 func (tw *storeTxnWrite) delete(key []byte) {
 	indexBytes := newRevBytes()
-	idxRev := revision{main: tw.beginRev + 1, sub: int64(len(tw.changes))}
+	idxRev := revision{Main: tw.beginRev + 1, Sub: int64(len(tw.changes))}
 	revToBytes(idxRev, indexBytes)
 
 	indexBytes = appendMarkTombstone(tw.storeTxnRead.s.lg, indexBytes)
@@ -59,8 +59,8 @@ func (tw *storeTxnWrite) delete(key []byte) {
 	err = tw.s.kvindex.Tombstone(key, idxRev)
 	if err != nil {
 		tw.storeTxnRead.s.lg.Fatal(
-			"failed to tombstone an existing key",
-			zap.String("key", string(key)),
+			"failed to tombstone an existing Key",
+			zap.String("Key", string(key)),
 			zap.Error(err),
 		)
 	}

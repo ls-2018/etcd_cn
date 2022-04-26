@@ -39,7 +39,7 @@ type Storage interface {
 	// Entries 获取索引在[lo,hi)之间的日志,日志总量限制在maxSize
 	Entries(lo, hi, maxSize uint64) ([]pb.Entry, error)
 	// Term 获取日志索引为i的届.找不到的情况下error返回值不为空,其中当返回ErrCompacted表示传入的索引数据已经找不到,
-	// 说明已经被压缩成快照数据了;返回ErrUnavailable：表示传入的索引值大于当前的最大索引.
+	// 说明已经被压缩成快照数据了;返回ErrUnavailable:表示传入的索引值大于当前的最大索引.
 	Term(index uint64) (uint64, error)
 	LastIndex() (uint64, error)     // 返回最后一条日志的索引
 	FirstIndex() (uint64, error)    // 返回第一条日志的索引
@@ -51,7 +51,8 @@ type MemoryStorage struct {
 	sync.Mutex
 	hardState pb.HardState // 状态信息(当前任期,当前节点投票给了谁,已提交的entry记录的位置)
 	snapshot  pb.Snapshot  // 当前内存里的快照信息
-	ents      []pb.Entry   // snapshot之后的日志条目,第一条日志条目的index为snapshot.Metadata.Index 已经apply的日志项
+	// wal日志 内存存储
+	ents []pb.Entry // snapshot之后的日志条目,第一条日志条目的index为snapshot.Metadata.Index 已经apply的日志项
 }
 
 // NewMemoryStorage 创建内存存储
@@ -185,7 +186,7 @@ func (ms *MemoryStorage) firstIndex() uint64 {
 }
 
 // Compact  新建Snapshot之后,一般会调用MemoryStorage.Compact()方法将MemoryStorage.ents中指定索引之前的Entry记录全部抛弃,
-// 从而实现压缩MemoryStorage.ents 的目的,具体实现如下：    [GC]
+// 从而实现压缩MemoryStorage.ents 的目的,具体实现如下:    [GC]
 func (ms *MemoryStorage) Compact(compactIndex uint64) error {
 	ms.Lock()
 	defer ms.Unlock()
@@ -205,6 +206,12 @@ func (ms *MemoryStorage) Compact(compactIndex uint64) error {
 	// 将compactlndex之后的Entry拷贝到ents中,并更新MemoryStorage.ents 字段
 	ents = append(ents, ms.ents[i+1:]...)
 	ms.ents = ents
+	// 那么随着写请求增多,内存中保留的 Raft 日志条目会越来越多,如何防止 etcd 出现 OOM 呢？etcd 提供了快照和压缩功能来解决这个问题.
+	// 首先你可以通过调整 --snapshot-count 参数来控制生成快照的频率,其值默认是 100000（etcd v3.4.9,早期 etcd 版本是 10000）,
+	// 也就是每 10 万个写请求触发一次快照生成操作.快照生成完之后,etcd 会通过压缩来删除旧的日志条目.那么是全部删除日志条目还是保留一小部分呢？
+	// 答案是保留一小部分 Raft 日志条目.数量由 DefaultSnapshotCatchUpEntries 参数控制,默认 5000,目前不支持自定义配置.
+	// 保留一小部分日志条目其实是为了帮助慢的 Follower 以较低的开销向 Leader 获取 Raft 日志条目,以尽快追上 Leader 进度.
+	// 若 raftLog 中不保留任何日志条目,就只能发送快照给慢的 Follower,这开销就非常大了.
 	return nil
 }
 

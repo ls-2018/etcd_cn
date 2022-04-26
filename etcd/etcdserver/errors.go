@@ -32,7 +32,7 @@ var (
 	ErrLearnerNotReady               = errors.New("etcdserver: 只能提拔与leader同步的learner成员")
 	ErrNoLeader                      = errors.New("etcdserver: 没有leader")
 	ErrNotLeader                     = errors.New("etcdserver: 不是leader")
-	ErrRequestTooLarge               = errors.New("etcdserver: 请求太大")
+	ErrRequestTooLarge               = errors.New("etcdserver: 请求太多")
 	ErrNoSpace                       = errors.New("etcdserver: 没有空间")
 	ErrTooManyRequests               = errors.New("etcdserver: 太多的请求")
 	ErrUnhealthy                     = errors.New("etcdserver: 集群不健康")

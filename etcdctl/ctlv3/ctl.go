@@ -58,7 +58,7 @@ func init() {
 	// TODO: secure by default when etcd enables secure gRPC by default.
 	rootCmd.PersistentFlags().BoolVar(&globalFlags.Insecure, "insecure-transport", true, "为客户端连接禁用传输安全性")
 	rootCmd.PersistentFlags().BoolVar(&globalFlags.InsecureDiscovery, "insecure-discovery", true, "接受描述集群端点的不安全的SRV记录")
-	rootCmd.PersistentFlags().BoolVar(&globalFlags.InsecureSkipVerify, "insecure-skip-tls-verify", false, "跳过 etcd 证书验证 (注意：该选项仅用于测试目的.）")
+	rootCmd.PersistentFlags().BoolVar(&globalFlags.InsecureSkipVerify, "insecure-skip-tls-verify", false, "跳过 etcd 证书验证 (注意:该选项仅用于测试目的.）")
 	rootCmd.PersistentFlags().StringVar(&globalFlags.TLS.CertFile, "cert", "", "识别使用该TLS证书文件的安全客户端")
 	rootCmd.PersistentFlags().StringVar(&globalFlags.TLS.KeyFile, "key", "", "识别使用该TLS密钥文件的安全客户端")
 	rootCmd.PersistentFlags().StringVar(&globalFlags.TLS.TrustedCAFile, "cacert", "", "使用此CA包验证启用tls的安全服务器的证书")

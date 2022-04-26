@@ -307,7 +307,7 @@ func (s *watchableStore) moveVictims() (moved int) {
 // syncWatchers 向所有未同步完成的watcher 发消息
 //	1. choose a set of watchers from the unsynced watcher group
 //	2. iterate over the set to get the minimum revision and remove compacted watchers
-//	3. use minimum revision to get all key-value pairs and send those events to watchers
+//	3. use minimum revision to get all Key-value pairs and send those events to watchers
 //	4. remove synced watchers in set from unsynced group and move to synced group
 func (s *watchableStore) syncWatchers() int {
 	s.mu.Lock()
@@ -325,8 +325,8 @@ func (s *watchableStore) syncWatchers() int {
 	// 根据unsynced watcherGroup中记录的watcher个数对其进行分批返回,同时获取该批watcher实例中查找最小的minRev字段,maxWatchersPerSync默认为512
 	wg, minRev := s.unsynced.choose(maxWatchersPerSync, curRev, compactionRev)
 	minBytes, maxBytes := newRevBytes(), newRevBytes()
-	revToBytes(revision{main: minRev}, minBytes)
-	revToBytes(revision{main: curRev + 1}, maxBytes)
+	revToBytes(revision{Main: minRev}, minBytes)
+	revToBytes(revision{Main: curRev + 1}, maxBytes)
 
 	tx := s.store.b.ReadTx()
 	tx.RLock()
@@ -393,7 +393,7 @@ func kvsToEvents(lg *zap.Logger, wg *watcherGroup, revs, vals [][]byte) (evs []m
 		if isTombstone(revs[i]) {
 			ty = mvccpb.DELETE
 			// patch in mod revision so watchers won't skip
-			kv.ModRevision = bytesToRev(revs[i]).main
+			kv.ModRevision = bytesToRev(revs[i]).Main
 		}
 		evs = append(evs, mvccpb.Event{Kv: &kv, Type: ty})
 	}

@@ -63,7 +63,7 @@ func (tr *storeTxnRead) rangeKeys(ctx context.Context, key, end []byte, curRev i
 		// 根据修订版本获取数据
 		_, vs := tr.tx.UnsafeRange(buckets.Key, revBytes, nil, 0)
 		if len(vs) != 1 {
-			tr.s.lg.Fatal("Range找不到修订对", zap.Int64("revision-main", revpair.main), zap.Int64("revision-sub", revpair.sub))
+			tr.s.lg.Fatal("Range找不到修订对", zap.Int64("revision-Main", revpair.Main), zap.Int64("revision-Sub", revpair.Sub))
 		}
 		if err := kvs[i].Unmarshal([]byte(vs[0])); err != nil {
 			tr.s.lg.Fatal(
@@ -72,6 +72,6 @@ func (tr *storeTxnRead) rangeKeys(ctx context.Context, key, end []byte, curRev i
 			)
 		}
 	}
-	tr.trace.Step("从bolt.db 中range key")
+	tr.trace.Step("从bolt.db 中range Key")
 	return &RangeResult{KVs: kvs, Count: total, Rev: curRev}, nil
 }

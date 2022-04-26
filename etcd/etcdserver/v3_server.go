@@ -17,6 +17,8 @@ package etcdserver
 import (
 	"context"
 	"encoding/binary"
+	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/ls-2018/etcd_cn/raft"
@@ -229,7 +231,7 @@ func (s *EtcdServer) doSerialize(ctx context.Context, chk func(*auth.AuthInfo) e
 	get()
 	// 如果在处理请求时更新了身份验证存储,请检查过时的令牌修订情况.
 	if ai.Revision != 0 && ai.Revision != s.authStore.Revision() {
-		// 节点在 Apply 流程的时候，会判断 Raft 日志条目中的请求鉴权版本号是否小于当前鉴权版本号，如果小于就拒绝写入。
+		// 节点在 Apply 流程的时候,会判断 Raft 日志条目中的请求鉴权版本号是否小于当前鉴权版本号,如果小于就拒绝写入.
 		// 请求认证的版本小于当前节点认证的版本
 		return auth.ErrAuthOldRevision
 	}
@@ -251,11 +253,14 @@ func (s *EtcdServer) raftRequestOnce(ctx context.Context, r pb.InternalRaftReque
 		return nil, result.err
 	}
 	// startTime
-	if startTime, ok := ctx.Value(traceutil.StartTimeKey).(time.Time); ok && result.trace != nil {
+	startTime, ok := ctx.Value(traceutil.StartTimeKey).(time.Time)
+	if ok && result.trace != nil {
 		applyStart := result.trace.GetStartTime()
 		result.trace.SetStartTime(startTime)
 		result.trace.InsertStep(0, applyStart, "处理raft请求")
 	}
+	marshal, _ := json.Marshal(result.trace)
+	fmt.Println("trace--->", string(marshal))
 	return result.resp, nil
 }
 

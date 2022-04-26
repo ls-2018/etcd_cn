@@ -114,7 +114,7 @@ func (a *applierV3backend) Put(ctx context.Context, txn mvcc.TxnWrite, p *pb.Put
 	resp.Header = &pb.ResponseHeader{}
 	trace = traceutil.Get(ctx)
 	// 如果上下文中的trace为空,则创建put跟踪
-	if trace.IsEmpty() {
+	if trace.IsEmpty {
 		trace = traceutil.New("put",
 			a.s.Logger(),
 			traceutil.Field{Key: "key", Value: string([]byte(p.Key))},
@@ -194,7 +194,7 @@ func (a *applierV3backend) DeleteRange(txn mvcc.TxnWrite, dr *pb.DeleteRangeRequ
 
 func (a *applierV3backend) Txn(ctx context.Context, rt *pb.TxnRequest) (*pb.TxnResponse, *traceutil.Trace, error) {
 	trace := traceutil.Get(ctx)
-	if trace.IsEmpty() {
+	if trace.IsEmpty {
 		trace = traceutil.New("transaction", a.s.Logger())
 		ctx = context.WithValue(ctx, traceutil.TraceKey, trace)
 	}

@@ -82,7 +82,7 @@ func (*User) Descriptor() ([]byte, []int) {
 	return fileDescriptor_8bbd6f3875b0e874, []int{1}
 }
 
-// Permission 是赋予角色的权限。
+// Permission 是赋予角色的权限.
 type Permission struct {
 	PermType             Permission_Type `protobuf:"varint,1,opt,name=permType,proto3,enum=authpb.Permission_Type" json:"permType,omitempty"`
 	Key                  string          `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`

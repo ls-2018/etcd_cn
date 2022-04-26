@@ -27,7 +27,7 @@ import (
 
 // SetFlagsFromEnv
 
-// 环境变量采用flag的名称,但为大写字母,有给定的前缀,任何破折号都由下划线代替 - 例如：Some-flag => ETCD_SOME_FLAG
+// 环境变量采用flag的名称,但为大写字母,有给定的前缀,任何破折号都由下划线代替 - 例如:Some-flag => ETCD_SOME_FLAG
 func SetFlagsFromEnv(lg *zap.Logger, prefix string, fs *flag.FlagSet) error {
 	var err error
 	alreadySet := make(map[string]bool)

@@ -27,7 +27,7 @@ func (r *raft) restore(s pb.Snapshot) bool {
 		return false
 	}
 	if r.state != StateFollower { // 在收到快照消息时,成为了leader
-		// 这是深度防御：如果领导者以某种方式结束了应用快照,它可以进入一个新的任期而不进入跟随者状态.
+		// 这是深度防御:如果领导者以某种方式结束了应用快照,它可以进入一个新的任期而不进入跟随者状态.
 		// 这应该永远不会发生,但如果它发生了,我们会通过提前返回来防止损害,所以只记录一个响亮的警告.
 		// 在写这篇文章的时候,当这个方法被调用时,实例被保证处于跟随者状态.
 		r.logger.Warningf("%x 试图将快照恢复为领导者;这不应该发生.", r.id)
@@ -35,7 +35,7 @@ func (r *raft) restore(s pb.Snapshot) bool {
 		return false
 	}
 
-	// 更多的深度防御：如果收件人不在配置中,就扔掉快照.
+	// 更多的深度防御:如果收件人不在配置中,就扔掉快照.
 	// 这不应该发生(在写这篇文章的时候),但这里和那里的很多代码都假定r.id在进度跟踪器中.
 	found := false
 	cs := s.Metadata.ConfState

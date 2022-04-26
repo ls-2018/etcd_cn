@@ -47,9 +47,9 @@ type commit struct {
 // raftNode.transport.Handler() -->
 // 基于raft的k,v存储
 type raftNode struct {
-	proposeC           <-chan string              // 发送提议消息
-	triggerConfChangeC <-chan raftpb.ConfChangeV1 // 集群的配置变更主动触发的
-	commitC            chan<- *commit             // 提交到上层应用的条目log (k,v)
+	proposeC           <-chan string              // 它用来接收 client 发送的写请求提案消息；
+	triggerConfChangeC <-chan raftpb.ConfChangeV1 // 它用来接收集群配置变化消息；
+	commitC            chan<- *commit             // 它用来输出 Raft 共识模块已提交的日志条目消息. (k,v)
 	errorC             chan<- error               // 返回raft回话的错误
 	id                 int                        // 本机ID
 	peers              []string                   // 每个节点的通信地址

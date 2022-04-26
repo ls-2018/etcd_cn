@@ -20,13 +20,13 @@ import "encoding/binary"
 const revBytesLen = 8 + 1 + 8
 
 func (a revision) GreaterThan(b revision) bool {
-	if a.main > b.main {
+	if a.Main > b.Main {
 		return true
 	}
-	if a.main < b.main {
+	if a.Main < b.Main {
 		return false
 	}
-	return a.sub > b.sub
+	return a.Sub > b.Sub
 }
 
 func newRevBytes() []byte {
@@ -34,15 +34,15 @@ func newRevBytes() []byte {
 }
 
 func revToBytes(rev revision, bytes []byte) {
-	binary.BigEndian.PutUint64(bytes, uint64(rev.main))
+	binary.BigEndian.PutUint64(bytes, uint64(rev.Main))
 	bytes[8] = '_'
-	binary.BigEndian.PutUint64(bytes[9:], uint64(rev.sub))
+	binary.BigEndian.PutUint64(bytes[9:], uint64(rev.Sub))
 }
 
 func bytesToRev(bytes []byte) revision {
 	return revision{
-		main: int64(binary.BigEndian.Uint64(bytes[0:8])),
-		sub:  int64(binary.BigEndian.Uint64(bytes[9:])),
+		Main: int64(binary.BigEndian.Uint64(bytes[0:8])),
+		Sub:  int64(binary.BigEndian.Uint64(bytes[9:])),
 	}
 }
 

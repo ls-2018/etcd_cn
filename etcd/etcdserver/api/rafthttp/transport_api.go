@@ -97,11 +97,11 @@ type Transport struct {
 	// When an error is received from ErrorC, user should stop raft state
 	// machine and thus stop the Transport.
 	ErrorC         chan error
-	streamRt       http.RoundTripper //( http.RoundTripper类型）： Stream消息通道中使用的http. RoundTripper实例.
-	pipelineRt     http.RoundTripper // ( http.RoundTripper 类型）：Pipeline 消息通道中使用的http.RoundTripper实例
+	streamRt       http.RoundTripper //( http.RoundTripper类型）: Stream消息通道中使用的http. RoundTripper实例.
+	pipelineRt     http.RoundTripper // ( http.RoundTripper 类型）:Pipeline 消息通道中使用的http.RoundTripper实例
 	mu             sync.RWMutex      // protect the remote and peer map
 	peers          map[types.ID]Peer
-	remotes        map[types.ID]*remote // 类型）： remote 中只封装了pipeline 实例,remote主要负责发送快照数据,帮助新加入的节点快速追赶上其他节点的数据.
+	remotes        map[types.ID]*remote // 类型）: remote 中只封装了pipeline 实例,remote主要负责发送快照数据,帮助新加入的节点快速追赶上其他节点的数据.
 	pipelineProber probing.Prober
 	streamProber   probing.Prober
 }

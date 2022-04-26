@@ -209,8 +209,8 @@ func (s *store) HashByRev(rev int64) (hash uint32, currentRev int64, compactRev 
 	defer tx.RUnlock()
 	s.mu.RUnlock()
 
-	upper := revision{main: rev + 1}
-	lower := revision{main: compactRev + 1}
+	upper := revision{Main: rev + 1}
+	lower := revision{Main: compactRev + 1}
 	h := crc32.New(crc32.MakeTable(crc32.Castagnoli))
 
 	h.Write(buckets.Key.Name())
@@ -252,7 +252,7 @@ func (s *store) updateCompactRev(rev int64) (<-chan struct{}, error) {
 	s.compactMainRev = rev
 
 	rbytes := newRevBytes()
-	revToBytes(revision{main: rev}, rbytes)
+	revToBytes(revision{Main: rev}, rbytes)
 
 	tx := s.b.BatchTx()
 	tx.Lock()
@@ -341,8 +341,8 @@ func (s *store) Restore(b backend.Backend) error {
 
 func (s *store) restore() error {
 	min, max := newRevBytes(), newRevBytes()
-	revToBytes(revision{main: 1}, min)
-	revToBytes(revision{main: math.MaxInt64, sub: math.MaxInt64}, max)
+	revToBytes(revision{Main: 1}, min)
+	revToBytes(revision{Main: math.MaxInt64, Sub: math.MaxInt64}, max)
 
 	keyToLease := make(map[string]lease.LeaseID)
 
@@ -353,12 +353,12 @@ func (s *store) restore() error {
 	_, finishedCompactBytes := tx.UnsafeRange(buckets.Meta, finishedCompactKeyName, nil, 0)
 	if len(finishedCompactBytes) != 0 {
 		s.revMu.Lock()
-		s.compactMainRev = bytesToRev(finishedCompactBytes[0]).main
+		s.compactMainRev = bytesToRev(finishedCompactBytes[0]).Main
 
 		s.lg.Info(
 			"restored last compact revision",
 			zap.Stringer("meta-bucket-name", buckets.Meta),
-			zap.String("meta-bucket-name-key", string(finishedCompactKeyName)),
+			zap.String("meta-bucket-name-Key", string(finishedCompactKeyName)),
 			zap.Int64("restored-compact-revision", s.compactMainRev),
 		)
 		s.revMu.Unlock()
@@ -366,7 +366,7 @@ func (s *store) restore() error {
 	_, scheduledCompactBytes := tx.UnsafeRange(buckets.Meta, scheduledCompactKeyName, nil, 0)
 	scheduledCompact := int64(0)
 	if len(scheduledCompactBytes) != 0 {
-		scheduledCompact = bytesToRev(scheduledCompactBytes[0]).main
+		scheduledCompact = bytesToRev(scheduledCompactBytes[0]).Main
 	}
 
 	// index keys concurrently as they're loaded in from tx
@@ -385,7 +385,7 @@ func (s *store) restore() error {
 		}
 		// next set begins after where this one ended
 		newMin := bytesToRev(keys[len(keys)-1][:revBytesLen])
-		newMin.sub++
+		newMin.Sub++
 		revToBytes(newMin, min)
 	}
 	close(rkvc)
@@ -434,7 +434,7 @@ func (s *store) restore() error {
 		s.lg.Info(
 			"resume scheduled compaction",
 			zap.Stringer("meta-bucket-name", buckets.Meta),
-			zap.String("meta-bucket-name-key", string(scheduledCompactKeyName)),
+			zap.String("meta-bucket-name-Key", string(scheduledCompactKeyName)),
 			zap.Int64("scheduled-compact-revision", scheduledCompact),
 		)
 	}
@@ -469,22 +469,22 @@ func restoreIntoIndex(lg *zap.Logger, idx index) (chan<- revKeyValue, <-chan int
 			}
 			// cache miss, fetch from tree index if there
 			if !ok {
-				ki = &keyIndex{key: rkv.kv.Key}
+				ki = &keyIndex{Key: rkv.kv.Key}
 				if idxKey := idx.KeyIndex(ki); idxKey != nil {
 					kiCache[rkv.kstr], ki = idxKey, idxKey
 					ok = true
 				}
 			}
 			rev := bytesToRev(rkv.key)
-			currentRev = rev.main
+			currentRev = rev.Main
 			if ok {
 				if isTombstone(rkv.key) {
-					if err := ki.tombstone(lg, rev.main, rev.sub); err != nil {
+					if err := ki.tombstone(lg, rev.Main, rev.Sub); err != nil {
 						lg.Warn("tombstone encountered error", zap.Error(err))
 					}
 					continue
 				}
-				ki.put(lg, rev.main, rev.sub)
+				ki.put(lg, rev.Main, rev.Sub)
 			} else if !isTombstone(rkv.key) {
 				ki.restore(lg, revision{rkv.kv.CreateRevision, 0}, rev, rkv.kv.Version)
 				idx.Insert(ki)

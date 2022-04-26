@@ -364,7 +364,7 @@ func (c Changer) apply(cfg *tracker.Config, prs tracker.ProgressMap, ccs ...pb.C
 	return nil
 }
 
-// symdiff 返回二者的差异数  len(a-b)+len(b-a)：描述的不够准确
+// symdiff 返回二者的差异数  len(a-b)+len(b-a):描述的不够准确
 func symdiff(l, r map[uint64]struct{}) int {
 	var n int
 	// [[1,2],[1,2]]
