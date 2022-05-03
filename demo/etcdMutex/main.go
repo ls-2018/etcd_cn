@@ -36,6 +36,7 @@ func main() {
 		if err := m1.Lock(context.TODO()); err != nil {
 			log.Fatal(err)
 		}
+
 		fmt.Println("m1---获得了锁")
 
 		time.Sleep(time.Second * 3)
