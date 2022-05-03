@@ -66,17 +66,28 @@ http://127.0.0.1:2379/members
 ```
 
 ### msgType
-
-| 消息类型 | 处理方 | 描述 | | :--- | :--- | :--: | | MsgHup | 节点支持 | 本地:开启选举,---->会触发vote或pre-vote | | MsgBeat | Leader |
-本地:心跳,---->给peers发送Msghearbeat | | MsgProp | Leader、Candidate、Follower | 本地:Propose -----> MsgApp | | MsgApp |
-Candidate、Follower | 非本地:操作日志【复制、配置变更 req】 | | MsgAppResp | Leader | 非本地:操作日志【复制 res】 | | MsgVote | 节点支持 | 非本地:投票请求 | |
-MsgVoteResp | Candidate | 非本地:投票相应 | | MsgPreVote | 节点支持 | 非本地:预投票请求 | | MsgPreVoteResp | Candidate | 非本地:预投票相应 | |
-MsgSnap | Candidate、Follower | 非本地:leader向follower拷贝快照,响应是MsgAppResp,告诉leader继续复制之后的值 | | MsgHeartbeat |
-Candidate、Follower | | | MsgHeartbeatResp | Leader | | | MsgUnreachable | Leader |
-非本地:etcdserver通过这个消息告诉raft状态机某个follower不可达,让其发送消息的方式由pipeline切成ping-pong模式 | | MsgSnapStatus | Leader |
-非本地:etcdserver通过这个消息告诉raft状态机快照发送成功还是失败 | | MsgCheckQuorum | Leader | | | MsgTransferLeader | Leader、Follower | 非本地: | |
-MsgTimeoutNow | Candidate、Follower | 非本地: | | MsgReadIndex | Leader、Follower | 非本地: | | MsgReadIndexResp | Follower |
-非本地: |
+ 
+| 消息类型 | 处理方 | 描述 |
+| :--- | :--- | :--- |
+| MsgHup | 节点支持 | 本地:开启选举,---->会触发vote或pre-vote | 
+| MsgBeat | Leader |本地:心跳,---->给peers发送Msghearbeat | 
+| MsgProp | Leader、Candidate、Follower | 本地:Propose -----> MsgApp | 
+| MsgApp | Candidate、Follower | 非本地:操作日志【复制、配置变更 req】 | 
+| MsgAppResp | Leader | 非本地:操作日志【复制 res】 | 
+| MsgVote | 节点支持 | 非本地:投票请求 | 
+| MsgVoteResp | Candidate | 非本地:投票相应 | 
+| MsgPreVote | 节点支持 | 非本地:预投票请求 | 
+| MsgPreVoteResp | Candidate | 非本地:预投票相应 | 
+| MsgSnap | Candidate、Follower | 非本地:leader向follower拷贝快照,响应是MsgAppResp,告诉leader继续复制之后的值 | 
+| MsgHeartbeat | Candidate、Follower |  | 
+| MsgHeartbeatResp | Leader |  | 
+| MsgUnreachable | Leader | 非本地:etcdserver通过这个消息告诉raft状态机某个follower不可达,让其发送消息的方式由pipeline切成ping-pong模式 | 
+| MsgSnapStatus | Leader | 非本地:etcdserver通过这个消息告诉raft状态机快照发送成功还是失败 | 
+| MsgCheckQuorum | Leader |  | 
+| MsgTransferLeader | Leader、Follower | 非本地: | 
+| MsgTimeoutNow | Candidate、Follower | 非本地: | 
+| MsgReadIndex | Leader、Follower | 非本地: | 
+| MsgReadIndexResp | Follower | 非本地: |
 
 ### issue
 
